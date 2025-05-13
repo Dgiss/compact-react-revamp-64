@@ -1,11 +1,12 @@
 
-import React from "react";
-import { SearchForm } from "@/components/forms/SearchForm";
-import { TabsEnhanced } from "@/components/ui/tabs-enhanced";
-import { DataTable } from "@/components/tables/DataTable";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 
 export default function VehiclesDevicesPage() {
-  const vehicleColumns = [
+  // Combine all columns from both vehicle and device data
+  const allColumns: Column[] = [
     { id: "immatriculation", label: "Immatriculation", sortable: true },
     { id: "entreprise", label: "Entreprise", sortable: true },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true },
@@ -14,15 +15,11 @@ export default function VehiclesDevicesPage() {
     { id: "marque", label: "Marque", sortable: true },
     { id: "modele", label: "Modèle", sortable: true },
     { id: "kilometrage", label: "Kilométrage", sortable: true },
-  ];
-
-  const deviceColumns = [
-    { id: "imei", label: "IMEI", sortable: true },
     { id: "sim", label: "SIM", sortable: true },
-    { id: "entreprise", label: "Entreprise", sortable: true },
-    { id: "vehicule", label: "Véhicule", sortable: true },
+    { id: "vehicule", label: "Véhicule associé", sortable: true },
   ];
 
+  // Combine vehicle and device data
   const vehicleData = [
     { 
       immatriculation: "GD 120 NK", 
@@ -32,7 +29,8 @@ export default function VehiclesDevicesPage() {
       categorie: "Voiture", 
       marque: "Peugeot", 
       modele: "308", 
-      kilometrage: "45000" 
+      kilometrage: "45000",
+      type: "vehicle"
     },
     { 
       immatriculation: "EC 430 MQ", 
@@ -42,7 +40,8 @@ export default function VehiclesDevicesPage() {
       categorie: "Utilitaire", 
       marque: "Renault", 
       modele: "Master", 
-      kilometrage: "78000" 
+      kilometrage: "78000",
+      type: "vehicle"
     },
     { 
       immatriculation: "GY-861-SF", 
@@ -52,7 +51,8 @@ export default function VehiclesDevicesPage() {
       categorie: "Voiture", 
       marque: "Toyota", 
       modele: "Yaris", 
-      kilometrage: "32000" 
+      kilometrage: "32000",
+      type: "vehicle"
     },
     { 
       immatriculation: "GH-290-QC", 
@@ -62,7 +62,8 @@ export default function VehiclesDevicesPage() {
       categorie: "Voiture", 
       marque: "Citroën", 
       modele: "C3", 
-      kilometrage: "28000" 
+      kilometrage: "28000",
+      type: "vehicle"
     },
     { 
       immatriculation: "GH-968-ZX", 
@@ -72,94 +73,55 @@ export default function VehiclesDevicesPage() {
       categorie: "Utilitaire", 
       marque: "Fiat", 
       modele: "Ducato", 
-      kilometrage: "62000" 
+      kilometrage: "62000",
+      type: "vehicle"
     },
   ];
 
   const deviceData = [
     { 
       imei: "862531040658404", 
-      sim: "", 
+      sim: "8933150520000591384", 
       entreprise: "", 
-      vehicule: "" 
+      vehicule: "",
+      type: "device"
     },
     { 
       imei: "862531040787807", 
-      sim: "", 
+      sim: "8933150520000763529", 
       entreprise: "", 
-      vehicule: "" 
+      vehicule: "",
+      type: "device"
     },
     { 
       imei: "866795038741631", 
-      sim: "", 
+      sim: "8933150520001459950", 
       entreprise: "MATTEI / HABICONFORT", 
-      vehicule: "FS 073 SV" 
+      vehicule: "FS 073 SV",
+      type: "device"
     },
     { 
       imei: "350612070642820", 
-      sim: "", 
+      sim: "8933150520001427874", 
       entreprise: "ADANEV MOBILITES", 
-      vehicule: "GY-953-LY" 
+      vehicule: "GY-953-LY",
+      type: "device"
     },
     { 
       imei: "862531040673056", 
-      sim: "", 
+      sim: "8933150520000623030", 
       entreprise: "Kick Services", 
-      vehicule: "RODSON MICHEL" 
+      vehicule: "RODSON MICHEL",
+      type: "device"
     },
   ];
 
-  const vehicleSearchFields = [
-    { id: "immatriculation", label: "Immatriculation" },
-    { id: "nomVehicule", label: "Nom Véhicule" },
-    { 
-      id: "entreprise", 
-      label: "Entreprise", 
-      type: "select",
-      options: [
-        { value: "MBSC", label: "MBSC" },
-        { value: "PHENIX IDFTP", label: "PHENIX IDFTP" },
-        { value: "ADANEV MOBILITES", label: "ADANEV MOBILITES" },
-      ]
-    },
-    { 
-      id: "categorie", 
-      label: "Catégorie", 
-      type: "select",
-      options: [
-        { value: "Voiture", label: "Voiture" },
-        { value: "Utilitaire", label: "Utilitaire" },
-        { value: "Camion", label: "Camion" },
-      ]
-    },
-    { 
-      id: "marque", 
-      label: "Marque", 
-      type: "select",
-      options: [
-        { value: "Peugeot", label: "Peugeot" },
-        { value: "Renault", label: "Renault" },
-        { value: "Toyota", label: "Toyota" },
-        { value: "Citroën", label: "Citroën" },
-        { value: "Fiat", label: "Fiat" },
-      ]
-    },
-  ];
+  // Combine all data into a single array
+  const combinedData = [...vehicleData, ...deviceData];
 
-  const deviceSearchFields = [
-    { id: "imei", label: "IMEI" },
-    { id: "sim", label: "SIM" },
-    { id: "vehicule", label: "Véhicule" },
-  ];
-
-  const handleVehicleSearch = (formData: any) => {
-    console.log("Searching vehicles with:", formData);
-    // Implement search logic
-  };
-
-  const handleDeviceSearch = (formData: any) => {
-    console.log("Searching devices with:", formData);
-    // Implement search logic
+  const handleAdd = () => {
+    console.log("Add new item");
+    // Implement add logic
   };
 
   const handleEdit = (item: any) => {
@@ -172,58 +134,22 @@ export default function VehiclesDevicesPage() {
     // Implement delete logic
   };
 
-  const handleAdd = () => {
-    console.log("Add new item");
-    // Implement add logic
-  };
-
-  const tabs = [
-    {
-      id: "vehicles",
-      label: "Véhicules",
-      content: (
-        <div>
-          <SearchForm
-            fields={vehicleSearchFields}
-            onSubmit={handleVehicleSearch}
-            onReset={() => console.log("Reset vehicle search")}
-            onAdd={handleAdd}
-          />
-          <DataTable
-            columns={vehicleColumns}
-            data={vehicleData}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </div>
-      ),
-    },
-    {
-      id: "devices",
-      label: "Boîtiers",
-      content: (
-        <div>
-          <SearchForm
-            fields={deviceSearchFields}
-            onSubmit={handleDeviceSearch}
-            onReset={() => console.log("Reset device search")}
-            onAdd={handleAdd}
-          />
-          <DataTable
-            columns={deviceColumns}
-            data={deviceData}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </div>
-      ),
-    },
-  ];
-
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Véhicules & Boîtiers</h1>
-      <TabsEnhanced tabs={tabs} />
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
+        <Button onClick={handleAdd}>
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter
+        </Button>
+      </div>
+      
+      <EnhancedDataTable
+        columns={allColumns}
+        data={combinedData}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
