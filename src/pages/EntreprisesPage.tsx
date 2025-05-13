@@ -1,9 +1,9 @@
 
-import React from "react";
-import { SearchForm } from "@/components/forms/SearchForm";
+import React, { useState } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { Plus } from "lucide-react";
+import { TabsEnhanced } from "@/components/ui/tabs-enhanced";
 
 export default function EntreprisesPage() {
   // Définition de toutes les colonnes possibles
@@ -105,21 +105,6 @@ export default function EntreprisesPage() {
     },
   ];
 
-  // Combiner les données des entreprises et des utilisateurs
-  const combinedData = [...entreprisesData, ...utilisateursData];
-
-  const searchFields = [
-    { id: "siret", label: "Siret" },
-    { id: "entreprise", label: "Nom de l'entreprise" },
-    { id: "email", label: "Email" },
-    { id: "nom", label: "Nom d'utilisateur" },
-  ];
-
-  const handleSearch = (formData: any) => {
-    console.log("Searching with:", formData);
-    // Implement search logic
-  };
-
   const handleEdit = (item: any) => {
     console.log("Edit item:", item);
     // Implement edit logic
@@ -135,6 +120,43 @@ export default function EntreprisesPage() {
     // Implement add logic
   };
 
+  // Colonnes visibles pour chaque onglet
+  const entreprisesColumns = allColumns.filter(col => 
+    ["siret", "entreprise", "contact", "telephone", "email", "adresse", "type"].includes(col.id)
+  );
+  
+  const utilisateursColumns = allColumns.filter(col => 
+    ["nom", "entreprise", "motDePasse", "type"].includes(col.id)
+  );
+
+  // Définition des onglets
+  const tabs = [
+    {
+      id: "entreprises",
+      label: "Entreprises",
+      content: (
+        <EnhancedDataTable
+          columns={entreprisesColumns}
+          data={entreprisesData}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )
+    },
+    {
+      id: "utilisateurs",
+      label: "Utilisateurs",
+      content: (
+        <EnhancedDataTable
+          columns={utilisateursColumns}
+          data={utilisateursData}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )
+    }
+  ];
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -147,19 +169,7 @@ export default function EntreprisesPage() {
         </div>
       </div>
       
-      <SearchForm
-        fields={searchFields}
-        onSubmit={handleSearch}
-        onReset={() => console.log("Reset search")}
-        onAdd={handleAdd}
-      />
-      
-      <EnhancedDataTable
-        columns={allColumns}
-        data={combinedData}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <TabsEnhanced tabs={tabs} className="mb-4" />
     </div>
   );
 }
