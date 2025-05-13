@@ -1,25 +1,26 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { TabsEnhanced } from "@/components/ui/tabs-enhanced";
 
 export default function EntreprisesPage() {
   // Définition de toutes les colonnes possibles
   const allColumns: Column[] = [
-    // Colonnes d'entreprises
-    { id: "siret", label: "Siret", sortable: true, visible: true },
+    // Colonnes communes
     { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
+    { id: "type", label: "Type", sortable: true, visible: true },
+    
+    // Colonnes spécifiques aux entreprises
+    { id: "siret", label: "Siret", sortable: true, visible: true },
     { id: "contact", label: "Contact", sortable: true, visible: true },
     { id: "telephone", label: "Téléphone", sortable: true, visible: true },
     { id: "email", label: "Email", sortable: true, visible: true },
     { id: "adresse", label: "Adresse", sortable: true, visible: false },
     
-    // Colonnes d'utilisateurs
+    // Colonnes spécifiques aux utilisateurs
     { id: "nom", label: "Nom d'utilisateur", sortable: true, visible: true },
     { id: "motDePasse", label: "Mot de passe", sortable: false, visible: false },
-    { id: "type", label: "Type", sortable: true, visible: true },
   ];
 
   // Données des entreprises
@@ -31,7 +32,7 @@ export default function EntreprisesPage() {
       telephone: "0123456789", 
       email: "contact@ambulances-leroy.fr", 
       adresse: "123 Rue de Paris, 75001 Paris",
-      type: "entreprise"
+      type: "Entreprise"
     },
     { 
       siret: "23456789012345", 
@@ -40,7 +41,7 @@ export default function EntreprisesPage() {
       telephone: "0234567890", 
       email: "contact@vitor-nettoyage.com", 
       adresse: "456 Avenue Victor Hugo, 75016 Paris",
-      type: "entreprise"
+      type: "Entreprise"
     },
     { 
       siret: "34567890123456", 
@@ -49,7 +50,7 @@ export default function EntreprisesPage() {
       telephone: "0345678901", 
       email: "contact@mac-transport.fr", 
       adresse: "789 Boulevard Saint-Michel, 75005 Paris",
-      type: "entreprise"
+      type: "Entreprise"
     },
     { 
       siret: "45678901234567", 
@@ -58,7 +59,7 @@ export default function EntreprisesPage() {
       telephone: "0456789012", 
       email: "contact@blive.com", 
       adresse: "12 Rue de Rivoli, 75004 Paris",
-      type: "entreprise"
+      type: "Entreprise"
     },
     { 
       siret: "56789012345678", 
@@ -67,7 +68,7 @@ export default function EntreprisesPage() {
       telephone: "0567890123", 
       email: "contact@iris-multiservices.fr", 
       adresse: "34 Avenue des Champs-Élysées, 75008 Paris",
-      type: "entreprise"
+      type: "Entreprise"
     },
   ];
 
@@ -77,33 +78,36 @@ export default function EntreprisesPage() {
       nom: "3djservices", 
       motDePasse: "3djservices2025", 
       entreprise: "3DJ SERVICES", 
-      type: "utilisateur"
+      type: "Utilisateur"
     },
     { 
       nom: "abcp", 
       motDePasse: "abcp2025", 
       entreprise: "ABCP", 
-      type: "utilisateur"
+      type: "Utilisateur"
     },
     { 
       nom: "abctsecuriteactivesecurite16", 
       motDePasse: "abctsecuriteactivesecurite162025", 
       entreprise: "ABCT SECURITE ( ACTIVE SECURITE 16 )",
-      type: "utilisateur"
+      type: "Utilisateur"
     },
     { 
       nom: "abnettoyage", 
       motDePasse: "abnettoyage2025", 
       entreprise: "AB NETTOYAGE",
-      type: "utilisateur"
+      type: "Utilisateur"
     },
     { 
       nom: "abptransport", 
       motDePasse: "abptransport2025", 
       entreprise: "ABP TRANSPORT",
-      type: "utilisateur"
+      type: "Utilisateur"
     },
   ];
+
+  // Fusionner les données en un seul tableau
+  const combinedData = [...entreprisesData, ...utilisateursData];
 
   const handleEdit = (item: any) => {
     console.log("Edit item:", item);
@@ -120,43 +124,6 @@ export default function EntreprisesPage() {
     // Implement add logic
   };
 
-  // Colonnes visibles pour chaque onglet
-  const entreprisesColumns = allColumns.filter(col => 
-    ["siret", "entreprise", "contact", "telephone", "email", "adresse", "type"].includes(col.id)
-  );
-  
-  const utilisateursColumns = allColumns.filter(col => 
-    ["nom", "entreprise", "motDePasse", "type"].includes(col.id)
-  );
-
-  // Définition des onglets
-  const tabs = [
-    {
-      id: "entreprises",
-      label: "Entreprises",
-      content: (
-        <EnhancedDataTable
-          columns={entreprisesColumns}
-          data={entreprisesData}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )
-    },
-    {
-      id: "utilisateurs",
-      label: "Utilisateurs",
-      content: (
-        <EnhancedDataTable
-          columns={utilisateursColumns}
-          data={utilisateursData}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )
-    }
-  ];
-
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -169,7 +136,12 @@ export default function EntreprisesPage() {
         </div>
       </div>
       
-      <TabsEnhanced tabs={tabs} className="mb-4" />
+      <EnhancedDataTable
+        columns={allColumns}
+        data={combinedData}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
