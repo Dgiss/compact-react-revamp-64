@@ -3,7 +3,7 @@ import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Eye, EyeOff, Filter, Search, Trash } from "lucide-react";
+import { Edit, Eye, EyeOff, Filter, Link, Search, Trash } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -32,11 +32,12 @@ interface EnhancedDataTableProps {
   data: any[];
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
+  onAssociate?: (item: any) => void;
 }
 
-export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDelete }: EnhancedDataTableProps) {
+export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDelete, onAssociate }: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
-    initialColumns.map(col => ({ ...col, visible: true }))
+    initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
   );
   
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null);
@@ -103,6 +104,9 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
   }, [filteredData, sortConfig]);
 
   const hasVisibleColumns = visibleColumns.length > 0;
+
+  // Determine if the item is a device (for association button)
+  const isDevice = (item: any) => item.type === 'device';
 
   return (
     <div className="space-y-4">
@@ -189,13 +193,13 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
               ) : (
                 <TableHead>Aucune colonne sélectionnée</TableHead>
               )}
-              {(onEdit || onDelete) && hasVisibleColumns && <TableHead className="w-20">Actions</TableHead>}
+              {(onEdit || onDelete || onAssociate) && hasVisibleColumns && <TableHead className="w-24">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + (onEdit || onDelete ? 1 : 0) : 1} className="text-center py-4">
+                <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
                   Aucune donnée disponible
                 </TableCell>
               </TableRow>
@@ -207,7 +211,7 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
                       {row[column.id] !== undefined && row[column.id] !== null ? row[column.id] : '-'}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && (
+                  {(onEdit || onDelete || onAssociate) && (
                     <TableCell className="flex gap-1">
                       {onEdit && (
                         <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
@@ -217,6 +221,11 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
                       {onDelete && (
                         <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
                           <Trash className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {onAssociate && isDevice(row) && (
+                        <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
+                          <Link className="h-4 w-4" />
                         </Button>
                       )}
                     </TableCell>

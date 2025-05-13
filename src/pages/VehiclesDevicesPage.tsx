@@ -3,25 +3,28 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
+import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
+import { toast } from "@/components/ui/use-toast";
 
 export default function VehiclesDevicesPage() {
+  const [showAssociateSheet, setShowAssociateSheet] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState<any>(null);
+
   // Define all possible columns
   const allColumns: Column[] = [
     { id: "immatriculation", label: "Immatriculation", sortable: true, visible: true },
     { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
     { id: "imei", label: "IMEI", sortable: true, visible: true },
-    { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true }, // Ajout de la colonne Type de Boîtier
-    { id: "categorie", label: "Catégorie", sortable: true, visible: false }, // Catégorie cachée complètement (sera supprimée du rendu)
+    { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true },
     { id: "marque", label: "Marque", sortable: true, visible: false }, // Cachée par défaut
     { id: "modele", label: "Modèle", sortable: true, visible: false }, // Cachée par défaut
     { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false }, // Cachée par défaut
     { id: "sim", label: "SIM", sortable: true, visible: true },
-    { id: "telephone", label: "Téléphone", sortable: true, visible: true }, // Ajout de la colonne téléphone
-    { id: "vehicule", label: "Véhicule associé", sortable: true, visible: true },
+    { id: "telephone", label: "Téléphone", sortable: true, visible: true },
   ];
 
   // Combine vehicle and device data
@@ -32,7 +35,6 @@ export default function VehiclesDevicesPage() {
       nomVehicule: "", 
       imei: "866854051690975", 
       typeBoitier: "GPS Tracker",
-      categorie: "Voiture", 
       marque: "Peugeot", 
       modele: "308", 
       kilometrage: "45000",
@@ -45,7 +47,6 @@ export default function VehiclesDevicesPage() {
       nomVehicule: "", 
       imei: "864636066827169", 
       typeBoitier: "GPS Tracker",
-      categorie: "Utilitaire", 
       marque: "Renault", 
       modele: "Master", 
       kilometrage: "78000",
@@ -58,7 +59,6 @@ export default function VehiclesDevicesPage() {
       nomVehicule: "", 
       imei: "864454070312115", 
       typeBoitier: "GPS Tracker",
-      categorie: "Voiture", 
       marque: "Toyota", 
       modele: "Yaris", 
       kilometrage: "32000",
@@ -71,7 +71,6 @@ export default function VehiclesDevicesPage() {
       nomVehicule: "", 
       imei: "350544508381053", 
       typeBoitier: "GPS Tracker",
-      categorie: "Voiture", 
       marque: "Citroën", 
       modele: "C3", 
       kilometrage: "28000",
@@ -84,7 +83,6 @@ export default function VehiclesDevicesPage() {
       nomVehicule: "", 
       imei: "350544500701886", 
       typeBoitier: "GPS Tracker",
-      categorie: "Utilitaire", 
       marque: "Fiat", 
       modele: "Ducato", 
       kilometrage: "62000",
@@ -99,7 +97,6 @@ export default function VehiclesDevicesPage() {
       sim: "8933150520000591384", 
       typeBoitier: "GPS Simple",
       entreprise: "", 
-      vehicule: "",
       telephone: "0712345678",
       type: "device"
     },
@@ -108,7 +105,6 @@ export default function VehiclesDevicesPage() {
       sim: "8933150520000763529", 
       typeBoitier: "GPS Avancé",
       entreprise: "", 
-      vehicule: "",
       telephone: "0723456789",
       type: "device"
     },
@@ -117,7 +113,6 @@ export default function VehiclesDevicesPage() {
       sim: "8933150520001459950", 
       typeBoitier: "GPS Simple",
       entreprise: "MATTEI / HABICONFORT", 
-      vehicule: "FS 073 SV",
       telephone: "0734567890",
       type: "device"
     },
@@ -126,7 +121,6 @@ export default function VehiclesDevicesPage() {
       sim: "8933150520001427874",
       typeBoitier: "GPS Avancé", 
       entreprise: "ADANEV MOBILITES", 
-      vehicule: "GY-953-LY",
       telephone: "0745678901",
       type: "device"
     },
@@ -135,7 +129,6 @@ export default function VehiclesDevicesPage() {
       sim: "8933150520000623030", 
       typeBoitier: "GPS Simple",
       entreprise: "Kick Services", 
-      vehicule: "RODSON MICHEL",
       telephone: "0756789012",
       type: "device"
     },
@@ -143,9 +136,6 @@ export default function VehiclesDevicesPage() {
 
   // Combine all data into a single array
   const combinedData = [...vehicleData, ...deviceData];
-
-  // Filtrer les colonnes pour supprimer "categorie" du rendu final
-  const displayColumns = allColumns.filter(column => column.id !== "categorie");
 
   const handleEdit = (item: any) => {
     console.log("Edit item:", item);
@@ -155,6 +145,12 @@ export default function VehiclesDevicesPage() {
   const handleDelete = (item: any) => {
     console.log("Delete item:", item);
     // Implement delete logic
+  };
+
+  const handleAssociate = (device: any) => {
+    console.log("Associate device:", device);
+    setSelectedDevice(device);
+    setShowAssociateSheet(true);
   };
 
   return (
@@ -189,11 +185,32 @@ export default function VehiclesDevicesPage() {
       </div>
       
       <EnhancedDataTable
-        columns={displayColumns}
+        columns={allColumns}
         data={combinedData}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onAssociate={handleAssociate}
       />
+
+      {/* Sheet pour associer un boîtier à un véhicule */}
+      <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
+        <SheetContent>
+          <SheetHeader className="mb-5">
+            <SheetTitle>Associer un Véhicule</SheetTitle>
+          </SheetHeader>
+          <AssociateVehicleForm
+            device={selectedDevice}
+            onClose={() => setShowAssociateSheet(false)}
+            onSuccess={() => {
+              toast({
+                title: "Boîtier associé",
+                description: "Le boîtier a été associé au véhicule avec succès"
+              });
+              setShowAssociateSheet(false);
+            }}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

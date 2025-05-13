@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Upload, Check, Eye, EyeOff } from "lucide-react";
+import { X, Upload, Check, Eye, EyeOff, Box } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,21 +14,28 @@ import { SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const clients = ["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"];
+const deviceTypes = ["GPS Simple", "GPS Avancé", "GPS Tracker", "GPS Pro", "Traceur"];
 
 type DeviceData = {
   imei: string;
   sim: string;
   telephone: string;
+  typeBoitier: string;
 }
 
 export default function ImportDevicesForm() {
   const [clientSelected, setClientSelected] = useState("");
+  const [typeBoitier, setTypeBoitier] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<DeviceData[]>([]);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   
   const handleClientChange = (value: string) => {
     setClientSelected(value);
+  };
+  
+  const handleTypeChange = (value: string) => {
+    setTypeBoitier(value);
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,10 +52,10 @@ export default function ImportDevicesForm() {
   const simulateExcelParsing = (file: File) => {
     // Données simulées - dans une implémentation réelle, vous les extrairiez du fichier Excel
     const mockData: DeviceData[] = [
-      { imei: "862531040658404", sim: "8933150520000591384", telephone: "0712345678" },
-      { imei: "862531040787807", sim: "8933150520000763529", telephone: "0723456789" },
-      { imei: "866795038741631", sim: "8933150520001459950", telephone: "0734567890" },
-      { imei: "350612070642820", sim: "8933150520001427874", telephone: "0745678901" }
+      { imei: "862531040658404", sim: "8933150520000591384", telephone: "0712345678", typeBoitier },
+      { imei: "862531040787807", sim: "8933150520000763529", telephone: "0723456789", typeBoitier },
+      { imei: "866795038741631", sim: "8933150520001459950", telephone: "0734567890", typeBoitier },
+      { imei: "350612070642820", sim: "8933150520001427874", telephone: "0745678901", typeBoitier }
     ];
     
     setPreviewData(mockData);
@@ -61,12 +68,18 @@ export default function ImportDevicesForm() {
       return;
     }
     
+    if (!typeBoitier) {
+      alert("Veuillez sélectionner un type de boîtier");
+      return;
+    }
+    
     if (!file) {
       alert("Veuillez sélectionner un fichier Excel");
       return;
     }
     
     console.log("Import des boîtiers pour le client:", clientSelected);
+    console.log("Type de boîtier:", typeBoitier);
     console.log("Données importées:", previewData);
     // Implémentez ici la logique d'import finale
   };
@@ -102,6 +115,31 @@ export default function ImportDevicesForm() {
         
         <div>
           <label className="block text-sm font-medium mb-2">
+            Type de Boîtier (Obligatoire)
+          </label>
+          <Select 
+            value={typeBoitier} 
+            onValueChange={handleTypeChange}
+            disabled={!clientSelected}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionner un type de boîtier" />
+            </SelectTrigger>
+            <SelectContent>
+              {deviceTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  <div className="flex items-center">
+                    <Box className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    {type}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-2">
             Fichier Excel
           </label>
           <div className="flex items-center gap-2">
@@ -109,7 +147,7 @@ export default function ImportDevicesForm() {
               type="file"
               accept=".xlsx, .xls"
               onChange={handleFileChange}
-              disabled={!clientSelected}
+              disabled={!clientSelected || !typeBoitier}
               className="flex-1"
             />
           </div>
@@ -150,6 +188,7 @@ export default function ImportDevicesForm() {
                       <TableHead>IMEI</TableHead>
                       <TableHead>Numéro SIM</TableHead>
                       <TableHead>Numéro de Téléphone</TableHead>
+                      <TableHead>Type de Boîtier</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -158,6 +197,7 @@ export default function ImportDevicesForm() {
                         <TableCell>{device.imei}</TableCell>
                         <TableCell>{device.sim}</TableCell>
                         <TableCell>{device.telephone}</TableCell>
+                        <TableCell>{device.typeBoitier || typeBoitier}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -176,7 +216,7 @@ export default function ImportDevicesForm() {
           </SheetClose>
           <Button 
             onClick={handleImport} 
-            disabled={!file || !clientSelected}
+            disabled={!file || !clientSelected || !typeBoitier}
           >
             <Upload className="h-4 w-4 mr-2" />
             Valider l'import
