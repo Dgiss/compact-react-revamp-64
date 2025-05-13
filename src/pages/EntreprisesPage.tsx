@@ -1,26 +1,37 @@
 
 import React from "react";
 import { SearchForm } from "@/components/forms/SearchForm";
-import { DataTable } from "@/components/tables/DataTable";
+import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
+import { Button } from "@/components/ui/button";
+import { Plus, FileSpreadsheet } from "lucide-react";
 
 export default function EntreprisesPage() {
-  const columns = [
-    { id: "siret", label: "Siret", sortable: true },
-    { id: "entreprise", label: "Entreprise", sortable: true },
-    { id: "contact", label: "Contact", sortable: true },
-    { id: "telephone", label: "Téléphone", sortable: true },
-    { id: "email", label: "Email", sortable: true },
-    { id: "adresse", label: "Adresse", sortable: true },
+  // Définition de toutes les colonnes possibles
+  const allColumns: Column[] = [
+    // Colonnes d'entreprises
+    { id: "siret", label: "Siret", sortable: true, visible: true },
+    { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
+    { id: "contact", label: "Contact", sortable: true, visible: true },
+    { id: "telephone", label: "Téléphone", sortable: true, visible: true },
+    { id: "email", label: "Email", sortable: true, visible: true },
+    { id: "adresse", label: "Adresse", sortable: true, visible: false },
+    
+    // Colonnes d'utilisateurs
+    { id: "nom", label: "Nom d'utilisateur", sortable: true, visible: true },
+    { id: "motDePasse", label: "Mot de passe", sortable: false, visible: false },
+    { id: "type", label: "Type", sortable: true, visible: true },
   ];
 
-  const data = [
+  // Données des entreprises
+  const entreprisesData = [
     { 
       siret: "12345678901234", 
       entreprise: "SOCIETE AMBULANCES LEROY", 
       contact: "Jean Dupont", 
       telephone: "0123456789", 
       email: "contact@ambulances-leroy.fr", 
-      adresse: "123 Rue de Paris, 75001 Paris" 
+      adresse: "123 Rue de Paris, 75001 Paris",
+      type: "entreprise"
     },
     { 
       siret: "23456789012345", 
@@ -28,7 +39,8 @@ export default function EntreprisesPage() {
       contact: "Marie Martin", 
       telephone: "0234567890", 
       email: "contact@vitor-nettoyage.com", 
-      adresse: "456 Avenue Victor Hugo, 75016 Paris" 
+      adresse: "456 Avenue Victor Hugo, 75016 Paris",
+      type: "entreprise"
     },
     { 
       siret: "34567890123456", 
@@ -36,7 +48,8 @@ export default function EntreprisesPage() {
       contact: "Pierre Durand", 
       telephone: "0345678901", 
       email: "contact@mac-transport.fr", 
-      adresse: "789 Boulevard Saint-Michel, 75005 Paris" 
+      adresse: "789 Boulevard Saint-Michel, 75005 Paris",
+      type: "entreprise"
     },
     { 
       siret: "45678901234567", 
@@ -44,7 +57,8 @@ export default function EntreprisesPage() {
       contact: "Sophie Bernard", 
       telephone: "0456789012", 
       email: "contact@blive.com", 
-      adresse: "12 Rue de Rivoli, 75004 Paris" 
+      adresse: "12 Rue de Rivoli, 75004 Paris",
+      type: "entreprise"
     },
     { 
       siret: "56789012345678", 
@@ -52,14 +66,53 @@ export default function EntreprisesPage() {
       contact: "Thomas Petit", 
       telephone: "0567890123", 
       email: "contact@iris-multiservices.fr", 
-      adresse: "34 Avenue des Champs-Élysées, 75008 Paris" 
+      adresse: "34 Avenue des Champs-Élysées, 75008 Paris",
+      type: "entreprise"
     },
   ];
+
+  // Données des utilisateurs
+  const utilisateursData = [
+    { 
+      nom: "3djservices", 
+      motDePasse: "3djservices2025", 
+      entreprise: "3DJ SERVICES", 
+      type: "utilisateur"
+    },
+    { 
+      nom: "abcp", 
+      motDePasse: "abcp2025", 
+      entreprise: "ABCP", 
+      type: "utilisateur"
+    },
+    { 
+      nom: "abctsecuriteactivesecurite16", 
+      motDePasse: "abctsecuriteactivesecurite162025", 
+      entreprise: "ABCT SECURITE ( ACTIVE SECURITE 16 )",
+      type: "utilisateur"
+    },
+    { 
+      nom: "abnettoyage", 
+      motDePasse: "abnettoyage2025", 
+      entreprise: "AB NETTOYAGE",
+      type: "utilisateur"
+    },
+    { 
+      nom: "abptransport", 
+      motDePasse: "abptransport2025", 
+      entreprise: "ABP TRANSPORT",
+      type: "utilisateur"
+    },
+  ];
+
+  // Combiner les données des entreprises et des utilisateurs
+  const combinedData = [...entreprisesData, ...utilisateursData];
 
   const searchFields = [
     { id: "siret", label: "Siret" },
     { id: "entreprise", label: "Nom de l'entreprise" },
     { id: "email", label: "Email" },
+    { id: "nom", label: "Nom d'utilisateur" },
   ];
 
   const handleSearch = (formData: any) => {
@@ -84,7 +137,15 @@ export default function EntreprisesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Entreprises</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Entreprises & Utilisateurs</h1>
+        <div className="flex gap-2">
+          <Button onClick={handleAdd}>
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter
+          </Button>
+        </div>
+      </div>
       
       <SearchForm
         fields={searchFields}
@@ -93,9 +154,9 @@ export default function EntreprisesPage() {
         onAdd={handleAdd}
       />
       
-      <DataTable
-        columns={columns}
-        data={data}
+      <EnhancedDataTable
+        columns={allColumns}
+        data={combinedData}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
