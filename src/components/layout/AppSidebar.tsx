@@ -11,14 +11,14 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Building2, Car, Cpu, Users } from "lucide-react";
+import { Building2, Car } from "lucide-react";
 
 export function AppSidebar() {
   const location = useLocation();
   
   const menuItems = [
     {
-      title: "Entreprises",
+      title: "Entreprises & Utilisateurs",
       icon: Building2,
       path: "/entreprises",
     },
@@ -26,11 +26,6 @@ export function AppSidebar() {
       title: "Véhicules & Boîtiers",
       icon: Car,
       path: "/vehicules-boitiers",
-    },
-    {
-      title: "Utilisateurs",
-      icon: Users,
-      path: "/utilisateurs",
     },
   ];
 

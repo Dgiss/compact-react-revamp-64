@@ -1,9 +1,9 @@
-
 import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit, Eye, EyeOff, Filter, Link, Search, Trash } from "lucide-react";
+import { CopyableCell } from "./CopyableCell";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -207,9 +207,10 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
               sortedData.map((row, index) => (
                 <TableRow key={index}>
                   {visibleColumns.map((column) => (
-                    <TableCell key={column.id} className="whitespace-nowrap">
-                      {row[column.id] !== undefined && row[column.id] !== null ? row[column.id] : '-'}
-                    </TableCell>
+                    <CopyableCell
+                      key={column.id}
+                      value={row[column.id]}
+                    />
                   ))}
                   {(onEdit || onDelete || onAssociate) && (
                     <TableCell className="flex gap-1">
