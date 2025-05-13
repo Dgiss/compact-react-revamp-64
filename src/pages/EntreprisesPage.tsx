@@ -9,18 +9,18 @@ export default function EntreprisesPage() {
   const allColumns: Column[] = [
     // Colonnes communes
     { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
-    { id: "type", label: "Type", sortable: true, visible: true },
     
     // Colonnes spécifiques aux entreprises
-    { id: "siret", label: "Siret", sortable: true, visible: true },
+    { id: "siret", label: "Siret", sortable: true, visible: false },
     { id: "contact", label: "Contact", sortable: true, visible: true },
     { id: "telephone", label: "Téléphone", sortable: true, visible: true },
     { id: "email", label: "Email", sortable: true, visible: true },
-    { id: "adresse", label: "Adresse", sortable: true, visible: false },
+    { id: "adresse", label: "Adresse", sortable: true, visible: true },
+    { id: "type", label: "Type", sortable: true, visible: false },
     
     // Colonnes spécifiques aux utilisateurs
     { id: "nom", label: "Nom d'utilisateur", sortable: true, visible: true },
-    { id: "motDePasse", label: "Mot de passe", sortable: false, visible: false },
+    { id: "motDePasse", label: "Mot de passe", sortable: false, visible: true },
   ];
 
   // Données des entreprises
