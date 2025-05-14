@@ -3,13 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Save } from "lucide-react";
 import { SheetClose } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface AssociateVehicleFormProps {
   device?: any;
@@ -24,6 +18,11 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   // Données factices des entreprises et véhicules
   const companies = ["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"];
   
+  const companyOptions = companies.map(company => ({
+    value: company,
+    label: company
+  }));
+  
   // Les véhicules seraient normalement filtrés en fonction de l'entreprise sélectionnée
   const vehicles = [
     { id: "1", name: "GD 120 NK - Peugeot 308" },
@@ -32,6 +31,11 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     { id: "4", name: "GH-290-QC - Citroën C3" },
     { id: "5", name: "GH-968-ZX - Fiat Ducato" },
   ];
+  
+  const vehicleOptions = vehicles.map(vehicle => ({
+    value: vehicle.id,
+    label: vehicle.name
+  }));
   
   const handleSubmit = () => {
     if (!selectedCompany || !selectedVehicle) {
@@ -54,40 +58,25 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
         <label className="block text-sm font-medium mb-2">
           Entreprise
         </label>
-        <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-          <SelectTrigger>
-            <SelectValue placeholder="Entreprise" />
-          </SelectTrigger>
-          <SelectContent>
-            {companies.map((company) => (
-              <SelectItem key={company} value={company}>
-                {company}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect 
+          options={companyOptions}
+          value={selectedCompany}
+          onValueChange={setSelectedCompany}
+          placeholder="Sélectionner une entreprise"
+        />
       </div>
       
       <div>
         <label className="block text-sm font-medium mb-2">
           Véhicules
         </label>
-        <Select 
-          value={selectedVehicle} 
+        <SearchableSelect 
+          options={vehicleOptions}
+          value={selectedVehicle}
           onValueChange={setSelectedVehicle}
+          placeholder="Sélectionner un véhicule"
           disabled={!selectedCompany}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Véhicules" />
-          </SelectTrigger>
-          <SelectContent>
-            {vehicles.map((vehicle) => (
-              <SelectItem key={vehicle.id} value={vehicle.id}>
-                {vehicle.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        />
       </div>
       
       <div className="flex justify-end gap-2 mt-6">

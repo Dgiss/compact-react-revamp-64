@@ -1,15 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Upload, Check, Eye, EyeOff, Box } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -30,13 +23,15 @@ export default function ImportDevicesForm() {
   const [previewData, setPreviewData] = useState<DeviceData[]>([]);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   
-  const handleClientChange = (value: string) => {
-    setClientSelected(value);
-  };
+  const clientOptions = clients.map(client => ({
+    value: client,
+    label: client
+  }));
   
-  const handleTypeChange = (value: string) => {
-    setTypeBoitier(value);
-  };
+  const deviceTypeOptions = deviceTypes.map(type => ({
+    value: type,
+    label: type
+  }));
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -44,7 +39,6 @@ export default function ImportDevicesForm() {
       setFile(selectedFile);
       
       // Simuler l'analyse du fichier Excel et générer des données d'aperçu
-      // Dans une application réelle, vous utiliseriez une bibliothèque comme xlsx pour analyser le fichier
       simulateExcelParsing(selectedFile);
     }
   };
@@ -99,45 +93,27 @@ export default function ImportDevicesForm() {
           <label className="block text-sm font-medium mb-2">
             Client (Obligatoire)
           </label>
-          <Select value={clientSelected} onValueChange={handleClientChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client} value={client}>
-                  {client}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect 
+            options={clientOptions}
+            value={clientSelected}
+            onValueChange={setClientSelected}
+            placeholder="Sélectionner un client"
+          />
         </div>
         
         <div>
           <label className="block text-sm font-medium mb-2">
             Type de Boîtier (Obligatoire)
           </label>
-          <Select 
-            value={typeBoitier} 
-            onValueChange={handleTypeChange}
+          <SearchableSelect 
+            options={deviceTypeOptions}
+            value={typeBoitier}
+            onValueChange={setTypeBoitier}
+            placeholder="Sélectionner un type de boîtier"
             disabled={!clientSelected}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionner un type de boîtier" />
-            </SelectTrigger>
-            <SelectContent>
-              {deviceTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  <div className="flex items-center">
-                    <Box className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                    {type}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium mb-2">
             Fichier Excel
