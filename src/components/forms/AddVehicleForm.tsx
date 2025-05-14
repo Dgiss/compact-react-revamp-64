@@ -18,6 +18,7 @@ const modeles = {
   "Mercedes": ["Classe A", "Classe C", "Classe E", "Sprinter"]
 };
 const entreprises = ["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"];
+const emplacements = ["Paris", "Lyon", "Marseille", "Toulouse", "Lille", "Bordeaux", "Nantes", "Strasbourg", "Nice", "Rennes", "Montpellier"];
 
 export default function AddVehicleForm() {
   const [nomVehicule, setNomVehicule] = useState("");
@@ -26,6 +27,7 @@ export default function AddVehicleForm() {
   const [marque, setMarque] = useState("");
   const [modele, setModele] = useState("");
   const [entreprise, setEntreprise] = useState("");
+  const [emplacement, setEmplacement] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,8 @@ export default function AddVehicleForm() {
       categorie,
       marque,
       modele,
-      entreprise
+      entreprise,
+      emplacement
     });
     // Implement save logic
   };
@@ -60,6 +63,11 @@ export default function AddVehicleForm() {
   const modeleOptions = filteredModeles.map(m => ({
     value: m,
     label: m
+  }));
+
+  const emplacementOptions = emplacements.map(emp => ({
+    value: emp,
+    label: emp
   }));
 
   return (
@@ -119,13 +127,23 @@ export default function AddVehicleForm() {
           </div>
         </div>
 
-        <div>
-          <SearchableSelect 
-            options={entrepriseOptions}
-            value={entreprise}
-            onValueChange={setEntreprise}
-            placeholder="Entreprise"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <SearchableSelect 
+              options={entrepriseOptions}
+              value={entreprise}
+              onValueChange={setEntreprise}
+              placeholder="Entreprise"
+            />
+          </div>
+          <div>
+            <SearchableSelect 
+              options={emplacementOptions}
+              value={emplacement}
+              onValueChange={setEmplacement}
+              placeholder="Emplacement"
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 mt-6">

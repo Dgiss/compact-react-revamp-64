@@ -8,10 +8,14 @@ import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 
 export default function VehiclesDevicesPage() {
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<any>(null);
+  const [searchImei, setSearchImei] = useState<string>("");
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [isFiltered, setIsFiltered] = useState(false);
 
   // Define all possible columns
   const allColumns: Column[] = [
@@ -20,6 +24,7 @@ export default function VehiclesDevicesPage() {
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
     { id: "imei", label: "IMEI", sortable: true, visible: true },
     { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true },
+    { id: "emplacement", label: "Emplacement", sortable: true, visible: true }, // Nouveau champ emplacement
     { id: "marque", label: "Marque", sortable: true, visible: false }, // Cachée par défaut
     { id: "modele", label: "Modèle", sortable: true, visible: false }, // Cachée par défaut
     { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false }, // Cachée par défaut
@@ -39,6 +44,7 @@ export default function VehiclesDevicesPage() {
       modele: "308", 
       kilometrage: "45000",
       telephone: "",
+      emplacement: "Paris",
       type: "vehicle"
     },
     { 
@@ -51,6 +57,7 @@ export default function VehiclesDevicesPage() {
       modele: "Master", 
       kilometrage: "78000",
       telephone: "",
+      emplacement: "Lyon",
       type: "vehicle"
     },
     { 
@@ -63,6 +70,7 @@ export default function VehiclesDevicesPage() {
       modele: "Yaris", 
       kilometrage: "32000",
       telephone: "",
+      emplacement: "Marseille",
       type: "vehicle"
     },
     { 
@@ -75,6 +83,7 @@ export default function VehiclesDevicesPage() {
       modele: "C3", 
       kilometrage: "28000",
       telephone: "",
+      emplacement: "Toulouse",
       type: "vehicle"
     },
     { 
@@ -87,6 +96,7 @@ export default function VehiclesDevicesPage() {
       modele: "Ducato", 
       kilometrage: "62000",
       telephone: "",
+      emplacement: "Lille",
       type: "vehicle"
     },
   ];
@@ -98,6 +108,7 @@ export default function VehiclesDevicesPage() {
       typeBoitier: "GPS Simple",
       entreprise: "", 
       telephone: "0712345678",
+      emplacement: "",
       type: "device"
     },
     { 
@@ -106,6 +117,7 @@ export default function VehiclesDevicesPage() {
       typeBoitier: "GPS Avancé",
       entreprise: "", 
       telephone: "0723456789",
+      emplacement: "",
       type: "device"
     },
     { 
@@ -114,6 +126,7 @@ export default function VehiclesDevicesPage() {
       typeBoitier: "GPS Simple",
       entreprise: "MATTEI / HABICONFORT", 
       telephone: "0734567890",
+      emplacement: "Bordeaux",
       type: "device"
     },
     { 
@@ -122,6 +135,7 @@ export default function VehiclesDevicesPage() {
       typeBoitier: "GPS Avancé", 
       entreprise: "ADANEV MOBILITES", 
       telephone: "0745678901",
+      emplacement: "Nantes",
       type: "device"
     },
     { 
@@ -130,6 +144,7 @@ export default function VehiclesDevicesPage() {
       typeBoitier: "GPS Simple",
       entreprise: "Kick Services", 
       telephone: "0756789012",
+      emplacement: "Strasbourg",
       type: "device"
     },
   ];
@@ -151,6 +166,53 @@ export default function VehiclesDevicesPage() {
     console.log("Associate device:", device);
     setSelectedDevice(device);
     setShowAssociateSheet(true);
+  };
+
+  // Fonction de recherche par IMEI multiples
+  const handleImeiSearch = () => {
+    if (!searchImei.trim()) {
+      setIsFiltered(false);
+      setFilteredData([]);
+      return;
+    }
+
+    // Séparer les IMEI par virgule, espace, ou nouvelle ligne et enlever les espaces
+    const imeiList = searchImei
+      .split(/[,\s\n]+/)
+      .map(imei => imei.trim())
+      .filter(imei => imei); // Filtrer les chaînes vides
+
+    if (imeiList.length === 0) {
+      setIsFiltered(false);
+      setFilteredData([]);
+      return;
+    }
+
+    const results = combinedData.filter(item => 
+      imeiList.some(imei => 
+        item.imei && item.imei.toLowerCase().includes(imei.toLowerCase()))
+    );
+
+    setFilteredData(results);
+    setIsFiltered(true);
+
+    if (results.length === 0) {
+      toast({
+        description: `Aucun résultat trouvé pour les IMEI recherchés`,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        description: `${results.length} résultat(s) trouvé(s)`,
+      });
+    }
+  };
+
+  // Réinitialiser la recherche
+  const resetSearch = () => {
+    setSearchImei("");
+    setIsFiltered(false);
+    setFilteredData([]);
   };
 
   return (
@@ -184,9 +246,26 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
       
+      {/* Recherche multiple par IMEI */}
+      <div className="mb-4">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Input
+              placeholder="Recherche par IMEI (séparés par virgules, espaces ou retour à la ligne)"
+              value={searchImei}
+              onChange={(e) => setSearchImei(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleImeiSearch}>Rechercher</Button>
+          {isFiltered && (
+            <Button variant="ghost" onClick={resetSearch}>Réinitialiser</Button>
+          )}
+        </div>
+      </div>
+      
       <EnhancedDataTable
         columns={allColumns}
-        data={combinedData}
+        data={isFiltered ? filteredData : combinedData}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onAssociate={handleAssociate}
