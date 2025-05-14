@@ -1,9 +1,13 @@
 
-import { Amplify, API, graphqlOperation } from 'aws-amplify';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/api';
 import { awsconfig } from '@/lib/amplifyConfig';
 
 // Configuration Amplify
 Amplify.configure(awsconfig);
+
+// Création du client API
+const client = generateClient();
 
 // Définition des types
 export interface User {
@@ -149,8 +153,10 @@ const deleteCompanyMutation = /* GraphQL */ `
 export const userService = {
   async listUsers(): Promise<User[]> {
     try {
-      const response = await API.graphql(graphqlOperation(listUsersQuery));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: listUsersQuery,
+      });
+      
       return response.data.listUsers.items;
     } catch (error) {
       console.error('Error listing users:', error);
@@ -160,8 +166,11 @@ export const userService = {
 
   async getUser(id: string): Promise<User> {
     try {
-      const response = await API.graphql(graphqlOperation(getUserQuery, { id }));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: getUserQuery,
+        variables: { id }
+      });
+      
       return response.data.getUser;
     } catch (error) {
       console.error(`Error getting user ${id}:`, error);
@@ -171,8 +180,11 @@ export const userService = {
 
   async createUser(user: User): Promise<User> {
     try {
-      const response = await API.graphql(graphqlOperation(createUserMutation, { input: user }));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: createUserMutation,
+        variables: { input: user }
+      });
+      
       return response.data.createUser;
     } catch (error) {
       console.error('Error creating user:', error);
@@ -182,8 +194,11 @@ export const userService = {
 
   async updateUser(user: User): Promise<User> {
     try {
-      const response = await API.graphql(graphqlOperation(updateUserMutation, { input: user }));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: updateUserMutation,
+        variables: { input: user }
+      });
+      
       return response.data.updateUser;
     } catch (error) {
       console.error(`Error updating user ${user.id}:`, error);
@@ -193,7 +208,11 @@ export const userService = {
 
   async deleteUser(id: string): Promise<string> {
     try {
-      await API.graphql(graphqlOperation(deleteUserMutation, { input: { id } }));
+      await client.graphql({
+        query: deleteUserMutation,
+        variables: { input: { id } }
+      });
+      
       return id;
     } catch (error) {
       console.error(`Error deleting user ${id}:`, error);
@@ -206,8 +225,10 @@ export const userService = {
 export const companyService = {
   async listCompanies(): Promise<Company[]> {
     try {
-      const response = await API.graphql(graphqlOperation(listCompaniesQuery));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: listCompaniesQuery
+      });
+      
       return response.data.listCompanies.items;
     } catch (error) {
       console.error('Error listing companies:', error);
@@ -217,8 +238,11 @@ export const companyService = {
 
   async getCompany(id: string): Promise<Company> {
     try {
-      const response = await API.graphql(graphqlOperation(getCompanyQuery, { id }));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: getCompanyQuery,
+        variables: { id }
+      });
+      
       return response.data.getCompany;
     } catch (error) {
       console.error(`Error getting company ${id}:`, error);
@@ -228,8 +252,11 @@ export const companyService = {
 
   async createCompany(company: Company): Promise<Company> {
     try {
-      const response = await API.graphql(graphqlOperation(createCompanyMutation, { input: company }));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: createCompanyMutation,
+        variables: { input: company }
+      });
+      
       return response.data.createCompany;
     } catch (error) {
       console.error('Error creating company:', error);
@@ -239,8 +266,11 @@ export const companyService = {
 
   async updateCompany(company: Company): Promise<Company> {
     try {
-      const response = await API.graphql(graphqlOperation(updateCompanyMutation, { input: company }));
-      // @ts-ignore
+      const response = await client.graphql({
+        query: updateCompanyMutation,
+        variables: { input: company }
+      });
+      
       return response.data.updateCompany;
     } catch (error) {
       console.error(`Error updating company ${company.id}:`, error);
@@ -250,7 +280,11 @@ export const companyService = {
 
   async deleteCompany(id: string): Promise<string> {
     try {
-      await API.graphql(graphqlOperation(deleteCompanyMutation, { input: { id } }));
+      await client.graphql({
+        query: deleteCompanyMutation,
+        variables: { input: { id } }
+      });
+      
       return id;
     } catch (error) {
       console.error(`Error deleting company ${id}:`, error);
