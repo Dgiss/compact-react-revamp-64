@@ -3,14 +3,8 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
 const marques = ["Peugeot", "Renault", "Citroën", "Toyota", "Fiat", "BMW", "Mercedes"];
@@ -47,6 +41,26 @@ export default function AddVehicleForm() {
   };
 
   const filteredModeles = marque ? modeles[marque as keyof typeof modeles] || [] : [];
+  
+  const entrepriseOptions = entreprises.map(ent => ({
+    value: ent,
+    label: ent
+  }));
+  
+  const categorieOptions = categories.map(cat => ({
+    value: cat,
+    label: cat
+  }));
+  
+  const marqueOptions = marques.map(m => ({
+    value: m,
+    label: m
+  }));
+  
+  const modeleOptions = filteredModeles.map(m => ({
+    value: m,
+    label: m
+  }));
 
   return (
     <>
@@ -74,68 +88,44 @@ export default function AddVehicleForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <Select value={categorie} onValueChange={setCategorie}>
-              <SelectTrigger>
-                <SelectValue placeholder="Categorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect 
+              options={categorieOptions}
+              value={categorie}
+              onValueChange={setCategorie}
+              placeholder="Categorie"
+            />
           </div>
           
           <div>
-            <Select value={marque} onValueChange={setMarque}>
-              <SelectTrigger>
-                <SelectValue placeholder="Marque" />
-              </SelectTrigger>
-              <SelectContent>
-                {marques.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect 
+              options={marqueOptions}
+              value={marque}
+              onValueChange={(value) => {
+                setMarque(value);
+                setModele("");
+              }}
+              placeholder="Marque"
+            />
           </div>
           
           <div>
-            <Select 
+            <SearchableSelect 
+              options={modeleOptions}
               value={modele} 
-              onValueChange={setModele} 
+              onValueChange={setModele}
+              placeholder="Model" 
               disabled={!marque}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Model" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredModeles.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
 
         <div>
-          <Select value={entreprise} onValueChange={setEntreprise}>
-            <SelectTrigger>
-              <SelectValue placeholder="Entreprise" />
-            </SelectTrigger>
-            <SelectContent>
-              {entreprises.map((ent) => (
-                <SelectItem key={ent} value={ent}>
-                  {ent}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect 
+            options={entrepriseOptions}
+            value={entreprise}
+            onValueChange={setEntreprise}
+            placeholder="Entreprise"
+          />
         </div>
 
         <div className="flex justify-end gap-2 mt-6">
