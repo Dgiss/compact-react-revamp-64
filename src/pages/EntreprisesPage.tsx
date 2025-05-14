@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "@/components/ui/use-toast";
 import AddCompanyForm from "@/components/forms/AddCompanyForm";
 import { CompanyUsersList } from "@/components/CompanyUsersList";
+import EditCompanyForm from "@/components/forms/EditCompanyForm";
+import EditUserForm from "@/components/forms/EditUserForm";
+import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 
 // Base de données fictive des utilisateurs par entreprise
 const companyUsers = {
@@ -33,6 +37,9 @@ const companyUsers = {
 
 export default function EntreprisesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Définition de toutes les colonnes possibles
   const allColumns: Column[] = [
@@ -144,24 +151,45 @@ export default function EntreprisesPage() {
   const combinedData = [...entreprisesData, ...utilisateursData];
 
   const handleEdit = (item: any) => {
-    console.log("Edit item:", item);
-    // Implement edit logic
+    setSelectedItem(item);
+    
+    if (item.type === "Entreprise") {
+      setEditDialogOpen(true);
+    } else {
+      setEditUserDialogOpen(true);
+    }
   };
 
   const handleDelete = (item: any) => {
     console.log("Delete item:", item);
-    // Implement delete logic
+    
+    // Simuler la suppression
+    toast({
+      title: item.type === "Entreprise" ? "Entreprise supprimée" : "Utilisateur supprimé",
+      description: `${item.type === "Entreprise" ? item.entreprise : item.nom} a été supprimé avec succès.`
+    });
   };
 
   const renderActions = (item: any) => {
     return (
       <div className="flex gap-2">
-        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}>
-          <Trash className="h-4 w-4" />
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+        </Dialog>
+        
+        <DeleteConfirmationDialog
+          title={item.type === "Entreprise" ? "Supprimer l'entreprise" : "Supprimer l'utilisateur"}
+          description={item.type === "Entreprise" 
+            ? `Êtes-vous sûr de vouloir supprimer l'entreprise "${item.entreprise}" ? Cette action ne peut pas être annulée.`
+            : `Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.nom}" ? Cette action ne peut pas être annulée.`
+          }
+          onConfirm={() => handleDelete(item)}
+        />
+        
         {item.type === "Entreprise" && (
           <CompanyUsersList 
             companyName={item.entreprise} 
@@ -177,6 +205,16 @@ export default function EntreprisesPage() {
     toast({
       title: "Ajout réussi",
       description: "L'entreprise et l'utilisateur ont été ajoutés avec succès"
+    });
+  };
+  
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false);
+    setEditUserDialogOpen(false);
+    setSelectedItem(null);
+    toast({
+      title: "Modification réussie",
+      description: "Les informations ont été mises à jour avec succès"
     });
   };
 
@@ -205,10 +243,34 @@ export default function EntreprisesPage() {
       <EnhancedDataTable
         columns={allColumns}
         data={combinedData}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
         renderActions={renderActions}
       />
+      
+      {/* Dialog pour éditer une entreprise */}
+      <Dialog open={editDialogOpen && selectedItem?.type === "Entreprise"} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          {selectedItem && selectedItem.type === "Entreprise" && (
+            <EditCompanyForm 
+              company={selectedItem} 
+              onClose={() => setEditDialogOpen(false)}
+              onSuccess={handleEditSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Dialog pour éditer un utilisateur */}
+      <Dialog open={editUserDialogOpen && !selectedItem?.type} onOpenChange={setEditUserDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          {selectedItem && !selectedItem.type && (
+            <EditUserForm 
+              user={selectedItem} 
+              onClose={() => setEditUserDialogOpen(false)}
+              onSuccess={handleEditSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,9 +1,18 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { SearchForm } from "@/components/forms/SearchForm";
 import { DataTable } from "@/components/tables/DataTable";
+import { Button } from "@/components/ui/button";
+import { Edit, Plus, Trash } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
+import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
+import EditUserForm from "@/components/forms/EditUserForm";
 
 export default function UtilisateursPage() {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
   const columns = [
     { id: "nom", label: "Nom d'utilisateur", sortable: true },
     { id: "motDePasse", label: "Mot de passe", sortable: false },
@@ -60,17 +69,45 @@ export default function UtilisateursPage() {
 
   const handleEdit = (item: any) => {
     console.log("Edit item:", item);
-    // Implement edit logic
+    setSelectedUser(item);
+    setEditDialogOpen(true);
   };
 
   const handleDelete = (item: any) => {
     console.log("Delete item:", item);
-    // Implement delete logic
+    toast({
+      title: "Utilisateur supprimé",
+      description: `L'utilisateur ${item.nom} a été supprimé avec succès.`
+    });
   };
 
   const handleAdd = () => {
     console.log("Add new item");
     // Implement add logic
+  };
+  
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false);
+    setSelectedUser(null);
+    toast({
+      title: "Modification réussie",
+      description: "Les informations de l'utilisateur ont été mises à jour avec succès"
+    });
+  };
+
+  const renderActions = (item: any) => {
+    return (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <DeleteConfirmationDialog
+          title="Supprimer l'utilisateur"
+          description={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.nom}" ? Cette action ne peut pas être annulée.`}
+          onConfirm={() => handleDelete(item)}
+        />
+      </div>
+    );
   };
 
   return (
@@ -87,9 +124,21 @@ export default function UtilisateursPage() {
       <DataTable
         columns={columns}
         data={data}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+        renderActions={renderActions}
       />
+      
+      {/* Dialog pour éditer un utilisateur */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          {selectedUser && (
+            <EditUserForm
+              user={selectedUser}
+              onClose={() => setEditDialogOpen(false)}
+              onSuccess={handleEditSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
