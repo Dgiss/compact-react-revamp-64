@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -33,9 +34,17 @@ interface EnhancedDataTableProps {
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
   onAssociate?: (item: any) => void;
+  renderCustomCell?: Record<string, (row: any) => React.ReactNode>;
 }
 
-export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDelete, onAssociate }: EnhancedDataTableProps) {
+export function EnhancedDataTable({ 
+  columns: initialColumns, 
+  data, 
+  onEdit, 
+  onDelete, 
+  onAssociate,
+  renderCustomCell
+}: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
     initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
   );
@@ -107,6 +116,14 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
 
   // Determine if the item is a device (for association button)
   const isDevice = (item: any) => item.type === 'device';
+
+  // Function to render cell content - either custom or default
+  const renderCellContent = (row: any, column: Column) => {
+    if (renderCustomCell && renderCustomCell[column.id]) {
+      return renderCustomCell[column.id](row);
+    }
+    return row[column.id];
+  };
 
   return (
     <div className="space-y-4">
@@ -209,7 +226,7 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
                   {visibleColumns.map((column) => (
                     <CopyableCell
                       key={column.id}
-                      value={row[column.id]}
+                      value={renderCellContent(row, column)}
                     />
                   ))}
                   {(onEdit || onDelete || onAssociate) && (
