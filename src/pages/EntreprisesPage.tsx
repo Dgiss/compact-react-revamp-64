@@ -1,16 +1,14 @@
+
 import React, { useState } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { TabsEnhanced } from "@/components/ui/tabs-enhanced";
-import AddUserForm from "@/components/forms/AddUserForm";
-import AddCompanyForm from "@/components/forms/AddCompanyForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
+import AddCompanyUserForm from "@/components/forms/AddCompanyUserForm";
 
 export default function EntreprisesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [dialogTab, setDialogTab] = useState("users");
 
   // Définition de toutes les colonnes possibles
   const allColumns: Column[] = [
@@ -18,7 +16,6 @@ export default function EntreprisesPage() {
     { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
     
     // Colonnes spécifiques aux entreprises
-    { id: "siret", label: "Siret", sortable: true, visible: false },
     { id: "contact", label: "Contact", sortable: true, visible: true },
     { id: "telephone", label: "Téléphone", sortable: true, visible: true },
     { id: "email", label: "Email", sortable: true, visible: true },
@@ -34,7 +31,6 @@ export default function EntreprisesPage() {
   // Données des entreprises
   const entreprisesData = [
     { 
-      siret: "12345678901234", 
       entreprise: "SOCIETE AMBULANCES LEROY", 
       contact: "Jean Dupont", 
       telephone: "0123456789", 
@@ -44,7 +40,6 @@ export default function EntreprisesPage() {
       type: "Entreprise"
     },
     { 
-      siret: "23456789012345", 
       entreprise: "VITOR NETTOYAGE", 
       contact: "Marie Martin", 
       telephone: "0234567890", 
@@ -54,7 +49,6 @@ export default function EntreprisesPage() {
       type: "Entreprise"
     },
     { 
-      siret: "34567890123456", 
       entreprise: "MAC TRANSPORT", 
       contact: "Pierre Durand", 
       telephone: "0345678901", 
@@ -64,7 +58,6 @@ export default function EntreprisesPage() {
       type: "Entreprise"
     },
     { 
-      siret: "45678901234567", 
       entreprise: "B LIVE", 
       contact: "Sophie Bernard", 
       telephone: "0456789012", 
@@ -74,7 +67,6 @@ export default function EntreprisesPage() {
       type: "Entreprise"
     },
     { 
-      siret: "56789012345678", 
       entreprise: "IRIS MULTISERVICES", 
       contact: "Thomas Petit", 
       telephone: "0567890123", 
@@ -132,36 +124,13 @@ export default function EntreprisesPage() {
     // Implement delete logic
   };
 
-  const handleAddSuccess = (type: string) => {
+  const handleAddSuccess = () => {
     setIsDialogOpen(false);
     toast({
-      title: type === "user" ? "Utilisateur ajouté" : "Entreprise ajoutée",
-      description: type === "user" ? "L'utilisateur a été ajouté avec succès" : "L'entreprise a été ajoutée avec succès"
+      title: "Ajout réussi",
+      description: "L'entreprise et/ou l'utilisateur ont été ajoutés avec succès"
     });
   };
-
-  const formTabs = [
-    {
-      id: "users",
-      label: "Utilisateur",
-      content: (
-        <AddUserForm 
-          onClose={() => setIsDialogOpen(false)} 
-          onSuccess={() => handleAddSuccess("user")}
-        />
-      )
-    },
-    {
-      id: "company",
-      label: "Entreprise",
-      content: (
-        <AddCompanyForm 
-          onClose={() => setIsDialogOpen(false)} 
-          onSuccess={() => handleAddSuccess("company")}
-        />
-      )
-    }
-  ];
 
   return (
     <div>
@@ -176,10 +145,12 @@ export default function EntreprisesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <TabsEnhanced 
-                tabs={formTabs} 
-                defaultValue={dialogTab} 
-                onChange={setDialogTab}
+              <DialogHeader className="mb-5">
+                <DialogTitle>Ajouter une entreprise</DialogTitle>
+              </DialogHeader>
+              <AddCompanyUserForm 
+                onClose={() => setIsDialogOpen(false)} 
+                onSuccess={handleAddSuccess}
               />
             </DialogContent>
           </Dialog>
