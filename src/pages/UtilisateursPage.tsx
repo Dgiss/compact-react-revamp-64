@@ -1,7 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SearchForm } from "@/components/forms/SearchForm";
-import { DataTable } from "@/components/tables/DataTable";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -9,57 +8,67 @@ import { toast } from "@/components/ui/use-toast";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import EditUserForm from "@/components/forms/EditUserForm";
 import { EnhancedDataTable } from "@/components/tables/EnhancedDataTable";
+import { userService, companyService, User, Company } from "@/services/awsService";
 
 export default function UtilisateursPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Chargement des données AWS
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const usersData = await userService.listUsers();
+        const companiesData = await companyService.listCompanies();
+        
+        setUsers(usersData);
+        setCompanies(companiesData);
+      } catch (error) {
+        console.error("Erreur lors du chargement des utilisateurs:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les utilisateurs depuis AWS",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Définition des colonnes
   const columns = [
-    { id: "nom", label: "Nom d'utilisateur", sortable: true },
-    { id: "motDePasse", label: "Mot de passe", sortable: false },
-    { id: "entreprise", label: "Entreprise", sortable: true },
+    { id: "username", label: "Nom d'utilisateur", sortable: true },
+    { id: "password", label: "Mot de passe", sortable: false },
+    { 
+      id: "companyId", 
+      label: "Entreprise", 
+      sortable: true,
+      renderCell: (value: string) => {
+        const company = companies.find(c => c.id === value);
+        return company ? company.name : value || "N/A";
+      }
+    },
+    { id: "role", label: "Rôle", sortable: true },
   ];
 
-  const data = [
-    { 
-      nom: "3djservices", 
-      motDePasse: "3djservices2025", 
-      entreprise: "3DJ SERVICES"
-    },
-    { 
-      nom: "abcp", 
-      motDePasse: "abcp2025", 
-      entreprise: "ABCP"
-    },
-    { 
-      nom: "abctsecuriteactivesecurite16", 
-      motDePasse: "abctsecuriteactivesecurite162025", 
-      entreprise: "ABCT SECURITE ( ACTIVE SECURITE 16 )"
-    },
-    { 
-      nom: "abnettoyage", 
-      motDePasse: "abnettoyage2025", 
-      entreprise: "AB NETTOYAGE"
-    },
-    { 
-      nom: "abptransport", 
-      motDePasse: "abptransport2025", 
-      entreprise: "ABP TRANSPORT"
-    },
-  ];
-
+  // Préparation des options de recherche
   const searchFields = [
-    { id: "nom", label: "Nom Utilisateur" },
+    { id: "username", label: "Nom Utilisateur" },
     { 
-      id: "entreprise", 
+      id: "companyId", 
       label: "Entreprise", 
       type: "select",
-      options: [
-        { value: "3DJ SERVICES", label: "3DJ SERVICES" },
-        { value: "ABCP", label: "ABCP" },
-        { value: "AB NETTOYAGE", label: "AB NETTOYAGE" },
-        { value: "ABP TRANSPORT", label: "ABP TRANSPORT" },
-      ]
+      options: companies.map(company => ({
+        value: company.id || "",
+        label: company.name
+      }))
     },
   ];
 
@@ -74,26 +83,45 @@ export default function UtilisateursPage() {
     setEditDialogOpen(true);
   };
 
-  const handleDelete = (item: any) => {
-    console.log("Delete item:", item);
-    toast({
-      title: "Utilisateur supprimé",
-      description: `L'utilisateur ${item.nom} a été supprimé avec succès.`
-    });
+  const handleDelete = async (item: any) => {
+    try {
+      await userService.deleteUser(item.id);
+      setUsers(users.filter(user => user.id !== item.id));
+      
+      toast({
+        title: "Utilisateur supprimé",
+        description: `L'utilisateur ${item.username} a été supprimé avec succès.`
+      });
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAdd = () => {
-    console.log("Add new item");
+    console.log("Add new user");
     // Implement add logic
   };
   
-  const handleEditSuccess = () => {
+  const handleEditSuccess = async () => {
     setEditDialogOpen(false);
     setSelectedUser(null);
-    toast({
-      title: "Modification réussie",
-      description: "Les informations de l'utilisateur ont été mises à jour avec succès"
-    });
+    
+    try {
+      const usersData = await userService.listUsers();
+      setUsers(usersData);
+      
+      toast({
+        title: "Modification réussie",
+        description: "Les informations de l'utilisateur ont été mises à jour avec succès"
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des données:", error);
+    }
   };
 
   const renderActions = (item: any) => {
@@ -104,7 +132,7 @@ export default function UtilisateursPage() {
         </Button>
         <DeleteConfirmationDialog
           title="Supprimer l'utilisateur"
-          description={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.nom}" ? Cette action ne peut pas être annulée.`}
+          description={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.username}" ? Cette action ne peut pas être annulée.`}
           onConfirm={() => handleDelete(item)}
         />
       </div>
@@ -122,14 +150,18 @@ export default function UtilisateursPage() {
         onAdd={handleAdd}
       />
       
-      {/* Instead of using DataTable, let's use EnhancedDataTable which supports renderActions */}
-      <EnhancedDataTable
-        columns={columns}
-        data={data}
-        renderActions={renderActions}
-      />
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <p>Chargement des utilisateurs...</p>
+        </div>
+      ) : (
+        <EnhancedDataTable
+          columns={columns}
+          data={users}
+          renderActions={renderActions}
+        />
+      )}
       
-      {/* Dialog pour éditer un utilisateur */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           {selectedUser && (
