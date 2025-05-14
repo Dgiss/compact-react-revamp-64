@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import EditUserForm from "@/components/forms/EditUserForm";
+import { EnhancedDataTable } from "@/components/tables/EnhancedDataTable";
 
 export default function UtilisateursPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -121,7 +122,8 @@ export default function UtilisateursPage() {
         onAdd={handleAdd}
       />
       
-      <DataTable
+      {/* Instead of using DataTable, let's use EnhancedDataTable which supports renderActions */}
+      <EnhancedDataTable
         columns={columns}
         data={data}
         renderActions={renderActions}
