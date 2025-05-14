@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Building2, Car, Cpu } from "lucide-react";
+import { Building2, Car, Cpu, Database } from "lucide-react";
 
 export default function Index() {
   const stats = [
@@ -30,13 +30,21 @@ export default function Index() {
       path: "/vehicules-boitiers",
       color: "bg-purple-50 text-purple-700",
     },
+    {
+      title: "AWS Data",
+      value: "AWS",
+      description: "Données AWS AppSync",
+      icon: Database,
+      path: "/aws-data",
+      color: "bg-amber-50 text-amber-700",
+    }
   ];
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Tableau de bord</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, index) => (
           <Link to={stat.path} key={index}>
             <Card className="hover:shadow-md transition-shadow">
