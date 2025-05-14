@@ -167,7 +167,7 @@ export default function EntreprisesPage() {
         {item.type === "company" && (
           <CompanyUsersList 
             companyName={item.name} 
-            users={item.users?.items || []} 
+            users={item.users || []} // Correction de l'erreur TS2339: Property 'items' does not exist on type 'User[]'
           />
         )}
       </div>
