@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search } from "lucide-react";
@@ -209,6 +210,15 @@ export default function VehiclesDevicesPage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
         <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            size="default"
+            onClick={() => setShowMultipleImeiDialog(true)}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Recherche Multiple d'IMEI
+          </Button>
+          
           <Sheet>
             <SheetTrigger asChild>
               <Button>
@@ -235,21 +245,12 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
       
-      {/* Bouton pour recherche multiple par IMEI */}
-      <div className="mb-4">
-        <div className="flex gap-2">
-          <Button 
-            onClick={() => setShowMultipleImeiDialog(true)}
-            className="w-full"
-          >
-            <Search className="h-4 w-4 mr-2" />
-            Recherche Multiple d'IMEI
-          </Button>
-          {isFiltered && (
-            <Button variant="ghost" onClick={resetSearch}>Réinitialiser</Button>
-          )}
+      {/* Afficher un bouton pour réinitialiser la recherche si des filtres sont actifs */}
+      {isFiltered && (
+        <div className="flex justify-end mb-4">
+          <Button variant="ghost" onClick={resetSearch}>Réinitialiser la recherche</Button>
         </div>
-      </div>
+      )}
       
       <EnhancedDataTable
         columns={allColumns}
