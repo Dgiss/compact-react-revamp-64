@@ -13,11 +13,21 @@ import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmatio
 import { companyService, userService, Company, User } from "@/services/awsService";
 import { useToast } from "@/hooks/use-toast";
 
+interface ExtendedCompany extends Company {
+  type: 'company';
+}
+
+interface ExtendedUser extends User {
+  type: 'user';
+}
+
+type CombinedItem = ExtendedCompany | ExtendedUser;
+
 export default function EntreprisesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<CombinedItem | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +66,7 @@ export default function EntreprisesPage() {
       label: "Entreprise", 
       sortable: true, 
       visible: true,
-      renderCell: (value, row) => row.type === "company" ? value : row.companyId || "N/A"
+      renderCell: (value, row: any) => row.type === "company" ? value : row.companyId || "N/A"
     },
     
     // Colonnes spécifiques aux entreprises
@@ -76,24 +86,26 @@ export default function EntreprisesPage() {
   const companiesData = companies.map(company => ({
     ...company,
     type: "company"
-  }));
+  })) as ExtendedCompany[];
 
   const usersData = users.map(user => ({
     ...user,
     type: "user"
-  }));
+  })) as ExtendedUser[];
 
   // Fusionner les données en un seul tableau
-  const combinedData = [...companiesData, ...usersData];
+  const combinedData: CombinedItem[] = [...companiesData, ...usersData];
 
-  const handleEdit = async (item: any) => {
+  const handleEdit = async (item: CombinedItem) => {
     setSelectedItem(item);
     
-    if (item.type === "company") {
+    if (item.type === "company" && item.id) {
       try {
         // Récupérer les détails complets de l'entreprise
         const companyDetails = await companyService.getCompany(item.id);
-        setSelectedItem({ ...companyDetails, type: "company" });
+        if (companyDetails) {
+          setSelectedItem({ ...companyDetails, type: "company" } as ExtendedCompany);
+        }
         setEditDialogOpen(true);
       } catch (error) {
         console.error("Erreur lors du chargement des détails de l'entreprise:", error);
@@ -108,7 +120,9 @@ export default function EntreprisesPage() {
     }
   };
 
-  const handleDelete = async (item: any) => {
+  const handleDelete = async (item: CombinedItem) => {
+    if (!item.id) return;
+    
     try {
       if (item.type === "company") {
         await companyService.deleteCompany(item.id);
@@ -120,7 +134,9 @@ export default function EntreprisesPage() {
       
       toast({
         title: item.type === "company" ? "Entreprise supprimée" : "Utilisateur supprimé",
-        description: `${item.type === "company" ? item.name : item.username} a été supprimé avec succès.`
+        description: item.type === "company" 
+          ? `${item.name} a été supprimée avec succès.`
+          : `${item.username} a été supprimé avec succès.`
       });
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
@@ -132,7 +148,7 @@ export default function EntreprisesPage() {
     }
   };
 
-  const renderActions = (item: any) => {
+  const renderActions = (item: CombinedItem) => {
     return (
       <div className="flex gap-2">
         <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>

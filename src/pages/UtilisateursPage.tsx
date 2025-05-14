@@ -12,7 +12,7 @@ import { userService, companyService, User, Company } from "@/services/awsServic
 
 export default function UtilisateursPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,13 +77,15 @@ export default function UtilisateursPage() {
     // Implement search logic
   };
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (item: User) => {
     console.log("Edit item:", item);
     setSelectedUser(item);
     setEditDialogOpen(true);
   };
 
-  const handleDelete = async (item: any) => {
+  const handleDelete = async (item: User) => {
+    if (!item.id) return;
+    
     try {
       await userService.deleteUser(item.id);
       setUsers(users.filter(user => user.id !== item.id));
@@ -124,7 +126,7 @@ export default function UtilisateursPage() {
     }
   };
 
-  const renderActions = (item: any) => {
+  const renderActions = (item: User) => {
     return (
       <div className="flex gap-2">
         <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>

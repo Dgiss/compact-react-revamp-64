@@ -1,6 +1,7 @@
 
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/api';
+import { GraphQLResult } from 'aws-amplify/api';
 import { awsconfig } from '@/lib/amplifyConfig';
 
 // Configuration Amplify
@@ -155,51 +156,51 @@ export const userService = {
     try {
       const response = await client.graphql({
         query: listUsersQuery,
-      });
+      }) as GraphQLResult<{ listUsers: { items: User[] } }>;
       
-      return response.data.listUsers.items;
+      return response.data?.listUsers.items || [];
     } catch (error) {
       console.error('Error listing users:', error);
       throw error;
     }
   },
 
-  async getUser(id: string): Promise<User> {
+  async getUser(id: string): Promise<User | null> {
     try {
       const response = await client.graphql({
         query: getUserQuery,
         variables: { id }
-      });
+      }) as GraphQLResult<{ getUser: User }>;
       
-      return response.data.getUser;
+      return response.data?.getUser || null;
     } catch (error) {
       console.error(`Error getting user ${id}:`, error);
       throw error;
     }
   },
 
-  async createUser(user: User): Promise<User> {
+  async createUser(user: User): Promise<User | null> {
     try {
       const response = await client.graphql({
         query: createUserMutation,
         variables: { input: user }
-      });
+      }) as GraphQLResult<{ createUser: User }>;
       
-      return response.data.createUser;
+      return response.data?.createUser || null;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
     }
   },
 
-  async updateUser(user: User): Promise<User> {
+  async updateUser(user: User): Promise<User | null> {
     try {
       const response = await client.graphql({
         query: updateUserMutation,
         variables: { input: user }
-      });
+      }) as GraphQLResult<{ updateUser: User }>;
       
-      return response.data.updateUser;
+      return response.data?.updateUser || null;
     } catch (error) {
       console.error(`Error updating user ${user.id}:`, error);
       throw error;
@@ -211,7 +212,7 @@ export const userService = {
       await client.graphql({
         query: deleteUserMutation,
         variables: { input: { id } }
-      });
+      }) as GraphQLResult<{ deleteUser: { id: string } }>;
       
       return id;
     } catch (error) {
@@ -227,51 +228,51 @@ export const companyService = {
     try {
       const response = await client.graphql({
         query: listCompaniesQuery
-      });
+      }) as GraphQLResult<{ listCompanies: { items: Company[] } }>;
       
-      return response.data.listCompanies.items;
+      return response.data?.listCompanies.items || [];
     } catch (error) {
       console.error('Error listing companies:', error);
       throw error;
     }
   },
 
-  async getCompany(id: string): Promise<Company> {
+  async getCompany(id: string): Promise<Company | null> {
     try {
       const response = await client.graphql({
         query: getCompanyQuery,
         variables: { id }
-      });
+      }) as GraphQLResult<{ getCompany: Company }>;
       
-      return response.data.getCompany;
+      return response.data?.getCompany || null;
     } catch (error) {
       console.error(`Error getting company ${id}:`, error);
       throw error;
     }
   },
 
-  async createCompany(company: Company): Promise<Company> {
+  async createCompany(company: Company): Promise<Company | null> {
     try {
       const response = await client.graphql({
         query: createCompanyMutation,
         variables: { input: company }
-      });
+      }) as GraphQLResult<{ createCompany: Company }>;
       
-      return response.data.createCompany;
+      return response.data?.createCompany || null;
     } catch (error) {
       console.error('Error creating company:', error);
       throw error;
     }
   },
 
-  async updateCompany(company: Company): Promise<Company> {
+  async updateCompany(company: Company): Promise<Company | null> {
     try {
       const response = await client.graphql({
         query: updateCompanyMutation,
         variables: { input: company }
-      });
+      }) as GraphQLResult<{ updateCompany: Company }>;
       
-      return response.data.updateCompany;
+      return response.data?.updateCompany || null;
     } catch (error) {
       console.error(`Error updating company ${company.id}:`, error);
       throw error;
@@ -283,7 +284,7 @@ export const companyService = {
       await client.graphql({
         query: deleteCompanyMutation,
         variables: { input: { id } }
-      });
+      }) as GraphQLResult<{ deleteCompany: { id: string } }>;
       
       return id;
     } catch (error) {
