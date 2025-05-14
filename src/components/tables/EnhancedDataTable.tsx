@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -35,9 +34,17 @@ interface EnhancedDataTableProps {
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
   onAssociate?: (item: any) => void;
+  renderActions?: (item: any) => React.ReactNode;
 }
 
-export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDelete, onAssociate }: EnhancedDataTableProps) {
+export function EnhancedDataTable({ 
+  columns: initialColumns, 
+  data, 
+  onEdit, 
+  onDelete, 
+  onAssociate,
+  renderActions
+}: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
     initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
   );
@@ -210,13 +217,15 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
               ) : (
                 <TableHead>Aucune colonne sélectionnée</TableHead>
               )}
-              {(onEdit || onDelete || onAssociate) && hasVisibleColumns && <TableHead className="w-24">Actions</TableHead>}
+              {(renderActions || onEdit || onDelete || onAssociate) && hasVisibleColumns && 
+                <TableHead className="w-24">Actions</TableHead>
+              }
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
+                <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
                   Aucune donnée disponible
                 </TableCell>
               </TableRow>
@@ -228,22 +237,28 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
                       {renderCellContent(column, row)}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete || onAssociate) && (
-                    <TableCell className="flex gap-1">
-                      {onEdit && (
-                        <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onDelete && (
-                        <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {onAssociate && isDevice(row) && (
-                        <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
-                          <Link className="h-4 w-4" />
-                        </Button>
+                  {(renderActions || onEdit || onDelete || onAssociate) && (
+                    <TableCell>
+                      {renderActions ? (
+                        renderActions(row)
+                      ) : (
+                        <div className="flex gap-1">
+                          {onEdit && (
+                            <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {onDelete && (
+                            <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {onAssociate && isDevice(row) && (
+                            <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
+                              <Link className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </TableCell>
                   )}

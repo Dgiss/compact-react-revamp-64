@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
@@ -43,17 +42,6 @@ export default function EntreprisesPage() {
       label: "Entreprise", 
       sortable: true, 
       visible: true,
-      renderCell: (value: any, item: any) => (
-        <div className="flex items-center gap-2">
-          <span>{value}</span>
-          {item.type === "Entreprise" && (
-            <CompanyUsersList 
-              companyName={value} 
-              users={companyUsers[value as string] || []} 
-            />
-          )}
-        </div>
-      ),
     },
     
     // Colonnes spécifiques aux entreprises
@@ -165,6 +153,25 @@ export default function EntreprisesPage() {
     // Implement delete logic
   };
 
+  const renderActions = (item: any) => {
+    return (
+      <div className="flex gap-2">
+        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => handleDelete(item)}>
+          <Trash className="h-4 w-4" />
+        </Button>
+        {item.type === "Entreprise" && (
+          <CompanyUsersList 
+            companyName={item.entreprise} 
+            users={companyUsers[item.entreprise] || []} 
+          />
+        )}
+      </div>
+    );
+  };
+
   const handleAddSuccess = () => {
     setIsDialogOpen(false);
     toast({
@@ -200,6 +207,7 @@ export default function EntreprisesPage() {
         data={combinedData}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        renderActions={renderActions}
       />
     </div>
   );

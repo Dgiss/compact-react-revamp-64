@@ -40,17 +40,21 @@ export function CompanyUsersList({ companyName, users }: CompanyUsersProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">ID</TableHead>
                   <TableHead>Nom</TableHead>
+                  <TableHead>Mot de passe</TableHead>
                   <TableHead>Rôle</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.id.substring(0, 4)}</TableCell>
                     <TableCell>{user.nom}</TableCell>
-                    <TableCell>{user.role || "Utilisateur"}</TableCell>
+                    <TableCell>{user.motDePasse}</TableCell>
+                    <TableCell>{
+                      user.role === "Admin" ? "Manager" : 
+                      user.role === "Opérateur" ? "Rapport" : 
+                      user.role || "Rapport"
+                    }</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
