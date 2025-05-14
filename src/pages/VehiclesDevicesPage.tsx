@@ -1,21 +1,20 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet } from "lucide-react";
+import { Plus, FileSpreadsheet, Search } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
+import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 
 export default function VehiclesDevicesPage() {
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<any>(null);
-  const [searchImei, setSearchImei] = useState<string>("");
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [isFiltered, setIsFiltered] = useState(false);
+  const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
 
   // Define all possible columns
   const allColumns: Column[] = [
@@ -24,10 +23,10 @@ export default function VehiclesDevicesPage() {
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
     { id: "imei", label: "IMEI", sortable: true, visible: true },
     { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true },
-    { id: "emplacement", label: "Emplacement", sortable: true, visible: true }, // Nouveau champ emplacement
-    { id: "marque", label: "Marque", sortable: true, visible: false }, // Cachée par défaut
-    { id: "modele", label: "Modèle", sortable: true, visible: false }, // Cachée par défaut
-    { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false }, // Cachée par défaut
+    { id: "emplacement", label: "Emplacement", sortable: true, visible: true },
+    { id: "marque", label: "Marque", sortable: true, visible: false },
+    { id: "modele", label: "Modèle", sortable: true, visible: false },
+    { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false },
     { id: "sim", label: "SIM", sortable: true, visible: true },
     { id: "telephone", label: "Téléphone", sortable: true, visible: true },
   ];
@@ -168,51 +167,41 @@ export default function VehiclesDevicesPage() {
     setShowAssociateSheet(true);
   };
 
-  // Fonction de recherche par IMEI multiples
-  const handleImeiSearch = () => {
-    if (!searchImei.trim()) {
-      setIsFiltered(false);
-      setFilteredData([]);
-      return;
-    }
-
-    // Séparer les IMEI par virgule, espace, ou nouvelle ligne et enlever les espaces
-    const imeiList = searchImei
-      .split(/[,\s\n]+/)
-      .map(imei => imei.trim())
-      .filter(imei => imei); // Filtrer les chaînes vides
-
-    if (imeiList.length === 0) {
-      setIsFiltered(false);
-      setFilteredData([]);
-      return;
-    }
-
-    const results = combinedData.filter(item => 
-      imeiList.some(imei => 
-        item.imei && item.imei.toLowerCase().includes(imei.toLowerCase()))
-    );
-
-    setFilteredData(results);
-    setIsFiltered(true);
-
-    if (results.length === 0) {
-      toast({
-        description: `Aucun résultat trouvé pour les IMEI recherchés`,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        description: `${results.length} résultat(s) trouvé(s)`,
-      });
-    }
-  };
-
   // Réinitialiser la recherche
   const resetSearch = () => {
-    setSearchImei("");
     setIsFiltered(false);
     setFilteredData([]);
+  };
+
+  // Fonction pour mettre à jour les données après une modification
+  const handleUpdateDevices = (devices: any[], newCompany: string) => {
+    // Créer une copie profonde des données
+    const updatedData = [...combinedData];
+    
+    // Mettre à jour l'entreprise pour chaque appareil sélectionné
+    devices.forEach(selectedDevice => {
+      const index = updatedData.findIndex(item => item.imei === selectedDevice.imei);
+      if (index !== -1) {
+        updatedData[index] = { ...updatedData[index], entreprise: newCompany };
+      }
+    });
+    
+    // Mettre à jour les données filtrées si nécessaire
+    if (isFiltered) {
+      const updatedFiltered = filteredData.map(item => {
+        const matchedDevice = devices.find(d => d.imei === item.imei);
+        if (matchedDevice) {
+          return { ...item, entreprise: newCompany };
+        }
+        return item;
+      });
+      setFilteredData(updatedFiltered);
+    }
+    
+    // Afficher un toast de confirmation
+    toast({
+      description: `${devices.length} boîtier(s) modifié(s) avec succès`,
+    });
   };
 
   return (
@@ -246,17 +235,16 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
       
-      {/* Recherche multiple par IMEI */}
+      {/* Bouton pour recherche multiple par IMEI */}
       <div className="mb-4">
         <div className="flex gap-2">
-          <div className="flex-1">
-            <Input
-              placeholder="Recherche par IMEI (séparés par virgules, espaces ou retour à la ligne)"
-              value={searchImei}
-              onChange={(e) => setSearchImei(e.target.value)}
-            />
-          </div>
-          <Button onClick={handleImeiSearch}>Rechercher</Button>
+          <Button 
+            onClick={() => setShowMultipleImeiDialog(true)}
+            className="w-full"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Recherche Multiple d'IMEI
+          </Button>
           {isFiltered && (
             <Button variant="ghost" onClick={resetSearch}>Réinitialiser</Button>
           )}
@@ -290,6 +278,17 @@ export default function VehiclesDevicesPage() {
           />
         </SheetContent>
       </Sheet>
+
+      {/* Dialog pour la recherche multiple d'IMEI */}
+      <MultipleImeiSearchDialog
+        open={showMultipleImeiDialog}
+        onOpenChange={setShowMultipleImeiDialog}
+        data={combinedData}
+        onUpdate={(devices, newCompany) => {
+          handleUpdateDevices(devices, newCompany);
+          setShowMultipleImeiDialog(false);
+        }}
+      />
     </div>
   );
 }
