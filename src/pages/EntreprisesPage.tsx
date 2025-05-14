@@ -5,7 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
-import AddCompanyUserForm from "@/components/forms/AddCompanyUserForm";
+import AddCompanyForm from "@/components/forms/AddCompanyForm";
+import { CompanyUsersList } from "@/components/CompanyUsersList";
+
+// Base de données fictive des utilisateurs par entreprise
+const companyUsers = {
+  "SOCIETE AMBULANCES LEROY": [
+    { id: "u1", nom: "ambulances_leroy_admin", motDePasse: "secure123", role: "Admin" },
+    { id: "u2", nom: "leroy_user1", motDePasse: "password456", role: "Opérateur" },
+  ],
+  "VITOR NETTOYAGE": [
+    { id: "u3", nom: "vitor_admin", motDePasse: "vitor2023", role: "Admin" },
+    { id: "u4", nom: "vitor_comptable", motDePasse: "compta2023", role: "Comptabilité" },
+    { id: "u5", nom: "vitor_tech", motDePasse: "tech2023", role: "Technicien" },
+  ],
+  "MAC TRANSPORT": [
+    { id: "u6", nom: "mac_admin", motDePasse: "mac2023", role: "Admin" },
+  ],
+  "B LIVE": [
+    { id: "u7", nom: "blive_admin", motDePasse: "blive2023", role: "Admin" },
+    { id: "u8", nom: "blive_user", motDePasse: "user2023", role: "Utilisateur" },
+  ],
+  "IRIS MULTISERVICES": [
+    { id: "u9", nom: "iris_admin", motDePasse: "iris2023", role: "Admin" },
+    { id: "u10", nom: "iris_tech", motDePasse: "tech2023", role: "Technicien" },
+  ],
+};
 
 export default function EntreprisesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -13,7 +38,23 @@ export default function EntreprisesPage() {
   // Définition de toutes les colonnes possibles
   const allColumns: Column[] = [
     // Colonnes communes
-    { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
+    { 
+      id: "entreprise", 
+      label: "Entreprise", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value: any, item: any) => (
+        <div className="flex items-center gap-2">
+          <span>{value}</span>
+          {item.type === "Entreprise" && (
+            <CompanyUsersList 
+              companyName={value} 
+              users={companyUsers[value as string] || []} 
+            />
+          )}
+        </div>
+      ),
+    },
     
     // Colonnes spécifiques aux entreprises
     { id: "contact", label: "Contact", sortable: true, visible: true },
@@ -128,7 +169,7 @@ export default function EntreprisesPage() {
     setIsDialogOpen(false);
     toast({
       title: "Ajout réussi",
-      description: "L'entreprise et/ou l'utilisateur ont été ajoutés avec succès"
+      description: "L'entreprise et l'utilisateur ont été ajoutés avec succès"
     });
   };
 
@@ -145,10 +186,7 @@ export default function EntreprisesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <DialogHeader className="mb-5">
-                <DialogTitle>Ajouter une entreprise</DialogTitle>
-              </DialogHeader>
-              <AddCompanyUserForm 
+              <AddCompanyForm 
                 onClose={() => setIsDialogOpen(false)} 
                 onSuccess={handleAddSuccess}
               />

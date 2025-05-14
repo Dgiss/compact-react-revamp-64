@@ -17,12 +17,16 @@ interface AddCompanyFormProps {
 }
 
 export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormProps) {
+  // Champs entreprise
   const [societe, setSociete] = useState("");
-  const [siret, setSiret] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [adresse, setAdresse] = useState("");
   const [ville, setVille] = useState("");
+  
+  // Champs utilisateur
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +36,14 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
     
     console.log("Entreprise ajoutée:", {
       entreprise: societe,
-      siret,
       telephone: mobile,
       email,
       adresse,
-      ville
+      ville,
+      utilisateur: {
+        nom: username,
+        motDePasse: password
+      }
     });
     
     onSuccess();
@@ -58,13 +65,6 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
               placeholder="Société"
               value={societe}
               onChange={(e) => setSociete(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-1">
-            <Input 
-              placeholder="Siret"
-              value={siret}
-              onChange={(e) => setSiret(e.target.value)}
             />
           </div>
           <div className="md:col-span-1">
@@ -94,6 +94,21 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
               placeholder="Ville"
               value={ville}
               onChange={(e) => setVille(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Nom utilisateur"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Mot de passe"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </div>
         </div>

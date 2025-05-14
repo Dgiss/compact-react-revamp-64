@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export interface Column {
   label: string;
   sortable?: boolean;
   visible?: boolean;
+  renderCell?: (value: any, row: any) => React.ReactNode;
 }
 
 interface EnhancedDataTableProps {
@@ -107,6 +109,21 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
 
   // Determine if the item is a device (for association button)
   const isDevice = (item: any) => item.type === 'device';
+
+  // Fonction pour rendre le contenu d'une cellule
+  const renderCellContent = (column: Column, row: any) => {
+    const value = row[column.id];
+    
+    // Utiliser le renderCell personnalisé s'il existe
+    if (column.renderCell) {
+      return column.renderCell(value, row);
+    }
+    
+    // Sinon, utiliser le rendu par défaut (CopyableCell)
+    return (
+      <CopyableCell key={column.id} value={value} />
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -207,10 +224,9 @@ export function EnhancedDataTable({ columns: initialColumns, data, onEdit, onDel
               sortedData.map((row, index) => (
                 <TableRow key={index}>
                   {visibleColumns.map((column) => (
-                    <CopyableCell
-                      key={column.id}
-                      value={row[column.id]}
-                    />
+                    <TableCell key={column.id}>
+                      {renderCellContent(column, row)}
+                    </TableCell>
                   ))}
                   {(onEdit || onDelete || onAssociate) && (
                     <TableCell className="flex gap-1">
