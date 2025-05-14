@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
@@ -10,63 +10,45 @@ import { CompanyUsersList } from "@/components/CompanyUsersList";
 import EditCompanyForm from "@/components/forms/EditCompanyForm";
 import EditUserForm from "@/components/forms/EditUserForm";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
-import { companyService, userService, Company, User } from "@/services/awsService";
-import { useToast } from "@/hooks/use-toast";
 
-interface ExtendedCompany extends Company {
-  type: 'company';
-}
-
-interface ExtendedUser extends User {
-  type: 'user';
-}
-
-type CombinedItem = ExtendedCompany | ExtendedUser;
+// Base de données fictive des utilisateurs par entreprise
+const companyUsers = {
+  "SOCIETE AMBULANCES LEROY": [
+    { id: "u1", nom: "ambulances_leroy_admin", motDePasse: "secure123", role: "Admin" },
+    { id: "u2", nom: "leroy_user1", motDePasse: "password456", role: "Opérateur" },
+  ],
+  "VITOR NETTOYAGE": [
+    { id: "u3", nom: "vitor_admin", motDePasse: "vitor2023", role: "Admin" },
+    { id: "u4", nom: "vitor_comptable", motDePasse: "compta2023", role: "Comptabilité" },
+    { id: "u5", nom: "vitor_tech", motDePasse: "tech2023", role: "Technicien" },
+  ],
+  "MAC TRANSPORT": [
+    { id: "u6", nom: "mac_admin", motDePasse: "mac2023", role: "Admin" },
+  ],
+  "B LIVE": [
+    { id: "u7", nom: "blive_admin", motDePasse: "blive2023", role: "Admin" },
+    { id: "u8", nom: "blive_user", motDePasse: "user2023", role: "Utilisateur" },
+  ],
+  "IRIS MULTISERVICES": [
+    { id: "u9", nom: "iris_admin", motDePasse: "iris2023", role: "Admin" },
+    { id: "u10", nom: "iris_tech", motDePasse: "tech2023", role: "Technicien" },
+  ],
+};
 
 export default function EntreprisesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<CombinedItem | null>(null);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-
-  // Chargement des données AWS
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const companiesData = await companyService.listCompanies();
-        const usersData = await userService.listUsers();
-        
-        setCompanies(companiesData);
-        setUsers(usersData);
-      } catch (error) {
-        console.error("Erreur lors du chargement des données:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de charger les données depuis AWS",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // Définition de toutes les colonnes possibles
   const allColumns: Column[] = [
     // Colonnes communes
     { 
-      id: "name", 
+      id: "entreprise", 
       label: "Entreprise", 
       sortable: true, 
       visible: true,
-      renderCell: (value, row: any) => row.type === "company" ? value : row.companyId || "N/A"
     },
     
     // Colonnes spécifiques aux entreprises
@@ -75,142 +57,165 @@ export default function EntreprisesPage() {
     { id: "email", label: "Email", sortable: true, visible: true },
     { id: "adresse", label: "Adresse", sortable: true, visible: true },
     { id: "ville", label: "Ville", sortable: true, visible: true },
+    { id: "type", label: "Type", sortable: true, visible: false },
     
     // Colonnes spécifiques aux utilisateurs
-    { id: "username", label: "Nom d'utilisateur", sortable: true, visible: true },
-    { id: "password", label: "Mot de passe", sortable: true, visible: true },
-    { id: "role", label: "Rôle", sortable: true, visible: true },
+    { id: "nom", label: "Nom d'utilisateur", sortable: true, visible: true },
+    { id: "motDePasse", label: "Mot de passe", sortable: true, visible: true },
   ];
 
-  // Préparation des données pour l'affichage
-  const companiesData = companies.map(company => ({
-    ...company,
-    type: "company"
-  })) as ExtendedCompany[];
+  // Données des entreprises
+  const entreprisesData = [
+    { 
+      entreprise: "SOCIETE AMBULANCES LEROY", 
+      contact: "Jean Dupont", 
+      telephone: "0123456789", 
+      email: "contact@ambulances-leroy.fr", 
+      adresse: "123 Rue de Paris, 75001 Paris",
+      ville: "Paris",
+      type: "Entreprise"
+    },
+    { 
+      entreprise: "VITOR NETTOYAGE", 
+      contact: "Marie Martin", 
+      telephone: "0234567890", 
+      email: "contact@vitor-nettoyage.com", 
+      adresse: "456 Avenue Victor Hugo, 75016 Paris",
+      ville: "Paris",
+      type: "Entreprise"
+    },
+    { 
+      entreprise: "MAC TRANSPORT", 
+      contact: "Pierre Durand", 
+      telephone: "0345678901", 
+      email: "contact@mac-transport.fr", 
+      adresse: "789 Boulevard Saint-Michel, 75005 Paris",
+      ville: "Paris",
+      type: "Entreprise"
+    },
+    { 
+      entreprise: "B LIVE", 
+      contact: "Sophie Bernard", 
+      telephone: "0456789012", 
+      email: "contact@blive.com", 
+      adresse: "12 Rue de Rivoli, 75004 Paris",
+      ville: "Paris",
+      type: "Entreprise"
+    },
+    { 
+      entreprise: "IRIS MULTISERVICES", 
+      contact: "Thomas Petit", 
+      telephone: "0567890123", 
+      email: "contact@iris-multiservices.fr", 
+      adresse: "34 Avenue des Champs-Élysées, 75008 Paris",
+      ville: "Paris",
+      type: "Entreprise"
+    },
+  ];
 
-  const usersData = users.map(user => ({
-    ...user,
-    type: "user"
-  })) as ExtendedUser[];
+  // Données des utilisateurs
+  const utilisateursData = [
+    { 
+      nom: "3djservices", 
+      motDePasse: "3djservices2025", 
+      entreprise: "3DJ SERVICES", 
+      type: "Utilisateur"
+    },
+    { 
+      nom: "abcp", 
+      motDePasse: "abcp2025", 
+      entreprise: "ABCP", 
+      type: "Utilisateur"
+    },
+    { 
+      nom: "abctsecuriteactivesecurite16", 
+      motDePasse: "abctsecuriteactivesecurite162025", 
+      entreprise: "ABCT SECURITE ( ACTIVE SECURITE 16 )",
+      type: "Utilisateur"
+    },
+    { 
+      nom: "abnettoyage", 
+      motDePasse: "abnettoyage2025", 
+      entreprise: "AB NETTOYAGE",
+      type: "Utilisateur"
+    },
+    { 
+      nom: "abptransport", 
+      motDePasse: "abptransport2025", 
+      entreprise: "ABP TRANSPORT",
+      type: "Utilisateur"
+    },
+  ];
 
   // Fusionner les données en un seul tableau
-  const combinedData: CombinedItem[] = [...companiesData, ...usersData];
+  const combinedData = [...entreprisesData, ...utilisateursData];
 
-  const handleEdit = async (item: CombinedItem) => {
+  const handleEdit = (item: any) => {
     setSelectedItem(item);
     
-    if (item.type === "company" && item.id) {
-      try {
-        // Récupérer les détails complets de l'entreprise
-        const companyDetails = await companyService.getCompany(item.id);
-        if (companyDetails) {
-          setSelectedItem({ ...companyDetails, type: "company" } as ExtendedCompany);
-        }
-        setEditDialogOpen(true);
-      } catch (error) {
-        console.error("Erreur lors du chargement des détails de l'entreprise:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les détails de l'entreprise",
-          variant: "destructive"
-        });
-      }
+    if (item.type === "Entreprise") {
+      setEditDialogOpen(true);
     } else {
       setEditUserDialogOpen(true);
     }
   };
 
-  const handleDelete = async (item: CombinedItem) => {
-    if (!item.id) return;
+  const handleDelete = (item: any) => {
+    console.log("Delete item:", item);
     
-    try {
-      if (item.type === "company") {
-        await companyService.deleteCompany(item.id);
-        setCompanies(companies.filter(company => company.id !== item.id));
-      } else {
-        await userService.deleteUser(item.id);
-        setUsers(users.filter(user => user.id !== item.id));
-      }
-      
-      toast({
-        title: item.type === "company" ? "Entreprise supprimée" : "Utilisateur supprimé",
-        description: item.type === "company" 
-          ? `${item.name} a été supprimée avec succès.`
-          : `${item.username} a été supprimé avec succès.`
-      });
-    } catch (error) {
-      console.error("Erreur lors de la suppression:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la suppression",
-        variant: "destructive"
-      });
-    }
+    // Simuler la suppression
+    toast({
+      title: item.type === "Entreprise" ? "Entreprise supprimée" : "Utilisateur supprimé",
+      description: `${item.type === "Entreprise" ? item.entreprise : item.nom} a été supprimé avec succès.`
+    });
   };
 
-  const renderActions = (item: CombinedItem) => {
+  const renderActions = (item: any) => {
     return (
       <div className="flex gap-2">
-        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-          <Edit className="h-4 w-4" />
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+        </Dialog>
         
         <DeleteConfirmationDialog
-          title={item.type === "company" ? "Supprimer l'entreprise" : "Supprimer l'utilisateur"}
-          description={item.type === "company" 
-            ? `Êtes-vous sûr de vouloir supprimer l'entreprise "${item.name}" ? Cette action ne peut pas être annulée.`
-            : `Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.username}" ? Cette action ne peut pas être annulée.`
+          title={item.type === "Entreprise" ? "Supprimer l'entreprise" : "Supprimer l'utilisateur"}
+          description={item.type === "Entreprise" 
+            ? `Êtes-vous sûr de vouloir supprimer l'entreprise "${item.entreprise}" ? Cette action ne peut pas être annulée.`
+            : `Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.nom}" ? Cette action ne peut pas être annulée.`
           }
           onConfirm={() => handleDelete(item)}
         />
         
-        {item.type === "company" && (
+        {item.type === "Entreprise" && (
           <CompanyUsersList 
-            companyName={item.name} 
-            users={item.users || []} // Correction de l'erreur TS2339: Property 'items' does not exist on type 'User[]'
+            companyName={item.entreprise} 
+            users={companyUsers[item.entreprise] || []} 
           />
         )}
       </div>
     );
   };
 
-  const handleAddSuccess = async () => {
+  const handleAddSuccess = () => {
     setIsDialogOpen(false);
-    try {
-      const companiesData = await companyService.listCompanies();
-      const usersData = await userService.listUsers();
-      
-      setCompanies(companiesData);
-      setUsers(usersData);
-      
-      toast({
-        title: "Ajout réussi",
-        description: "L'entreprise a été ajoutée avec succès"
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour des données:", error);
-    }
+    toast({
+      title: "Ajout réussi",
+      description: "L'entreprise et l'utilisateur ont été ajoutés avec succès"
+    });
   };
   
-  const handleEditSuccess = async () => {
+  const handleEditSuccess = () => {
     setEditDialogOpen(false);
     setEditUserDialogOpen(false);
     setSelectedItem(null);
-    
-    try {
-      const companiesData = await companyService.listCompanies();
-      const usersData = await userService.listUsers();
-      
-      setCompanies(companiesData);
-      setUsers(usersData);
-      
-      toast({
-        title: "Modification réussie",
-        description: "Les informations ont été mises à jour avec succès"
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour des données:", error);
-    }
+    toast({
+      title: "Modification réussie",
+      description: "Les informations ont été mises à jour avec succès"
+    });
   };
 
   return (
@@ -235,21 +240,16 @@ export default function EntreprisesPage() {
         </div>
       </div>
       
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <p>Chargement des données...</p>
-        </div>
-      ) : (
-        <EnhancedDataTable
-          columns={allColumns}
-          data={combinedData}
-          renderActions={renderActions}
-        />
-      )}
+      <EnhancedDataTable
+        columns={allColumns}
+        data={combinedData}
+        renderActions={renderActions}
+      />
       
-      <Dialog open={editDialogOpen && selectedItem?.type === "company"} onOpenChange={setEditDialogOpen}>
+      {/* Dialog pour éditer une entreprise */}
+      <Dialog open={editDialogOpen && selectedItem?.type === "Entreprise"} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          {selectedItem && selectedItem.type === "company" && (
+          {selectedItem && selectedItem.type === "Entreprise" && (
             <EditCompanyForm 
               company={selectedItem} 
               onClose={() => setEditDialogOpen(false)}
@@ -259,9 +259,10 @@ export default function EntreprisesPage() {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={editUserDialogOpen && selectedItem?.type === "user"} onOpenChange={setEditUserDialogOpen}>
+      {/* Dialog pour éditer un utilisateur */}
+      <Dialog open={editUserDialogOpen && !selectedItem?.type} onOpenChange={setEditUserDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          {selectedItem && selectedItem.type === "user" && (
+          {selectedItem && !selectedItem.type && (
             <EditUserForm 
               user={selectedItem} 
               onClose={() => setEditUserDialogOpen(false)}
