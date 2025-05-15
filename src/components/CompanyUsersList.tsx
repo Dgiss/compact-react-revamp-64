@@ -1,13 +1,12 @@
 
 import React from "react";
 import {
-  HoverCard,
-  HoverCardTrigger,
-  HoverCardContent,
-} from "@/components/ui/hover-card";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ChevronDown } from "lucide-react";
 
 interface User {
   id: string;
@@ -23,13 +22,11 @@ interface CompanyUsersProps {
 
 export function CompanyUsersList({ companyName, users }: CompanyUsersProps) {
   return (
-    <HoverCard openDelay={0} closeDelay={200}>
-      <HoverCardTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-          <Users className="h-4 w-4" />
-        </Button>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80 p-0">
+    <DropdownMenu>
+      <DropdownMenuTrigger className="flex items-center cursor-pointer hover:underline text-blue-600">
+        {companyName} <ChevronDown className="h-4 w-4 ml-1" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-auto p-0 min-w-[400px]">
         <div className="p-3 border-b">
           <h4 className="font-medium">Utilisateurs de {companyName}</h4>
         </div>
@@ -61,7 +58,7 @@ export function CompanyUsersList({ companyName, users }: CompanyUsersProps) {
             </Table>
           )}
         </div>
-      </HoverCardContent>
-    </HoverCard>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

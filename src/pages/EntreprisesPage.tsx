@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import AddCompanyForm from "@/components/forms/AddCompanyForm";
 import { CompanyUsersList } from "@/components/CompanyUsersList";
@@ -41,7 +41,7 @@ export default function EntreprisesPage() {
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
-  // Définition de toutes les colonnes possibles
+  // Définition de toutes les colonnes possibles, sans login/password dans le tableau principal
   const allColumns: Column[] = [
     // Colonnes communes
     { 
@@ -49,6 +49,15 @@ export default function EntreprisesPage() {
       label: "Entreprise", 
       sortable: true, 
       visible: true,
+      renderCell: (value, row) => {
+        if (row.type === "Entreprise") {
+          return <CompanyUsersList 
+            companyName={value} 
+            users={companyUsers[value] || []} 
+          />;
+        }
+        return value;
+      }
     },
     
     // Colonnes spécifiques aux entreprises
@@ -58,10 +67,6 @@ export default function EntreprisesPage() {
     { id: "adresse", label: "Adresse", sortable: true, visible: true },
     { id: "ville", label: "Ville", sortable: true, visible: true },
     { id: "type", label: "Type", sortable: true, visible: false },
-    
-    // Colonnes spécifiques aux utilisateurs
-    { id: "nom", label: "Nom d'utilisateur", sortable: true, visible: true },
-    { id: "motDePasse", label: "Mot de passe", sortable: true, visible: true },
   ];
 
   // Données des entreprises
@@ -113,42 +118,8 @@ export default function EntreprisesPage() {
     },
   ];
 
-  // Données des utilisateurs
-  const utilisateursData = [
-    { 
-      nom: "3djservices", 
-      motDePasse: "3djservices2025", 
-      entreprise: "3DJ SERVICES", 
-      type: "Utilisateur"
-    },
-    { 
-      nom: "abcp", 
-      motDePasse: "abcp2025", 
-      entreprise: "ABCP", 
-      type: "Utilisateur"
-    },
-    { 
-      nom: "abctsecuriteactivesecurite16", 
-      motDePasse: "abctsecuriteactivesecurite162025", 
-      entreprise: "ABCT SECURITE ( ACTIVE SECURITE 16 )",
-      type: "Utilisateur"
-    },
-    { 
-      nom: "abnettoyage", 
-      motDePasse: "abnettoyage2025", 
-      entreprise: "AB NETTOYAGE",
-      type: "Utilisateur"
-    },
-    { 
-      nom: "abptransport", 
-      motDePasse: "abptransport2025", 
-      entreprise: "ABP TRANSPORT",
-      type: "Utilisateur"
-    },
-  ];
-
-  // Fusionner les données en un seul tableau
-  const combinedData = [...entreprisesData, ...utilisateursData];
+  // Filtrer les données d'utilisateurs pour ne pas afficher les utilisateurs directement dans le tableau
+  const filteredData = entreprisesData;
 
   const handleEdit = (item: any) => {
     setSelectedItem(item);
@@ -189,13 +160,6 @@ export default function EntreprisesPage() {
           }
           onConfirm={() => handleDelete(item)}
         />
-        
-        {item.type === "Entreprise" && (
-          <CompanyUsersList 
-            companyName={item.entreprise} 
-            users={companyUsers[item.entreprise] || []} 
-          />
-        )}
       </div>
     );
   };
@@ -242,7 +206,7 @@ export default function EntreprisesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={combinedData}
+        data={filteredData}
         renderActions={renderActions}
       />
       
