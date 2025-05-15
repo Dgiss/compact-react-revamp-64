@@ -9,6 +9,7 @@ import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
+import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 
 export default function VehiclesDevicesPage() {
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
@@ -18,6 +19,9 @@ export default function VehiclesDevicesPage() {
   const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
+  const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [combinedData, setCombinedData] = useState<any[]>([...vehicleData, ...deviceData]);
 
   // Define all possible columns
   const allColumns: Column[] = [
@@ -151,17 +155,40 @@ export default function VehiclesDevicesPage() {
     },
   ];
 
-  // Combine all data into a single array
-  const combinedData = [...vehicleData, ...deviceData];
-
   const handleEdit = (item: any) => {
     console.log("Edit item:", item);
-    // Implement edit logic
+    setSelectedItem(item);
+    setShowEditVehicleDialog(true);
   };
 
   const handleDelete = (item: any) => {
     console.log("Delete item:", item);
-    // Implement delete logic
+    setSelectedItem(item);
+  };
+
+  const confirmDelete = () => {
+    // Remove the item from the combined data
+    const updatedData = combinedData.filter(entry => 
+      entry.imei !== selectedItem.imei
+    );
+    
+    setCombinedData(updatedData);
+    
+    // Update filtered data if necessary
+    if (isFiltered) {
+      const updatedFilteredData = filteredData.filter(entry => 
+        entry.imei !== selectedItem.imei
+      );
+      setFilteredData(updatedFilteredData);
+    }
+    
+    // Show success toast
+    toast({
+      title: item => selectedItem.type === "vehicle" ? "Véhicule supprimé" : "Boîtier supprimé",
+      description: item => `L'élément a été supprimé avec succès.`,
+    });
+    
+    setSelectedItem(null);
   };
 
   const handleAssociate = (device: any) => {
@@ -205,6 +232,33 @@ export default function VehiclesDevicesPage() {
     toast({
       description: `${devices.length} boîtier(s) modifié(s) avec succès`,
     });
+  };
+
+  // Handle save after editing
+  const handleSaveEdit = (updatedItem: any) => {
+    // Update the item in the combined data
+    const updatedData = combinedData.map(item => 
+      item.imei === updatedItem.imei ? { ...item, ...updatedItem } : item
+    );
+    
+    setCombinedData(updatedData);
+    
+    // Update filtered data if necessary
+    if (isFiltered) {
+      const updatedFilteredData = filteredData.map(item => 
+        item.imei === updatedItem.imei ? { ...item, ...updatedItem } : item
+      );
+      setFilteredData(updatedFilteredData);
+    }
+    
+    // Show success toast
+    toast({
+      title: updatedItem.type === "vehicle" ? "Véhicule modifié" : "Boîtier modifié",
+      description: "Les informations ont été mises à jour avec succès.",
+    });
+    
+    setShowEditVehicleDialog(false);
+    setSelectedItem(null);
   };
 
   return (
@@ -258,7 +312,37 @@ export default function VehiclesDevicesPage() {
         columns={allColumns}
         data={isFiltered ? filteredData : combinedData}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={(item) => {
+          setSelectedItem(item);
+          // Use custom delete handler with confirmation dialog
+        }}
+        renderActions={(item) => (
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <DeleteConfirmationDialog
+              title={item.type === "vehicle" ? "Supprimer le véhicule" : "Supprimer le boîtier"}
+              description={`Êtes-vous sûr de vouloir supprimer ${item.type === "vehicle" ? "ce véhicule" : "ce boîtier"} ? Cette action est irréversible.`}
+              onConfirm={() => {
+                const updatedData = combinedData.filter(entry => entry.imei !== item.imei);
+                setCombinedData(updatedData);
+                if (isFiltered) {
+                  const updatedFilteredData = filteredData.filter(entry => entry.imei !== item.imei);
+                  setFilteredData(updatedFilteredData);
+                }
+                toast({
+                  description: `${item.type === "vehicle" ? "Véhicule" : "Boîtier"} supprimé avec succès.`,
+                });
+              }}
+            />
+            {item.type === "device" && (
+              <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)}>
+                <Link className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
         onAssociate={handleAssociate}
       />
 
@@ -292,6 +376,25 @@ export default function VehiclesDevicesPage() {
           setShowMultipleImeiDialog(false);
         }}
       />
+
+      {/* Dialog pour l'édition d'un véhicule ou boîtier */}
+      <Dialog open={showEditVehicleDialog} onOpenChange={setShowEditVehicleDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedItem?.type === "vehicle" ? "Modifier le véhicule" : "Modifier le boîtier"}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedItem && (
+            <AddVehicleForm 
+              initialData={selectedItem}
+              onClose={() => setShowEditVehicleDialog(false)}
+              onSave={handleSaveEdit}
+              isEditing={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
