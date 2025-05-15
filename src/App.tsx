@@ -8,6 +8,7 @@ import { Layout } from "@/components/layout/Layout";
 import Index from "./pages/Index";
 import EntreprisesPage from "./pages/EntreprisesPage";
 import VehiclesDevicesPage from "./pages/VehiclesDevicesPage";
+import SimCardsPage from "./pages/SimCardsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route index element={<Index />} />
             <Route path="/entreprises" element={<EntreprisesPage />} />
             <Route path="/vehicules-boitiers" element={<VehiclesDevicesPage />} />
+            <Route path="/sim-cards" element={<SimCardsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

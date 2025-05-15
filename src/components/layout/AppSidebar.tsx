@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Building2, Car } from "lucide-react";
+import { Building2, Car, BarChart } from "lucide-react";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -26,6 +26,11 @@ export function AppSidebar() {
       title: "Véhicules & Boîtiers",
       icon: Car,
       path: "/vehicules-boitiers",
+    },
+    {
+      title: "Cartes SIM",
+      icon: BarChart,
+      path: "/sim-cards",
     },
   ];
 
