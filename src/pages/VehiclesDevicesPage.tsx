@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -13,7 +13,7 @@ import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearc
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 
 export default function VehiclesDevicesPage() {
-  // Define vehicle and device data first before using them
+  // Define vehicle and device data
   const vehicleData = [
     { 
       immatriculation: "GD 120 NK", 
@@ -284,6 +284,9 @@ export default function VehiclesDevicesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Ajouter un Véhicule</DialogTitle>
+              </DialogHeader>
               <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} />
             </DialogContent>
           </Dialog>
@@ -296,6 +299,9 @@ export default function VehiclesDevicesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Importer des Boîtiers</DialogTitle>
+              </DialogHeader>
               <ImportDevicesForm onClose={() => setShowImportDevicesDialog(false)} />
             </DialogContent>
           </Dialog>
@@ -333,7 +339,7 @@ export default function VehiclesDevicesPage() {
                   setFilteredData(updatedFilteredData);
                 }
                 toast({
-                  description: `${item.type === "vehicle" ? "Véhicule" : "Boîtier"} supprimé avec succès.`,
+                  description: `${item.type === "vehicle" ? "Véhicule" : "Boîtier"} supprimé avec succès.`
                 });
               }}
             />
