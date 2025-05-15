@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Upload, Check, Eye, EyeOff, Box } from "lucide-react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { SheetClose, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const clients = ["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"];
@@ -16,7 +17,11 @@ type DeviceData = {
   typeBoitier: string;
 }
 
-export default function ImportDevicesForm() {
+interface ImportDevicesFormProps {
+  onClose?: () => void;
+}
+
+export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
   const [clientSelected, setClientSelected] = useState("");
   const [typeBoitier, setTypeBoitier] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -76,6 +81,7 @@ export default function ImportDevicesForm() {
     console.log("Type de boîtier:", typeBoitier);
     console.log("Données importées:", previewData);
     // Implémentez ici la logique d'import finale
+    if (onClose) onClose();
   };
   
   const togglePreview = () => {
@@ -84,9 +90,9 @@ export default function ImportDevicesForm() {
 
   return (
     <>
-      <SheetHeader className="mb-5">
-        <SheetTitle>Importer des Boîtiers</SheetTitle>
-      </SheetHeader>
+      <DialogHeader className="mb-5">
+        <DialogTitle>Importer des Boîtiers</DialogTitle>
+      </DialogHeader>
 
       <div className="space-y-4">
         <div>
@@ -184,12 +190,12 @@ export default function ImportDevicesForm() {
         )}
         
         <div className="flex justify-end gap-2 mt-6">
-          <SheetClose asChild>
+          <DialogClose asChild>
             <Button type="button" variant="outline">
               <X className="h-4 w-4 mr-2" />
               Annuler
             </Button>
-          </SheetClose>
+          </DialogClose>
           <Button 
             onClick={handleImport} 
             disabled={!file || !clientSelected || !typeBoitier}

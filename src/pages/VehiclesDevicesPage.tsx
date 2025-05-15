@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -16,6 +16,8 @@ export default function VehiclesDevicesPage() {
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [isFiltered, setIsFiltered] = useState(false);
   const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
+  const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
+  const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
 
   // Define all possible columns
   const allColumns: Column[] = [
@@ -219,29 +221,29 @@ export default function VehiclesDevicesPage() {
             Recherche Multiple d'IMEI
           </Button>
           
-          <Sheet>
-            <SheetTrigger asChild>
+          <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
+            <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter un Véhicule
               </Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
-              <AddVehicleForm />
-            </SheetContent>
-          </Sheet>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} />
+            </DialogContent>
+          </Dialog>
 
-          <Sheet>
-            <SheetTrigger asChild>
+          <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
+            <DialogTrigger asChild>
               <Button variant="outline">
                 <FileSpreadsheet className="h-4 w-4 mr-2" />
                 Importer des Boîtiers
               </Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
-              <ImportDevicesForm />
-            </SheetContent>
-          </Sheet>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <ImportDevicesForm onClose={() => setShowImportDevicesDialog(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       
