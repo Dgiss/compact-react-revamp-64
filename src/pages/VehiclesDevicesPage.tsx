@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -12,33 +13,7 @@ import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearc
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 
 export default function VehiclesDevicesPage() {
-  const [showAssociateSheet, setShowAssociateSheet] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState<any>(null);
-  const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [isFiltered, setIsFiltered] = useState(false);
-  const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
-  const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
-  const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
-  const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [combinedData, setCombinedData] = useState<any[]>([...vehicleData, ...deviceData]);
-
-  // Define all possible columns
-  const allColumns: Column[] = [
-    { id: "immatriculation", label: "Immatriculation", sortable: true, visible: true },
-    { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
-    { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
-    { id: "imei", label: "IMEI", sortable: true, visible: true },
-    { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true },
-    { id: "emplacement", label: "Emplacement", sortable: true, visible: true },
-    { id: "marque", label: "Marque", sortable: true, visible: false },
-    { id: "modele", label: "Modèle", sortable: true, visible: false },
-    { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false },
-    { id: "sim", label: "SIM", sortable: true, visible: true },
-    { id: "telephone", label: "Téléphone", sortable: true, visible: true },
-  ];
-
-  // Combine vehicle and device data
+  // Define vehicle and device data first before using them
   const vehicleData = [
     { 
       immatriculation: "GD 120 NK", 
@@ -155,6 +130,32 @@ export default function VehiclesDevicesPage() {
     },
   ];
 
+  const [showAssociateSheet, setShowAssociateSheet] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState<any>(null);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
+  const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
+  const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
+  const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [combinedData, setCombinedData] = useState<any[]>([...vehicleData, ...deviceData]);
+
+  // Define all possible columns
+  const allColumns: Column[] = [
+    { id: "immatriculation", label: "Immatriculation", sortable: true, visible: true },
+    { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
+    { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
+    { id: "imei", label: "IMEI", sortable: true, visible: true },
+    { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true },
+    { id: "emplacement", label: "Emplacement", sortable: true, visible: true },
+    { id: "marque", label: "Marque", sortable: true, visible: false },
+    { id: "modele", label: "Modèle", sortable: true, visible: false },
+    { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false },
+    { id: "sim", label: "SIM", sortable: true, visible: true },
+    { id: "telephone", label: "Téléphone", sortable: true, visible: true },
+  ];
+
   const handleEdit = (item: any) => {
     console.log("Edit item:", item);
     setSelectedItem(item);
@@ -184,8 +185,8 @@ export default function VehiclesDevicesPage() {
     
     // Show success toast
     toast({
-      title: item => selectedItem.type === "vehicle" ? "Véhicule supprimé" : "Boîtier supprimé",
-      description: item => `L'élément a été supprimé avec succès.`,
+      title: selectedItem.type === "vehicle" ? "Véhicule supprimé" : "Boîtier supprimé",
+      description: "L'élément a été supprimé avec succès.",
     });
     
     setSelectedItem(null);
