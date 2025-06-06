@@ -1,4 +1,4 @@
-import { format, subDays, subWeeks } from "date-fns";
+import { format, subDays, subWeeks, addYears } from "date-fns";
 
 // Define the SIM Card interface
 export interface SimCard {
@@ -15,6 +15,8 @@ export interface SimCard {
   rechargePending?: boolean;
   lastRechargeDate?: Date;
   nextRenewalDate?: Date;
+  activationDate: Date; // Date d'activation de la carte
+  expirationDate: Date; // Date d'expiration (5 ans après activation)
 }
 
 // Define thresholds for each type of SIM
@@ -67,7 +69,7 @@ export const generateUsagePercentage = (): number => {
 // Generate random status
 export const generateStatus = (): "active" | "suspended" | "blocked" | "recharging" | "expired" => {
   const statuses: ("active" | "suspended" | "blocked" | "recharging" | "expired")[] = ["active", "suspended", "blocked", "recharging", "expired"];
-  const weights = [0.65, 0.15, 0.05, 0.05, 0.10]; // 65% active, 15% suspended, 5% blocked, 5% recharging, 10% expired
+  const weights = [0.60, 0.15, 0.05, 0.05, 0.15]; // 60% active, 15% suspended, 5% blocked, 5% recharging, 15% expired
   
   const random = Math.random();
   let sum = 0;
@@ -78,6 +80,18 @@ export const generateStatus = (): "active" | "suspended" | "blocked" | "rechargi
     }
   }
   return "active"; // Default
+};
+
+// Generate random activation date (between 6 months and 4 years ago)
+export const generateActivationDate = (): Date => {
+  const now = new Date();
+  const monthsAgo = 6 + Math.floor(Math.random() * 42); // Between 6 months and 4 years
+  return subDays(now, monthsAgo * 30);
+};
+
+// Generate expiration date (5 years after activation)
+export const generateExpirationDate = (activationDate: Date): Date => {
+  return addYears(activationDate, 5);
 };
 
 // Generate random last activity date (between today and 30 days ago)
@@ -111,12 +125,12 @@ export const getStatusDisplayName = (status: string): string => {
     case "suspended": return "Suspendu";
     case "blocked": return "Bloqué";
     case "recharging": return "En recharge";
-    case "expired": return "Crédits épuisés";
+    case "expired": return "Expiré";
     default: return status;
   }
 };
 
-// Check if a SIM card is expired (usage at 100% or past renewal date)
+// Check if a SIM card is expired (usage at 100%, past renewal date, or past expiration date)
 export const isExpired = (sim: SimCard): boolean => {
   const dataPercentage = (sim.dataUsage / sim.dataPlan) * 100;
   const smsPercentage = (sim.smsCount / sim.smsPlan) * 100;
@@ -129,7 +143,36 @@ export const isExpired = (sim: SimCard): boolean => {
   const now = new Date();
   const pastRenewalDate = sim.nextRenewalDate && sim.nextRenewalDate <= now;
   
-  return usageAtMax || !!pastRenewalDate;
+  // Check if expiration date (5 years) has passed
+  const pastExpirationDate = sim.expirationDate && sim.expirationDate <= now;
+  
+  return usageAtMax || !!pastRenewalDate || !!pastExpirationDate;
+};
+
+// Get expiration reason for display
+export const getExpirationReason = (sim: SimCard): string => {
+  const dataPercentage = (sim.dataUsage / sim.dataPlan) * 100;
+  const smsPercentage = (sim.smsCount / sim.smsPlan) * 100;
+  const callPercentage = (sim.callDuration / sim.callPlan) * 100;
+  
+  const now = new Date();
+  
+  // Check expiration date first (5 years)
+  if (sim.expirationDate && sim.expirationDate <= now) {
+    return "Date d'expiration dépassée";
+  }
+  
+  // Check renewal date
+  if (sim.nextRenewalDate && sim.nextRenewalDate <= now) {
+    return "Date de renouvellement dépassée";
+  }
+  
+  // Check usage limits
+  if (dataPercentage >= 100) return "Données épuisées";
+  if (smsPercentage >= 100) return "SMS épuisés";
+  if (callPercentage >= 100) return "Minutes d'appel épuisées";
+  
+  return "Crédits épuisés";
 };
 
 // Check if a SIM card needs recharge (usage > 80%)
@@ -168,6 +211,8 @@ export const generateSimCardData = (): SimCard[] => {
       const smsUsagePercentage = generateUsagePercentage();
       const callUsagePercentage = generateUsagePercentage();
       
+      const activationDate = generateActivationDate();
+      const expirationDate = generateExpirationDate(activationDate);
       const status = generateStatus();
       const lastActivity = generateLastActivity();
       
@@ -182,6 +227,8 @@ export const generateSimCardData = (): SimCard[] => {
         callDuration: Math.round(callPlan * callUsagePercentage),
         status,
         lastActivity,
+        activationDate,
+        expirationDate,
         nextRenewalDate: generateNextRenewalDate(),
         rechargePending: status === "recharging",
         lastRechargeDate: status === "recharging" ? subDays(new Date(), Math.floor(Math.random() * 7)) : undefined

@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { SimCardTable } from "./SimCardTable";
 import { SimCardChart } from "./SimCardChart";
 import { SimCardFilters } from "./SimCardFilters";
-import { generateSimCardData, SimCard, checkAndUpdateExpiredStatus } from "./sim-data-utils";
+import { generateSimCardData, SimCard, checkAndUpdateExpiredStatus, getExpirationReason } from "./sim-data-utils";
 
 export default function SimCardManagement() {
   // Generate initial data
@@ -30,10 +30,21 @@ export default function SimCardManagement() {
         );
         
         if (newExpiredCards.length > 0) {
-          toast({
-            title: "Cartes expirées détectées",
-            description: `${newExpiredCards.length} carte(s) ont épuisé leurs crédits.`,
-            variant: "destructive",
+          // Group expired cards by expiration reason
+          const byReason = newExpiredCards.reduce((acc, card) => {
+            const reason = getExpirationReason(card);
+            if (!acc[reason]) acc[reason] = [];
+            acc[reason].push(card);
+            return acc;
+          }, {} as Record<string, SimCard[]>);
+
+          // Show different notifications based on expiration reason
+          Object.entries(byReason).forEach(([reason, cards]) => {
+            toast({
+              title: "Cartes expirées détectées",
+              description: `${cards.length} carte(s) : ${reason}`,
+              variant: "destructive",
+            });
           });
         }
         
@@ -105,7 +116,9 @@ export default function SimCardManagement() {
             smsCount: 0,
             callDuration: 0,
             lastRechargeDate: new Date(),
-            lastActivity: new Date()
+            lastActivity: new Date(),
+            // Note: For date expiration, recharge won't extend the 5-year limit
+            // Only credit limits are reset
           } : card
         )
       );

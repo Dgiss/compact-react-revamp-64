@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Table, 
@@ -9,9 +8,9 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { SimCard, getThresholds, getSimTypeDisplayName, formatDate, getStatusDisplayName, needsRecharge } from "./sim-data-utils";
+import { SimCard, getThresholds, getSimTypeDisplayName, formatDate, getStatusDisplayName, needsRecharge, getExpirationReason } from "./sim-data-utils";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 
 interface SimCardTableProps {
   data: SimCard[];
@@ -127,7 +126,7 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
             <TableHead className="min-w-[140px]">Appels</TableHead>
             <TableHead>Statut</TableHead>
             <TableHead>Dernière activité</TableHead>
-            <TableHead>Prochaine échéance</TableHead>
+            <TableHead>Date d'expiration</TableHead>
             <TableHead className="w-48">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -190,20 +189,29 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(sim.status)}`}>
-                      {sim.status === "recharging" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                      {getStatusDisplayName(sim.status)}
-                    </span>
+                    <div className="space-y-1">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(sim.status)}`}>
+                        {sim.status === "recharging" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                        {getStatusDisplayName(sim.status)}
+                      </span>
+                      {sim.status === "expired" && (
+                        <div className="flex items-center text-xs text-red-600">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          {getExpirationReason(sim)}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>{formatDate(sim.lastActivity)}</TableCell>
                   <TableCell>
-                    {sim.nextRenewalDate ? (
-                      <div className="text-sm">
-                        {formatDate(sim.nextRenewalDate)}
+                    <div className="text-sm">
+                      <div className="font-medium">
+                        {formatDate(sim.expirationDate)}
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
+                      <div className="text-xs text-muted-foreground">
+                        Activée: {formatDate(sim.activationDate)}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1 flex-wrap">
