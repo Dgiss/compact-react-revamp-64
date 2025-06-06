@@ -1,12 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { SimCardTable } from "./SimCardTable";
 import { SimCardChart } from "./SimCardChart";
 import { SimCardFilters } from "./SimCardFilters";
-import { generateSimCardData, SimCard } from "./sim-data-utils";
+import { generateSimCardData, SimCard, checkAndUpdateExpiredStatus } from "./sim-data-utils";
 
 export default function SimCardManagement() {
   // Generate initial data
@@ -19,6 +19,33 @@ export default function SimCardManagement() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [periodFilter, setPeriodFilter] = useState<string>("month");
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  // Check for expired cards periodically
+  useEffect(() => {
+    const checkExpiredCards = () => {
+      setSimCards(prev => {
+        const updated = checkAndUpdateExpiredStatus(prev);
+        const newExpiredCards = updated.filter((card, index) => 
+          card.status === "expired" && prev[index].status !== "expired"
+        );
+        
+        if (newExpiredCards.length > 0) {
+          toast({
+            title: "Cartes expirées détectées",
+            description: `${newExpiredCards.length} carte(s) ont épuisé leurs crédits.`,
+            variant: "destructive",
+          });
+        }
+        
+        return updated;
+      });
+    };
+
+    checkExpiredCards();
+    const interval = setInterval(checkExpiredCards, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
+  }, [toast]);
   
   // Apply filters to data
   const filteredData = simCards.filter((card) => {
@@ -35,7 +62,7 @@ export default function SimCardManagement() {
   });
 
   // Handle status change (simulated)
-  const handleStatusChange = (simId: string, newStatus: "active" | "suspended" | "blocked" | "recharging") => {
+  const handleStatusChange = (simId: string, newStatus: "active" | "suspended" | "blocked" | "recharging" | "expired") => {
     setSimCards(prev => 
       prev.map(card => 
         card.id === simId ? { ...card, status: newStatus } : card

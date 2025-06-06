@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 interface SimCardTableProps {
   data: SimCard[];
   period: string;
-  onStatusChange: (simId: string, newStatus: "active" | "suspended" | "blocked" | "recharging") => void;
+  onStatusChange: (simId: string, newStatus: "active" | "suspended" | "blocked" | "recharging" | "expired") => void;
   onRecharge: (simId: string) => void;
   onCancelRecharge: (simId: string) => void;
 }
@@ -24,6 +24,7 @@ interface SimCardTableProps {
 export function SimCardTable({ data, period, onStatusChange, onRecharge, onCancelRecharge }: SimCardTableProps) {
   // Helper function to determine consumption color
   const getConsumptionColor = (percentage: number): string => {
+    if (percentage >= 100) return "bg-red-600"; // Full consumption
     if (percentage < 50) return "bg-green-500";
     if (percentage < 80) return "bg-yellow-500";
     return "bg-red-500";
@@ -36,6 +37,7 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
       case "suspended": return "bg-yellow-100 text-yellow-800";
       case "blocked": return "bg-red-100 text-red-800";
       case "recharging": return "bg-blue-100 text-blue-800";
+      case "expired": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -55,6 +57,19 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
         >
           <Loader2 className="h-3 w-3 mr-1 animate-spin" />
           Annuler
+        </Button>
+      );
+    } else if (sim.status === "expired") {
+      // Only show recharge button for expired cards
+      buttons.push(
+        <Button 
+          key="recharge"
+          variant="outline" 
+          size="sm"
+          className="text-blue-600 border-blue-600 hover:bg-blue-50"
+          onClick={() => onRecharge(sim.id)}
+        >
+          Recharger
         </Button>
       );
     } else if (sim.status === "active") {
@@ -125,7 +140,7 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
               const callPercentage = (sim.callDuration / sim.callPlan) * 100;
               
               return (
-                <TableRow key={sim.id}>
+                <TableRow key={sim.id} className={sim.status === "expired" ? "bg-red-50" : ""}>
                   <TableCell className="font-medium">{sim.id}</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium

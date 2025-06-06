@@ -1,4 +1,3 @@
-
 import { format, subDays, subWeeks } from "date-fns";
 
 // Define the SIM Card interface
@@ -11,7 +10,7 @@ export interface SimCard {
   smsCount: number;
   callPlan: number; // in minutes
   callDuration: number; // in minutes
-  status: "active" | "suspended" | "blocked" | "recharging";
+  status: "active" | "suspended" | "blocked" | "recharging" | "expired";
   lastActivity: Date;
   rechargePending?: boolean;
   lastRechargeDate?: Date;
@@ -66,9 +65,9 @@ export const generateUsagePercentage = (): number => {
 };
 
 // Generate random status
-export const generateStatus = (): "active" | "suspended" | "blocked" | "recharging" => {
-  const statuses: ("active" | "suspended" | "blocked" | "recharging")[] = ["active", "suspended", "blocked", "recharging"];
-  const weights = [0.75, 0.15, 0.05, 0.05]; // 75% active, 15% suspended, 5% blocked, 5% recharging
+export const generateStatus = (): "active" | "suspended" | "blocked" | "recharging" | "expired" => {
+  const statuses: ("active" | "suspended" | "blocked" | "recharging" | "expired")[] = ["active", "suspended", "blocked", "recharging", "expired"];
+  const weights = [0.65, 0.15, 0.05, 0.05, 0.10]; // 65% active, 15% suspended, 5% blocked, 5% recharging, 10% expired
   
   const random = Math.random();
   let sum = 0;
@@ -112,8 +111,25 @@ export const getStatusDisplayName = (status: string): string => {
     case "suspended": return "Suspendu";
     case "blocked": return "Bloqué";
     case "recharging": return "En recharge";
+    case "expired": return "Crédits épuisés";
     default: return status;
   }
+};
+
+// Check if a SIM card is expired (usage at 100% or past renewal date)
+export const isExpired = (sim: SimCard): boolean => {
+  const dataPercentage = (sim.dataUsage / sim.dataPlan) * 100;
+  const smsPercentage = (sim.smsCount / sim.smsPlan) * 100;
+  const callPercentage = (sim.callDuration / sim.callPlan) * 100;
+  
+  // Check if any usage is at 100%
+  const usageAtMax = dataPercentage >= 100 || smsPercentage >= 100 || callPercentage >= 100;
+  
+  // Check if renewal date has passed
+  const now = new Date();
+  const pastRenewalDate = sim.nextRenewalDate && sim.nextRenewalDate <= now;
+  
+  return usageAtMax || !!pastRenewalDate;
 };
 
 // Check if a SIM card needs recharge (usage > 80%)
@@ -123,6 +139,16 @@ export const needsRecharge = (sim: SimCard): boolean => {
   const callPercentage = (sim.callDuration / sim.callPlan) * 100;
   
   return dataPercentage > 80 || smsPercentage > 80 || callPercentage > 80;
+};
+
+// Check and update expired status for SIM cards
+export const checkAndUpdateExpiredStatus = (simCards: SimCard[]): SimCard[] => {
+  return simCards.map(sim => {
+    if (sim.status === "active" && isExpired(sim)) {
+      return { ...sim, status: "expired" as const };
+    }
+    return sim;
+  });
 };
 
 // Generate complete SIM card data
