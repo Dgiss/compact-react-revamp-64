@@ -35,7 +35,7 @@ export default function SimCardManagement() {
   });
 
   // Handle status change (simulated)
-  const handleStatusChange = (simId: string, newStatus: string) => {
+  const handleStatusChange = (simId: string, newStatus: "active" | "suspended" | "blocked" | "recharging") => {
     setSimCards(prev => 
       prev.map(card => 
         card.id === simId ? { ...card, status: newStatus } : card
@@ -55,7 +55,7 @@ export default function SimCardManagement() {
       prev.map(card => 
         card.id === simId ? { 
           ...card, 
-          status: "recharging",
+          status: "recharging" as const,
           rechargePending: true 
         } : card
       )
@@ -72,7 +72,7 @@ export default function SimCardManagement() {
         prev.map(card => 
           card.id === simId ? {
             ...card,
-            status: "active",
+            status: "active" as const,
             rechargePending: false,
             dataUsage: 0,
             smsCount: 0,
@@ -96,7 +96,7 @@ export default function SimCardManagement() {
       prev.map(card => 
         card.id === simId ? { 
           ...card, 
-          status: "active",
+          status: "active" as const,
           rechargePending: false 
         } : card
       )

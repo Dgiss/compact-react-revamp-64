@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -196,31 +195,34 @@ export const SimConsumptionTable: React.FC = () => {
                     <div className={`px-2 py-1 rounded mb-1 text-sm ${getColorByThreshold(sim.dataUsage, 'data')}`}>
                       {sim.dataUsage} MB
                     </div>
-                    <Progress 
-                      value={(sim.dataUsage / maxData) * 100} 
-                      className="h-2"
-                      indicatorClassName={getProgressColor(sim.dataUsage, 'data')}
-                    />
+                    <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${getProgressColor(sim.dataUsage, 'data')}`}
+                        style={{ width: `${(sim.dataUsage / maxData) * 100}%` }}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className={`px-2 py-1 rounded mb-1 text-sm ${getColorByThreshold(sim.smsCount, 'sms')}`}>
                       {sim.smsCount} messages
                     </div>
-                    <Progress 
-                      value={(sim.smsCount / maxSms) * 100} 
-                      className="h-2"
-                      indicatorClassName={getProgressColor(sim.smsCount, 'sms')}
-                    />
+                    <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${getProgressColor(sim.smsCount, 'sms')}`}
+                        style={{ width: `${(sim.smsCount / maxSms) * 100}%` }}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className={`px-2 py-1 rounded mb-1 text-sm ${getColorByThreshold(sim.callDuration, 'calls')}`}>
                       {sim.callDuration} minutes
                     </div>
-                    <Progress 
-                      value={(sim.callDuration / maxCalls) * 100} 
-                      className="h-2"
-                      indicatorClassName={getProgressColor(sim.callDuration, 'calls')}
-                    />
+                    <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${getProgressColor(sim.callDuration, 'calls')}`}
+                        style={{ width: `${(sim.callDuration / maxCalls) * 100}%` }}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

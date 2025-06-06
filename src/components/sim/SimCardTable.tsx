@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 interface SimCardTableProps {
   data: SimCard[];
   period: string;
-  onStatusChange: (simId: string, newStatus: string) => void;
+  onStatusChange: (simId: string, newStatus: "active" | "suspended" | "blocked" | "recharging") => void;
   onRecharge: (simId: string) => void;
   onCancelRecharge: (simId: string) => void;
 }
@@ -145,14 +145,10 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
                     <div className="text-sm mb-1">
                       {sim.dataUsage} / {sim.dataPlan} MB
                     </div>
-                    <Progress 
-                      value={dataPercentage} 
-                      className="h-2 bg-gray-100"
-                    />
-                    <div className={`h-2 w-full rounded-full mt-[-8px] overflow-hidden`}>
+                    <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div 
-                        className={`h-full ${getConsumptionColor(dataPercentage)}`}
-                        style={{ width: `${dataPercentage}%` }}
+                        className={`h-full transition-all duration-300 ${getConsumptionColor(dataPercentage)}`}
+                        style={{ width: `${Math.min(dataPercentage, 100)}%` }}
                       />
                     </div>
                   </TableCell>
@@ -160,14 +156,10 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
                     <div className="text-sm mb-1">
                       {sim.smsCount} / {sim.smsPlan}
                     </div>
-                    <Progress 
-                      value={smsPercentage} 
-                      className="h-2 bg-gray-100"
-                    />
-                    <div className={`h-2 w-full rounded-full mt-[-8px] overflow-hidden`}>
+                    <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div 
-                        className={`h-full ${getConsumptionColor(smsPercentage)}`}
-                        style={{ width: `${smsPercentage}%` }}
+                        className={`h-full transition-all duration-300 ${getConsumptionColor(smsPercentage)}`}
+                        style={{ width: `${Math.min(smsPercentage, 100)}%` }}
                       />
                     </div>
                   </TableCell>
@@ -175,14 +167,10 @@ export function SimCardTable({ data, period, onStatusChange, onRecharge, onCance
                     <div className="text-sm mb-1">
                       {sim.callDuration} / {sim.callPlan} min
                     </div>
-                    <Progress 
-                      value={callPercentage} 
-                      className="h-2 bg-gray-100"
-                    />
-                    <div className={`h-2 w-full rounded-full mt-[-8px] overflow-hidden`}>
+                    <div className="relative w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div 
-                        className={`h-full ${getConsumptionColor(callPercentage)}`}
-                        style={{ width: `${callPercentage}%` }}
+                        className={`h-full transition-all duration-300 ${getConsumptionColor(callPercentage)}`}
+                        style={{ width: `${Math.min(callPercentage, 100)}%` }}
                       />
                     </div>
                   </TableCell>
