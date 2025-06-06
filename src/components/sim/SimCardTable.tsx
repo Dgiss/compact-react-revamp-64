@@ -9,16 +9,19 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { SimCard, getThresholds, getSimTypeDisplayName, formatDate } from "./sim-data-utils";
+import { SimCard, getThresholds, getSimTypeDisplayName, formatDate, getStatusDisplayName, needsRecharge } from "./sim-data-utils";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface SimCardTableProps {
   data: SimCard[];
   period: string;
   onStatusChange: (simId: string, newStatus: string) => void;
+  onRecharge: (simId: string) => void;
+  onCancelRecharge: (simId: string) => void;
 }
 
-export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps) {
+export function SimCardTable({ data, period, onStatusChange, onRecharge, onCancelRecharge }: SimCardTableProps) {
   // Helper function to determine consumption color
   const getConsumptionColor = (percentage: number): string => {
     if (percentage < 50) return "bg-green-500";
@@ -32,25 +35,45 @@ export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps
       case "active": return "bg-green-100 text-green-800";
       case "suspended": return "bg-yellow-100 text-yellow-800";
       case "blocked": return "bg-red-100 text-red-800";
+      case "recharging": return "bg-blue-100 text-blue-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  // Helper function to get status display name
-  const getStatusDisplayName = (status: string): string => {
-    switch (status) {
-      case "active": return "Actif";
-      case "suspended": return "Suspendu";
-      case "blocked": return "Bloqué";
-      default: return status;
-    }
-  };
+  // Helper function to get action buttons based on status and usage
+  const getActionButtons = (sim: SimCard) => {
+    const buttons = [];
 
-  // Helper function to get action button based on status
-  const getActionButton = (sim: SimCard) => {
-    if (sim.status === "active") {
-      return (
+    if (sim.status === "recharging") {
+      buttons.push(
         <Button 
+          key="cancel-recharge"
+          variant="outline" 
+          size="sm"
+          className="text-red-600 border-red-600 hover:bg-red-50"
+          onClick={() => onCancelRecharge(sim.id)}
+        >
+          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+          Annuler
+        </Button>
+      );
+    } else if (sim.status === "active") {
+      if (needsRecharge(sim)) {
+        buttons.push(
+          <Button 
+            key="recharge"
+            variant="outline" 
+            size="sm"
+            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            onClick={() => onRecharge(sim.id)}
+          >
+            Recharger
+          </Button>
+        );
+      }
+      buttons.push(
+        <Button 
+          key="suspend"
           variant="outline" 
           size="sm"
           className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
@@ -59,9 +82,10 @@ export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps
           Suspendre
         </Button>
       );
-    } else {
-      return (
+    } else if (sim.status === "suspended" || sim.status === "blocked") {
+      buttons.push(
         <Button 
+          key="reactivate"
           variant="outline" 
           size="sm"
           className="text-green-600 border-green-600 hover:bg-green-50"
@@ -71,6 +95,8 @@ export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps
         </Button>
       );
     }
+
+    return buttons;
   };
 
   return (
@@ -86,7 +112,8 @@ export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps
             <TableHead className="min-w-[140px]">Appels</TableHead>
             <TableHead>Statut</TableHead>
             <TableHead>Dernière activité</TableHead>
-            <TableHead className="w-32">Actions</TableHead>
+            <TableHead>Prochaine échéance</TableHead>
+            <TableHead className="w-48">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -161,13 +188,23 @@ export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(sim.status)}`}>
+                      {sim.status === "recharging" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                       {getStatusDisplayName(sim.status)}
                     </span>
                   </TableCell>
                   <TableCell>{formatDate(sim.lastActivity)}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      {getActionButton(sim)}
+                    {sim.nextRenewalDate ? (
+                      <div className="text-sm">
+                        {formatDate(sim.nextRenewalDate)}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 flex-wrap">
+                      {getActionButtons(sim)}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -175,7 +212,7 @@ export function SimCardTable({ data, period, onStatusChange }: SimCardTableProps
             })
           ) : (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
+              <TableCell colSpan={10} className="text-center py-4 text-muted-foreground">
                 Aucune donnée disponible
               </TableCell>
             </TableRow>

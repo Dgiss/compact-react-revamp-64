@@ -11,8 +11,11 @@ export interface SimCard {
   smsCount: number;
   callPlan: number; // in minutes
   callDuration: number; // in minutes
-  status: "active" | "suspended" | "blocked";
+  status: "active" | "suspended" | "blocked" | "recharging";
   lastActivity: Date;
+  rechargePending?: boolean;
+  lastRechargeDate?: Date;
+  nextRenewalDate?: Date;
 }
 
 // Define thresholds for each type of SIM
@@ -63,9 +66,9 @@ export const generateUsagePercentage = (): number => {
 };
 
 // Generate random status
-export const generateStatus = (): "active" | "suspended" | "blocked" => {
-  const statuses: ("active" | "suspended" | "blocked")[] = ["active", "suspended", "blocked"];
-  const weights = [0.8, 0.15, 0.05]; // 80% active, 15% suspended, 5% blocked
+export const generateStatus = (): "active" | "suspended" | "blocked" | "recharging" => {
+  const statuses: ("active" | "suspended" | "blocked" | "recharging")[] = ["active", "suspended", "blocked", "recharging"];
+  const weights = [0.75, 0.15, 0.05, 0.05]; // 75% active, 15% suspended, 5% blocked, 5% recharging
   
   const random = Math.random();
   let sum = 0;
@@ -85,6 +88,13 @@ export const generateLastActivity = (): Date => {
   return subDays(now, daysAgo);
 };
 
+// Generate next renewal date (between 7 and 30 days from now)
+export const generateNextRenewalDate = (): Date => {
+  const now = new Date();
+  const daysToAdd = 7 + Math.floor(Math.random() * 23); // Between 7 and 30 days
+  return new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+};
+
 // Format date for display
 export const formatDate = (date: Date): string => {
   return format(date, "dd/MM/yyyy HH:mm");
@@ -93,6 +103,26 @@ export const formatDate = (date: Date): string => {
 // Get display name for SIM type
 export const getSimTypeDisplayName = (type: string): string => {
   return type;
+};
+
+// Get display name for status
+export const getStatusDisplayName = (status: string): string => {
+  switch (status) {
+    case "active": return "Actif";
+    case "suspended": return "Suspendu";
+    case "blocked": return "Bloqué";
+    case "recharging": return "En recharge";
+    default: return status;
+  }
+};
+
+// Check if a SIM card needs recharge (usage > 80%)
+export const needsRecharge = (sim: SimCard): boolean => {
+  const dataPercentage = (sim.dataUsage / sim.dataPlan) * 100;
+  const smsPercentage = (sim.smsCount / sim.smsPlan) * 100;
+  const callPercentage = (sim.callDuration / sim.callPlan) * 100;
+  
+  return dataPercentage > 80 || smsPercentage > 80 || callPercentage > 80;
 };
 
 // Generate complete SIM card data
@@ -112,6 +142,9 @@ export const generateSimCardData = (): SimCard[] => {
       const smsUsagePercentage = generateUsagePercentage();
       const callUsagePercentage = generateUsagePercentage();
       
+      const status = generateStatus();
+      const lastActivity = generateLastActivity();
+      
       simCards.push({
         id: generateSimId(type, i),
         type,
@@ -121,8 +154,11 @@ export const generateSimCardData = (): SimCard[] => {
         smsCount: Math.round(smsPlan * smsUsagePercentage),
         callPlan,
         callDuration: Math.round(callPlan * callUsagePercentage),
-        status: generateStatus(),
-        lastActivity: generateLastActivity()
+        status,
+        lastActivity,
+        nextRenewalDate: generateNextRenewalDate(),
+        rechargePending: status === "recharging",
+        lastRechargeDate: status === "recharging" ? subDays(new Date(), Math.floor(Math.random() * 7)) : undefined
       });
     }
   });

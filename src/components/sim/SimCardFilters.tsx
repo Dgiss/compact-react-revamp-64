@@ -59,6 +59,7 @@ export function SimCardFilters({
             <SelectItem value="active">Actif</SelectItem>
             <SelectItem value="suspended">Suspendu</SelectItem>
             <SelectItem value="blocked">Bloqué</SelectItem>
+            <SelectItem value="recharging">En recharge</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 import { SimCardTable } from "./SimCardTable";
 import { SimCardChart } from "./SimCardChart";
 import { SimCardFilters } from "./SimCardFilters";
@@ -11,6 +12,7 @@ export default function SimCardManagement() {
   // Generate initial data
   const [simCards, setSimCards] = useState<SimCard[]>(generateSimCardData());
   const [viewType, setViewType] = useState<"table" | "chart">("table");
+  const { toast } = useToast();
   
   // Filter states
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -39,6 +41,71 @@ export default function SimCardManagement() {
         card.id === simId ? { ...card, status: newStatus } : card
       )
     );
+    
+    toast({
+      title: "Statut mis à jour",
+      description: `Le statut de la carte SIM ${simId} a été modifié.`,
+    });
+  };
+
+  // Handle recharge action
+  const handleRecharge = (simId: string) => {
+    // Set status to recharging
+    setSimCards(prev => 
+      prev.map(card => 
+        card.id === simId ? { 
+          ...card, 
+          status: "recharging",
+          rechargePending: true 
+        } : card
+      )
+    );
+
+    toast({
+      title: "Recharge initiée",
+      description: `La recharge de la carte SIM ${simId} a été déclenchée.`,
+    });
+
+    // Simulate recharge process (3 seconds)
+    setTimeout(() => {
+      setSimCards(prev => 
+        prev.map(card => 
+          card.id === simId ? {
+            ...card,
+            status: "active",
+            rechargePending: false,
+            dataUsage: 0,
+            smsCount: 0,
+            callDuration: 0,
+            lastRechargeDate: new Date(),
+            lastActivity: new Date()
+          } : card
+        )
+      );
+
+      toast({
+        title: "Recharge terminée",
+        description: `La carte SIM ${simId} a été rechargée avec succès.`,
+      });
+    }, 3000);
+  };
+
+  // Handle cancel recharge
+  const handleCancelRecharge = (simId: string) => {
+    setSimCards(prev => 
+      prev.map(card => 
+        card.id === simId ? { 
+          ...card, 
+          status: "active",
+          rechargePending: false 
+        } : card
+      )
+    );
+
+    toast({
+      title: "Recharge annulée",
+      description: `La recharge de la carte SIM ${simId} a été annulée.`,
+    });
   };
 
   return (
@@ -74,6 +141,8 @@ export default function SimCardManagement() {
               data={filteredData} 
               period={periodFilter}
               onStatusChange={handleStatusChange}
+              onRecharge={handleRecharge}
+              onCancelRecharge={handleCancelRecharge}
             />
           ) : (
             <SimCardChart 
