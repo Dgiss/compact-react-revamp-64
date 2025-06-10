@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -11,7 +10,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Building2, Car, BarChart } from "lucide-react";
+import { Building2, Car, BarChart, Download } from "lucide-react";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -31,6 +30,11 @@ export function AppSidebar() {
       title: "Cartes SIM",
       icon: BarChart,
       path: "/sim-cards",
+    },
+    {
+      title: "FotaWeb",
+      icon: Download,
+      path: "/fota-web",
     },
   ];
 
