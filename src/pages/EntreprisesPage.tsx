@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus, Trash } from "lucide-react";
@@ -10,154 +10,344 @@ import { CompanyUsersList } from "@/components/CompanyUsersList";
 import EditCompanyForm from "@/components/forms/EditCompanyForm";
 import EditUserForm from "@/components/forms/EditUserForm";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
+import { generateClient } from 'aws-amplify/api';
 
-// Base de données fictive des utilisateurs par entreprise
-const companyUsers = {
-  "SOCIETE AMBULANCES LEROY": [
-    { id: "u1", nom: "ambulances_leroy_admin", motDePasse: "secure123", role: "Admin" },
-    { id: "u2", nom: "leroy_user1", motDePasse: "password456", role: "Opérateur" },
-  ],
-  "VITOR NETTOYAGE": [
-    { id: "u3", nom: "vitor_admin", motDePasse: "vitor2023", role: "Admin" },
-    { id: "u4", nom: "vitor_comptable", motDePasse: "compta2023", role: "Comptabilité" },
-    { id: "u5", nom: "vitor_tech", motDePasse: "tech2023", role: "Technicien" },
-  ],
-  "MAC TRANSPORT": [
-    { id: "u6", nom: "mac_admin", motDePasse: "mac2023", role: "Admin" },
-  ],
-  "B LIVE": [
-    { id: "u7", nom: "blive_admin", motDePasse: "blive2023", role: "Admin" },
-    { id: "u8", nom: "blive_user", motDePasse: "user2023", role: "Utilisateur" },
-  ],
-  "IRIS MULTISERVICES": [
-    { id: "u9", nom: "iris_admin", motDePasse: "iris2023", role: "Admin" },
-    { id: "u10", nom: "iris_tech", motDePasse: "tech2023", role: "Technicien" },
-  ],
-};
+// Import GraphQL queries and mutations
+const listCompanies = /* GraphQL */ `
+  query ListCompanies(
+    $id: ID
+    $filter: ModelCompanyFilterInput
+    $limit: Int
+    $nextToken: String
+    $sortDirection: ModelSortDirection
+  ) {
+    listCompanies(
+      id: $id
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      sortDirection: $sortDirection
+    ) {
+      items {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+
+const updateCompany = /* GraphQL */ `
+  mutation UpdateCompany(
+    $input: UpdateCompanyInput!
+    $condition: ModelCompanyConditionInput
+  ) {
+    updateCompany(input: $input, condition: $condition) {
+      id
+      name
+      siret
+      address
+      contact
+      email
+      mobile
+      phone
+      __typename
+    }
+  }
+`;
+
+const deleteCompany = /* GraphQL */ `
+  mutation DeleteCompany(
+    $input: DeleteCompanyInput!
+    $condition: ModelCompanyConditionInput
+  ) {
+    deleteCompany(input: $input, condition: $condition) {
+      id
+      __typename
+    }
+  }
+`;
 
 export default function EntreprisesPage() {
+  const client = generateClient();
+  
+  // States
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  
+  // Search states
+  const [searchName, setSearchName] = useState('');
+  const [searchEmail, setSearchEmail] = useState('');
+  const [searchSiret, setSearchSiret] = useState('');
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
 
-  // Définition de toutes les colonnes possibles, sans login/password dans le tableau principal
-  const allColumns: Column[] = [
-    // Colonnes communes
+  // Fetch all companies
+  const fetchCompanies = async () => {
+    setLoading(true);
+    let allItems = [];
+    let nextToken = null;
+    
+    try {
+      do {
+        const variables = {
+          limit: 4000,
+          nextToken: nextToken
+        };
+        
+        const companyList = await client.graphql({
+          query: listCompanies,
+          variables: variables
+        });
+        
+        const data = companyList.data.listCompanies;
+        allItems = allItems.concat(data.items);
+        nextToken = data.nextToken;
+        
+      } while (nextToken);
+      
+      setCompanies(allItems);
+    } catch (err) {
+      console.error('Error fetching companies:', err);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la récupération des entreprises: ${err.message || 'Erreur inconnue'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Search companies with filters
+  const fetchFilteredCompanies = async () => {
+    setSearchLoading(true);
+    
+    let filtersArray = [];
+    
+    if (searchSiret && searchSiret.trim()) {
+      filtersArray.push({ siret: { contains: searchSiret.trim() } });
+    }
+    
+    if (searchName && searchName.trim()) {
+      filtersArray.push({ name: { contains: searchName.trim() } });
+    }
+    
+    if (searchEmail && searchEmail.trim()) {
+      filtersArray.push({ email: { contains: searchEmail.trim() } });
+    }
+    
+    if (filtersArray.length === 0) {
+      toast({
+        title: "Attention",
+        description: "Veuillez saisir au moins un critère de recherche",
+        variant: "destructive",
+      });
+      setSearchLoading(false);
+      return;
+    }
+
+    let nextToken = null;
+    let allCompanies = [];
+
+    const variables = {
+      limit: 6000, 
+      filter: {
+        or: filtersArray
+      }
+    };
+
+    try {
+      do {
+        const queryVariables = { ...variables, nextToken };
+
+        const res = await client.graphql({
+          query: listCompanies,
+          variables: queryVariables
+        });
+
+        const fetchedCompanies = res.data.listCompanies.items;
+        allCompanies = [...allCompanies, ...fetchedCompanies];
+        nextToken = res.data.listCompanies.nextToken;
+      } while (nextToken); 
+
+      setCompanies(allCompanies);
+      setIsFiltered(true);
+      
+      toast({
+        title: "Recherche réussie",
+        description: `${allCompanies.length} entreprises trouvées`,
+      });
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la recherche",
+        variant: "destructive",
+      });
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Reset search
+  const resetFilter = async () => {
+    setSearchName('');
+    setSearchEmail('');
+    setSearchSiret('');
+    setIsFiltered(false);
+    await fetchCompanies();
+  };
+
+  // Update company
+  const updateCompanyData = async (data) => {
+    try {
+      const companyDetails = {
+        id: data.id,
+        name: data.name,
+        address: data.address,
+        email: data.email,
+        contact: data.contact,
+        mobile: data.mobile,
+        siret: data.siret,
+      };
+
+      await client.graphql({
+        query: updateCompany,
+        variables: {
+          input: companyDetails
+        }
+      });
+
+      toast({
+        title: "Succès",
+        description: "Entreprise modifiée avec succès",
+      });
+      
+      await fetchCompanies();
+    } catch (err) {
+      console.error('Error updating company:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la modification",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Delete company
+  const handleDelete = async (item) => {
+    try {
+      const companyDetails = {
+        id: item.id
+      };
+
+      await client.graphql({
+        query: deleteCompany,
+        variables: { input: companyDetails }
+      });
+
+      toast({
+        title: "Succès",
+        description: "Entreprise supprimée avec succès",
+      });
+      
+      await fetchCompanies();
+    } catch (err) {
+      console.error('Error deleting company:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  // Define columns for the table
+  const allColumns = [
     { 
-      id: "entreprise", 
+      id: "name", 
       label: "Entreprise", 
       sortable: true, 
       visible: true,
       renderCell: (value, row) => {
-        if (row.type === "Entreprise") {
-          return <CompanyUsersList 
-            companyName={value} 
-            users={companyUsers[value] || []} 
-          />;
-        }
-        return value;
+        return <CompanyUsersList 
+          companyName={value} 
+          users={row.users?.items || []} 
+        />;
       }
     },
-    
-    // Colonnes spécifiques aux entreprises
     { id: "contact", label: "Contact", sortable: true, visible: true },
-    { id: "telephone", label: "Téléphone", sortable: true, visible: true },
+    { id: "mobile", label: "Téléphone", sortable: true, visible: true },
     { id: "email", label: "Email", sortable: true, visible: true },
-    { id: "adresse", label: "Adresse", sortable: true, visible: true },
-    { id: "ville", label: "Ville", sortable: true, visible: true },
-    { id: "type", label: "Type", sortable: true, visible: false },
+    { id: "address", label: "Adresse", sortable: true, visible: true },
+    { id: "city", label: "Ville", sortable: true, visible: true },
+    { id: "siret", label: "Siret", sortable: true, visible: false },
   ];
 
-  // Données des entreprises
-  const entreprisesData = [
-    { 
-      entreprise: "SOCIETE AMBULANCES LEROY", 
-      contact: "Jean Dupont", 
-      telephone: "0123456789", 
-      email: "contact@ambulances-leroy.fr", 
-      adresse: "123 Rue de Paris, 75001 Paris",
-      ville: "Paris",
-      type: "Entreprise"
-    },
-    { 
-      entreprise: "VITOR NETTOYAGE", 
-      contact: "Marie Martin", 
-      telephone: "0234567890", 
-      email: "contact@vitor-nettoyage.com", 
-      adresse: "456 Avenue Victor Hugo, 75016 Paris",
-      ville: "Paris",
-      type: "Entreprise"
-    },
-    { 
-      entreprise: "MAC TRANSPORT", 
-      contact: "Pierre Durand", 
-      telephone: "0345678901", 
-      email: "contact@mac-transport.fr", 
-      adresse: "789 Boulevard Saint-Michel, 75005 Paris",
-      ville: "Paris",
-      type: "Entreprise"
-    },
-    { 
-      entreprise: "B LIVE", 
-      contact: "Sophie Bernard", 
-      telephone: "0456789012", 
-      email: "contact@blive.com", 
-      adresse: "12 Rue de Rivoli, 75004 Paris",
-      ville: "Paris",
-      type: "Entreprise"
-    },
-    { 
-      entreprise: "IRIS MULTISERVICES", 
-      contact: "Thomas Petit", 
-      telephone: "0567890123", 
-      email: "contact@iris-multiservices.fr", 
-      adresse: "34 Avenue des Champs-Élysées, 75008 Paris",
-      ville: "Paris",
-      type: "Entreprise"
-    },
-  ];
-
-  // Filtrer les données d'utilisateurs pour ne pas afficher les utilisateurs directement dans le tableau
-  const filteredData = entreprisesData;
-
-  const handleEdit = (item: any) => {
+  const handleEdit = (item) => {
     setSelectedItem(item);
-    
-    if (item.type === "Entreprise") {
-      setEditDialogOpen(true);
-    } else {
-      setEditUserDialogOpen(true);
-    }
+    setEditDialogOpen(true);
   };
 
-  const handleDelete = (item: any) => {
-    console.log("Delete item:", item);
-    
-    // Simuler la suppression
-    toast({
-      title: item.type === "Entreprise" ? "Entreprise supprimée" : "Utilisateur supprimé",
-      description: `${item.type === "Entreprise" ? item.entreprise : item.nom} a été supprimé avec succès.`
-    });
-  };
-
-  const renderActions = (item: any) => {
+  const renderActions = (item) => {
     return (
       <div className="flex gap-2">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-          </DialogTrigger>
-        </Dialog>
+        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+          <Edit className="h-4 w-4" />
+        </Button>
         
         <DeleteConfirmationDialog
-          title={item.type === "Entreprise" ? "Supprimer l'entreprise" : "Supprimer l'utilisateur"}
-          description={item.type === "Entreprise" 
-            ? `Êtes-vous sûr de vouloir supprimer l'entreprise "${item.entreprise}" ? Cette action ne peut pas être annulée.`
-            : `Êtes-vous sûr de vouloir supprimer l'utilisateur "${item.nom}" ? Cette action ne peut pas être annulée.`
-          }
+          title="Supprimer l'entreprise"
+          description={`Êtes-vous sûr de vouloir supprimer l'entreprise "${item.name}" ? Cette action ne peut pas être annulée.`}
           onConfirm={() => handleDelete(item)}
         />
       </div>
@@ -166,24 +356,85 @@ export default function EntreprisesPage() {
 
   const handleAddSuccess = () => {
     setIsDialogOpen(false);
+    fetchCompanies();
     toast({
       title: "Ajout réussi",
-      description: "L'entreprise et l'utilisateur ont été ajoutés avec succès"
+      description: "L'entreprise a été ajoutée avec succès"
     });
   };
   
   const handleEditSuccess = () => {
     setEditDialogOpen(false);
-    setEditUserDialogOpen(false);
     setSelectedItem(null);
+    fetchCompanies();
     toast({
       title: "Modification réussie",
       description: "Les informations ont été mises à jour avec succès"
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Chargement des entreprises...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
+      {/* Search Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
+        <div>
+          <label className="block text-sm font-medium mb-2">Nom entreprise</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            placeholder="Rechercher par nom..."
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Email</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={searchEmail}
+            onChange={(e) => setSearchEmail(e.target.value)}
+            placeholder="Rechercher par email..."
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Siret</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={searchSiret}
+            onChange={(e) => setSearchSiret(e.target.value)}
+            placeholder="Rechercher par siret..."
+          />
+        </div>
+        <div className="flex items-end gap-2">
+          <Button 
+            variant="outline"
+            onClick={resetFilter}
+            disabled={searchLoading}
+          >
+            Réinitialiser
+          </Button>
+          <Button 
+            onClick={fetchFilteredCompanies}
+            disabled={searchLoading}
+          >
+            {searchLoading ? "Recherche..." : "Rechercher"}
+          </Button>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Entreprises & Utilisateurs</h1>
         <div className="flex gap-2">
@@ -206,30 +457,18 @@ export default function EntreprisesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={filteredData}
+        data={companies}
         renderActions={renderActions}
+        loading={loading}
       />
       
-      {/* Dialog pour éditer une entreprise */}
-      <Dialog open={editDialogOpen && selectedItem?.type === "Entreprise"} onOpenChange={setEditDialogOpen}>
+      {/* Edit Company Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          {selectedItem && selectedItem.type === "Entreprise" && (
+          {selectedItem && (
             <EditCompanyForm 
               company={selectedItem} 
               onClose={() => setEditDialogOpen(false)}
-              onSuccess={handleEditSuccess}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Dialog pour éditer un utilisateur */}
-      <Dialog open={editUserDialogOpen && !selectedItem?.type} onOpenChange={setEditUserDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          {selectedItem && !selectedItem.type && (
-            <EditUserForm 
-              user={selectedItem} 
-              onClose={() => setEditUserDialogOpen(false)}
               onSuccess={handleEditSuccess}
             />
           )}
