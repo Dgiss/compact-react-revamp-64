@@ -35,6 +35,7 @@ interface EnhancedDataTableProps {
   onDelete?: (item: any) => void;
   onAssociate?: (item: any) => void;
   renderActions?: (item: any) => React.ReactNode;
+  loading?: boolean;
 }
 
 export function EnhancedDataTable({ 
@@ -43,7 +44,8 @@ export function EnhancedDataTable({
   onEdit, 
   onDelete, 
   onAssociate,
-  renderActions
+  renderActions,
+  loading = false
 }: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
     initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
@@ -131,6 +133,17 @@ export function EnhancedDataTable({
       <CopyableCell key={column.id} value={value} />
     );
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
