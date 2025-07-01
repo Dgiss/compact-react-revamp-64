@@ -2,10 +2,12 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
+import { waitForAmplifyConfig } from '@/config/aws-config.js';
 
 const client = generateClient();
 
 export const fetchCompaniesWithVehicles = async () => {
+  await waitForAmplifyConfig();
   let allCompanies = [];
   let allVehicles = [];
   let nextToken = null;
@@ -52,6 +54,7 @@ export const fetchCompaniesWithVehicles = async () => {
 };
 
 export const updateVehicleData = async (data) => {
+  await waitForAmplifyConfig();
   const vehicleDetails = {
     immat: data.immat,
     vehicleDeviceImei: data.vehicleDeviceImei,
@@ -72,6 +75,7 @@ export const updateVehicleData = async (data) => {
 };
 
 export const deleteVehicleData = async (item) => {
+  await waitForAmplifyConfig();
   const vehicleDetails = {
     immat: item.immat
   };

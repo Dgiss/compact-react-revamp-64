@@ -146,23 +146,24 @@ export const fetchCompaniesWithUsers = async () => {
       // Get users from the nested structure
       const companyUsers = company.users?.items || [];
       
-      // Create user objects with login info from existing data
-      const usersWithLogin = companyUsers.map(user => {
-        const nom = user.sub || user.firstname || 'N/A';
-        const motDePasse = `${user.firstname || 'user'}${new Date().getFullYear()}`;
+      // Create user objects with real data from existing fields
+      const usersWithRealData = companyUsers.map(user => {
+        const fullName = [user.firstname, user.lastname].filter(Boolean).join(' ') || user.sub || 'Utilisateur';
+        const userId = user.sub || user.mappingId || `user_${Math.random()}`;
         
         return {
           ...user,
-          id: user.sub || user.mappingId || `user_${Math.random()}`,
-          nom: nom,
-          motDePasse: motDePasse
+          id: userId,
+          nom: fullName,
+          // Note: Les mots de passe ne sont pas stockés en clair pour la sécurité
+          motDePasse: 'Géré par le système'
         };
       });
       
       return {
         ...company,
         users: {
-          items: usersWithLogin
+          items: usersWithRealData
         }
       };
     });
