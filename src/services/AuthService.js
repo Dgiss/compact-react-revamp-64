@@ -1,8 +1,37 @@
 
 import { signIn, signOut, getCurrentUser } from 'aws-amplify/auth';
 
+// Fonction pour forcer la déconnexion complète
+export const forceSignOut = async () => {
+  try {
+    await signOut({ global: true });
+    localStorage.removeItem('alreadyLogged');
+    localStorage.removeItem('loginExpiration');
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur lors de la déconnexion forcée:', error);
+    // Nettoyer localStorage même si signOut échoue
+    localStorage.removeItem('alreadyLogged');
+    localStorage.removeItem('loginExpiration');
+    return { success: false, error: error.message };
+  }
+};
+
 export const signInUser = async (username, password) => {
   try {
+    console.log('Tentative de connexion pour:', username);
+    
+    // Vérifier d'abord si l'utilisateur est déjà connecté
+    try {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        console.log('Utilisateur déjà connecté détecté, déconnexion forcée...');
+        await forceSignOut();
+      }
+    } catch (error) {
+      console.log('Aucun utilisateur connecté détecté');
+    }
+
     const { isSignedIn, nextStep } = await signIn({ username, password });
     
     if (nextStep.signInStep === 'DONE') {
@@ -14,12 +43,37 @@ export const signInUser = async (username, password) => {
       localStorage.setItem('alreadyLogged', 'true');
       localStorage.setItem('loginExpiration', expirationDate.getTime().toString());
       
+      console.log('Connexion réussie pour:', username);
       return { success: true, user: isSignedIn };
     }
     
     return { success: false, error: 'Étape de connexion non terminée' };
   } catch (error) {
     console.error('Erreur de connexion:', error);
+    
+    // Gérer spécifiquement l'erreur "already signed in"
+    if (error.message && error.message.includes('already signed in')) {
+      console.log('Erreur "already signed in" détectée, tentative de récupération...');
+      try {
+        await forceSignOut();
+        // Réessayer la connexion après déconnexion
+        const retryResult = await signIn({ username, password });
+        if (retryResult.nextStep.signInStep === 'DONE') {
+          const expirationDate = new Date();
+          expirationDate.setHours(expirationDate.getHours() + 2);
+          localStorage.setItem('alreadyLogged', 'true');
+          localStorage.setItem('loginExpiration', expirationDate.getTime().toString());
+          return { success: true, user: retryResult.isSignedIn };
+        }
+      } catch (retryError) {
+        console.error('Échec de la récupération après "already signed in":', retryError);
+        return { 
+          success: false, 
+          error: 'Session corrompue. Veuillez rafraîchir la page et réessayer.' 
+        };
+      }
+    }
+    
     return { 
       success: false, 
       error: error.message || 'Erreur de connexion' 
@@ -29,35 +83,80 @@ export const signInUser = async (username, password) => {
 
 export const signOutUser = async () => {
   try {
-    await signOut();
+    await signOut({ global: true });
     localStorage.removeItem('alreadyLogged');
     localStorage.removeItem('loginExpiration');
+    console.log('Déconnexion réussie');
     return { success: true };
   } catch (error) {
     console.error('Erreur de déconnexion:', error);
+    // Nettoyer localStorage même si signOut échoue
+    localStorage.removeItem('alreadyLogged');
+    localStorage.removeItem('loginExpiration');
     return { success: false, error: error.message };
   }
 };
 
 export const checkAuthStatus = async () => {
   try {
+    console.log('Vérification du statut d\'authentification...');
+    
     const alreadyLogged = localStorage.getItem('alreadyLogged');
     const loginExpiration = localStorage.getItem('loginExpiration');
     
-    if (!alreadyLogged || !loginExpiration) {
-      return { isAuthenticated: false };
+    console.log('localStorage - alreadyLogged:', alreadyLogged);
+    console.log('localStorage - loginExpiration:', loginExpiration);
+    
+    // Vérifier l'expiration du localStorage
+    if (loginExpiration) {
+      const now = new Date().getTime();
+      if (now > parseInt(loginExpiration)) {
+        console.log('Session localStorage expirée, nettoyage...');
+        localStorage.removeItem('alreadyLogged');
+        localStorage.removeItem('loginExpiration');
+        try {
+          await signOut({ global: true });
+        } catch (error) {
+          console.log('Erreur lors du nettoyage de session:', error);
+        }
+        return { isAuthenticated: false };
+      }
     }
     
-    // Vérifier l'expiration
-    const now = new Date().getTime();
-    if (now > parseInt(loginExpiration)) {
+    // Vérifier l'état Cognito
+    let cognitoUser = null;
+    try {
+      cognitoUser = await getCurrentUser();
+      console.log('Utilisateur Cognito trouvé:', cognitoUser?.username);
+    } catch (error) {
+      console.log('Aucun utilisateur Cognito actif');
+    }
+    
+    // Synchroniser les états
+    if (cognitoUser && !alreadyLogged) {
+      console.log('Synchronisation: utilisateur Cognito sans localStorage');
+      const expirationDate = new Date();
+      expirationDate.setHours(expirationDate.getHours() + 2);
+      localStorage.setItem('alreadyLogged', 'true');
+      localStorage.setItem('loginExpiration', expirationDate.getTime().toString());
+      return { isAuthenticated: true, user: cognitoUser };
+    }
+    
+    if (!cognitoUser && alreadyLogged) {
+      console.log('Synchronisation: localStorage sans utilisateur Cognito, nettoyage...');
       localStorage.removeItem('alreadyLogged');
       localStorage.removeItem('loginExpiration');
       return { isAuthenticated: false };
     }
     
-    const user = await getCurrentUser();
-    return { isAuthenticated: true, user };
+    if (cognitoUser && alreadyLogged) {
+      console.log('Sessions synchronisées, utilisateur authentifié');
+      return { isAuthenticated: true, user: cognitoUser };
+    }
+    
+    console.log('Aucune session active');
+    return { isAuthenticated: false };
+    
   } catch (error) {
     console.error('Erreur de vérification du statut:', error);
     localStorage.removeItem('alreadyLogged');
@@ -69,6 +168,7 @@ export const checkAuthStatus = async () => {
 export const getCurrentUserInfo = async () => {
   try {
     const user = await getCurrentUser();
+    console.log('Informations utilisateur récupérées:', user?.username);
     return user;
   } catch (error) {
     console.error('Erreur de récupération utilisateur:', error);

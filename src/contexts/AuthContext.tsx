@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { checkAuthStatus, getCurrentUserInfo } from '@/services/AuthService';
+import { checkAuthStatus, getCurrentUserInfo, forceSignOut } from '@/services/AuthService';
 
 interface User {
   username: string;
@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (user: User) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  forceLogout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,34 +38,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async () => {
     try {
+      console.log('AuthContext: Vérification de l\'authentification...');
       const { isAuthenticated: authStatus, user: authUser } = await checkAuthStatus();
+      
+      console.log('AuthContext: Statut auth:', authStatus);
       setIsAuthenticated(authStatus);
       
       if (authStatus && authUser) {
-        setUser({
+        const userData = {
           username: authUser.username,
-          userId: authUser.userId
-        });
+          userId: authUser.userId || authUser.username
+        };
+        setUser(userData);
+        console.log('AuthContext: Utilisateur défini:', userData.username);
       } else {
         setUser(null);
+        console.log('AuthContext: Aucun utilisateur');
       }
     } catch (error) {
-      console.error('Erreur de vérification auth:', error);
+      console.error('AuthContext: Erreur de vérification auth:', error);
       setIsAuthenticated(false);
       setUser(null);
+      
+      // En cas d'erreur, nettoyer complètement
+      try {
+        await forceSignOut();
+      } catch (cleanupError) {
+        console.error('AuthContext: Erreur de nettoyage:', cleanupError);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const login = (userData: User) => {
+    console.log('AuthContext: Connexion utilisateur:', userData.username);
     setIsAuthenticated(true);
     setUser(userData);
   };
 
   const logout = () => {
+    console.log('AuthContext: Déconnexion utilisateur');
     setIsAuthenticated(false);
     setUser(null);
+  };
+
+  const forceLogout = async () => {
+    try {
+      console.log('AuthContext: Déconnexion forcée...');
+      await forceSignOut();
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error('AuthContext: Erreur lors de la déconnexion forcée:', error);
+      // Forcer la déconnexion côté client même si l'API échoue
+      setIsAuthenticated(false);
+      setUser(null);
+    }
   };
 
   useEffect(() => {
@@ -77,7 +107,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     login,
     logout,
-    checkAuth
+    checkAuth,
+    forceLogout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
