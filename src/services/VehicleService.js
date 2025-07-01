@@ -1,8 +1,9 @@
+
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
-import { fetchAllDevices, getDeviceTypeName } from './DeviceService.js';
+import { fetchAllDevices } from './DeviceService.js';
 
 const client = generateClient();
 
@@ -55,7 +56,7 @@ export const fetchCompaniesWithVehicles = async () => {
           immatriculation: vehicle.immat,
           nomVehicule: vehicle.code || "",
           imei: vehicle.vehicleDeviceImei || "",
-          typeBoitier: associatedDevice ? getDeviceTypeName(associatedDevice.protocolId) : "GPS Tracker",
+          typeBoitier: associatedDevice ? associatedDevice.protocolId : "",
           marque: vehicle.vehicleBrandBrandName || "",
           modele: vehicle.vehicleModeleId || "",
           kilometrage: vehicle.kilometerage?.toString() || "",
@@ -80,7 +81,7 @@ export const fetchCompaniesWithVehicles = async () => {
       immatriculation: "",
       nomVehicule: "",
       imei: device.imei,
-      typeBoitier: getDeviceTypeName(device.protocolId),
+      typeBoitier: device.protocolId,
       marque: "",
       modele: "",
       kilometrage: "",

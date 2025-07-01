@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi } from "lucide-react";
@@ -189,12 +190,14 @@ export default function VehiclesDevicesPage() {
     { id: "imei", label: "IMEI", sortable: true, visible: true },
     { 
       id: "typeBoitier", 
-      label: "Type de Boîtier", 
+      label: "Protocol ID", 
       sortable: true, 
       visible: true,
       renderCell: (value, row) => (
         <div className="flex flex-col">
-          <span className="font-medium">{value}</span>
+          <span className="font-medium">
+            {value ? `Protocol: ${value}` : "N/A"}
+          </span>
           {row.deviceData && (
             <span className="text-xs text-gray-500">
               {row.isAssociated ? "Associé" : "Disponible"}
@@ -209,7 +212,7 @@ export default function VehiclesDevicesPage() {
     { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false },
     { 
       id: "telephone", 
-      label: "Téléphone", 
+      label: "SIM", 
       sortable: true, 
       visible: true,
       renderCell: (value) => (
