@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link } from "lucide-react";
@@ -295,8 +296,6 @@ export default function VehiclesDevicesPage() {
         columns={allColumns}
         data={isFiltered ? filteredData : combinedData}
         onEdit={handleEdit}
-        enablePagination={true}
-        defaultItemsPerPage={50}
         renderActions={(item) => (
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>

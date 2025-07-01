@@ -99,53 +99,6 @@ export const listCompanies = /* GraphQL */ `
   }
 `;
 
-export const listUsers = /* GraphQL */ `
-  query ListUsers(
-    $sub: String
-    $filter: ModelUserFilterInput
-    $limit: Int
-    $nextToken: String
-    $sortDirection: ModelSortDirection
-  ) {
-    listUsers(
-      sub: $sub
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-      sortDirection: $sortDirection
-    ) {
-      items {
-        sub
-        firstname
-        lastname
-        mobile
-        beginDate
-        endDate
-        mappingId
-        languageCode
-        lastModificationDate
-        showReport
-        dispatcher
-        applicationVersion
-        themeId
-        companyUsersId
-        login
-        motDePasse
-        company {
-          id
-          name
-          __typename
-        }
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-
 export const vehiclesByCompanyVehiclesId = /* GraphQL */ `
   query VehiclesByCompanyVehiclesId(
     $companyVehiclesId: ID!

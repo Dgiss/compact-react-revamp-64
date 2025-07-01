@@ -1,11 +1,9 @@
-
 import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit, Eye, EyeOff, Filter, Link, Search, Trash } from "lucide-react";
 import { CopyableCell } from "./CopyableCell";
-import { EnhancedPagination } from "@/components/ui/enhanced-pagination";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -38,8 +36,6 @@ interface EnhancedDataTableProps {
   onAssociate?: (item: any) => void;
   renderActions?: (item: any) => React.ReactNode;
   loading?: boolean;
-  enablePagination?: boolean;
-  defaultItemsPerPage?: number;
 }
 
 export function EnhancedDataTable({ 
@@ -49,9 +45,7 @@ export function EnhancedDataTable({
   onDelete, 
   onAssociate,
   renderActions,
-  loading = false,
-  enablePagination = false,
-  defaultItemsPerPage = 50
+  loading = false
 }: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
     initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
@@ -60,10 +54,6 @@ export function EnhancedDataTable({
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' } | null>(null);
   const [searchColumn, setSearchColumn] = useState<string>(columns[0]?.id || "");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(defaultItemsPerPage);
 
   const visibleColumns = useMemo(() => {
     return columns.filter(column => column.visible);
@@ -92,7 +82,6 @@ export function EnhancedDataTable({
     return sortConfig.key === key ? sortConfig.direction : undefined;
   };
 
-  // Filter data based on search term
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
     
@@ -103,7 +92,6 @@ export function EnhancedDataTable({
     });
   }, [data, searchTerm, searchColumn]);
 
-  // Sort ALL filtered data (global sort, not just current page)
   const sortedData = useMemo(() => {
     if (!sortConfig) return filteredData;
     
@@ -125,28 +113,6 @@ export function EnhancedDataTable({
       return 0;
     });
   }, [filteredData, sortConfig]);
-
-  // Paginate the sorted data
-  const paginatedData = useMemo(() => {
-    if (!enablePagination) return sortedData;
-    
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return sortedData.slice(startIndex, endIndex);
-  }, [sortedData, currentPage, itemsPerPage, enablePagination]);
-
-  // Pagination calculations
-  const totalItems = sortedData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage: number) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page
-  };
 
   const hasVisibleColumns = visibleColumns.length > 0;
 
@@ -270,14 +236,14 @@ export function EnhancedDataTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedData.length === 0 ? (
+            {sortedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
                   Aucune donnée disponible
                 </TableCell>
               </TableRow>
             ) : hasVisibleColumns ? (
-              paginatedData.map((row, index) => (
+              sortedData.map((row, index) => (
                 <TableRow key={index}>
                   {visibleColumns.map((column) => (
                     <TableCell key={column.id}>
@@ -315,17 +281,6 @@ export function EnhancedDataTable({
           </TableBody>
         </Table>
       </div>
-
-      {enablePagination && totalItems > 0 && (
-        <EnhancedPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-        />
-      )}
     </div>
   );
 }
