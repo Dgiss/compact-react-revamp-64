@@ -1,10 +1,37 @@
 
 import React from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { AppSidebar } from "./AppSidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { signOutUser } from "@/services/AuthService";
+import { toast } from "@/components/ui/use-toast";
 
 export function Layout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const result = await signOutUser();
+      if (result.success) {
+        logout();
+        toast({
+          title: "Déconnexion réussie",
+          description: "À bientôt !",
+        });
+        navigate('/login');
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur de déconnexion",
+        description: "Une erreur s'est produite",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="flex w-full min-h-screen bg-gray-50">
@@ -15,11 +42,21 @@ export function Layout() {
               <SidebarTrigger className="mr-2" />
               <h1 className="text-xl font-medium">Tableau de bord</h1>
             </div>
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-gray-600">
+                  Connecté en tant que <strong>{user.username}</strong>
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                Déconnexion
+              </Button>
+            </div>
           </div>
           <div className="p-4">
             <Outlet />
