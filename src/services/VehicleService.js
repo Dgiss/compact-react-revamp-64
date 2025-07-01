@@ -34,6 +34,14 @@ export const fetchCompaniesWithVehicles = async () => {
   
   // Fetch all devices
   const devices = await fetchAllDevices();
+  console.log('=== DEVICE DEBUG INFO ===');
+  console.log('Total devices fetched:', devices.length);
+  console.log('First device sample:', devices[0]);
+  console.log('Device structure sample:', {
+    imei: devices[0]?.imei,
+    protocolId: devices[0]?.protocolId,
+    sim: devices[0]?.sim
+  });
   
   // Create a map of devices by IMEI for quick lookup
   const deviceMap = {};
@@ -43,11 +51,30 @@ export const fetchCompaniesWithVehicles = async () => {
     }
   });
   
+  console.log('Device map keys (IMEIs):', Object.keys(deviceMap));
+  console.log('Device map sample entry:', deviceMap[Object.keys(deviceMap)[0]]);
+  
   // Extract all vehicles from companies and enrich with device data
   allCompanies.forEach(company => {
     if (company.vehicles && company.vehicles.items) {
       const companyVehicles = company.vehicles.items.map(vehicle => {
+        console.log(`=== VEHICLE DEBUG: ${vehicle.immat} ===`);
+        console.log('Vehicle IMEI:', vehicle.vehicleDeviceImei);
+        console.log('IMEI exists in deviceMap:', !!deviceMap[vehicle.vehicleDeviceImei]);
+        
         const associatedDevice = deviceMap[vehicle.vehicleDeviceImei];
+        console.log('Associated device found:', !!associatedDevice);
+        
+        if (associatedDevice) {
+          console.log('Device data:', {
+            imei: associatedDevice.imei,
+            protocolId: associatedDevice.protocolId,
+            sim: associatedDevice.sim
+          });
+        } else {
+          console.log('No device found for IMEI:', vehicle.vehicleDeviceImei);
+          console.log('Available IMEIs in map:', Object.keys(deviceMap).slice(0, 5));
+        }
         
         return {
           ...vehicle,
@@ -92,6 +119,10 @@ export const fetchCompaniesWithVehicles = async () => {
     }));
   
   allDevices = [...allVehicles, ...unassociatedDevices];
+  
+  console.log('=== FINAL RESULT SAMPLE ===');
+  console.log('Sample vehicle with device data:', allDevices.find(d => d.type === 'vehicle'));
+  console.log('Sample unassociated device:', allDevices.find(d => d.type === 'device'));
   
   return { companies: allCompanies, vehicles: allDevices };
 };
