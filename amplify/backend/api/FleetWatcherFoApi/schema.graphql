@@ -1,0 +1,38 @@
+
+# This file is used by Amplify in the build process to represent the schema
+# defined in the src/graphql/schema.json file
+
+type Company @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  siren: String
+  users: [User] @hasMany(indexName: "byCompany", fields: ["id"])
+  vehicles: [Vehicle] @hasMany(indexName: "byCompany", fields: ["id"])
+}
+
+type User @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  username: String!
+  email: AWSEmail!
+  companyUsersId: ID @index(name: "byCompany")
+}
+
+type Vehicle @model @auth(rules: [{allow: public}]) {
+  immat: ID!
+  code: String
+  vehicleDeviceImei: String
+  vehicleVehicleCategoryId: ID
+  vehicleBrandBrandName: String
+  vehicleModeleId: String
+  kilometerage: Int
+  kilometerageStart: Int
+  vehicleCompanyId: ID @index(name: "byCompany")
+  locations: String
+}
+
+type Device @model @auth(rules: [{allow: public}]) {
+  imei: ID!
+  protocolId: String
+  sim: String
+  lastKnownLocation: String
+}

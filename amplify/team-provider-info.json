@@ -1,0 +1,36 @@
+
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-fleetwatcherfo-dev-152847-authRole",
+      "UnauthRoleArn": "arn:aws:iam::123456789012:role/amplify-fleetwatcherfo-dev-152847-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::123456789012:role/amplify-fleetwatcherfo-dev-152847-authRole",
+      "Region": "eu-west-3",
+      "DeploymentBucketName": "amplify-fleetwatcherfo-dev-152847-deployment",
+      "UnauthRoleName": "amplify-fleetwatcherfo-dev-152847-unauthRole",
+      "StackName": "amplify-fleetwatcherfo-dev-152847",
+      "StackId": "arn:aws:cloudformation:eu-west-3:123456789012:stack/amplify-fleetwatcherfo-dev-152847/12345678-1234-1234-1234-123456789012",
+      "AmplifyAppId": "d1234567890123"
+    },
+    "categories": {
+      "auth": {
+        "FleetWatcherFoAuth": {
+          "userPoolId": "eu-west-3_K0BoxUFkS",
+          "userPoolArn": "arn:aws:cognito-idp:eu-west-3:123456789012:userpool/eu-west-3_K0BoxUFkS",
+          "userPoolName": "FleetWatcherFoAuth_userpool_dev",
+          "appClientIDWeb": "1bg4vbumtfgjmro8n65ce4c859",
+          "appClientID": "1bg4vbumtfgjmro8n65ce4c859",
+          "identityPoolId": "eu-west-3:5fdebe79-865b-40ec-8de0-f0b04dbbae29",
+          "identityPoolName": "FleetWatcherFoAuth_identitypool_dev"
+        }
+      },
+      "api": {
+        "FleetWatcherFoApi": {
+          "GraphQLAPIIdOutput": "77e55jvfordw5c6tb5bmh6loiq",
+          "GraphQLAPIEndpointOutput": "https://77e55jvfordw5c6tb5bmh6loiq.appsync-api.eu-west-3.amazonaws.com/graphql",
+          "GraphQLAPIKeyOutput": "da2-madtpj74mjallnjpbhca7owzym"
+        }
+      }
+    }
+  }
+}

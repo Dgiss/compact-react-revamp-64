@@ -1,0 +1,343 @@
+
+{
+  "schema": {
+    "types": {
+      "Company": {
+        "name": "Company",
+        "fields": {
+          "id": {
+            "name": "id",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": true,
+            "attributes": []
+          },
+          "name": {
+            "name": "name",
+            "isArray": false,
+            "type": "String",
+            "isRequired": true,
+            "attributes": []
+          },
+          "siren": {
+            "name": "siren",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "users": {
+            "name": "users",
+            "isArray": false,
+            "type": {
+              "model": "User"
+            },
+            "isRequired": false,
+            "attributes": [],
+            "association": {
+              "connectionType": "HAS_MANY",
+              "associatedWith": "companyUsersId"
+            }
+          },
+          "vehicles": {
+            "name": "vehicles",
+            "isArray": false,
+            "type": {
+              "model": "Vehicle"
+            },
+            "isRequired": false,
+            "attributes": [],
+            "association": {
+              "connectionType": "HAS_MANY",
+              "associatedWith": "vehicleCompanyId"
+            }
+          },
+          "createdAt": {
+            "name": "createdAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          }
+        },
+        "syncable": true,
+        "pluralName": "Companies",
+        "attributes": [
+          {
+            "type": "model",
+            "properties": {}
+          },
+          {
+            "type": "auth",
+            "properties": {
+              "rules": [
+                {
+                  "allow": "public",
+                  "operations": ["create", "update", "delete", "read"]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "User": {
+        "name": "User",
+        "fields": {
+          "id": {
+            "name": "id",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": true,
+            "attributes": []
+          },
+          "username": {
+            "name": "username",
+            "isArray": false,
+            "type": "String",
+            "isRequired": true,
+            "attributes": []
+          },
+          "email": {
+            "name": "email",
+            "isArray": false,
+            "type": "AWSEmail",
+            "isRequired": true,
+            "attributes": []
+          },
+          "companyUsersId": {
+            "name": "companyUsersId",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": false,
+            "attributes": []
+          },
+          "createdAt": {
+            "name": "createdAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          }
+        },
+        "syncable": true,
+        "pluralName": "Users",
+        "attributes": [
+          {
+            "type": "model",
+            "properties": {}
+          },
+          {
+            "type": "auth",
+            "properties": {
+              "rules": [
+                {
+                  "allow": "public",
+                  "operations": ["create", "update", "delete", "read"]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Vehicle": {
+        "name": "Vehicle",
+        "fields": {
+          "immat": {
+            "name": "immat",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": true,
+            "attributes": []
+          },
+          "code": {
+            "name": "code",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "vehicleDeviceImei": {
+            "name": "vehicleDeviceImei",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "vehicleVehicleCategoryId": {
+            "name": "vehicleVehicleCategoryId",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": false,
+            "attributes": []
+          },
+          "vehicleBrandBrandName": {
+            "name": "vehicleBrandBrandName",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "vehicleModeleId": {
+            "name": "vehicleModeleId",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "kilometerage": {
+            "name": "kilometerage",
+            "isArray": false,
+            "type": "Int",
+            "isRequired": false,
+            "attributes": []
+          },
+          "kilometerageStart": {
+            "name": "kilometerageStart",
+            "isArray": false,
+            "type": "Int",
+            "isRequired": false,
+            "attributes": []
+          },
+          "vehicleCompanyId": {
+            "name": "vehicleCompanyId",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": false,
+            "attributes": []
+          },
+          "locations": {
+            "name": "locations",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "createdAt": {
+            "name": "createdAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          }
+        },
+        "syncable": true,
+        "pluralName": "Vehicles",
+        "attributes": [
+          {
+            "type": "model",
+            "properties": {}
+          },
+          {
+            "type": "auth",
+            "properties": {
+              "rules": [
+                {
+                  "allow": "public",
+                  "operations": ["create", "update", "delete", "read"]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Device": {
+        "name": "Device",
+        "fields": {
+          "imei": {
+            "name": "imei",
+            "isArray": false,
+            "type": "ID",
+            "isRequired": true,
+            "attributes": []
+          },
+          "protocolId": {
+            "name": "protocolId",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "sim": {
+            "name": "sim",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "lastKnownLocation": {
+            "name": "lastKnownLocation",
+            "isArray": false,
+            "type": "String",
+            "isRequired": false,
+            "attributes": []
+          },
+          "createdAt": {
+            "name": "createdAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          },
+          "updatedAt": {
+            "name": "updatedAt",
+            "isArray": false,
+            "type": "AWSDateTime",
+            "isRequired": false,
+            "attributes": [],
+            "isReadOnly": true
+          }
+        },
+        "syncable": true,
+        "pluralName": "Devices",
+        "attributes": [
+          {
+            "type": "model",
+            "properties": {}
+          },
+          {
+            "type": "auth",
+            "properties": {
+              "rules": [
+                {
+                  "allow": "public",
+                  "operations": ["create", "update", "delete", "read"]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "enums": {},
+    "nonModels": {},
+    "version": "1"
+  }
+}
