@@ -1,0 +1,48 @@
+
+# Schema GraphQL complet pour FleetWatcher
+
+type Company @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  siren: String
+  address: String
+  contact: String
+  mobile: String
+  phone: String
+  email: AWSEmail
+  users: [User] @hasMany(indexName: "byCompany", fields: ["id"])
+  vehicles: [Vehicle] @hasMany(indexName: "byCompany", fields: ["id"])
+}
+
+type User @model @auth(rules: [{allow: public}]) {
+  sub: ID!
+  username: String!
+  email: AWSEmail!
+  password: String
+  firstname: String
+  lastname: String
+  mobile: String
+  companyUsersId: ID @index(name: "byCompany")
+  company: Company @belongsTo(fields: ["companyUsersId"])
+}
+
+type Vehicle @model @auth(rules: [{allow: public}]) {
+  immat: ID!
+  code: String
+  vehicleDeviceImei: String
+  vehicleVehicleCategoryId: ID
+  vehicleBrandBrandName: String
+  vehicleModeleId: String
+  kilometerage: Int
+  kilometerageStart: Int
+  vehicleCompanyId: ID @index(name: "byCompany")
+  locations: String
+  company: Company @belongsTo(fields: ["vehicleCompanyId"])
+}
+
+type Device @model @auth(rules: [{allow: public}]) {
+  imei: ID!
+  protocolId: String
+  sim: String
+  lastKnownLocation: String
+}
