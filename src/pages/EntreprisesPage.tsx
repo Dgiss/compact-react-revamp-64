@@ -10,107 +10,9 @@ import { CompanyUsersList } from "@/components/CompanyUsersList";
 import EditCompanyForm from "@/components/forms/EditCompanyForm";
 import EditUserForm from "@/components/forms/EditUserForm";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
-import { generateClient } from 'aws-amplify/api';
-
-// Import GraphQL queries and mutations
-const listCompanies = /* GraphQL */ `
-  query ListCompanies(
-    $id: ID
-    $filter: ModelCompanyFilterInput
-    $limit: Int
-    $nextToken: String
-    $sortDirection: ModelSortDirection
-  ) {
-    listCompanies(
-      id: $id
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-      sortDirection: $sortDirection
-    ) {
-      items {
-        id
-        name
-        siret
-        address
-        postalCode
-        city
-        countryCode
-        contact
-        email
-        mobile
-        phone
-        fax
-        creationDate
-        subscriptionDate
-        keyedStart
-        users {
-          items {
-            sub
-            firstname
-            lastname
-            mobile
-            beginDate
-            endDate
-            mappingId
-            languageCode
-            lastModificationDate
-            showReport
-            dispatcher
-            applicationVersion
-            themeId
-            companyUsersId
-            createdAt
-            updatedAt
-            __typename
-          }
-          nextToken
-          __typename
-        }
-        createdAt
-        updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-
-const updateCompany = /* GraphQL */ `
-  mutation UpdateCompany(
-    $input: UpdateCompanyInput!
-    $condition: ModelCompanyConditionInput
-  ) {
-    updateCompany(input: $input, condition: $condition) {
-      id
-      name
-      siret
-      address
-      contact
-      email
-      mobile
-      phone
-      __typename
-    }
-  }
-`;
-
-const deleteCompany = /* GraphQL */ `
-  mutation DeleteCompany(
-    $input: DeleteCompanyInput!
-    $condition: ModelCompanyConditionInput
-  ) {
-    deleteCompany(input: $input, condition: $condition) {
-      id
-      __typename
-    }
-  }
-`;
+import * as CompanyService from "@/services/CompanyService";
 
 export default function EntreprisesPage() {
-  const client = generateClient();
-  
   // States
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -129,27 +31,8 @@ export default function EntreprisesPage() {
   // Fetch all companies
   const fetchCompanies = async () => {
     setLoading(true);
-    let allItems = [];
-    let nextToken = null;
-    
     try {
-      do {
-        const variables = {
-          limit: 4000,
-          nextToken: nextToken
-        };
-        
-        const companyList = await client.graphql({
-          query: listCompanies,
-          variables: variables
-        });
-        
-        const data = companyList.data.listCompanies;
-        allItems = allItems.concat(data.items);
-        nextToken = data.nextToken;
-        
-      } while (nextToken);
-      
+      const allItems = await CompanyService.fetchCompanies();
       setCompanies(allItems);
     } catch (err) {
       console.error('Error fetching companies:', err);
@@ -167,54 +50,8 @@ export default function EntreprisesPage() {
   const fetchFilteredCompanies = async () => {
     setSearchLoading(true);
     
-    let filtersArray = [];
-    
-    if (searchSiret && searchSiret.trim()) {
-      filtersArray.push({ siret: { contains: searchSiret.trim() } });
-    }
-    
-    if (searchName && searchName.trim()) {
-      filtersArray.push({ name: { contains: searchName.trim() } });
-    }
-    
-    if (searchEmail && searchEmail.trim()) {
-      filtersArray.push({ email: { contains: searchEmail.trim() } });
-    }
-    
-    if (filtersArray.length === 0) {
-      toast({
-        title: "Attention",
-        description: "Veuillez saisir au moins un critère de recherche",
-        variant: "destructive",
-      });
-      setSearchLoading(false);
-      return;
-    }
-
-    let nextToken = null;
-    let allCompanies = [];
-
-    const variables = {
-      limit: 6000, 
-      filter: {
-        or: filtersArray
-      }
-    };
-
     try {
-      do {
-        const queryVariables = { ...variables, nextToken };
-
-        const res = await client.graphql({
-          query: listCompanies,
-          variables: queryVariables
-        });
-
-        const fetchedCompanies = res.data.listCompanies.items;
-        allCompanies = [...allCompanies, ...fetchedCompanies];
-        nextToken = res.data.listCompanies.nextToken;
-      } while (nextToken); 
-
+      const allCompanies = await CompanyService.fetchFilteredCompanies(searchName, searchEmail, searchSiret);
       setCompanies(allCompanies);
       setIsFiltered(true);
       
@@ -226,7 +63,7 @@ export default function EntreprisesPage() {
       console.error("Error fetching companies:", error);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la recherche",
+        description: error.message || "Erreur lors de la recherche",
         variant: "destructive",
       });
     } finally {
@@ -246,22 +83,7 @@ export default function EntreprisesPage() {
   // Update company
   const updateCompanyData = async (data) => {
     try {
-      const companyDetails = {
-        id: data.id,
-        name: data.name,
-        address: data.address,
-        email: data.email,
-        contact: data.contact,
-        mobile: data.mobile,
-        siret: data.siret,
-      };
-
-      await client.graphql({
-        query: updateCompany,
-        variables: {
-          input: companyDetails
-        }
-      });
+      await CompanyService.updateCompanyData(data);
 
       toast({
         title: "Succès",
@@ -282,14 +104,7 @@ export default function EntreprisesPage() {
   // Delete company
   const handleDelete = async (item) => {
     try {
-      const companyDetails = {
-        id: item.id
-      };
-
-      await client.graphql({
-        query: deleteCompany,
-        variables: { input: companyDetails }
-      });
+      await CompanyService.deleteCompanyData(item);
 
       toast({
         title: "Succès",

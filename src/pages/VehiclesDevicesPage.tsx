@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link } from "lucide-react";
@@ -10,154 +11,9 @@ import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
-import { generateClient } from 'aws-amplify/api';
-
-// GraphQL queries
-const listCompanies = /* GraphQL */ `
-  query ListCompanies(
-    $filter: ModelCompanyFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    listCompanies(
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        id
-        name
-        vehicles {
-          items {
-            immat
-            year
-            fuelType
-            consumption
-            maxSpeed
-            seatCount
-            icon
-            kilometerage
-            kilometerPrice
-            kilometerageStart
-            kilometerageDay
-            kilometerageLastUpdate
-            timeRunning
-            counterValue
-            co2
-            lastModificationDate
-            rollingTimeStart
-            rollingTimeDay
-            locations
-            installationPrecautions
-            code
-            gefcoSend
-            tankCapacity
-            canMileage
-            companyVehiclesId
-            vehicleVehicleCategoryId
-            vehicleBrandBrandName
-            vehicleModeleId
-            vehicleDeviceImei
-            __typename
-          }
-          nextToken
-          __typename
-        }
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-
-const vehiclesByCompanyVehiclesId = /* GraphQL */ `
-  query VehiclesByCompanyVehiclesId(
-    $companyVehiclesId: ID!
-    $sortDirection: ModelSortDirection
-    $filter: ModelVehicleFilterInput
-    $limit: Int
-    $nextToken: String
-  ) {
-    vehiclesByCompanyVehiclesId(
-      companyVehiclesId: $companyVehiclesId
-      sortDirection: $sortDirection
-      filter: $filter
-      limit: $limit
-      nextToken: $nextToken
-    ) {
-      items {
-        immat
-        year
-        fuelType
-        consumption
-        maxSpeed
-        seatCount
-        icon
-        kilometerage
-        kilometerPrice
-        kilometerageStart
-        kilometerageDay
-        kilometerageLastUpdate
-        timeRunning
-        counterValue
-        co2
-        lastModificationDate
-        rollingTimeStart
-        rollingTimeDay
-        locations
-        installationPrecautions
-        code
-        gefcoSend
-        tankCapacity
-        canMileage
-        companyVehiclesId
-        vehicleVehicleCategoryId
-        vehicleBrandBrandName
-        vehicleModeleId
-        vehicleDeviceImei
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-`;
-
-const updateVehicle = /* GraphQL */ `
-  mutation UpdateVehicle(
-    $input: UpdateVehicleInput!
-    $condition: ModelVehicleConditionInput
-  ) {
-    updateVehicle(input: $input, condition: $condition) {
-      immat
-      vehicleDeviceImei
-      vehicleVehicleCategoryId
-      vehicleBrandBrandName
-      vehicleModeleId
-      kilometerage
-      kilometerageStart
-      code
-      __typename
-    }
-  }
-`;
-
-const deleteVehicle = /* GraphQL */ `
-  mutation DeleteVehicle(
-    $input: DeleteVehicleInput!
-    $condition: ModelVehicleConditionInput
-  ) {
-    deleteVehicle(input: $input, condition: $condition) {
-      immat
-      __typename
-    }
-  }
-`;
+import * as VehicleService from "@/services/VehicleService";
 
 export default function VehiclesDevicesPage() {
-  const client = generateClient();
-  
   // States
   const [companies, setCompanies] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -184,48 +40,9 @@ export default function VehiclesDevicesPage() {
   // Fetch all companies with their vehicles
   const fetchCompaniesWithVehicles = async () => {
     setLoading(true);
-    let allCompanies = [];
-    let allVehicles = [];
-    let nextToken = null;
     
     try {
-      do {
-        const variables = {
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        const companyList = await client.graphql({
-          query: listCompanies,
-          variables: variables
-        });
-        
-        const data = companyList.data.listCompanies;
-        allCompanies = allCompanies.concat(data.items);
-        nextToken = data.nextToken;
-        
-      } while (nextToken);
-      
-      // Extract all vehicles from companies
-      allCompanies.forEach(company => {
-        if (company.vehicles && company.vehicles.items) {
-          const companyVehicles = company.vehicles.items.map(vehicle => ({
-            ...vehicle,
-            entreprise: company.name,
-            type: "vehicle",
-            immatriculation: vehicle.immat,
-            nomVehicule: vehicle.code || "",
-            imei: vehicle.vehicleDeviceImei || "",
-            typeBoitier: "GPS Tracker",
-            marque: vehicle.vehicleBrandBrandName || "",
-            modele: vehicle.vehicleModeleId || "",
-            kilometrage: vehicle.kilometerage?.toString() || "",
-            telephone: "",
-            emplacement: vehicle.locations || ""
-          }));
-          allVehicles = allVehicles.concat(companyVehicles);
-        }
-      });
+      const { companies: allCompanies, vehicles: allVehicles } = await VehicleService.fetchCompaniesWithVehicles();
       
       setCompanies(allCompanies);
       setVehicles(allVehicles);
@@ -298,23 +115,7 @@ export default function VehiclesDevicesPage() {
   // Update vehicle
   const updateVehicleData = async (data) => {
     try {
-      const vehicleDetails = {
-        immat: data.immat,
-        vehicleDeviceImei: data.vehicleDeviceImei,
-        vehicleVehicleCategoryId: data.vehicleVehicleCategoryId,
-        vehicleBrandBrandName: data.vehicleBrandBrandName,
-        vehicleModeleId: data.vehicleModeleId,
-        kilometerage: data.kilometerage,
-        kilometerageStart: data.kilometerageStart,
-        code: data.code
-      };
-
-      await client.graphql({
-        query: updateVehicle,
-        variables: {
-          input: vehicleDetails
-        }
-      });
+      await VehicleService.updateVehicleData(data);
 
       toast({
         title: "Succès",
@@ -335,14 +136,7 @@ export default function VehiclesDevicesPage() {
   // Delete vehicle
   const deleteVehicleData = async (item) => {
     try {
-      const vehicleDetails = {
-        immat: item.immat
-      };
-
-      await client.graphql({
-        query: deleteVehicle,
-        variables: { input: vehicleDetails }
-      });
+      await VehicleService.deleteVehicleData(item);
 
       toast({
         title: "Succès",
