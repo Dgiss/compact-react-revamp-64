@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -156,18 +156,68 @@ export default function VehiclesDevicesPage() {
     fetchCompaniesWithVehicles();
   }, []);
 
-  // Define columns for the table
+  // Define columns for the table with enhanced device information
   const allColumns = [
-    { id: "immatriculation", label: "Immatriculation", sortable: true, visible: true },
-    { id: "entreprise", label: "Entreprise", sortable: true, visible: true },
+    { 
+      id: "immatriculation", 
+      label: "Immatriculation", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value, row) => (
+        <div className="flex items-center gap-2">
+          {row.type === "vehicle" ? (
+            <Car className="h-4 w-4 text-blue-500" />
+          ) : (
+            <Wifi className="h-4 w-4 text-green-500" />
+          )}
+          <span>{value || "N/A"}</span>
+        </div>
+      )
+    },
+    { 
+      id: "entreprise", 
+      label: "Entreprise", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value, row) => (
+        <span className={row.isAssociated ? "text-gray-900" : "text-orange-600 font-medium"}>
+          {value}
+        </span>
+      )
+    },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
     { id: "imei", label: "IMEI", sortable: true, visible: true },
-    { id: "typeBoitier", label: "Type de Boîtier", sortable: true, visible: true },
+    { 
+      id: "typeBoitier", 
+      label: "Type de Boîtier", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value, row) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{value}</span>
+          {row.deviceData && (
+            <span className="text-xs text-gray-500">
+              {row.isAssociated ? "Associé" : "Disponible"}
+            </span>
+          )}
+        </div>
+      )
+    },
     { id: "emplacement", label: "Emplacement", sortable: true, visible: true },
     { id: "marque", label: "Marque", sortable: true, visible: false },
     { id: "modele", label: "Modèle", sortable: true, visible: false },
     { id: "kilometrage", label: "Kilométrage", sortable: true, visible: false },
-    { id: "telephone", label: "Téléphone", sortable: true, visible: true },
+    { 
+      id: "telephone", 
+      label: "Téléphone", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value) => (
+        <span className={value ? "text-gray-900" : "text-gray-400"}>
+          {value || "N/A"}
+        </span>
+      )
+    },
   ];
 
   const handleEdit = (item) => {
@@ -247,7 +297,13 @@ export default function VehiclesDevicesPage() {
       </div>
 
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
+          <p className="text-sm text-gray-600 mt-1">
+            {combinedData.filter(item => item.type === "vehicle").length} véhicules • {" "}
+            {combinedData.filter(item => item.type === "device").length} boîtiers disponibles
+          </p>
+        </div>
         {/* Keep existing buttons */}
         <div className="flex gap-2">
           <Button 
