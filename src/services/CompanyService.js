@@ -5,6 +5,59 @@ import * as mutations from '../graphql/mutations';
 
 const client = generateClient();
 
+// Fonction pour récupérer toutes les entreprises sans utilisateurs
+export const fetchCompanies = async () => {
+  let allCompanies = [];
+  let nextToken = null;
+  
+  do {
+    const variables = {
+      limit: 1000,
+      nextToken: nextToken
+    };
+    
+    const companyList = await client.graphql({
+      query: queries.listCompanies,
+      variables: variables
+    });
+    
+    const data = companyList.data.listCompanies;
+    allCompanies = allCompanies.concat(data.items);
+    nextToken = data.nextToken;
+    
+  } while (nextToken);
+
+  return allCompanies;
+};
+
+// Fonction pour récupérer les entreprises avec filtres
+export const fetchFilteredCompanies = async (filters = {}) => {
+  const allCompanies = await fetchCompanies();
+  
+  // Appliquer les filtres si nécessaire
+  if (Object.keys(filters).length === 0) {
+    return allCompanies;
+  }
+  
+  return allCompanies.filter(company => {
+    let matches = true;
+    
+    if (filters.name && !company.name?.toLowerCase().includes(filters.name.toLowerCase())) {
+      matches = false;
+    }
+    
+    if (filters.siret && !company.siret?.includes(filters.siret)) {
+      matches = false;
+    }
+    
+    if (filters.city && !company.city?.toLowerCase().includes(filters.city.toLowerCase())) {
+      matches = false;
+    }
+    
+    return matches;
+  });
+};
+
 export const fetchCompaniesWithUsers = async () => {
   let allCompanies = [];
   let nextToken = null;

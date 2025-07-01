@@ -1,3 +1,4 @@
+
 export const listCompanies = /* GraphQL */ `
   query ListCompanies(
     $id: ID
@@ -45,8 +46,6 @@ export const listCompanies = /* GraphQL */ `
             applicationVersion
             themeId
             companyUsersId
-            login
-            motDePasse
             createdAt
             updatedAt
             __typename

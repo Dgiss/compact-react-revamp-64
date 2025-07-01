@@ -1,4 +1,23 @@
 
+export const createCompany = /* GraphQL */ `
+  mutation CreateCompany(
+    $input: CreateCompanyInput!
+    $condition: ModelCompanyConditionInput
+  ) {
+    createCompany(input: $input, condition: $condition) {
+      id
+      name
+      siret
+      address
+      contact
+      email
+      mobile
+      phone
+      __typename
+    }
+  }
+`;
+
 export const updateCompany = /* GraphQL */ `
   mutation UpdateCompany(
     $input: UpdateCompanyInput!
@@ -25,6 +44,54 @@ export const deleteCompany = /* GraphQL */ `
   ) {
     deleteCompany(input: $input, condition: $condition) {
       id
+      __typename
+    }
+  }
+`;
+
+export const createUser = /* GraphQL */ `
+  mutation CreateUser(
+    $input: CreateUserInput!
+    $condition: ModelUserConditionInput
+  ) {
+    createUser(input: $input, condition: $condition) {
+      sub
+      firstname
+      lastname
+      mobile
+      login
+      motDePasse
+      companyUsersId
+      __typename
+    }
+  }
+`;
+
+export const updateUser = /* GraphQL */ `
+  mutation UpdateUser(
+    $input: UpdateUserInput!
+    $condition: ModelUserConditionInput
+  ) {
+    updateUser(input: $input, condition: $condition) {
+      sub
+      firstname
+      lastname
+      mobile
+      login
+      motDePasse
+      companyUsersId
+      __typename
+    }
+  }
+`;
+
+export const deleteUser = /* GraphQL */ `
+  mutation DeleteUser(
+    $input: DeleteUserInput!
+    $condition: ModelUserConditionInput
+  ) {
+    deleteUser(input: $input, condition: $condition) {
+      sub
       __typename
     }
   }
