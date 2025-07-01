@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,9 @@ export default function EntreprisesPage() {
   // Update company
   const updateCompanyData = async (data) => {
     try {
-      await CompanyService.updateCompanyData(data);
+      await CompanyService.updateCompanyAndUser({
+        companyData: data
+      });
 
       toast({
         title: "Succès",
@@ -95,20 +96,20 @@ export default function EntreprisesPage() {
       console.error('Error updating company:', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la modification",
+        description: err.message || "Erreur lors de la modification",
         variant: "destructive",
       });
     }
   };
 
-  // Delete company
+  // Delete company and associated users
   const handleDelete = async (item) => {
     try {
-      await CompanyService.deleteCompanyData(item);
+      await CompanyService.deleteCompanyAndUser(item);
 
       toast({
         title: "Succès",
-        description: "Entreprise supprimée avec succès",
+        description: "Entreprise et utilisateurs supprimés avec succès",
       });
       
       await fetchCompanies();
@@ -116,7 +117,7 @@ export default function EntreprisesPage() {
       console.error('Error deleting company:', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la suppression",
+        description: err.message || "Erreur lors de la suppression",
         variant: "destructive",
       });
     }
@@ -174,7 +175,7 @@ export default function EntreprisesPage() {
     fetchCompanies();
     toast({
       title: "Ajout réussi",
-      description: "L'entreprise a été ajoutée avec succès"
+      description: "L'entreprise et l'utilisateur ont été créés avec succès"
     });
   };
   
