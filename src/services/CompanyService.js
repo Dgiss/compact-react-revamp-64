@@ -117,7 +117,7 @@ export const fetchCompaniesWithUsers = async () => {
     let allCompanies = [];
     let nextToken = null;
     
-    // Fetch companies with nested users - single GraphQL call
+    // Fetch companies first
     do {
       const variables = {
         limit: 4000,
@@ -139,34 +139,68 @@ export const fetchCompaniesWithUsers = async () => {
     
     console.log(`Fetched ${allCompanies.length} companies`);
     
-    // Process user data directly from the nested response
-    const companiesWithUserData = allCompanies.map(company => {
-      console.log(`Processing company: ${company.name}, users count: ${company.users?.items?.length || 0}`);
-      
-      // Get users from the nested structure
-      const companyUsers = company.users?.items || [];
-      
-      // Create user objects with real data from existing fields
-      const usersWithRealData = companyUsers.map(user => {
-        const fullName = [user.firstname, user.lastname].filter(Boolean).join(' ') || user.sub || 'Utilisateur';
-        const userId = user.sub || user.mappingId || `user_${Math.random()}`;
+    // Now fetch users for each company using usersByCompanyUsersId
+    const companiesWithUserData = await Promise.all(
+      allCompanies.map(async (company) => {
+        console.log(`Fetching users for company: ${company.name}`);
         
-        return {
-          ...user,
-          id: userId,
-          nom: fullName,
-          // Note: Les mots de passe ne sont pas stockés en clair pour la sécurité
-          motDePasse: 'Géré par le système'
-        };
-      });
-      
-      return {
-        ...company,
-        users: {
-          items: usersWithRealData
+        try {
+          let companyUsers = [];
+          let userNextToken = null;
+          
+          // Fetch users for this specific company
+          do {
+            const userVariables = {
+              companyUsersId: company.id,
+              limit: 1000,
+              nextToken: userNextToken
+            };
+            
+            const usersList = await client.graphql({
+              query: queries.usersByCompanyUsersId,
+              variables: userVariables
+            });
+            
+            const userData = usersList.data.usersByCompanyUsersId;
+            companyUsers = companyUsers.concat(userData.items);
+            userNextToken = userData.nextToken;
+            
+          } while (userNextToken);
+          
+          console.log(`Found ${companyUsers.length} users for company ${company.name}`);
+          
+          // Clean and format user data
+          const formattedUsers = companyUsers.map(user => ({
+            id: user.id,
+            sub: user.id,
+            firstname: user.firstname || '',
+            lastname: user.lastname || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            role: user.role || 'Rapport',
+            username: user.username || '',
+            password: user.password || '',
+            nom: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.username || 'Utilisateur'
+          }));
+          
+          return {
+            ...company,
+            users: {
+              items: formattedUsers
+            }
+          };
+          
+        } catch (userError) {
+          console.error(`Error fetching users for company ${company.name}:`, userError);
+          return {
+            ...company,
+            users: {
+              items: []
+            }
+          };
         }
-      };
-    });
+      })
+    );
     
     console.log('Companies with user data processed successfully');
     return companiesWithUserData;
