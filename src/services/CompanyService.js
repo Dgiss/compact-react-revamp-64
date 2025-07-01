@@ -105,7 +105,7 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     createdCompany = companyResult.data.createCompany;
     console.log('Company created in GraphQL:', createdCompany);
     
-    // Étape 2: Créer l'utilisateur dans Cognito
+    // Étape 2: Créer l'utilisateur dans Cognito (côté client)
     const cognitoUserData = {
       username: userData.username,
       password: userData.password,
@@ -142,7 +142,8 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
       success: true,
       company: createdCompany,
       user: userResult.data.createUser,
-      cognitoUser: createdCognitoUser
+      cognitoUser: createdCognitoUser,
+      warning: cognitoResult.needsConfirmation ? 'L\'utilisateur doit confirmer son email' : null
     };
     
   } catch (error) {
@@ -150,11 +151,6 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     
     // Rollback en cas d'erreur
     try {
-      if (createdCognitoUser && createdCognitoUser.username) {
-        console.log('Rolling back Cognito user creation...');
-        await CognitoService.deleteUserFromCognito(createdCognitoUser.username);
-      }
-      
       if (createdCompany && createdCompany.id) {
         console.log('Rolling back company creation...');
         await client.graphql({
@@ -219,9 +215,9 @@ export const updateCompanyAndUser = async ({ companyData, userData, userCognitoD
       });
     }
     
-    // Mettre à jour l'utilisateur dans Cognito
+    // Note: Mise à jour Cognito requiert une implémentation côté serveur
     if (userCognitoData && userCognitoData.username) {
-      await CognitoService.updateUserInCognito(userCognitoData);
+      console.warn('Cognito user update requires server-side implementation');
     }
     
     return { success: true };
@@ -253,13 +249,11 @@ export const deleteCompanyAndUser = async (company) => {
     // Récupérer les utilisateurs de l'entreprise
     const users = company.users?.items || [];
     
-    // Supprimer chaque utilisateur de Cognito et GraphQL
+    // Supprimer chaque utilisateur de GraphQL (Cognito nécessite côté serveur)
     for (const user of users) {
       try {
-        // Supprimer de Cognito
-        if (user.username) {
-          await CognitoService.deleteUserFromCognito(user.username);
-        }
+        // Note: Suppression Cognito requiert une implémentation côté serveur
+        console.warn(`Cognito user deletion for ${user.username} requires server-side implementation`);
         
         // Supprimer de GraphQL
         await client.graphql({

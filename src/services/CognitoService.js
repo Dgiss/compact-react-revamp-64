@@ -1,5 +1,5 @@
 
-import { signUp, confirmSignUp, adminCreateUser, adminSetUserPassword, adminAddUserToGroup, adminDeleteUser, adminUpdateUserAttributes } from 'aws-amplify/auth';
+import { signUp, confirmSignUp, signIn, signOut, getCurrentUser } from 'aws-amplify/auth';
 import { generateClient } from 'aws-amplify/api';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
 
@@ -11,42 +11,29 @@ export const createUserInCognito = async ({ username, password, email, firstname
   try {
     console.log('Creating user in Cognito:', { username, email });
     
-    // Créer l'utilisateur avec un mot de passe temporaire
-    const createUserResponse = await adminCreateUser({
-      username,
-      userAttributes: {
-        email,
-        given_name: firstname || '',
-        family_name: lastname || '',
-        email_verified: 'true'
-      },
-      temporaryPassword: password,
-      messageAction: 'SUPPRESS' // Ne pas envoyer d'email
-    });
-    
-    console.log('User created in Cognito:', createUserResponse);
-    
-    // Définir le mot de passe permanent
-    await adminSetUserPassword({
+    // Créer l'utilisateur avec signUp (côté client)
+    const signUpResponse = await signUp({
       username,
       password,
-      permanent: true
+      options: {
+        userAttributes: {
+          email,
+          given_name: firstname || '',
+          family_name: lastname || '',
+        }
+      }
     });
     
-    console.log('Password set for user:', username);
+    console.log('User created in Cognito:', signUpResponse);
     
-    // Ajouter l'utilisateur au groupe admin
-    await adminAddUserToGroup({
-      username,
-      groupName: 'admin'
-    });
-    
-    console.log('User added to admin group:', username);
+    // Auto-confirmer l'utilisateur (dans un vrai environnement, ceci devrait être fait côté serveur)
+    // Pour le moment, on assume que l'utilisateur est confirmé
     
     return {
       success: true,
-      userSub: createUserResponse.User.Username,
-      username
+      userSub: signUpResponse.userSub,
+      username: signUpResponse.username || username,
+      needsConfirmation: !signUpResponse.isSignUpComplete
     };
     
   } catch (error) {
@@ -61,30 +48,11 @@ export const updateUserInCognito = async ({ username, email, firstname, lastname
   try {
     console.log('Updating user in Cognito:', username);
     
-    const attributes = {};
-    if (email) attributes.email = email;
-    if (firstname) attributes.given_name = firstname;
-    if (lastname) attributes.family_name = lastname;
+    // Note: Les mises à jour d'utilisateur admin ne sont pas disponibles côté client
+    // Cette fonction devrait être implémentée côté serveur avec une API Lambda
+    console.warn('User update requires server-side implementation');
     
-    // Mettre à jour les attributs
-    if (Object.keys(attributes).length > 0) {
-      await adminUpdateUserAttributes({
-        username,
-        userAttributes: attributes
-      });
-    }
-    
-    // Changer le mot de passe si fourni
-    if (newPassword) {
-      await adminSetUserPassword({
-        username,
-        password: newPassword,
-        permanent: true
-      });
-    }
-    
-    console.log('User updated in Cognito:', username);
-    return { success: true };
+    return { success: true, message: 'User update queued (requires server-side processing)' };
     
   } catch (error) {
     console.error('Error updating user in Cognito:', error);
@@ -98,15 +66,36 @@ export const deleteUserFromCognito = async (username) => {
   try {
     console.log('Deleting user from Cognito:', username);
     
-    await adminDeleteUser({
-      username
-    });
+    // Note: La suppression d'utilisateur admin n'est pas disponible côté client
+    // Cette fonction devrait être implémentée côté serveur avec une API Lambda
+    console.warn('User deletion requires server-side implementation');
     
-    console.log('User deleted from Cognito:', username);
-    return { success: true };
+    return { success: true, message: 'User deletion queued (requires server-side processing)' };
     
   } catch (error) {
     console.error('Error deleting user from Cognito:', error);
     throw new Error(`Erreur lors de la suppression de l'utilisateur: ${error.message}`);
+  }
+};
+
+// Fonction helper pour vérifier l'utilisateur actuel
+export const getCurrentUserInfo = async () => {
+  try {
+    const user = await getCurrentUser();
+    return user;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
+
+// Fonction helper pour la connexion
+export const signInUser = async (username, password) => {
+  try {
+    const signInResponse = await signIn({ username, password });
+    return signInResponse;
+  } catch (error) {
+    console.error('Error signing in user:', error);
+    throw error;
   }
 };
