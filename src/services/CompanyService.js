@@ -110,66 +110,78 @@ export const deleteCompanyData = async (item) => {
 };
 
 export const fetchCompaniesWithUsers = async () => {
-  await waitForAmplifyConfig();
-  let allCompanies = [];
-  let allUsers = [];
-  let nextToken = null;
-  
-  // Fetch all companies
-  do {
-    const variables = {
-      limit: 4000,
-      nextToken: nextToken
-    };
+  try {
+    console.log('Starting fetchCompaniesWithUsers...');
+    await waitForAmplifyConfig();
     
-    const companyList = await client.graphql({
-      query: queries.listCompanies,
-      variables: variables
+    let allCompanies = [];
+    let nextToken = null;
+    
+    // Fetch companies with nested users - single GraphQL call
+    do {
+      const variables = {
+        limit: 4000,
+        nextToken: nextToken
+      };
+      
+      console.log('Fetching companies with variables:', variables);
+      
+      const companyList = await client.graphql({
+        query: queries.listCompanies,
+        variables: variables
+      });
+      
+      const data = companyList.data.listCompanies;
+      allCompanies = allCompanies.concat(data.items);
+      nextToken = data.nextToken;
+      
+    } while (nextToken);
+    
+    console.log(`Fetched ${allCompanies.length} companies`);
+    
+    // Process user data directly from the nested response
+    const companiesWithUserData = allCompanies.map(company => {
+      console.log(`Processing company: ${company.name}, users count: ${company.users?.items?.length || 0}`);
+      
+      // Get users from the nested structure
+      const companyUsers = company.users?.items || [];
+      
+      // Create user objects with login info from existing data
+      const usersWithLogin = companyUsers.map(user => {
+        const nom = user.sub || user.firstname || 'N/A';
+        const motDePasse = `${user.firstname || 'user'}${new Date().getFullYear()}`;
+        
+        return {
+          ...user,
+          id: user.sub || user.mappingId || `user_${Math.random()}`,
+          nom: nom,
+          motDePasse: motDePasse
+        };
+      });
+      
+      return {
+        ...company,
+        users: {
+          items: usersWithLogin
+        }
+      };
     });
     
-    const data = companyList.data.listCompanies;
-    allCompanies = allCompanies.concat(data.items);
-    nextToken = data.nextToken;
+    console.log('Companies with user data processed successfully');
+    return companiesWithUserData;
     
-  } while (nextToken);
-  
-  // Fetch all users separately
-  nextToken = null;
-  do {
-    const variables = {
-      limit: 4000,
-      nextToken: nextToken
-    };
+  } catch (error) {
+    console.error('Error in fetchCompaniesWithUsers:', error);
     
-    const userList = await client.graphql({
-      query: queries.listUsers,
-      variables: variables
-    });
+    // Provide more specific error messages
+    if (error.message?.includes('NoCredentials')) {
+      throw new Error('Erreur d\'authentification - veuillez vous reconnecter');
+    } else if (error.message?.includes('NetworkError')) {
+      throw new Error('Erreur de réseau - vérifiez votre connexion');
+    } else if (error.message?.includes('GraphQL')) {
+      throw new Error('Erreur lors de la récupération des données');
+    }
     
-    const data = userList.data.listUsers;
-    allUsers = allUsers.concat(data.items);
-    nextToken = data.nextToken;
-    
-  } while (nextToken);
-  
-  // Map users to companies and add login/password info
-  const companiesWithUserData = allCompanies.map(company => {
-    const companyUsers = allUsers.filter(user => user.companyUsersId === company.id);
-    
-    // Create user objects with login info
-    const usersWithLogin = companyUsers.map(user => ({
-      ...user,
-      nom: user.sub || user.firstname || 'N/A', // Use sub as login name
-      motDePasse: `${user.firstname || 'user'}${new Date().getFullYear()}` // Generate password based on firstname + year
-    }));
-    
-    return {
-      ...company,
-      users: {
-        items: usersWithLogin
-      }
-    };
-  });
-  
-  return companiesWithUserData;
+    throw error;
+  }
 };

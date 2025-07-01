@@ -39,24 +39,36 @@ export const configureAmplify = () => {
     return configurationPromise;
   }
 
-  configurationPromise = new Promise((resolve) => {
+  configurationPromise = new Promise((resolve, reject) => {
     try {
       console.log('Configuration d\'Amplify en cours...');
       
       // Configuration synchrone d'Amplify
       Amplify.configure(awsConfig);
       
-      // Petit délai pour s'assurer que la configuration est appliquée
+      // Délai plus long pour s'assurer que la configuration est complètement appliquée
       setTimeout(() => {
-        isConfigured = true;
-        console.log('Amplify configuré avec succès');
-        resolve(true);
-      }, 200);
+        try {
+          // Vérifier que la configuration est bien active
+          const config = Amplify.getConfig();
+          if (config && config.API && config.API.GraphQL) {
+            isConfigured = true;
+            console.log('Amplify configuré avec succès');
+            resolve(true);
+          } else {
+            console.error('Configuration Amplify incomplète');
+            reject(new Error('Configuration Amplify incomplète'));
+          }
+        } catch (err) {
+          console.error('Erreur lors de la vérification de la configuration:', err);
+          reject(err);
+        }
+      }, 500);
       
     } catch (error) {
       console.error('Erreur lors de la configuration d\'Amplify:', error);
       isConfigured = false;
-      resolve(false);
+      reject(error);
     }
   });
 
@@ -73,7 +85,15 @@ export const waitForAmplifyConfig = async () => {
   }
   
   if (configurationPromise) {
-    return await configurationPromise;
+    try {
+      return await configurationPromise;
+    } catch (error) {
+      console.error('Erreur lors de l\'attente de la configuration:', error);
+      // Reset promise to allow retry
+      configurationPromise = null;
+      isConfigured = false;
+      throw error;
+    }
   }
   
   return await configureAmplify();
