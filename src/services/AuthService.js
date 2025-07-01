@@ -1,9 +1,11 @@
 
 import { signIn, signOut, getCurrentUser } from 'aws-amplify/auth';
+import { isAmplifyConfigured, waitForAmplifyConfig } from '@/config/aws-config.js';
 
 // Fonction pour forcer la déconnexion complète
 export const forceSignOut = async () => {
   try {
+    await waitForAmplifyConfig();
     await signOut({ global: true });
     localStorage.removeItem('alreadyLogged');
     localStorage.removeItem('loginExpiration');
@@ -20,6 +22,12 @@ export const forceSignOut = async () => {
 export const signInUser = async (username, password) => {
   try {
     console.log('Tentative de connexion pour:', username);
+    
+    // Vérifier que Amplify est configuré
+    if (!isAmplifyConfigured()) {
+      console.log('Amplify non configuré, attente de la configuration...');
+      await waitForAmplifyConfig();
+    }
     
     // Vérifier d'abord si l'utilisateur est déjà connecté
     try {
@@ -50,6 +58,29 @@ export const signInUser = async (username, password) => {
     return { success: false, error: 'Étape de connexion non terminée' };
   } catch (error) {
     console.error('Erreur de connexion:', error);
+    
+    // Gérer spécifiquement l'erreur de configuration
+    if (error.message && error.message.includes('Auth UserPool not configured')) {
+      console.log('Erreur de configuration détectée, nouvelle tentative...');
+      try {
+        await waitForAmplifyConfig();
+        // Réessayer la connexion après configuration
+        const retryResult = await signIn({ username, password });
+        if (retryResult.nextStep.signInStep === 'DONE') {
+          const expirationDate = new Date();
+          expirationDate.setHours(expirationDate.getHours() + 2);
+          localStorage.setItem('alreadyLogged', 'true');
+          localStorage.setItem('loginExpiration', expirationDate.getTime().toString());
+          return { success: true, user: retryResult.isSignedIn };
+        }
+      } catch (retryError) {
+        console.error('Échec de la nouvelle tentative:', retryError);
+        return { 
+          success: false, 
+          error: 'Problème de configuration. Veuillez rafraîchir la page et réessayer.' 
+        };
+      }
+    }
     
     // Gérer spécifiquement l'erreur "already signed in"
     if (error.message && error.message.includes('already signed in')) {
@@ -83,6 +114,7 @@ export const signInUser = async (username, password) => {
 
 export const signOutUser = async () => {
   try {
+    await waitForAmplifyConfig();
     await signOut({ global: true });
     localStorage.removeItem('alreadyLogged');
     localStorage.removeItem('loginExpiration');
@@ -100,6 +132,9 @@ export const signOutUser = async () => {
 export const checkAuthStatus = async () => {
   try {
     console.log('Vérification du statut d\'authentification...');
+    
+    // Attendre que Amplify soit configuré
+    await waitForAmplifyConfig();
     
     const alreadyLogged = localStorage.getItem('alreadyLogged');
     const loginExpiration = localStorage.getItem('loginExpiration');
@@ -167,6 +202,7 @@ export const checkAuthStatus = async () => {
 
 export const getCurrentUserInfo = async () => {
   try {
+    await waitForAmplifyConfig();
     const user = await getCurrentUser();
     console.log('Informations utilisateur récupérées:', user?.username);
     return user;

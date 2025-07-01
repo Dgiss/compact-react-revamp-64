@@ -31,8 +31,43 @@ const awsConfig = {
   aws_cognito_verification_mechanisms: ["PHONE_NUMBER"]
 };
 
+let isConfigured = false;
+
 export const configureAmplify = () => {
-  Amplify.configure(awsConfig);
+  try {
+    console.log('Configuration d\'Amplify en cours...');
+    Amplify.configure(awsConfig);
+    isConfigured = true;
+    console.log('Amplify configuré avec succès');
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la configuration d\'Amplify:', error);
+    isConfigured = false;
+    return false;
+  }
+};
+
+export const isAmplifyConfigured = () => {
+  return isConfigured;
+};
+
+export const waitForAmplifyConfig = () => {
+  return new Promise((resolve) => {
+    if (isConfigured) {
+      resolve(true);
+      return;
+    }
+    
+    const checkConfig = () => {
+      if (isConfigured) {
+        resolve(true);
+      } else {
+        setTimeout(checkConfig, 100);
+      }
+    };
+    
+    checkConfig();
+  });
 };
 
 export default awsConfig;
