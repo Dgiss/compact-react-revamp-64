@@ -1,4 +1,3 @@
-
 export const listCompanies = /* GraphQL */ `
   query ListCompanies(
     $id: ID
@@ -46,6 +45,8 @@ export const listCompanies = /* GraphQL */ `
             applicationVersion
             themeId
             companyUsersId
+            login
+            motDePasse
             createdAt
             updatedAt
             __typename
@@ -87,6 +88,53 @@ export const listCompanies = /* GraphQL */ `
             __typename
           }
           nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+
+export const listUsers = /* GraphQL */ `
+  query ListUsers(
+    $sub: String
+    $filter: ModelUserFilterInput
+    $limit: Int
+    $nextToken: String
+    $sortDirection: ModelSortDirection
+  ) {
+    listUsers(
+      sub: $sub
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      sortDirection: $sortDirection
+    ) {
+      items {
+        sub
+        firstname
+        lastname
+        mobile
+        beginDate
+        endDate
+        mappingId
+        languageCode
+        lastModificationDate
+        showReport
+        dispatcher
+        applicationVersion
+        themeId
+        companyUsersId
+        login
+        motDePasse
+        company {
+          id
+          name
           __typename
         }
         createdAt

@@ -5,13 +5,13 @@ import * as mutations from '../graphql/mutations';
 
 const client = generateClient();
 
-export const fetchCompanies = async () => {
-  let allItems = [];
+export const fetchCompaniesWithUsers = async () => {
+  let allCompanies = [];
   let nextToken = null;
   
   do {
     const variables = {
-      limit: 4000,
+      limit: 1000,
       nextToken: nextToken
     };
     
@@ -21,85 +21,132 @@ export const fetchCompanies = async () => {
     });
     
     const data = companyList.data.listCompanies;
-    allItems = allItems.concat(data.items);
+    allCompanies = allCompanies.concat(data.items);
     nextToken = data.nextToken;
     
   } while (nextToken);
-  
-  return allItems;
-};
 
-export const fetchFilteredCompanies = async (searchName, searchEmail, searchSiret) => {
-  let filtersArray = [];
+  // Récupérer tous les utilisateurs avec listUsers pour avoir les vrais login/mot de passe
+  let allUsers = [];
+  let userNextToken = null;
   
-  if (searchSiret && searchSiret.trim()) {
-    filtersArray.push({ siret: { contains: searchSiret.trim() } });
-  }
-  
-  if (searchName && searchName.trim()) {
-    filtersArray.push({ name: { contains: searchName.trim() } });
-  }
-  
-  if (searchEmail && searchEmail.trim()) {
-    filtersArray.push({ email: { contains: searchEmail.trim() } });
-  }
-  
-  if (filtersArray.length === 0) {
-    throw new Error("Veuillez saisir au moins un critère de recherche");
-  }
-
-  let nextToken = null;
-  let allCompanies = [];
-
-  const variables = {
-    limit: 6000, 
-    filter: {
-      or: filtersArray
-    }
-  };
-
   do {
-    const queryVariables = { ...variables, nextToken };
-
-    const res = await client.graphql({
-      query: queries.listCompanies,
-      variables: queryVariables
+    const userVariables = {
+      limit: 1000,
+      nextToken: userNextToken
+    };
+    
+    const userList = await client.graphql({
+      query: queries.listUsers,
+      variables: userVariables
     });
+    
+    const userData = userList.data.listUsers;
+    allUsers = allUsers.concat(userData.items);
+    userNextToken = userData.nextToken;
+    
+  } while (userNextToken);
 
-    const fetchedCompanies = res.data.listCompanies.items;
-    allCompanies = [...allCompanies, ...fetchedCompanies];
-    nextToken = res.data.listCompanies.nextToken;
-  } while (nextToken); 
-
-  return allCompanies;
+  // Mapper les utilisateurs aux entreprises
+  const companiesWithUsers = allCompanies.map(company => {
+    // Trouver les utilisateurs de cette entreprise
+    const companyUsers = allUsers.filter(user => user.companyUsersId === company.id);
+    
+    return {
+      ...company,
+      users: {
+        items: companyUsers.map(user => ({
+          ...user,
+          // S'assurer que les champs login et motDePasse sont disponibles
+          login: user.login || user.sub || user.firstname + user.lastname,
+          motDePasse: user.motDePasse || 'Non disponible'
+        }))
+      }
+    };
+  });
+  
+  return companiesWithUsers;
 };
 
-export const updateCompanyData = async (data) => {
-  const companyDetails = {
-    id: data.id,
-    name: data.name,
-    address: data.address,
-    email: data.email,
-    contact: data.contact,
-    mobile: data.mobile,
-    siret: data.siret,
-  };
-
+export const updateCompany = async (data) => {
   await client.graphql({
     query: mutations.updateCompany,
     variables: {
-      input: companyDetails
+      input: data
     }
   });
 };
 
-export const deleteCompanyData = async (item) => {
-  const companyDetails = {
-    id: item.id
-  };
-
+export const deleteCompany = async (id) => {
   await client.graphql({
     query: mutations.deleteCompany,
-    variables: { input: companyDetails }
+    variables: { input: { id } }
   });
+};
+
+export const createCompany = async (data) => {
+  const result = await client.graphql({
+    query: mutations.createCompany,
+    variables: {
+      input: data
+    }
+  });
+  return result.data.createCompany;
+};
+
+export const addUserToCompany = async (userData) => {
+  const result = await client.graphql({
+    query: mutations.createUser,
+    variables: {
+      input: userData
+    }
+  });
+  return result.data.createUser;
+};
+
+export const updateUser = async (userData) => {
+  await client.graphql({
+    query: mutations.updateUser,
+    variables: {
+      input: userData
+    }
+  });
+};
+
+export const deleteUser = async (sub) => {
+  await client.graphql({
+    query: mutations.deleteUser,
+    variables: { input: { sub } }
+  });
+};
+
+// Nouvelle fonction pour récupérer tous les utilisateurs avec pagination
+export const fetchAllUsers = async () => {
+  let allUsers = [];
+  let nextToken = null;
+  
+  do {
+    const variables = {
+      limit: 1000,
+      nextToken: nextToken
+    };
+    
+    const userList = await client.graphql({
+      query: queries.listUsers,
+      variables: variables
+    });
+    
+    const data = userList.data.listUsers;
+    allUsers = allUsers.concat(data.items);
+    nextToken = data.nextToken;
+    
+  } while (nextToken);
+
+  // Enrichir les données utilisateur avec des informations de login
+  return allUsers.map(user => ({
+    ...user,
+    login: user.login || user.sub || user.firstname + user.lastname,
+    motDePasse: user.motDePasse || 'Non disponible',
+    companyName: user.company?.name || 'Non assignée'
+  }));
 };
