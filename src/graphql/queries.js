@@ -1,4 +1,3 @@
-
 export const listCompanies = /* GraphQL */ `
   query ListCompanies(
     $id: ID
@@ -144,6 +143,44 @@ export const vehiclesByCompanyVehiclesId = /* GraphQL */ `
         vehicleBrandBrandName
         vehicleModeleId
         vehicleDeviceImei
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+
+export const listUsers = /* GraphQL */ `
+  query ListUsers(
+    $filter: ModelUserFilterInput
+    $limit: Int
+    $nextToken: String
+    $sortDirection: ModelSortDirection
+  ) {
+    listUsers(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      sortDirection: $sortDirection
+    ) {
+      items {
+        sub
+        firstname
+        lastname
+        mobile
+        beginDate
+        endDate
+        mappingId
+        languageCode
+        lastModificationDate
+        showReport
+        dispatcher
+        applicationVersion
+        themeId
+        companyUsersId
+        createdAt
+        updatedAt
         __typename
       }
       nextToken

@@ -1,4 +1,3 @@
-
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -102,4 +101,68 @@ export const deleteCompanyData = async (item) => {
     query: mutations.deleteCompany,
     variables: { input: companyDetails }
   });
+};
+
+export const fetchCompaniesWithUsers = async () => {
+  let allCompanies = [];
+  let allUsers = [];
+  let nextToken = null;
+  
+  // Fetch all companies
+  do {
+    const variables = {
+      limit: 4000,
+      nextToken: nextToken
+    };
+    
+    const companyList = await client.graphql({
+      query: queries.listCompanies,
+      variables: variables
+    });
+    
+    const data = companyList.data.listCompanies;
+    allCompanies = allCompanies.concat(data.items);
+    nextToken = data.nextToken;
+    
+  } while (nextToken);
+  
+  // Fetch all users separately
+  nextToken = null;
+  do {
+    const variables = {
+      limit: 4000,
+      nextToken: nextToken
+    };
+    
+    const userList = await client.graphql({
+      query: queries.listUsers,
+      variables: variables
+    });
+    
+    const data = userList.data.listUsers;
+    allUsers = allUsers.concat(data.items);
+    nextToken = data.nextToken;
+    
+  } while (nextToken);
+  
+  // Map users to companies and add login/password info
+  const companiesWithUserData = allCompanies.map(company => {
+    const companyUsers = allUsers.filter(user => user.companyUsersId === company.id);
+    
+    // Create user objects with login info
+    const usersWithLogin = companyUsers.map(user => ({
+      ...user,
+      nom: user.sub || user.firstname || 'N/A', // Use sub as login name
+      motDePasse: `${user.firstname || 'user'}${new Date().getFullYear()}` // Generate password based on firstname + year
+    }));
+    
+    return {
+      ...company,
+      users: {
+        items: usersWithLogin
+      }
+    };
+  });
+  
+  return companiesWithUserData;
 };

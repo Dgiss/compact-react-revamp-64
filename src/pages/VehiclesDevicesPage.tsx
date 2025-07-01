@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -17,7 +16,6 @@ export default function VehiclesDevicesPage() {
   // States
   const [companies, setCompanies] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [devices, setDevices] = useState([]);
   const [combinedData, setCombinedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filteredData, setFilteredData] = useState([]);
@@ -250,6 +248,7 @@ export default function VehiclesDevicesPage() {
 
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
+        {/* Keep existing buttons */}
         <div className="flex gap-2">
           <Button 
             variant="outline"
@@ -314,9 +313,11 @@ export default function VehiclesDevicesPage() {
           </div>
         )}
         loading={loading}
+        enablePagination={true}
+        defaultItemsPerPage={50}
       />
 
-      {/* Sheet pour associer un boîtier à un véhicule */}
+      {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
         <SheetContent>
           <SheetHeader className="mb-5">
@@ -336,16 +337,13 @@ export default function VehiclesDevicesPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Dialog pour la recherche multiple d'IMEI */}
       <MultipleImeiSearchDialog
         open={showMultipleImeiDialog}
         onOpenChange={setShowMultipleImeiDialog}
         data={combinedData}
         onUpdate={(devices, newCompany) => {
-          // Créer une copie profonde des données
           const updatedData = [...combinedData];
           
-          // Mettre à jour l'entreprise pour chaque appareil sélectionné
           devices.forEach(selectedDevice => {
             const index = updatedData.findIndex(item => item.imei === selectedDevice.imei);
             if (index !== -1) {
@@ -360,7 +358,6 @@ export default function VehiclesDevicesPage() {
         }}
       />
 
-      {/* Dialog pour l'édition d'un véhicule ou boîtier */}
       <Dialog open={showEditVehicleDialog} onOpenChange={setShowEditVehicleDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>

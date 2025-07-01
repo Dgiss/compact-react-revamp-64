@@ -1,14 +1,13 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus, Trash } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import AddCompanyForm from "@/components/forms/AddCompanyForm";
 import { CompanyUsersList } from "@/components/CompanyUsersList";
 import EditCompanyForm from "@/components/forms/EditCompanyForm";
-import EditUserForm from "@/components/forms/EditUserForm";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import * as CompanyService from "@/services/CompanyService";
 
@@ -18,7 +17,6 @@ export default function EntreprisesPage() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editUserDialogOpen, setEditUserDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   
   // Search states
@@ -28,11 +26,11 @@ export default function EntreprisesPage() {
   const [isFiltered, setIsFiltered] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // Fetch all companies
+  // Fetch all companies with users
   const fetchCompanies = async () => {
     setLoading(true);
     try {
-      const allItems = await CompanyService.fetchCompanies();
+      const allItems = await CompanyService.fetchCompaniesWithUsers();
       setCompanies(allItems);
     } catch (err) {
       console.error('Error fetching companies:', err);
@@ -275,6 +273,8 @@ export default function EntreprisesPage() {
         data={companies}
         renderActions={renderActions}
         loading={loading}
+        enablePagination={true}
+        defaultItemsPerPage={50}
       />
       
       {/* Edit Company Dialog */}
