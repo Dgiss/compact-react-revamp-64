@@ -1,2840 +1,11919 @@
-{
-  "data" : {
-    "__schema" : {
-      "queryType" : {
-        "name" : "Query"
-      },
-      "mutationType" : {
-        "name" : "Mutation"
-      },
-      "subscriptionType" : {
-        "name" : "Subscription"
-      },
-      "types" : [ {
-        "kind" : "OBJECT",
-        "name" : "Query",
-        "description" : null,
-        "fields" : [ {
-          "name" : "getTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "id",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "SCALAR",
-                "name" : "ID",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "listTodos",
-          "description" : null,
-          "args" : [ {
-            "name" : "filter",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoFilterInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "limit",
-            "description" : null,
-            "type" : {
-              "kind" : "SCALAR",
-              "name" : "Int",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "nextToken",
-            "description" : null,
-            "type" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "ModelTodoConnection",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "Todo",
-        "description" : null,
-        "fields" : [ {
-          "name" : "id",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "name",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "createdAt",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "AWSDateTime",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "updatedAt",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "AWSDateTime",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "SCALAR",
-        "name" : "ID",
-        "description" : "Built-in ID",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "SCALAR",
-        "name" : "String",
-        "description" : "Built-in String",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "SCALAR",
-        "name" : "AWSDateTime",
-        "description" : "The `AWSDateTime` scalar type provided by AWS AppSync, represents a valid ***extended*** [ISO 8601 DateTime](https://en.wikipedia.org/wiki/ISO_8601#Combined_date_and_time_representations) string. In other words, this scalar type accepts datetime strings of the form `YYYY-MM-DDThh:mm:ss.SSSZ`.  The scalar can also accept \"negative years\" of the form `-YYYY` which correspond to years before `0000`. For example, \"**-2017-01-01T00:00Z**\" and \"**-9999-01-01T00:00Z**\" are both valid datetime strings.  The field after the two digit seconds field is a nanoseconds field. It can accept between 1 and 9 digits. So, for example, \"**1970-01-01T12:00:00.2Z**\", \"**1970-01-01T12:00:00.277Z**\" and \"**1970-01-01T12:00:00.123456789Z**\" are all valid datetime strings.  The seconds and nanoseconds fields are optional (the seconds field must be specified if the nanoseconds field is to be used).  The [time zone offset](https://en.wikipedia.org/wiki/ISO_8601#Time_zone_designators) is compulsory for this scalar. The time zone offset must either be `Z` (representing the UTC time zone) or be in the format `±hh:mm:ss`. The seconds field in the timezone offset will be considered valid even though it is not part of the ISO 8601 standard.",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "ModelTodoConnection",
-        "description" : null,
-        "fields" : [ {
-          "name" : "items",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "LIST",
-              "name" : null,
-              "ofType" : {
-                "kind" : "OBJECT",
-                "name" : "Todo",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "nextToken",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelTodoFilterInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "id",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelIDInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "name",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "createdAt",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "updatedAt",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "and",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoFilterInput",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "or",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoFilterInput",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "not",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelTodoFilterInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelIDInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "contains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notContains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "beginsWith",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeExists",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeType",
-          "description" : null,
-          "type" : {
-            "kind" : "ENUM",
-            "name" : "ModelAttributeTypes",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "size",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSizeInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "SCALAR",
-        "name" : "Boolean",
-        "description" : "Built-in Boolean",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "ENUM",
-        "name" : "ModelAttributeTypes",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : [ {
-          "name" : "binary",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "binarySet",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "bool",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "list",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "map",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "number",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "numberSet",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "string",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "stringSet",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "_null",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSizeInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Int",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "SCALAR",
-        "name" : "Int",
-        "description" : "Built-in Int",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelStringInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "contains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notContains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "beginsWith",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeExists",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeType",
-          "description" : null,
-          "type" : {
-            "kind" : "ENUM",
-            "name" : "ModelAttributeTypes",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "size",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSizeInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "Mutation",
-        "description" : null,
-        "fields" : [ {
-          "name" : "createTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "input",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "INPUT_OBJECT",
-                "name" : "CreateTodoInput",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "condition",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoConditionInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "updateTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "input",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "INPUT_OBJECT",
-                "name" : "UpdateTodoInput",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "condition",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoConditionInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "deleteTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "input",
-            "description" : null,
-            "type" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "INPUT_OBJECT",
-                "name" : "DeleteTodoInput",
-                "ofType" : null
-              }
-            },
-            "defaultValue" : null
-          }, {
-            "name" : "condition",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoConditionInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "CreateTodoInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "id",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "name",
-          "description" : null,
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelTodoConditionInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "name",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "and",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoConditionInput",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "or",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelTodoConditionInput",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "not",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelTodoConditionInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "createdAt",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "updatedAt",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "UpdateTodoInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "id",
-          "description" : null,
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "name",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "DeleteTodoInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "id",
-          "description" : null,
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "Subscription",
-        "description" : null,
-        "fields" : [ {
-          "name" : "onCreateTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "filter",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelSubscriptionTodoFilterInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "onUpdateTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "filter",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelSubscriptionTodoFilterInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "onDeleteTodo",
-          "description" : null,
-          "args" : [ {
-            "name" : "filter",
-            "description" : null,
-            "type" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelSubscriptionTodoFilterInput",
-              "ofType" : null
-            },
-            "defaultValue" : null
-          } ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "Todo",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSubscriptionTodoFilterInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "id",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSubscriptionIDInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "name",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSubscriptionStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSubscriptionStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "createdAt",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSubscriptionStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "updatedAt",
-          "description" : null,
-          "type" : {
-            "kind" : "INPUT_OBJECT",
-            "name" : "ModelSubscriptionStringInput",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "and",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelSubscriptionTodoFilterInput",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "or",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "INPUT_OBJECT",
-              "name" : "ModelSubscriptionTodoFilterInput",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSubscriptionIDInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "contains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notContains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "beginsWith",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "in",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notIn",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "ID",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSubscriptionStringInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "contains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notContains",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "beginsWith",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "in",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notIn",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelBooleanInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeExists",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeType",
-          "description" : null,
-          "type" : {
-            "kind" : "ENUM",
-            "name" : "ModelAttributeTypes",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "ENUM",
-        "name" : "ModelSortDirection",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : [ {
-          "name" : "ASC",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "DESC",
-          "description" : null,
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelFloatInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Float",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeExists",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeType",
-          "description" : null,
-          "type" : {
-            "kind" : "ENUM",
-            "name" : "ModelAttributeTypes",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "SCALAR",
-        "name" : "Float",
-        "description" : "Built-in Float",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSubscriptionFloatInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Float",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Float",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "in",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Float",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notIn",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Float",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSubscriptionIntInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Int",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "in",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Int",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "notIn",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Int",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelIntInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "le",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "lt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "ge",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "gt",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Int",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "between",
-          "description" : null,
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Int",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeExists",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "attributeType",
-          "description" : null,
-          "type" : {
-            "kind" : "ENUM",
-            "name" : "ModelAttributeTypes",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "INPUT_OBJECT",
-        "name" : "ModelSubscriptionBooleanInput",
-        "description" : null,
-        "fields" : null,
-        "inputFields" : [ {
-          "name" : "ne",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        }, {
-          "name" : "eq",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "defaultValue" : null
-        } ],
-        "interfaces" : null,
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "__Schema",
-        "description" : "A GraphQL Introspection defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, the entry points for query, mutation, and subscription operations.",
-        "fields" : [ {
-          "name" : "types",
-          "description" : "A list of all types supported by this server.",
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "LIST",
-              "name" : null,
-              "ofType" : {
-                "kind" : "NON_NULL",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "OBJECT",
-                  "name" : "__Type",
-                  "ofType" : null
-                }
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "queryType",
-          "description" : "The type that query operations will be rooted at.",
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "__Type",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "mutationType",
-          "description" : "If this server supports mutation, the type that mutation operations will be rooted at.",
-          "args" : [ ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "__Type",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "directives",
-          "description" : "'A list of all directives supported by this server.",
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "LIST",
-              "name" : null,
-              "ofType" : {
-                "kind" : "NON_NULL",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "OBJECT",
-                  "name" : "__Directive",
-                  "ofType" : null
-                }
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "subscriptionType",
-          "description" : "'If this server support subscription, the type that subscription operations will be rooted at.",
-          "args" : [ ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "__Type",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "__Type",
-        "description" : null,
-        "fields" : [ {
-          "name" : "kind",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "ENUM",
-              "name" : "__TypeKind",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "name",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "fields",
-          "description" : null,
-          "args" : [ {
-            "name" : "includeDeprecated",
-            "description" : null,
-            "type" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            },
-            "defaultValue" : "false"
-          } ],
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "OBJECT",
-                "name" : "__Field",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "interfaces",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "OBJECT",
-                "name" : "__Type",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "possibleTypes",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "OBJECT",
-                "name" : "__Type",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "enumValues",
-          "description" : null,
-          "args" : [ {
-            "name" : "includeDeprecated",
-            "description" : null,
-            "type" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            },
-            "defaultValue" : "false"
-          } ],
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "OBJECT",
-                "name" : "__EnumValue",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "inputFields",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "OBJECT",
-                "name" : "__InputValue",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "ofType",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "OBJECT",
-            "name" : "__Type",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "ENUM",
-        "name" : "__TypeKind",
-        "description" : "An enum describing what kind of type a given __Type is",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : [ {
-          "name" : "SCALAR",
-          "description" : "Indicates this type is a scalar.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "OBJECT",
-          "description" : "Indicates this type is an object. `fields` and `interfaces` are valid fields.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "INTERFACE",
-          "description" : "Indicates this type is an interface. `fields` and `possibleTypes` are valid fields.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "UNION",
-          "description" : "Indicates this type is a union. `possibleTypes` is a valid field.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "ENUM",
-          "description" : "Indicates this type is an enum. `enumValues` is a valid field.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "INPUT_OBJECT",
-          "description" : "Indicates this type is an input object. `inputFields` is a valid field.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "LIST",
-          "description" : "Indicates this type is a list. `ofType` is a valid field.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "NON_NULL",
-          "description" : "Indicates this type is a non-null. `ofType` is a valid field.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "__Field",
-        "description" : null,
-        "fields" : [ {
-          "name" : "name",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "args",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "LIST",
-              "name" : null,
-              "ofType" : {
-                "kind" : "NON_NULL",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "OBJECT",
-                  "name" : "__InputValue",
-                  "ofType" : null
-                }
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "type",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "__Type",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "isDeprecated",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "deprecationReason",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "__InputValue",
-        "description" : null,
-        "fields" : [ {
-          "name" : "name",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "type",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "OBJECT",
-              "name" : "__Type",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "defaultValue",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "__EnumValue",
-        "description" : null,
-        "fields" : [ {
-          "name" : "name",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "isDeprecated",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "deprecationReason",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "OBJECT",
-        "name" : "__Directive",
-        "description" : null,
-        "fields" : [ {
-          "name" : "name",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "description",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "locations",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "NON_NULL",
-              "name" : null,
-              "ofType" : {
-                "kind" : "ENUM",
-                "name" : "__DirectiveLocation",
-                "ofType" : null
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "args",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "LIST",
-              "name" : null,
-              "ofType" : {
-                "kind" : "NON_NULL",
-                "name" : null,
-                "ofType" : {
-                  "kind" : "OBJECT",
-                  "name" : "__InputValue",
-                  "ofType" : null
-                }
-              }
-            }
-          },
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "onOperation",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "isDeprecated" : true,
-          "deprecationReason" : "Use `locations`."
-        }, {
-          "name" : "onFragment",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "isDeprecated" : true,
-          "deprecationReason" : "Use `locations`."
-        }, {
-          "name" : "onField",
-          "description" : null,
-          "args" : [ ],
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "Boolean",
-            "ofType" : null
-          },
-          "isDeprecated" : true,
-          "deprecationReason" : "Use `locations`."
-        } ],
-        "inputFields" : null,
-        "interfaces" : [ ],
-        "enumValues" : null,
-        "possibleTypes" : null
-      }, {
-        "kind" : "ENUM",
-        "name" : "__DirectiveLocation",
-        "description" : "An enum describing valid locations where a directive can be placed",
-        "fields" : null,
-        "inputFields" : null,
-        "interfaces" : null,
-        "enumValues" : [ {
-          "name" : "QUERY",
-          "description" : "Indicates the directive is valid on queries.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "MUTATION",
-          "description" : "Indicates the directive is valid on mutations.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "FIELD",
-          "description" : "Indicates the directive is valid on fields.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "FRAGMENT_DEFINITION",
-          "description" : "Indicates the directive is valid on fragment definitions.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "FRAGMENT_SPREAD",
-          "description" : "Indicates the directive is valid on fragment spreads.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "INLINE_FRAGMENT",
-          "description" : "Indicates the directive is valid on inline fragments.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "SCHEMA",
-          "description" : "Indicates the directive is valid on a schema SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "SCALAR",
-          "description" : "Indicates the directive is valid on a scalar SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "OBJECT",
-          "description" : "Indicates the directive is valid on an object SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "FIELD_DEFINITION",
-          "description" : "Indicates the directive is valid on a field SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "ARGUMENT_DEFINITION",
-          "description" : "Indicates the directive is valid on a field argument SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "INTERFACE",
-          "description" : "Indicates the directive is valid on an interface SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "UNION",
-          "description" : "Indicates the directive is valid on an union SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "ENUM",
-          "description" : "Indicates the directive is valid on an enum SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "ENUM_VALUE",
-          "description" : "Indicates the directive is valid on an enum value SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "INPUT_OBJECT",
-          "description" : "Indicates the directive is valid on an input object SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        }, {
-          "name" : "INPUT_FIELD_DEFINITION",
-          "description" : "Indicates the directive is valid on an input object field SDL definition.",
-          "isDeprecated" : false,
-          "deprecationReason" : null
-        } ],
-        "possibleTypes" : null
-      } ],
-      "directives" : [ {
-        "name" : "include",
-        "description" : "Directs the executor to include this field or fragment only when the `if` argument is true",
-        "locations" : [ "FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT" ],
-        "args" : [ {
-          "name" : "if",
-          "description" : "Included when true.",
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "onOperation" : false,
-        "onFragment" : true,
-        "onField" : true
-      }, {
-        "name" : "skip",
-        "description" : "Directs the executor to skip this field or fragment when the `if`'argument is true.",
-        "locations" : [ "FIELD", "FRAGMENT_SPREAD", "INLINE_FRAGMENT" ],
-        "args" : [ {
-          "name" : "if",
-          "description" : "Skipped when true.",
-          "type" : {
-            "kind" : "NON_NULL",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "Boolean",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "onOperation" : false,
-        "onFragment" : true,
-        "onField" : true
-      }, {
-        "name" : "defer",
-        "description" : "This directive allows results to be deferred during execution",
-        "locations" : [ "FIELD" ],
-        "args" : [ ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : true
-      }, {
-        "name" : "deprecated",
-        "description" : null,
-        "locations" : [ "FIELD_DEFINITION", "ENUM_VALUE" ],
-        "args" : [ {
-          "name" : "reason",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : "\"No longer supported\""
-        } ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_api_key",
-        "description" : "Tells the service this field/object has access authorized by an API key.",
-        "locations" : [ "OBJECT", "FIELD_DEFINITION" ],
-        "args" : [ ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_publish",
-        "description" : "Tells the service which subscriptions will be published to when this mutation is called. This directive is deprecated use @aws_susbscribe directive instead.",
-        "locations" : [ "FIELD_DEFINITION" ],
-        "args" : [ {
-          "name" : "subscriptions",
-          "description" : "List of subscriptions which will be published to when this mutation is called.",
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_auth",
-        "description" : "Directs the schema to enforce authorization on a field",
-        "locations" : [ "FIELD_DEFINITION" ],
-        "args" : [ {
-          "name" : "cognito_groups",
-          "description" : "List of cognito user pool groups which have access on this field",
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_oidc",
-        "description" : "Tells the service this field/object has access authorized by an OIDC token.",
-        "locations" : [ "OBJECT", "FIELD_DEFINITION" ],
-        "args" : [ ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_subscribe",
-        "description" : "Tells the service which mutation triggers this subscription.",
-        "locations" : [ "FIELD_DEFINITION" ],
-        "args" : [ {
-          "name" : "mutations",
-          "description" : "List of mutations which will trigger this subscription when they are called.",
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_lambda",
-        "description" : "Tells the service this field/object has access authorized by a Lambda Authorizer.",
-        "locations" : [ "OBJECT", "FIELD_DEFINITION" ],
-        "args" : [ ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_cognito_user_pools",
-        "description" : "Tells the service this field/object has access authorized by a Cognito User Pools token.",
-        "locations" : [ "OBJECT", "FIELD_DEFINITION" ],
-        "args" : [ {
-          "name" : "cognito_groups",
-          "description" : "List of cognito user pool groups which have access on this field",
-          "type" : {
-            "kind" : "LIST",
-            "name" : null,
-            "ofType" : {
-              "kind" : "SCALAR",
-              "name" : "String",
-              "ofType" : null
-            }
-          },
-          "defaultValue" : null
-        } ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
-        "name" : "aws_iam",
-        "description" : "Tells the service this field/object has access authorized by sigv4 signing.",
-        "locations" : [ "OBJECT", "FIELD_DEFINITION" ],
-        "args" : [ ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      } ]
+/* eslint-disable */
+// this is an auto generated file. This will be overwritten
+
+export const onCreateCompany = /* GraphQL */ `
+  subscription OnCreateCompany($filter: ModelSubscriptionCompanyFilterInput) {
+    onCreateCompany(filter: $filter) {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        items {
+          sub
+          firstname
+          lastname
+          mobile
+          beginDate
+          endDate
+          mappingId
+          languageCode
+          lastModificationDate
+          showReport
+          dispatcher
+          applicationVersion
+          themeId
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          companyUsersId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      vehicles {
+        items {
+          immat
+          year
+          fuelType
+          consumption
+          maxSpeed
+          seatCount
+          icon
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          kilometerage
+          kilometerPrice
+          kilometerageStart
+          kilometerageDay
+          kilometerageLastUpdate
+          timeRunning
+          counterValue
+          co2
+          lastModificationDate
+          rollingTimeStart
+          rollingTimeDay
+          locations
+          installationPrecautions
+          code
+          vehicleCategory {
+            id
+            category
+            description
+            createdAt
+            updatedAt
+            __typename
+          }
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          modele {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          gefcoSend
+          tankCapacity
+          canMileage
+          companyVehiclesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      drivers {
+        items {
+          sub
+          firstname
+          lastname
+          fullname
+          birthDate
+          drivingLicenseNumber
+          drivingLicenseType
+          job
+          hiringDate
+          comment
+          driverKey
+          email
+          mobile
+          lastModificationDate
+          code
+          address
+          agencyId
+          cdc
+          pdm
+          nni
+          companyDriversId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      trames {
+        items {
+          id
+          speed
+          lat
+          lng
+          address
+          azimut
+          immobilisation
+          timestamp
+          state
+          fuel
+          ibuttonCode
+          companyId
+          driverFullName
+          vehicleBrandName
+          companyTramesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          driver {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          processor
+          createdAt
+          updatedAt
+          trameDriverSub
+          trameVehicleImmat
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
     }
   }
-}
+`;
+export const onUpdateCompany = /* GraphQL */ `
+  subscription OnUpdateCompany($filter: ModelSubscriptionCompanyFilterInput) {
+    onUpdateCompany(filter: $filter) {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        items {
+          sub
+          firstname
+          lastname
+          mobile
+          beginDate
+          endDate
+          mappingId
+          languageCode
+          lastModificationDate
+          showReport
+          dispatcher
+          applicationVersion
+          themeId
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          companyUsersId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      vehicles {
+        items {
+          immat
+          year
+          fuelType
+          consumption
+          maxSpeed
+          seatCount
+          icon
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          kilometerage
+          kilometerPrice
+          kilometerageStart
+          kilometerageDay
+          kilometerageLastUpdate
+          timeRunning
+          counterValue
+          co2
+          lastModificationDate
+          rollingTimeStart
+          rollingTimeDay
+          locations
+          installationPrecautions
+          code
+          vehicleCategory {
+            id
+            category
+            description
+            createdAt
+            updatedAt
+            __typename
+          }
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          modele {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          gefcoSend
+          tankCapacity
+          canMileage
+          companyVehiclesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      drivers {
+        items {
+          sub
+          firstname
+          lastname
+          fullname
+          birthDate
+          drivingLicenseNumber
+          drivingLicenseType
+          job
+          hiringDate
+          comment
+          driverKey
+          email
+          mobile
+          lastModificationDate
+          code
+          address
+          agencyId
+          cdc
+          pdm
+          nni
+          companyDriversId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      trames {
+        items {
+          id
+          speed
+          lat
+          lng
+          address
+          azimut
+          immobilisation
+          timestamp
+          state
+          fuel
+          ibuttonCode
+          companyId
+          driverFullName
+          vehicleBrandName
+          companyTramesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          driver {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          processor
+          createdAt
+          updatedAt
+          trameDriverSub
+          trameVehicleImmat
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteCompany = /* GraphQL */ `
+  subscription OnDeleteCompany($filter: ModelSubscriptionCompanyFilterInput) {
+    onDeleteCompany(filter: $filter) {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        items {
+          sub
+          firstname
+          lastname
+          mobile
+          beginDate
+          endDate
+          mappingId
+          languageCode
+          lastModificationDate
+          showReport
+          dispatcher
+          applicationVersion
+          themeId
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          companyUsersId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      vehicles {
+        items {
+          immat
+          year
+          fuelType
+          consumption
+          maxSpeed
+          seatCount
+          icon
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          kilometerage
+          kilometerPrice
+          kilometerageStart
+          kilometerageDay
+          kilometerageLastUpdate
+          timeRunning
+          counterValue
+          co2
+          lastModificationDate
+          rollingTimeStart
+          rollingTimeDay
+          locations
+          installationPrecautions
+          code
+          vehicleCategory {
+            id
+            category
+            description
+            createdAt
+            updatedAt
+            __typename
+          }
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          modele {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          gefcoSend
+          tankCapacity
+          canMileage
+          companyVehiclesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      drivers {
+        items {
+          sub
+          firstname
+          lastname
+          fullname
+          birthDate
+          drivingLicenseNumber
+          drivingLicenseType
+          job
+          hiringDate
+          comment
+          driverKey
+          email
+          mobile
+          lastModificationDate
+          code
+          address
+          agencyId
+          cdc
+          pdm
+          nni
+          companyDriversId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      trames {
+        items {
+          id
+          speed
+          lat
+          lng
+          address
+          azimut
+          immobilisation
+          timestamp
+          state
+          fuel
+          ibuttonCode
+          companyId
+          driverFullName
+          vehicleBrandName
+          companyTramesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          driver {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          processor
+          createdAt
+          updatedAt
+          trameDriverSub
+          trameVehicleImmat
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateUser = /* GraphQL */ `
+  subscription OnCreateUser($filter: ModelSubscriptionUserFilterInput) {
+    onCreateUser(filter: $filter) {
+      sub
+      firstname
+      lastname
+      mobile
+      beginDate
+      endDate
+      mappingId
+      languageCode
+      lastModificationDate
+      showReport
+      dispatcher
+      applicationVersion
+      themeId
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      companyUsersId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateUser = /* GraphQL */ `
+  subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
+    onUpdateUser(filter: $filter) {
+      sub
+      firstname
+      lastname
+      mobile
+      beginDate
+      endDate
+      mappingId
+      languageCode
+      lastModificationDate
+      showReport
+      dispatcher
+      applicationVersion
+      themeId
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      companyUsersId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteUser = /* GraphQL */ `
+  subscription OnDeleteUser($filter: ModelSubscriptionUserFilterInput) {
+    onDeleteUser(filter: $filter) {
+      sub
+      firstname
+      lastname
+      mobile
+      beginDate
+      endDate
+      mappingId
+      languageCode
+      lastModificationDate
+      showReport
+      dispatcher
+      applicationVersion
+      themeId
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      companyUsersId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateDriver = /* GraphQL */ `
+  subscription OnCreateDriver($filter: ModelSubscriptionDriverFilterInput) {
+    onCreateDriver(filter: $filter) {
+      sub
+      firstname
+      lastname
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateDriver = /* GraphQL */ `
+  subscription OnUpdateDriver($filter: ModelSubscriptionDriverFilterInput) {
+    onUpdateDriver(filter: $filter) {
+      sub
+      firstname
+      lastname
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteDriver = /* GraphQL */ `
+  subscription OnDeleteDriver($filter: ModelSubscriptionDriverFilterInput) {
+    onDeleteDriver(filter: $filter) {
+      sub
+      firstname
+      lastname
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateVehicle = /* GraphQL */ `
+  subscription OnCreateVehicle($filter: ModelSubscriptionVehicleFilterInput) {
+    onCreateVehicle(filter: $filter) {
+      immat
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        logo {
+          bucket
+          region
+          key
+          __typename
+        }
+        models {
+          items {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        vehicle {
+          immat
+          year
+          fuelType
+          consumption
+          maxSpeed
+          seatCount
+          icon
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          kilometerage
+          kilometerPrice
+          kilometerageStart
+          kilometerageDay
+          kilometerageLastUpdate
+          timeRunning
+          counterValue
+          co2
+          lastModificationDate
+          rollingTimeStart
+          rollingTimeDay
+          locations
+          installationPrecautions
+          code
+          vehicleCategory {
+            id
+            category
+            description
+            createdAt
+            updatedAt
+            __typename
+          }
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          modele {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          gefcoSend
+          tankCapacity
+          canMileage
+          companyVehiclesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        items {
+          id
+          vehicleImmat
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          alertId
+          alert {
+            id
+            name
+            type
+            disabled
+            instantaneous
+            reportFrequency
+            byMail
+            bySms
+            byWhatsapp
+            smsTemplate
+            emailTemplate
+            sentToDriver
+            phones
+            emails
+            extra
+            createdAt
+            updatedAt
+            alertCompanyId
+            alertZoneId
+            __typename
+          }
+          isFlespi
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      tags {
+        items {
+          id
+          vehicleImmat
+          tagId
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          tag {
+            id
+            name
+            description
+            color
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicle = /* GraphQL */ `
+  subscription OnUpdateVehicle($filter: ModelSubscriptionVehicleFilterInput) {
+    onUpdateVehicle(filter: $filter) {
+      immat
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        logo {
+          bucket
+          region
+          key
+          __typename
+        }
+        models {
+          items {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        vehicle {
+          immat
+          year
+          fuelType
+          consumption
+          maxSpeed
+          seatCount
+          icon
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          kilometerage
+          kilometerPrice
+          kilometerageStart
+          kilometerageDay
+          kilometerageLastUpdate
+          timeRunning
+          counterValue
+          co2
+          lastModificationDate
+          rollingTimeStart
+          rollingTimeDay
+          locations
+          installationPrecautions
+          code
+          vehicleCategory {
+            id
+            category
+            description
+            createdAt
+            updatedAt
+            __typename
+          }
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          modele {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          gefcoSend
+          tankCapacity
+          canMileage
+          companyVehiclesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        items {
+          id
+          vehicleImmat
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          alertId
+          alert {
+            id
+            name
+            type
+            disabled
+            instantaneous
+            reportFrequency
+            byMail
+            bySms
+            byWhatsapp
+            smsTemplate
+            emailTemplate
+            sentToDriver
+            phones
+            emails
+            extra
+            createdAt
+            updatedAt
+            alertCompanyId
+            alertZoneId
+            __typename
+          }
+          isFlespi
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      tags {
+        items {
+          id
+          vehicleImmat
+          tagId
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          tag {
+            id
+            name
+            description
+            color
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicle = /* GraphQL */ `
+  subscription OnDeleteVehicle($filter: ModelSubscriptionVehicleFilterInput) {
+    onDeleteVehicle(filter: $filter) {
+      immat
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        logo {
+          bucket
+          region
+          key
+          __typename
+        }
+        models {
+          items {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        vehicle {
+          immat
+          year
+          fuelType
+          consumption
+          maxSpeed
+          seatCount
+          icon
+          picture {
+            bucket
+            region
+            key
+            __typename
+          }
+          kilometerage
+          kilometerPrice
+          kilometerageStart
+          kilometerageDay
+          kilometerageLastUpdate
+          timeRunning
+          counterValue
+          co2
+          lastModificationDate
+          rollingTimeStart
+          rollingTimeDay
+          locations
+          installationPrecautions
+          code
+          vehicleCategory {
+            id
+            category
+            description
+            createdAt
+            updatedAt
+            __typename
+          }
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          modele {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          gefcoSend
+          tankCapacity
+          canMileage
+          companyVehiclesId
+          company {
+            id
+            name
+            siret
+            address
+            postalCode
+            city
+            countryCode
+            contact
+            email
+            mobile
+            phone
+            fax
+            creationDate
+            subscriptionDate
+            keyedStart
+            createdAt
+            updatedAt
+            __typename
+          }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        items {
+          id
+          vehicleImmat
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          alertId
+          alert {
+            id
+            name
+            type
+            disabled
+            instantaneous
+            reportFrequency
+            byMail
+            bySms
+            byWhatsapp
+            smsTemplate
+            emailTemplate
+            sentToDriver
+            phones
+            emails
+            extra
+            createdAt
+            updatedAt
+            alertCompanyId
+            alertZoneId
+            __typename
+          }
+          isFlespi
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      tags {
+        items {
+          id
+          vehicleImmat
+          tagId
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          tag {
+            id
+            name
+            description
+            color
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+  }
+`;
+export const onCreateAlert = /* GraphQL */ `
+  subscription OnCreateAlert($filter: ModelSubscriptionAlertFilterInput) {
+    onCreateAlert(filter: $filter) {
+      id
+      name
+      type
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        items {
+          id
+          vehicleImmat
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          alertId
+          alert {
+            id
+            name
+            type
+            disabled
+            instantaneous
+            reportFrequency
+            byMail
+            bySms
+            byWhatsapp
+            smsTemplate
+            emailTemplate
+            sentToDriver
+            phones
+            emails
+            extra
+            createdAt
+            updatedAt
+            alertCompanyId
+            alertZoneId
+            __typename
+          }
+          isFlespi
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        lat
+        lng
+        radius
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+  }
+`;
+export const onUpdateAlert = /* GraphQL */ `
+  subscription OnUpdateAlert($filter: ModelSubscriptionAlertFilterInput) {
+    onUpdateAlert(filter: $filter) {
+      id
+      name
+      type
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        items {
+          id
+          vehicleImmat
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          alertId
+          alert {
+            id
+            name
+            type
+            disabled
+            instantaneous
+            reportFrequency
+            byMail
+            bySms
+            byWhatsapp
+            smsTemplate
+            emailTemplate
+            sentToDriver
+            phones
+            emails
+            extra
+            createdAt
+            updatedAt
+            alertCompanyId
+            alertZoneId
+            __typename
+          }
+          isFlespi
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        lat
+        lng
+        radius
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+  }
+`;
+export const onDeleteAlert = /* GraphQL */ `
+  subscription OnDeleteAlert($filter: ModelSubscriptionAlertFilterInput) {
+    onDeleteAlert(filter: $filter) {
+      id
+      name
+      type
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        items {
+          id
+          vehicleImmat
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          alertId
+          alert {
+            id
+            name
+            type
+            disabled
+            instantaneous
+            reportFrequency
+            byMail
+            bySms
+            byWhatsapp
+            smsTemplate
+            emailTemplate
+            sentToDriver
+            phones
+            emails
+            extra
+            createdAt
+            updatedAt
+            alertCompanyId
+            alertZoneId
+            __typename
+          }
+          isFlespi
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        lat
+        lng
+        radius
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+  }
+`;
+export const onCreateVehicleAlerts = /* GraphQL */ `
+  subscription OnCreateVehicleAlerts(
+    $filter: ModelSubscriptionVehicleAlertsFilterInput
+  ) {
+    onCreateVehicleAlerts(filter: $filter) {
+      id
+      vehicleImmat
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      alertId
+      alert {
+        id
+        name
+        type
+        disabled
+        instantaneous
+        reportFrequency
+        byMail
+        bySms
+        byWhatsapp
+        smsTemplate
+        emailTemplate
+        sentToDriver
+        phones
+        emails
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        extra
+        zone {
+          id
+          name
+          lat
+          lng
+          radius
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        alertCompanyId
+        alertZoneId
+        __typename
+      }
+      isFlespi
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicleAlerts = /* GraphQL */ `
+  subscription OnUpdateVehicleAlerts(
+    $filter: ModelSubscriptionVehicleAlertsFilterInput
+  ) {
+    onUpdateVehicleAlerts(filter: $filter) {
+      id
+      vehicleImmat
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      alertId
+      alert {
+        id
+        name
+        type
+        disabled
+        instantaneous
+        reportFrequency
+        byMail
+        bySms
+        byWhatsapp
+        smsTemplate
+        emailTemplate
+        sentToDriver
+        phones
+        emails
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        extra
+        zone {
+          id
+          name
+          lat
+          lng
+          radius
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        alertCompanyId
+        alertZoneId
+        __typename
+      }
+      isFlespi
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicleAlerts = /* GraphQL */ `
+  subscription OnDeleteVehicleAlerts(
+    $filter: ModelSubscriptionVehicleAlertsFilterInput
+  ) {
+    onDeleteVehicleAlerts(filter: $filter) {
+      id
+      vehicleImmat
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      alertId
+      alert {
+        id
+        name
+        type
+        disabled
+        instantaneous
+        reportFrequency
+        byMail
+        bySms
+        byWhatsapp
+        smsTemplate
+        emailTemplate
+        sentToDriver
+        phones
+        emails
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        extra
+        zone {
+          id
+          name
+          lat
+          lng
+          radius
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        alertCompanyId
+        alertZoneId
+        __typename
+      }
+      isFlespi
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateAlertDefinition = /* GraphQL */ `
+  subscription OnCreateAlertDefinition(
+    $filter: ModelSubscriptionAlertDefinitionFilterInput
+  ) {
+    onCreateAlertDefinition(filter: $filter) {
+      key
+      label
+      description
+      isFlespi
+      calculator
+      variables
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateAlertDefinition = /* GraphQL */ `
+  subscription OnUpdateAlertDefinition(
+    $filter: ModelSubscriptionAlertDefinitionFilterInput
+  ) {
+    onUpdateAlertDefinition(filter: $filter) {
+      key
+      label
+      description
+      isFlespi
+      calculator
+      variables
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteAlertDefinition = /* GraphQL */ `
+  subscription OnDeleteAlertDefinition(
+    $filter: ModelSubscriptionAlertDefinitionFilterInput
+  ) {
+    onDeleteAlertDefinition(filter: $filter) {
+      key
+      label
+      description
+      isFlespi
+      calculator
+      variables
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateVehicleAlertState = /* GraphQL */ `
+  subscription OnCreateVehicleAlertState(
+    $filter: ModelSubscriptionVehicleAlertStateFilterInput
+  ) {
+    onCreateVehicleAlertState(filter: $filter) {
+      id
+      alert
+      state
+      timestamp
+      zone {
+        id
+        name
+        lat
+        lng
+        radius
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleAlertStateZoneId
+      vehicleAlertStateVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicleAlertState = /* GraphQL */ `
+  subscription OnUpdateVehicleAlertState(
+    $filter: ModelSubscriptionVehicleAlertStateFilterInput
+  ) {
+    onUpdateVehicleAlertState(filter: $filter) {
+      id
+      alert
+      state
+      timestamp
+      zone {
+        id
+        name
+        lat
+        lng
+        radius
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleAlertStateZoneId
+      vehicleAlertStateVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicleAlertState = /* GraphQL */ `
+  subscription OnDeleteVehicleAlertState(
+    $filter: ModelSubscriptionVehicleAlertStateFilterInput
+  ) {
+    onDeleteVehicleAlertState(filter: $filter) {
+      id
+      alert
+      state
+      timestamp
+      zone {
+        id
+        name
+        lat
+        lng
+        radius
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleAlertStateZoneId
+      vehicleAlertStateVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onCreateAlertHistory = /* GraphQL */ `
+  subscription OnCreateAlertHistory(
+    $filter: ModelSubscriptionAlertHistoryFilterInput
+  ) {
+    onCreateAlertHistory(filter: $filter) {
+      id
+      type
+      imei
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      timestamp
+      config {
+        id
+        name
+        type
+        disabled
+        instantaneous
+        reportFrequency
+        byMail
+        bySms
+        byWhatsapp
+        smsTemplate
+        emailTemplate
+        sentToDriver
+        phones
+        emails
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        extra
+        zone {
+          id
+          name
+          lat
+          lng
+          radius
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        alertCompanyId
+        alertZoneId
+        __typename
+      }
+      data
+      createdAt
+      updatedAt
+      alertHistoryVehicleImmat
+      alertHistoryDriverSub
+      alertHistoryCompanyId
+      alertHistoryConfigId
+      __typename
+    }
+  }
+`;
+export const onUpdateAlertHistory = /* GraphQL */ `
+  subscription OnUpdateAlertHistory(
+    $filter: ModelSubscriptionAlertHistoryFilterInput
+  ) {
+    onUpdateAlertHistory(filter: $filter) {
+      id
+      type
+      imei
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      timestamp
+      config {
+        id
+        name
+        type
+        disabled
+        instantaneous
+        reportFrequency
+        byMail
+        bySms
+        byWhatsapp
+        smsTemplate
+        emailTemplate
+        sentToDriver
+        phones
+        emails
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        extra
+        zone {
+          id
+          name
+          lat
+          lng
+          radius
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        alertCompanyId
+        alertZoneId
+        __typename
+      }
+      data
+      createdAt
+      updatedAt
+      alertHistoryVehicleImmat
+      alertHistoryDriverSub
+      alertHistoryCompanyId
+      alertHistoryConfigId
+      __typename
+    }
+  }
+`;
+export const onDeleteAlertHistory = /* GraphQL */ `
+  subscription OnDeleteAlertHistory(
+    $filter: ModelSubscriptionAlertHistoryFilterInput
+  ) {
+    onDeleteAlertHistory(filter: $filter) {
+      id
+      type
+      imei
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      timestamp
+      config {
+        id
+        name
+        type
+        disabled
+        instantaneous
+        reportFrequency
+        byMail
+        bySms
+        byWhatsapp
+        smsTemplate
+        emailTemplate
+        sentToDriver
+        phones
+        emails
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        extra
+        zone {
+          id
+          name
+          lat
+          lng
+          radius
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        alertCompanyId
+        alertZoneId
+        __typename
+      }
+      data
+      createdAt
+      updatedAt
+      alertHistoryVehicleImmat
+      alertHistoryDriverSub
+      alertHistoryCompanyId
+      alertHistoryConfigId
+      __typename
+    }
+  }
+`;
+export const onCreateZone = /* GraphQL */ `
+  subscription OnCreateZone($filter: ModelSubscriptionZoneFilterInput) {
+    onCreateZone(filter: $filter) {
+      id
+      name
+      lat
+      lng
+      radius
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateZone = /* GraphQL */ `
+  subscription OnUpdateZone($filter: ModelSubscriptionZoneFilterInput) {
+    onUpdateZone(filter: $filter) {
+      id
+      name
+      lat
+      lng
+      radius
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteZone = /* GraphQL */ `
+  subscription OnDeleteZone($filter: ModelSubscriptionZoneFilterInput) {
+    onDeleteZone(filter: $filter) {
+      id
+      name
+      lat
+      lng
+      radius
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateVehicleCategory = /* GraphQL */ `
+  subscription OnCreateVehicleCategory(
+    $filter: ModelSubscriptionVehicleCategoryFilterInput
+  ) {
+    onCreateVehicleCategory(filter: $filter) {
+      id
+      category
+      description
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicleCategory = /* GraphQL */ `
+  subscription OnUpdateVehicleCategory(
+    $filter: ModelSubscriptionVehicleCategoryFilterInput
+  ) {
+    onUpdateVehicleCategory(filter: $filter) {
+      id
+      category
+      description
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicleCategory = /* GraphQL */ `
+  subscription OnDeleteVehicleCategory(
+    $filter: ModelSubscriptionVehicleCategoryFilterInput
+  ) {
+    onDeleteVehicleCategory(filter: $filter) {
+      id
+      category
+      description
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateVehicleBrand = /* GraphQL */ `
+  subscription OnCreateVehicleBrand(
+    $filter: ModelSubscriptionVehicleBrandFilterInput
+  ) {
+    onCreateVehicleBrand(filter: $filter) {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        items {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicleBrand = /* GraphQL */ `
+  subscription OnUpdateVehicleBrand(
+    $filter: ModelSubscriptionVehicleBrandFilterInput
+  ) {
+    onUpdateVehicleBrand(filter: $filter) {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        items {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicleBrand = /* GraphQL */ `
+  subscription OnDeleteVehicleBrand(
+    $filter: ModelSubscriptionVehicleBrandFilterInput
+  ) {
+    onDeleteVehicleBrand(filter: $filter) {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        items {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateVehicleModel = /* GraphQL */ `
+  subscription OnCreateVehicleModel(
+    $filter: ModelSubscriptionVehicleModelFilterInput
+  ) {
+    onCreateVehicleModel(filter: $filter) {
+      id
+      modele
+      brand {
+        brandName
+        logo {
+          bucket
+          region
+          key
+          __typename
+        }
+        models {
+          items {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleBrandModelsBrandName
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicleModel = /* GraphQL */ `
+  subscription OnUpdateVehicleModel(
+    $filter: ModelSubscriptionVehicleModelFilterInput
+  ) {
+    onUpdateVehicleModel(filter: $filter) {
+      id
+      modele
+      brand {
+        brandName
+        logo {
+          bucket
+          region
+          key
+          __typename
+        }
+        models {
+          items {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleBrandModelsBrandName
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicleModel = /* GraphQL */ `
+  subscription OnDeleteVehicleModel(
+    $filter: ModelSubscriptionVehicleModelFilterInput
+  ) {
+    onDeleteVehicleModel(filter: $filter) {
+      id
+      modele
+      brand {
+        brandName
+        logo {
+          bucket
+          region
+          key
+          __typename
+        }
+        models {
+          items {
+            id
+            modele
+            createdAt
+            updatedAt
+            vehicleBrandModelsBrandName
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleBrandModelsBrandName
+      __typename
+    }
+  }
+`;
+export const onCreateDevice = /* GraphQL */ `
+  subscription OnCreateDevice($filter: ModelSubscriptionDeviceFilterInput) {
+    onCreateDevice(filter: $filter) {
+      imei
+      protocolId
+      sim
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      createdAt
+      updatedAt
+      deviceVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onUpdateDevice = /* GraphQL */ `
+  subscription OnUpdateDevice($filter: ModelSubscriptionDeviceFilterInput) {
+    onUpdateDevice(filter: $filter) {
+      imei
+      protocolId
+      sim
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      createdAt
+      updatedAt
+      deviceVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onDeleteDevice = /* GraphQL */ `
+  subscription OnDeleteDevice($filter: ModelSubscriptionDeviceFilterInput) {
+    onDeleteDevice(filter: $filter) {
+      imei
+      protocolId
+      sim
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      createdAt
+      updatedAt
+      deviceVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onCreateTrame = /* GraphQL */ `
+  subscription OnCreateTrame($filter: ModelSubscriptionTrameFilterInput) {
+    onCreateTrame(filter: $filter) {
+      id
+      speed
+      lat
+      lng
+      address
+      azimut
+      immobilisation
+      timestamp
+      state
+      fuel
+      ibuttonCode
+      companyId
+      driverFullName
+      vehicleBrandName
+      companyTramesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      processor
+      createdAt
+      updatedAt
+      trameDriverSub
+      trameVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onUpdateTrame = /* GraphQL */ `
+  subscription OnUpdateTrame($filter: ModelSubscriptionTrameFilterInput) {
+    onUpdateTrame(filter: $filter) {
+      id
+      speed
+      lat
+      lng
+      address
+      azimut
+      immobilisation
+      timestamp
+      state
+      fuel
+      ibuttonCode
+      companyId
+      driverFullName
+      vehicleBrandName
+      companyTramesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      processor
+      createdAt
+      updatedAt
+      trameDriverSub
+      trameVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onDeleteTrame = /* GraphQL */ `
+  subscription OnDeleteTrame($filter: ModelSubscriptionTrameFilterInput) {
+    onDeleteTrame(filter: $filter) {
+      id
+      speed
+      lat
+      lng
+      address
+      azimut
+      immobilisation
+      timestamp
+      state
+      fuel
+      ibuttonCode
+      companyId
+      driverFullName
+      vehicleBrandName
+      companyTramesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      processor
+      createdAt
+      updatedAt
+      trameDriverSub
+      trameVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onCreateDvD = /* GraphQL */ `
+  subscription OnCreateDvD($filter: ModelSubscriptionDvDFilterInput) {
+    onCreateDvD(filter: $filter) {
+      id
+      dvDVehicleImmat
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      dvDDriverSub
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      assignmentDate
+      unassignmentDate
+      createdAt
+      updatedAt
+      dvDCompanyId
+      __typename
+    }
+  }
+`;
+export const onUpdateDvD = /* GraphQL */ `
+  subscription OnUpdateDvD($filter: ModelSubscriptionDvDFilterInput) {
+    onUpdateDvD(filter: $filter) {
+      id
+      dvDVehicleImmat
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      dvDDriverSub
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      assignmentDate
+      unassignmentDate
+      createdAt
+      updatedAt
+      dvDCompanyId
+      __typename
+    }
+  }
+`;
+export const onDeleteDvD = /* GraphQL */ `
+  subscription OnDeleteDvD($filter: ModelSubscriptionDvDFilterInput) {
+    onDeleteDvD(filter: $filter) {
+      id
+      dvDVehicleImmat
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      dvDDriverSub
+      driver {
+        sub
+        firstname
+        lastname
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        users {
+          items {
+            sub
+            firstname
+            lastname
+            mobile
+            beginDate
+            endDate
+            mappingId
+            languageCode
+            lastModificationDate
+            showReport
+            dispatcher
+            applicationVersion
+            themeId
+            companyUsersId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        vehicles {
+          items {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        drivers {
+          items {
+            sub
+            firstname
+            lastname
+            fullname
+            birthDate
+            drivingLicenseNumber
+            drivingLicenseType
+            job
+            hiringDate
+            comment
+            driverKey
+            email
+            mobile
+            lastModificationDate
+            code
+            address
+            agencyId
+            cdc
+            pdm
+            nni
+            companyDriversId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        trames {
+          items {
+            id
+            speed
+            lat
+            lng
+            address
+            azimut
+            immobilisation
+            timestamp
+            state
+            fuel
+            ibuttonCode
+            companyId
+            driverFullName
+            vehicleBrandName
+            companyTramesId
+            processor
+            createdAt
+            updatedAt
+            trameDriverSub
+            trameVehicleImmat
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      assignmentDate
+      unassignmentDate
+      createdAt
+      updatedAt
+      dvDCompanyId
+      __typename
+    }
+  }
+`;
+export const onCreateDepense = /* GraphQL */ `
+  subscription OnCreateDepense($filter: ModelSubscriptionDepenseFilterInput) {
+    onCreateDepense(filter: $filter) {
+      id
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      type
+      prestataire
+      montantTTC
+      montantHT
+      associateDate
+      produit
+      qte
+      description
+      companyId
+      createdAt
+      updatedAt
+      depenseVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onUpdateDepense = /* GraphQL */ `
+  subscription OnUpdateDepense($filter: ModelSubscriptionDepenseFilterInput) {
+    onUpdateDepense(filter: $filter) {
+      id
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      type
+      prestataire
+      montantTTC
+      montantHT
+      associateDate
+      produit
+      qte
+      description
+      companyId
+      createdAt
+      updatedAt
+      depenseVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onDeleteDepense = /* GraphQL */ `
+  subscription OnDeleteDepense($filter: ModelSubscriptionDepenseFilterInput) {
+    onDeleteDepense(filter: $filter) {
+      id
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      type
+      prestataire
+      montantTTC
+      montantHT
+      associateDate
+      produit
+      qte
+      description
+      companyId
+      createdAt
+      updatedAt
+      depenseVehicleImmat
+      __typename
+    }
+  }
+`;
+export const onCreateLabelsCollection = /* GraphQL */ `
+  subscription OnCreateLabelsCollection(
+    $filter: ModelSubscriptionLabelsCollectionFilterInput
+  ) {
+    onCreateLabelsCollection(filter: $filter) {
+      key
+      label
+      type
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateLabelsCollection = /* GraphQL */ `
+  subscription OnUpdateLabelsCollection(
+    $filter: ModelSubscriptionLabelsCollectionFilterInput
+  ) {
+    onUpdateLabelsCollection(filter: $filter) {
+      key
+      label
+      type
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteLabelsCollection = /* GraphQL */ `
+  subscription OnDeleteLabelsCollection(
+    $filter: ModelSubscriptionLabelsCollectionFilterInput
+  ) {
+    onDeleteLabelsCollection(filter: $filter) {
+      key
+      label
+      type
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateTag = /* GraphQL */ `
+  subscription OnCreateTag($filter: ModelSubscriptionTagFilterInput) {
+    onCreateTag(filter: $filter) {
+      id
+      name
+      description
+      color
+      vehicles {
+        items {
+          id
+          vehicleImmat
+          tagId
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          tag {
+            id
+            name
+            description
+            color
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateTag = /* GraphQL */ `
+  subscription OnUpdateTag($filter: ModelSubscriptionTagFilterInput) {
+    onUpdateTag(filter: $filter) {
+      id
+      name
+      description
+      color
+      vehicles {
+        items {
+          id
+          vehicleImmat
+          tagId
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          tag {
+            id
+            name
+            description
+            color
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteTag = /* GraphQL */ `
+  subscription OnDeleteTag($filter: ModelSubscriptionTagFilterInput) {
+    onDeleteTag(filter: $filter) {
+      id
+      name
+      description
+      color
+      vehicles {
+        items {
+          id
+          vehicleImmat
+          tagId
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          tag {
+            id
+            name
+            description
+            color
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onCreateVehicleTags = /* GraphQL */ `
+  subscription OnCreateVehicleTags(
+    $filter: ModelSubscriptionVehicleTagsFilterInput
+  ) {
+    onCreateVehicleTags(filter: $filter) {
+      id
+      vehicleImmat
+      tagId
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      tag {
+        id
+        name
+        description
+        color
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onUpdateVehicleTags = /* GraphQL */ `
+  subscription OnUpdateVehicleTags(
+    $filter: ModelSubscriptionVehicleTagsFilterInput
+  ) {
+    onUpdateVehicleTags(filter: $filter) {
+      id
+      vehicleImmat
+      tagId
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      tag {
+        id
+        name
+        description
+        color
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+export const onDeleteVehicleTags = /* GraphQL */ `
+  subscription OnDeleteVehicleTags(
+    $filter: ModelSubscriptionVehicleTagsFilterInput
+  ) {
+    onDeleteVehicleTags(filter: $filter) {
+      id
+      vehicleImmat
+      tagId
+      vehicle {
+        immat
+        year
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        picture {
+          bucket
+          region
+          key
+          __typename
+        }
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        vehicleCategory {
+          id
+          category
+          description
+          createdAt
+          updatedAt
+          __typename
+        }
+        brand {
+          brandName
+          logo {
+            bucket
+            region
+            key
+            __typename
+          }
+          models {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        modele {
+          id
+          modele
+          brand {
+            brandName
+            createdAt
+            updatedAt
+            __typename
+          }
+          createdAt
+          updatedAt
+          vehicleBrandModelsBrandName
+          __typename
+        }
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          users {
+            nextToken
+            __typename
+          }
+          vehicles {
+            nextToken
+            __typename
+          }
+          drivers {
+            nextToken
+            __typename
+          }
+          trames {
+            nextToken
+            __typename
+          }
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          vehicle {
+            immat
+            year
+            fuelType
+            consumption
+            maxSpeed
+            seatCount
+            icon
+            kilometerage
+            kilometerPrice
+            kilometerageStart
+            kilometerageDay
+            kilometerageLastUpdate
+            timeRunning
+            counterValue
+            co2
+            lastModificationDate
+            rollingTimeStart
+            rollingTimeDay
+            locations
+            installationPrecautions
+            code
+            gefcoSend
+            tankCapacity
+            canMileage
+            companyVehiclesId
+            createdAt
+            updatedAt
+            vehicleVehicleCategoryId
+            vehicleBrandBrandName
+            vehicleModeleId
+            vehicleDeviceImei
+            __typename
+          }
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        alerts {
+          items {
+            id
+            vehicleImmat
+            alertId
+            isFlespi
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        tags {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      tag {
+        id
+        name
+        description
+        color
+        vehicles {
+          items {
+            id
+            vehicleImmat
+            tagId
+            createdAt
+            updatedAt
+            __typename
+          }
+          nextToken
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
