@@ -1,4 +1,3 @@
-
 {
   "features": {
     "graphqltransformer": {
@@ -50,10 +49,9 @@
       "pinpoint": 1,
       "translate": 1,
       "transcribe": 1,
-      "comprehend": 1,
       "rekognition": 1,
       "textract": 1,
-      "polly": 1
+      "comprehend": 1
     },
     "project": {
       "overrides": true
