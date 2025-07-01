@@ -1,10 +1,13 @@
+
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
+import { waitForAmplifyConfig } from '@/config/aws-config.js';
 
 const client = generateClient();
 
 export const fetchCompanies = async () => {
+  await waitForAmplifyConfig();
   let allItems = [];
   let nextToken = null;
   
@@ -29,6 +32,7 @@ export const fetchCompanies = async () => {
 };
 
 export const fetchFilteredCompanies = async (searchName, searchEmail, searchSiret) => {
+  await waitForAmplifyConfig();
   let filtersArray = [];
   
   if (searchSiret && searchSiret.trim()) {
@@ -74,6 +78,7 @@ export const fetchFilteredCompanies = async (searchName, searchEmail, searchSire
 };
 
 export const updateCompanyData = async (data) => {
+  await waitForAmplifyConfig();
   const companyDetails = {
     id: data.id,
     name: data.name,
@@ -93,6 +98,7 @@ export const updateCompanyData = async (data) => {
 };
 
 export const deleteCompanyData = async (item) => {
+  await waitForAmplifyConfig();
   const companyDetails = {
     id: item.id
   };
@@ -104,6 +110,7 @@ export const deleteCompanyData = async (item) => {
 };
 
 export const fetchCompaniesWithUsers = async () => {
+  await waitForAmplifyConfig();
   let allCompanies = [];
   let allUsers = [];
   let nextToken = null;

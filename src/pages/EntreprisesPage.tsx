@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import AddCompanyForm from "@/components/forms/AddCompanyForm";
 import { CompanyUsersList } from "@/components/CompanyUsersList";
@@ -30,7 +30,9 @@ export default function EntreprisesPage() {
   const fetchCompanies = async () => {
     setLoading(true);
     try {
+      console.log('Fetching companies with users...');
       const allItems = await CompanyService.fetchCompaniesWithUsers();
+      console.log('Companies fetched successfully:', allItems.length);
       setCompanies(allItems);
     } catch (err) {
       console.error('Error fetching companies:', err);
@@ -259,6 +261,10 @@ export default function EntreprisesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
+              <DialogTitle>Ajouter une entreprise</DialogTitle>
+              <DialogDescription>
+                Créez une nouvelle entreprise en remplissant les informations ci-dessous.
+              </DialogDescription>
               <AddCompanyForm 
                 onClose={() => setIsDialogOpen(false)} 
                 onSuccess={handleAddSuccess}
@@ -280,6 +286,10 @@ export default function EntreprisesPage() {
       {/* Edit Company Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
+          <DialogTitle>Modifier l'entreprise</DialogTitle>
+          <DialogDescription>
+            Modifiez les informations de l'entreprise sélectionnée.
+          </DialogDescription>
           {selectedItem && (
             <EditCompanyForm 
               company={selectedItem} 
