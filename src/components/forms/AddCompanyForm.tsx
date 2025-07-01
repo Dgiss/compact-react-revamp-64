@@ -17,20 +17,14 @@ interface AddCompanyFormProps {
 }
 
 export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormProps) {
-  // Champs entreprise
+  // Champs entreprise (simplifiés selon le schéma)
   const [societe, setSociete] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [email, setEmail] = useState("");
-  const [adresse, setAdresse] = useState("");
-  const [ville, setVille] = useState("");
-  const [contact, setContact] = useState("");
-  const [siret, setSiret] = useState("");
+  const [siren, setSiren] = useState("");
   
-  // Champs utilisateur
+  // Champs utilisateur (simplifiés selon le schéma)
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
+  const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   
   // États
@@ -53,21 +47,13 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
     try {
       const companyData = {
         name: societe,
-        address: adresse,
-        email: email,
-        contact: contact,
-        mobile: mobile,
-        siret: siret,
-        city: ville
+        siren: siren
       };
       
       const userData = {
         username: username,
         password: password,
-        email: email,
-        firstname: firstname,
-        lastname: lastname,
-        phone: mobile
+        email: email || 'default@test.com'
       };
       
       console.log("Creating company with user...", { companyData, userData });
@@ -109,7 +95,7 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-1">
             <Input 
-              placeholder="Société *"
+              placeholder="Nom de l'entreprise *"
               value={societe}
               onChange={(e) => setSociete(e.target.value)}
               required
@@ -117,45 +103,9 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
           </div>
           <div className="md:col-span-1">
             <Input 
-              placeholder="Contact"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-1">
-            <Input 
-              placeholder="Mobile"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-1">
-            <Input 
-              placeholder="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-1">
-            <Input 
-              placeholder="Adresse"
-              value={adresse}
-              onChange={(e) => setAdresse(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-1">
-            <Input 
-              placeholder="Ville"
-              value={ville}
-              onChange={(e) => setVille(e.target.value)}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <Input 
-              placeholder="SIRET"
-              value={siret}
-              onChange={(e) => setSiret(e.target.value)}
+              placeholder="SIREN"
+              value={siren}
+              onChange={(e) => setSiren(e.target.value)}
             />
           </div>
         </div>
@@ -165,27 +115,21 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-1">
               <Input 
-                placeholder="Prénom"
-                value={firstname}
-                onChange={(e) => setFirstname(e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-1">
-              <Input 
-                placeholder="Nom"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-1">
-              <Input 
                 placeholder="Nom d'utilisateur *"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
-            <div className="relative md:col-span-1">
+            <div className="md:col-span-1">
+              <Input 
+                placeholder="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="relative md:col-span-2">
               <Input 
                 type={showPassword ? "text" : "password"}
                 placeholder="Mot de passe *"

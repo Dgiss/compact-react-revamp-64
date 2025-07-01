@@ -11,9 +11,10 @@ type Company @model @auth(rules: [{allow: public}]) {
 }
 
 type User @model @auth(rules: [{allow: public}]) {
-  id: ID!
+  sub: ID!
   username: String!
   email: AWSEmail!
+  password: String
   companyUsersId: ID @index(name: "byCompany")
 }
 

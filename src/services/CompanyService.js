@@ -2,7 +2,7 @@ import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
-import * as CognitoService from './CognitoService';
+import { signUp } from 'aws-amplify/auth';
 
 const client = generateClient();
 
@@ -36,15 +36,11 @@ export const fetchFilteredCompanies = async (searchName, searchEmail, searchSire
   let filtersArray = [];
   
   if (searchSiret && searchSiret.trim()) {
-    filtersArray.push({ siret: { contains: searchSiret.trim() } });
+    filtersArray.push({ siren: { contains: searchSiret.trim() } });
   }
   
   if (searchName && searchName.trim()) {
     filtersArray.push({ name: { contains: searchName.trim() } });
-  }
-  
-  if (searchEmail && searchEmail.trim()) {
-    filtersArray.push({ email: { contains: searchEmail.trim() } });
   }
   
   if (filtersArray.length === 0) {
@@ -81,20 +77,14 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
   await waitForAmplifyConfig();
   
   let createdCompany = null;
-  let createdCognitoUser = null;
   
   try {
     console.log('Creating company with user:', { companyData, userData });
     
-    // Étape 1: Créer l'entreprise dans GraphQL
+    // Étape 1: Créer l'entreprise dans GraphQL (champs basiques seulement)
     const companyInput = {
       name: companyData.name,
-      address: companyData.address || '',
-      email: companyData.email || '',
-      contact: companyData.contact || '',
-      mobile: companyData.mobile || '',
-      siret: companyData.siret || '',
-      city: companyData.city || ''
+      siren: companyData.siren || ''
     };
     
     const companyResult = await client.graphql({
@@ -105,45 +95,40 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     createdCompany = companyResult.data.createCompany;
     console.log('Company created in GraphQL:', createdCompany);
     
-    // Étape 2: Créer l'utilisateur dans Cognito (côté client)
-    const cognitoUserData = {
+    // Étape 2: Créer l'utilisateur dans Cognito (comme dans votre exemple qui fonctionne)
+    const user = await signUp({
       username: userData.username,
       password: userData.password,
-      email: userData.email || companyData.email,
-      firstname: userData.firstname || '',
-      lastname: userData.lastname || ''
-    };
+      options: {
+        userAttributes: {
+          email: userData.email || 'default@test.com'
+        }
+      }
+    });
     
-    const cognitoResult = await CognitoService.createUserInCognito(cognitoUserData);
-    createdCognitoUser = cognitoResult;
-    console.log('User created in Cognito:', cognitoResult);
+    console.log('User created in Cognito:', user);
     
-    // Étape 3: Créer l'utilisateur dans GraphQL avec la référence à l'entreprise
-    const userInput = {
-      id: cognitoResult.userSub,
+    // Étape 3: Créer l'utilisateur dans GraphQL (comme dans votre exemple qui fonctionne)
+    const userDetails = {
+      sub: user.userId.toString(),
       username: userData.username,
-      email: userData.email || companyData.email,
-      firstname: userData.firstname || '',
-      lastname: userData.lastname || '',
-      phone: userData.phone || companyData.mobile || '',
-      role: 'Admin',
+      email: userData.email || 'default@test.com',
       password: userData.password,
       companyUsersId: createdCompany.id
     };
     
-    const userResult = await client.graphql({
+    const newUser = await client.graphql({
       query: mutations.createUser,
-      variables: { input: userInput }
+      variables: { input: userDetails }
     });
     
-    console.log('User created in GraphQL:', userResult.data.createUser);
+    console.log('User created in GraphQL:', newUser);
     
     return {
       success: true,
       company: createdCompany,
-      user: userResult.data.createUser,
-      cognitoUser: createdCognitoUser,
-      warning: cognitoResult.needsConfirmation ? 'L\'utilisateur doit confirmer son email' : null
+      user: newUser.data.createUser,
+      cognitoUser: user
     };
     
   } catch (error) {
@@ -171,11 +156,7 @@ export const updateCompanyData = async (data) => {
   const companyDetails = {
     id: data.id,
     name: data.name,
-    address: data.address,
-    email: data.email,
-    contact: data.contact,
-    mobile: data.mobile,
-    siret: data.siret,
+    siren: data.siren,
   };
 
   await client.graphql({
@@ -186,11 +167,11 @@ export const updateCompanyData = async (data) => {
   });
 };
 
-export const updateCompanyAndUser = async ({ companyData, userData, userCognitoData }) => {
+export const updateCompanyAndUser = async ({ companyData, userData }) => {
   await waitForAmplifyConfig();
   
   try {
-    console.log('Updating company and user:', { companyData, userData, userCognitoData });
+    console.log('Updating company and user:', { companyData, userData });
     
     // Mettre à jour l'entreprise
     if (companyData) {
@@ -198,26 +179,18 @@ export const updateCompanyAndUser = async ({ companyData, userData, userCognitoD
     }
     
     // Mettre à jour l'utilisateur dans GraphQL
-    if (userData && userData.id) {
+    if (userData && userData.sub) {
       const userInput = {
-        id: userData.id,
+        sub: userData.sub,
         username: userData.username,
         email: userData.email,
-        firstname: userData.firstname,
-        lastname: userData.lastname,
-        phone: userData.phone,
-        role: userData.role || 'Admin'
+        password: userData.password
       };
       
       await client.graphql({
         query: mutations.updateUser,
         variables: { input: userInput }
       });
-    }
-    
-    // Note: Mise à jour Cognito requiert une implémentation côté serveur
-    if (userCognitoData && userCognitoData.username) {
-      console.warn('Cognito user update requires server-side implementation');
     }
     
     return { success: true };
@@ -249,21 +222,15 @@ export const deleteCompanyAndUser = async (company) => {
     // Récupérer les utilisateurs de l'entreprise
     const users = company.users?.items || [];
     
-    // Supprimer chaque utilisateur de GraphQL (Cognito nécessite côté serveur)
+    // Supprimer chaque utilisateur de GraphQL
     for (const user of users) {
       try {
-        // Note: Suppression Cognito requiert une implémentation côté serveur
-        console.warn(`Cognito user deletion for ${user.username} requires server-side implementation`);
-        
-        // Supprimer de GraphQL
         await client.graphql({
           query: mutations.deleteUser,
-          variables: { input: { id: user.id } }
+          variables: { input: { sub: user.sub } }
         });
-        
       } catch (userError) {
         console.error(`Error deleting user ${user.username}:`, userError);
-        // Continuer même si un utilisateur échoue
       }
     }
     
@@ -340,16 +307,11 @@ export const fetchCompaniesWithUsers = async () => {
           
           // Clean and format user data
           const formattedUsers = companyUsers.map(user => ({
-            id: user.id,
-            sub: user.id,
-            firstname: user.firstname || '',
-            lastname: user.lastname || '',
-            email: user.email || '',
-            phone: user.phone || '',
-            role: user.role || 'Rapport',
+            sub: user.sub,
             username: user.username || '',
+            email: user.email || '',
             password: user.password || '',
-            nom: [user.firstname, user.lastname].filter(Boolean).join(' ') || user.username || 'Utilisateur'
+            nom: user.username || 'Utilisateur'
           }));
           
           return {
