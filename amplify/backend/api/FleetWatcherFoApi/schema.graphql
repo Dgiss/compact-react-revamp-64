@@ -47,6 +47,7 @@ type User @model
     address: String
     mobile: String
     username: String
+    email: String
     password: String
     #invited: String // Role invité
     beginDate: String
