@@ -124,7 +124,6 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     const userDetails = {
       sub: user.userId.toString(),
       username: userData.username,
-      email: userData.email || 'default@test.com',
       password: userData.password,
       firstname: userData.firstname || '',
       lastname: userData.lastname || '',
@@ -223,7 +222,6 @@ export const updateCompanyAndUser = async ({ companyData, userData }) => {
       const userInput = {
         sub: userData.sub,
         username: userData.username,
-        email: userData.email,
         password: userData.password,
         firstname: userData.firstname || '',
         lastname: userData.lastname || '',
