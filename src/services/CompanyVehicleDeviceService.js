@@ -1,0 +1,173 @@
+import * as VehicleService from './VehicleService';
+import * as CompanyService from './CompanyService';
+import * as DeviceService from './DeviceService';
+
+/**
+ * Service for managing company-vehicle-device relationships
+ * Provides a unified interface for complex data operations
+ */
+
+/**
+ * Get all companies with their associated vehicles and devices
+ * @returns {Promise<{companies: Array, vehicles: Array, devices: Array, stats: Object}>}
+ */
+export const fetchCompaniesWithVehiclesAndDevices = async () => {
+  try {
+    const { companies, vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    // Separate vehicles from free devices
+    const actualVehicles = vehicles.filter(item => item.type === 'vehicle');
+    const freeDevices = vehicles.filter(item => item.type === 'device');
+    
+    // Generate statistics
+    const stats = {
+      totalCompanies: companies.length,
+      totalVehicles: actualVehicles.length,
+      totalDevices: vehicles.length,
+      freeDevices: freeDevices.length,
+      associatedDevices: actualVehicles.filter(v => v.imei).length,
+      companiesWithVehicles: companies.filter(c => c.vehicles?.items?.length > 0).length
+    };
+    
+    return {
+      companies,
+      vehicles: actualVehicles,
+      devices: vehicles, // Combined vehicles + free devices
+      freeDevices,
+      stats
+    };
+  } catch (error) {
+    console.error('Error fetching companies with vehicles and devices:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get vehicles for a specific company
+ * @param {string} companyId - Company ID
+ * @returns {Promise<Array>} Array of vehicles with device data
+ */
+export const fetchVehiclesByCompany = async (companyId) => {
+  try {
+    const { companies, vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    // Find the company
+    const company = companies.find(c => c.id === companyId);
+    if (!company) {
+      throw new Error(`Company with ID ${companyId} not found`);
+    }
+    
+    // Filter vehicles for this company
+    const companyVehicles = vehicles.filter(vehicle => 
+      vehicle.type === 'vehicle' && 
+      vehicle.entreprise === company.name
+    );
+    
+    return companyVehicles;
+  } catch (error) {
+    console.error('Error fetching vehicles by company:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get free (unassociated) devices
+ * @returns {Promise<Array>} Array of free devices
+ */
+export const fetchFreeDevices = async () => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    // Return only free devices
+    return vehicles.filter(item => item.type === 'device');
+  } catch (error) {
+    console.error('Error fetching free devices:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search devices by multiple criteria
+ * @param {Object} filters - Search filters
+ * @param {string} filters.imei - IMEI filter
+ * @param {string} filters.sim - SIM filter
+ * @param {string} filters.entreprise - Company filter
+ * @param {string} filters.immatriculation - License plate filter
+ * @returns {Promise<Array>} Filtered results
+ */
+export const searchDevicesAndVehicles = async (filters) => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    return vehicles.filter(item => {
+      const matchesImei = !filters.imei || 
+        (item.imei && item.imei.toLowerCase().includes(filters.imei.toLowerCase()));
+      
+      const matchesSim = !filters.sim || 
+        (item.telephone && item.telephone.toLowerCase().includes(filters.sim.toLowerCase()));
+      
+      const matchesEntreprise = !filters.entreprise || 
+        (item.entreprise && item.entreprise.toLowerCase().includes(filters.entreprise.toLowerCase()));
+      
+      const matchesImmat = !filters.immatriculation || 
+        (item.immatriculation && item.immatriculation.toLowerCase().includes(filters.immatriculation.toLowerCase()));
+      
+      return matchesImei && matchesSim && matchesEntreprise && matchesImmat;
+    });
+  } catch (error) {
+    console.error('Error searching devices and vehicles:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get companies list for dropdowns/selects
+ * @returns {Promise<Array>} Array of companies with id and name
+ */
+export const fetchCompaniesForSelect = async () => {
+  try {
+    const companies = await CompanyService.fetchCompanies();
+    return companies.map(company => ({
+      id: company.id,
+      name: company.name,
+      siret: company.siret
+    }));
+  } catch (error) {
+    console.error('Error fetching companies for select:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get device status and association info
+ * @param {string} imei - Device IMEI
+ * @returns {Promise<Object>} Device status information
+ */
+export const getDeviceStatus = async (imei) => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    const device = vehicles.find(item => item.imei === imei);
+    
+    if (!device) {
+      return { found: false, message: 'Device not found' };
+    }
+    
+    return {
+      found: true,
+      type: device.type,
+      isAssociated: device.isAssociated,
+      entreprise: device.entreprise,
+      vehicleInfo: device.type === 'vehicle' ? {
+        immatriculation: device.immatriculation,
+        nomVehicule: device.nomVehicule,
+        marque: device.marque,
+        modele: device.modele
+      } : null,
+      deviceData: device.deviceData
+    };
+  } catch (error) {
+    console.error('Error getting device status:', error);
+    throw error;
+  }
+};
