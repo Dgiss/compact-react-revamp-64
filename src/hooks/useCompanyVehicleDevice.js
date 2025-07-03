@@ -206,10 +206,18 @@ export const useCompanyVehicleDevice = () => {
       const results = await CompanyVehicleDeviceService.searchByCompany(company);
       setDevices(results);
       
-      toast({
-        title: "Recherche par entreprise",
-        description: `${results.length} résultat(s) trouvé(s)`,
-      });
+      if (results.length === 0) {
+        toast({
+          title: "Aucun résultat",
+          description: `Aucune entreprise trouvée pour "${company}". Vérifiez l'orthographe ou consultez la console pour voir les entreprises disponibles.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Recherche par entreprise",
+          description: `${results.length} résultat(s) trouvé(s) pour "${company}"`,
+        });
+      }
       
       return results;
     } catch (err) {

@@ -202,9 +202,38 @@ export const searchByCompany = async (company) => {
   try {
     const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
     
-    return vehicles.filter(item => 
+    // Debug logging
+    console.log('=== COMPANY SEARCH DEBUG ===');
+    console.log('Searching for company:', company);
+    console.log('Total vehicles loaded:', vehicles.length);
+    
+    // Get all unique companies
+    const allCompanies = [...new Set(vehicles
+      .map(item => item.entreprise)
+      .filter(Boolean)
+    )];
+    console.log('All available companies:', allCompanies);
+    
+    // Check if exact match exists
+    const exactMatch = allCompanies.find(c => 
+      c.toLowerCase() === company.toLowerCase()
+    );
+    console.log('Exact match found:', exactMatch);
+    
+    // Check partial matches
+    const partialMatches = allCompanies.filter(c => 
+      c.toLowerCase().includes(company.toLowerCase())
+    );
+    console.log('Partial matches:', partialMatches);
+    
+    const results = vehicles.filter(item => 
       item.entreprise && item.entreprise.toLowerCase().includes(company.toLowerCase())
     );
+    
+    console.log('Search results count:', results.length);
+    console.log('=== END DEBUG ===');
+    
+    return results;
   } catch (error) {
     console.error('Error searching by company:', error);
     throw error;
