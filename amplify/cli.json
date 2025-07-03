@@ -1,4 +1,3 @@
-
 {
   "features": {
     "graphqltransformer": {
@@ -41,9 +40,7 @@
       "emitauthprovider": true,
       "generateindexrules": true,
       "enabledartnullsafety": true,
-      "generatemodelsforlazyloadandcustomselectionset": false,
-      "generateTypeScriptTypes": true,
-      "targetLanguage": "typescript"
+      "generatemodelsforlazyloadandcustomselectionset": false
     },
     "appsync": {
       "generategraphqlpermissions": true

@@ -55,7 +55,14 @@
           "flespiTrajectoryHistoryCalc": "1675320",
           "flespiUrl": "https://flespi.io/gw/devices",
           "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
-          "s3Key": "amplify-builds/FleetWatcherReportProcessor-3933687072437437552b-build.zip"
+          "s3Key": "amplify-builds/FleetWatcherReportProcessor-6b41484c6975574c6b4d-build.zip"
+        },
+        "apiSIV": {
+          "apiToken": "2cc614726936bc2fc2533b8f47f42c06",
+          "infoSivTableName": "sivtable",
+          "vehiclesTableName": "Siv",
+          "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
+          "s3Key": "amplify-builds/apiSIV-65707536796645346f76-build.zip"
         },
         "AdminQueries36a219b9": {
           "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
@@ -79,39 +86,17 @@
         },
         "TeltonikaStreamProcessor": {
           "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
-          "s3Key": "amplify-builds/TeltonikaStreamProcessor-4d56574c2b3569674666-build.zip"
+          "s3Key": "amplify-builds/TeltonikaStreamProcessor-794e6e79353246496975-build.zip"
         },
         "XirgoStreamProcessor": {
           "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
           "s3Key": "amplify-builds/XirgoStreamProcessor-4c5a4558715749514434-build.zip"
         },
-        "apiSIV": {
-          "vehiclesTableName": "Vehicle-tktqxx6apngitfngva75btjsfm",
-          "infoSivTableName": "SIV",
-          "apiToken": "2cc614726936bc2fc2533b8f47f42c06",
-          "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
-          "s3Key": "amplify-builds/apiSIV-65707536796645346f76-build.zip"
-        },
-        "rechercheCompany": {
-          "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
-          "s3Key": "amplify-builds/rechercheCompany-4e5a79566e7957334644-build.zip"
-        },
-        "rechercheVehicle": {
-          "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
-          "s3Key": "amplify-builds/rechercheVehicle-346a7a4e6f6841412b68-build.zip"
-        },
-        "rechercheDevice": {
-          "deploymentBucketName": "amplify-fwfo-fwatcher-9af59-deployment",
-          "s3Key": "amplify-builds/rechercheDevice-4d564e4d557364677561-build.zip"
-        }
+        "updatepassword": {}
       },
       "auth": {
         "FleetWatcherFoAuth": {},
         "userPoolGroups": {}
-      },
-      "api": {
-        "AdminQueries": {},
-        "FleetWatcherFoApi": {}
       }
     }
   }
