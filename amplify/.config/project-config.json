@@ -1,10 +1,11 @@
+
 {
   "providers": [
     "awscloudformation"
   ],
   "projectName": "FWFO",
   "version": "3.1",
-  "frontend": "javascript",
+  "frontend": "typescript",
   "javascript": {
     "framework": "react",
     "config": {
