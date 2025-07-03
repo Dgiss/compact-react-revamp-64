@@ -116,6 +116,115 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
+  // Specific search functions for single criteria
+  const searchByImei = useCallback(async (imei) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const results = await CompanyVehicleDeviceService.searchByImei(imei);
+      setDevices(results);
+      
+      toast({
+        title: "Recherche par IMEI",
+        description: `${results.length} résultat(s) trouvé(s)`,
+      });
+      
+      return results;
+    } catch (err) {
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la recherche par IMEI: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const searchBySim = useCallback(async (sim) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const results = await CompanyVehicleDeviceService.searchBySim(sim);
+      setDevices(results);
+      
+      toast({
+        title: "Recherche par SIM",
+        description: `${results.length} résultat(s) trouvé(s)`,
+      });
+      
+      return results;
+    } catch (err) {
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la recherche par SIM: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const searchByVehicle = useCallback(async (vehicle) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const results = await CompanyVehicleDeviceService.searchByVehicle(vehicle);
+      setDevices(results);
+      
+      toast({
+        title: "Recherche par véhicule",
+        description: `${results.length} résultat(s) trouvé(s)`,
+      });
+      
+      return results;
+    } catch (err) {
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la recherche par véhicule: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const searchByCompany = useCallback(async (company) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const results = await CompanyVehicleDeviceService.searchByCompany(company);
+      setDevices(results);
+      
+      toast({
+        title: "Recherche par entreprise",
+        description: `${results.length} résultat(s) trouvé(s)`,
+      });
+      
+      return results;
+    } catch (err) {
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la recherche par entreprise: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Reset to show all data
   const resetFilters = useCallback(() => {
     loadAllData();
@@ -136,6 +245,10 @@ export const useCompanyVehicleDevice = () => {
     // Actions
     loadAllData,
     searchDevices,
+    searchByImei,
+    searchBySim,
+    searchByVehicle,
+    searchByCompany,
     getVehiclesByCompany,
     getDeviceStatus,
     loadCompaniesForSelect,

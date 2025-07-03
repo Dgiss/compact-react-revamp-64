@@ -22,6 +22,10 @@ export default function VehiclesDevicesPage() {
     loading,
     loadAllData,
     searchDevices,
+    searchByImei,
+    searchBySim,
+    searchByVehicle,
+    searchByCompany,
     resetFilters,
     isFiltered,
     totalResults
@@ -61,11 +65,27 @@ export default function VehiclesDevicesPage() {
     }
 
     try {
-      const results = await searchDevices({
-        imei: searchImei,
-        immatriculation: searchImmat,
-        entreprise: searchEntreprise
-      });
+      // Determine search type based on how many criteria are filled
+      const filledCriteria = [searchImei, searchImmat, searchEntreprise].filter(Boolean);
+      
+      let results;
+      if (filledCriteria.length === 1) {
+        // Single criteria search - use specific functions
+        if (searchImei) {
+          results = await searchByImei(searchImei);
+        } else if (searchImmat) {
+          results = await searchByVehicle(searchImmat);
+        } else if (searchEntreprise) {
+          results = await searchByCompany(searchEntreprise);
+        }
+      } else {
+        // Multiple criteria search - use combined search
+        results = await searchDevices({
+          imei: searchImei,
+          immatriculation: searchImmat,
+          entreprise: searchEntreprise
+        });
+      }
       
       setFilteredData(results);
     } catch (error) {

@@ -139,6 +139,79 @@ export const fetchCompaniesForSelect = async () => {
 };
 
 /**
+ * Search devices by IMEI only
+ * @param {string} imei - IMEI to search for
+ * @returns {Promise<Array>} Filtered results
+ */
+export const searchByImei = async (imei) => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    return vehicles.filter(item => 
+      item.imei && item.imei.toLowerCase().includes(imei.toLowerCase())
+    );
+  } catch (error) {
+    console.error('Error searching by IMEI:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search devices by SIM only
+ * @param {string} sim - SIM to search for
+ * @returns {Promise<Array>} Filtered results
+ */
+export const searchBySim = async (sim) => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    return vehicles.filter(item => 
+      item.telephone && item.telephone.toLowerCase().includes(sim.toLowerCase())
+    );
+  } catch (error) {
+    console.error('Error searching by SIM:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search devices by vehicle/immatriculation only
+ * @param {string} vehicle - Vehicle/immatriculation to search for
+ * @returns {Promise<Array>} Filtered results
+ */
+export const searchByVehicle = async (vehicle) => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    return vehicles.filter(item => 
+      (item.immatriculation && item.immatriculation.toLowerCase().includes(vehicle.toLowerCase())) ||
+      (item.nomVehicule && item.nomVehicule.toLowerCase().includes(vehicle.toLowerCase()))
+    );
+  } catch (error) {
+    console.error('Error searching by vehicle:', error);
+    throw error;
+  }
+};
+
+/**
+ * Search devices by company only
+ * @param {string} company - Company to search for
+ * @returns {Promise<Array>} Filtered results
+ */
+export const searchByCompany = async (company) => {
+  try {
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    return vehicles.filter(item => 
+      item.entreprise && item.entreprise.toLowerCase().includes(company.toLowerCase())
+    );
+  } catch (error) {
+    console.error('Error searching by company:', error);
+    throw error;
+  }
+};
+
+/**
  * Get device status and association info
  * @param {string} imei - Device IMEI
  * @returns {Promise<Object>} Device status information
