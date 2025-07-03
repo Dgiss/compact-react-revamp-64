@@ -1,7 +1,7 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { signUp } from 'aws-amplify/auth';
 
 const client = generateClient();
@@ -294,9 +294,8 @@ export const deleteCompanyAndUser = async (company) => {
 };
 
 export const fetchCompaniesWithUsers = async () => {
-  try {
+  return await withCredentialRetry(async () => {
     console.log('Starting fetchCompaniesWithUsers...');
-    await waitForAmplifyConfig();
     
     let allCompanies = [];
     let nextToken = null;
@@ -390,19 +389,5 @@ export const fetchCompaniesWithUsers = async () => {
     
     console.log('Companies with user data processed successfully');
     return companiesWithUserData;
-    
-  } catch (error) {
-    console.error('Error in fetchCompaniesWithUsers:', error);
-    
-    // Provide more specific error messages
-    if (error.message?.includes('NoCredentials')) {
-      throw new Error('Erreur d\'authentification - veuillez vous reconnecter');
-    } else if (error.message?.includes('NetworkError')) {
-      throw new Error('Erreur de réseau - vérifiez votre connexion');
-    } else if (error.message?.includes('GraphQL')) {
-      throw new Error('Erreur lors de la récupération des données');
-    }
-    
-    throw error;
-  }
+  });
 };

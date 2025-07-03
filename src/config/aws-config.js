@@ -1,5 +1,6 @@
 
 import { Amplify } from 'aws-amplify';
+import { getCurrentUser } from 'aws-amplify/auth';
 
 const awsConfig = {
   aws_project_region: "eu-west-3",
@@ -97,6 +98,47 @@ export const waitForAmplifyConfig = async () => {
   }
   
   return await configureAmplify();
+};
+
+// Vérifier si l'utilisateur a des credentials valides
+export const ensureCredentials = async () => {
+  try {
+    await waitForAmplifyConfig();
+    const user = await getCurrentUser();
+    return !!user;
+  } catch (error) {
+    console.warn('Aucun utilisateur authentifié trouvé:', error);
+    return false;
+  }
+};
+
+// Fonction de retry pour les requêtes avec gestion des credentials
+export const withCredentialRetry = async (operation, maxRetries = 2) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Vérifier les credentials avant chaque tentative
+      const hasCredentials = await ensureCredentials();
+      if (!hasCredentials) {
+        throw new Error('Utilisateur non authentifié - veuillez vous reconnecter');
+      }
+      
+      return await operation();
+    } catch (error) {
+      console.warn(`Tentative ${attempt}/${maxRetries} échouée:`, error.message);
+      
+      if (error.message?.includes('NoCredentials') || error.message?.includes('No credentials')) {
+        if (attempt < maxRetries) {
+          console.log('Nouvelle tentative avec attente...');
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          continue;
+        }
+        throw new Error('Erreur d\'authentification - veuillez vous reconnecter');
+      }
+      
+      // Pour les autres erreurs, ne pas retry
+      throw error;
+    }
+  }
 };
 
 export default awsConfig;

@@ -2,35 +2,35 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { fetchAllDevices } from './DeviceService.js';
 
 const client = generateClient();
 
 export const fetchCompaniesWithVehicles = async () => {
-  await waitForAmplifyConfig();
-  let allCompanies = [];
-  let allVehicles = [];
-  let allDevices = [];
-  let nextToken = null;
-  
-  // Fetch companies with vehicles (nouvelle relation)
-  do {
-    const variables = {
-      limit: 1000,
-      nextToken: nextToken
-    };
+  return await withCredentialRetry(async () => {
+    let allCompanies = [];
+    let allVehicles = [];
+    let allDevices = [];
+    let nextToken = null;
     
-    const companyList = await client.graphql({
-      query: queries.listCompanies,
-      variables: variables
-    });
-    
-    const data = companyList.data.listCompanies;
-    allCompanies = allCompanies.concat(data.items);
-    nextToken = data.nextToken;
-    
-  } while (nextToken);
+    // Fetch companies with vehicles (nouvelle relation)
+    do {
+      const variables = {
+        limit: 1000,
+        nextToken: nextToken
+      };
+      
+      const companyList = await client.graphql({
+        query: queries.listCompanies,
+        variables: variables
+      });
+      
+      const data = companyList.data.listCompanies;
+      allCompanies = allCompanies.concat(data.items);
+      nextToken = data.nextToken;
+      
+    } while (nextToken);
   
   // Fetch all devices
   const devices = await fetchAllDevices();
@@ -126,11 +126,12 @@ export const fetchCompaniesWithVehicles = async () => {
   
   allDevices = [...allVehicles, ...unassociatedDevices];
   
-  console.log('=== FINAL RESULT SAMPLE ===');
-  console.log('Sample vehicle with device data:', allDevices.find(d => d.type === 'vehicle'));
-  console.log('Sample unassociated device:', allDevices.find(d => d.type === 'device'));
-  
-  return { companies: allCompanies, vehicles: allDevices };
+    console.log('=== FINAL RESULT SAMPLE ===');
+    console.log('Sample vehicle with device data:', allDevices.find(d => d.type === 'vehicle'));
+    console.log('Sample unassociated device:', allDevices.find(d => d.type === 'device'));
+    
+    return { companies: allCompanies, vehicles: allDevices };
+  });
 };
 
 export const updateVehicleData = async (data) => {
