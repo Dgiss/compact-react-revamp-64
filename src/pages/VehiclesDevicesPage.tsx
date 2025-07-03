@@ -158,9 +158,14 @@ export default function VehiclesDevicesPage() {
           ) : (
             <Wifi className="h-4 w-4 text-green-500" />
           )}
-          <span className={!value ? "text-gray-400 italic" : ""}>
-            {value || (row.type === "vehicle" ? "Pas d'immatriculation" : "Boîtier")}
-          </span>
+          <div className="flex flex-col">
+            <span className={!value ? "text-gray-400 italic" : "font-medium"}>
+              {value || (row.type === "vehicle" ? "Pas d'immatriculation" : "Boîtier non assigné")}
+            </span>
+            {row.type === "vehicle" && row.nomVehicule && (
+              <span className="text-xs text-gray-500">{row.nomVehicule}</span>
+            )}
+          </div>
         </div>
       )
     },
@@ -170,9 +175,17 @@ export default function VehiclesDevicesPage() {
       sortable: true, 
       visible: true,
       renderCell: (value, row) => (
-        <span className={row.isAssociated ? "text-gray-900" : "text-blue-600 font-medium"}>
-          {value || "Entreprise non définie"}
-        </span>
+        <div className="flex flex-col">
+          <span className={row.type === "vehicle" ? "text-blue-600 font-medium" : 
+                          row.isAssociated ? "text-gray-900" : "text-green-600 font-medium"}>
+            {value || "Entreprise non définie"}
+          </span>
+          {row.type === "device" && (
+            <span className="text-xs text-gray-500">
+              {row.isAssociated ? "Boîtier assigné" : "Boîtier disponible"}
+            </span>
+          )}
+        </div>
       )
     },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
@@ -293,7 +306,8 @@ export default function VehiclesDevicesPage() {
           <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
           <p className="text-sm text-gray-600 mt-1">
             {combinedData.filter(item => item.type === "vehicle").length} véhicules • {" "}
-            {combinedData.filter(item => item.type === "device").length} boîtiers disponibles
+            {combinedData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • {" "}
+            {combinedData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles
           </p>
         </div>
         {/* Keep existing buttons */}
