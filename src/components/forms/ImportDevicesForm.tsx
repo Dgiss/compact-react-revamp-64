@@ -2,10 +2,15 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Upload, Check, Eye, EyeOff, Box } from "lucide-react";
+import { X, Upload, Check, Eye, EyeOff, FileSpreadsheet, AlertCircle } from "lucide-react";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { DialogClose, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "@/components/ui/use-toast";
+import { createDevice } from "@/services/DeviceService";
+import * as XLSX from 'xlsx';
 
 const clients = ["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"];
 const deviceTypes = ["GPS Simple", "GPS Avancé", "GPS Tracker", "GPS Pro", "Traceur"];
@@ -27,6 +32,13 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<DeviceData[]>([]);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importResults, setImportResults] = useState<{
+    success: number;
+    failed: number;
+    errors: string[];
+  } | null>(null);
   
   const clientOptions = clients.map(client => ({
     value: client,
@@ -43,45 +55,140 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       
-      // Simuler l'analyse du fichier Excel et générer des données d'aperçu
-      simulateExcelParsing(selectedFile);
+      // Parse the Excel file and generate preview data
+      parseExcelFile(selectedFile);
     }
   };
 
-  const simulateExcelParsing = (file: File) => {
-    // Données simulées - dans une implémentation réelle, vous les extrairiez du fichier Excel
-    const mockData: DeviceData[] = [
-      { imei: "862531040658404", sim: "8933150520000591384", telephone: "0712345678", typeBoitier },
-      { imei: "862531040787807", sim: "8933150520000763529", telephone: "0723456789", typeBoitier },
-      { imei: "866795038741631", sim: "8933150520001459950", telephone: "0734567890", typeBoitier },
-      { imei: "350612070642820", sim: "8933150520001427874", telephone: "0745678901", typeBoitier }
-    ];
+  const parseExcelFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const sheetData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        
+        // Skip header row and transform data
+        const transformedData: DeviceData[] = sheetData.slice(1).map((row: any) => ({
+          imei: row[0]?.toString() || '',
+          sim: row[2]?.toString() || '',
+          telephone: row[3]?.toString() || '',
+          typeBoitier: typeBoitier
+        })).filter(device => device.imei); // Filter out empty rows
+        
+        setPreviewData(transformedData);
+        setIsPreviewVisible(true);
+        
+        console.log('Parsed Excel data:', transformedData);
+      } catch (error) {
+        console.error('Error parsing Excel file:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de l'analyse du fichier Excel",
+          variant: "destructive",
+        });
+      }
+    };
     
-    setPreviewData(mockData);
-    setIsPreviewVisible(true);
+    reader.readAsArrayBuffer(file);
   };
   
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!clientSelected) {
-      alert("Veuillez sélectionner un client avant d'importer");
+      toast({
+        title: "Attention",
+        description: "Veuillez sélectionner un client avant d'importer",
+        variant: "destructive",
+      });
       return;
     }
     
     if (!typeBoitier) {
-      alert("Veuillez sélectionner un type de boîtier");
+      toast({
+        title: "Attention", 
+        description: "Veuillez sélectionner un type de boîtier",
+        variant: "destructive",
+      });
       return;
     }
     
-    if (!file) {
-      alert("Veuillez sélectionner un fichier Excel");
+    if (!file || previewData.length === 0) {
+      toast({
+        title: "Attention",
+        description: "Veuillez sélectionner un fichier Excel valide",
+        variant: "destructive",
+      });
       return;
     }
     
-    console.log("Import des boîtiers pour le client:", clientSelected);
-    console.log("Type de boîtier:", typeBoitier);
-    console.log("Données importées:", previewData);
-    // Implémentez ici la logique d'import finale
-    if (onClose) onClose();
+    setIsImporting(true);
+    setImportProgress(0);
+    
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: [] as string[]
+    };
+    
+    try {
+      console.log("Starting import for client:", clientSelected);
+      console.log("Device type:", typeBoitier);
+      console.log("Devices to import:", previewData.length);
+      
+      // Process devices in batches to avoid overwhelming the API
+      for (let i = 0; i < previewData.length; i++) {
+        const device = previewData[i];
+        
+        try {
+          await createDevice({
+            imei: device.imei,
+            sim: device.sim,
+            protocolId: typeBoitier,
+            constructor: device.imei // For Flespi naming
+          });
+          
+          results.success++;
+          console.log(`Device ${device.imei} imported successfully`);
+        } catch (error) {
+          results.failed++;
+          const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+          results.errors.push(`${device.imei}: ${errorMsg}`);
+          console.error(`Failed to import device ${device.imei}:`, error);
+        }
+        
+        // Update progress
+        const progress = ((i + 1) / previewData.length) * 100;
+        setImportProgress(progress);
+      }
+      
+      setImportResults(results);
+      
+      // Show summary toast
+      toast({
+        title: "Import terminé",
+        description: `${results.success} boîtiers importés avec succès. ${results.failed} échecs.`,
+        variant: results.failed === 0 ? "default" : "destructive",
+      });
+      
+      // Close dialog after successful import
+      if (results.failed === 0) {
+        setTimeout(() => {
+          if (onClose) onClose();
+        }, 2000);
+      }
+      
+    } catch (error) {
+      console.error('Import process failed:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du processus d'import",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
   };
   
   const togglePreview = () => {
@@ -141,7 +248,13 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
         {file && (
           <div className="bg-muted/40 p-3 rounded-md">
             <div className="flex justify-between items-center mb-2">
-              <div className="font-medium">Fichier sélectionné: {file.name}</div>
+              <div className="font-medium flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                {file.name}
+                <span className="text-sm text-muted-foreground">
+                  ({previewData.length} boîtiers)
+                </span>
+              </div>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -163,7 +276,7 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
             </div>
             
             {isPreviewVisible && (
-              <div className="border rounded-md mt-2 overflow-x-auto">
+              <div className="border rounded-md mt-2 overflow-x-auto max-h-64">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -176,8 +289,8 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
                   <TableBody>
                     {previewData.map((device, index) => (
                       <TableRow key={index}>
-                        <TableCell>{device.imei}</TableCell>
-                        <TableCell>{device.sim}</TableCell>
+                        <TableCell className="font-mono text-sm">{device.imei}</TableCell>
+                        <TableCell className="font-mono text-sm">{device.sim}</TableCell>
                         <TableCell>{device.telephone}</TableCell>
                         <TableCell>{device.typeBoitier || typeBoitier}</TableCell>
                       </TableRow>
@@ -189,6 +302,47 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
           </div>
         )}
         
+        {isImporting && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="text-sm">Import en cours...</span>
+            </div>
+            <Progress value={importProgress} className="w-full" />
+            <p className="text-xs text-muted-foreground">
+              {Math.round(importProgress)}% - Ne fermez pas cette fenêtre
+            </p>
+          </div>
+        )}
+        
+        {importResults && (
+          <Alert className={importResults.failed > 0 ? "border-destructive" : "border-green-500"}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p>
+                  <strong>Import terminé:</strong> {importResults.success} succès, {importResults.failed} échecs
+                </p>
+                {importResults.errors.length > 0 && (
+                  <div className="max-h-32 overflow-y-auto">
+                    <p className="text-sm font-medium">Erreurs:</p>
+                    <ul className="text-xs space-y-1">
+                      {importResults.errors.slice(0, 5).map((error, index) => (
+                        <li key={index} className="text-destructive">{error}</li>
+                      ))}
+                      {importResults.errors.length > 5 && (
+                        <li className="text-muted-foreground">
+                          ... et {importResults.errors.length - 5} autres erreurs
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="flex justify-end gap-2 mt-6">
           <DialogClose asChild>
             <Button type="button" variant="outline">
@@ -198,10 +352,19 @@ export default function ImportDevicesForm({ onClose }: ImportDevicesFormProps) {
           </DialogClose>
           <Button 
             onClick={handleImport} 
-            disabled={!file || !clientSelected || !typeBoitier}
+            disabled={!file || !clientSelected || !typeBoitier || isImporting || previewData.length === 0}
           >
-            <Upload className="h-4 w-4 mr-2" />
-            Valider l'import
+            {isImporting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Import en cours...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Valider l'import ({previewData.length} boîtiers)
+              </>
+            )}
           </Button>
         </div>
       </div>

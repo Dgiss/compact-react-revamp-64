@@ -7,6 +7,8 @@ import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
+import { createDevice } from "@/services/DeviceService";
+import { toast } from "@/components/ui/use-toast";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
 const marques = ["Peugeot", "Renault", "Citroën", "Toyota", "Fiat", "BMW", "Mercedes"];
@@ -43,6 +45,8 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [kilometrage, setKilometrage] = useState("");
   const [type, setType] = useState("vehicle");
   const [entreprises, setEntreprises] = useState([]);
+  const [isCreatingDevice, setIsCreatingDevice] = useState(false);
+  const [shouldCreateDevice, setShouldCreateDevice] = useState(false);
   const { loadCompaniesForSelect } = useCompanyVehicleDevice();
 
   // Fetch companies on component mount
@@ -83,40 +87,81 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     }
   }, [initialData, entreprises]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsCreatingDevice(true);
     
-    // Find the company name from the selected ID for backward compatibility
-    const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
-    const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
-    
-    // Create form data with only serializable values (primitives)
-    const formData = {
-      nomVehicule: nomVehicule || "",
-      immatriculation: immatriculation || "",
-      categorie: categorie || "",
-      marque: marque || "",
-      modele: modele || "",
-      entreprise: entrepriseName || "", // Send company name for compatibility
-      companyVehiclesId: selectedCompany?.id, // Also send company ID for GraphQL
-      emplacement: emplacement || "",
-      imei: imei || "",
-      typeBoitier: typeBoitier || "",
-      sim: sim || "",
-      telephone: telephone || "",
-      kilometrage: kilometrage || "",
-      type: type || "vehicle"
-    };
-    
-    console.log('Form data being submitted:', formData);
-    
-    // Call onSave if provided (for editing mode)
-    if (onSave) {
-      onSave(formData);
+    try {
+      // Find the company name from the selected ID for backward compatibility
+      const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
+      const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
+      
+      // Create device first if IMEI is provided and we're creating a vehicle
+      let deviceCreated = false;
+      if (imei && (type === "vehicle" || shouldCreateDevice) && !isEditing) {
+        try {
+          await createDevice({
+            imei: imei,
+            sim: sim,
+            protocolId: typeBoitier,
+            constructor: imei,
+            deviceVehicleImmat: immatriculation // Associate with vehicle if creating vehicle
+          });
+          deviceCreated = true;
+          
+          toast({
+            title: "Boîtier créé",
+            description: `Boîtier ${imei} créé et ajouté à Flespi avec succès`,
+          });
+        } catch (deviceError) {
+          console.error('Error creating device:', deviceError);
+          toast({
+            title: "Erreur boîtier",
+            description: "Erreur lors de la création du boîtier, mais le véhicule sera créé",
+            variant: "destructive",
+          });
+        }
+      }
+      
+      // Create form data with only serializable values (primitives)
+      const formData = {
+        nomVehicule: nomVehicule || "",
+        immatriculation: immatriculation || "",
+        categorie: categorie || "",
+        marque: marque || "",
+        modele: modele || "",
+        entreprise: entrepriseName || "", // Send company name for compatibility
+        companyVehiclesId: selectedCompany?.id, // Also send company ID for GraphQL
+        emplacement: emplacement || "",
+        imei: imei || "",
+        typeBoitier: typeBoitier || "",
+        sim: sim || "",
+        telephone: telephone || "",
+        kilometrage: kilometrage || "",
+        type: type || "vehicle",
+        deviceCreated: deviceCreated // Indicate if device was created
+      };
+      
+      console.log('Form data being submitted:', formData);
+      
+      // Call onSave if provided (for editing mode)
+      if (onSave) {
+        onSave(formData);
+      }
+      
+      // Call onClose if provided
+      if (onClose) onClose();
+      
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la soumission du formulaire",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingDevice(false);
     }
-    
-    // Call onClose if provided
-    if (onClose) onClose();
   };
 
   const filteredModeles = marque ? modeles[marque as keyof typeof modeles] || [] : [];
@@ -290,12 +335,32 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
             </div>
             <div>
               <Input 
-                placeholder="IMEI"
+                placeholder="IMEI (optionnel)"
                 value={imei} 
                 onChange={(e) => setImei(e.target.value)}
                 readOnly={isEditing} // IMEI shouldn't be editable in edit mode
               />
             </div>
+          </div>
+        )}
+        
+        {isVehicle && imei && !isEditing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="createDevice"
+                checked={shouldCreateDevice}
+                onChange={(e) => setShouldCreateDevice(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="createDevice" className="text-sm font-medium">
+                Créer automatiquement le boîtier avec cet IMEI
+              </label>
+            </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Le boîtier sera automatiquement créé et associé à ce véhicule, et ajouté à Flespi
+            </p>
           </div>
         )}
 
@@ -306,8 +371,17 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
               Annuler
             </Button>
           </DialogClose>
-          <Button type="submit">
-            {isEditing ? "Mettre à jour" : "Enregistrer"}
+          <Button type="submit" disabled={isCreatingDevice}>
+            {isCreatingDevice ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                {isEditing ? "Mise à jour..." : "Création..."}
+              </>
+            ) : (
+              <>
+                {isEditing ? "Mettre à jour" : "Enregistrer"}
+              </>
+            )}
           </Button>
         </div>
       </form>
