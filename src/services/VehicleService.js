@@ -14,7 +14,7 @@ export const fetchCompaniesWithVehicles = async () => {
   let allDevices = [];
   let nextToken = null;
   
-  // Fetch companies with vehicles
+  // Fetch companies with vehicles (nouvelle relation)
   do {
     const variables = {
       limit: 1000,
@@ -59,10 +59,10 @@ export const fetchCompaniesWithVehicles = async () => {
     if (company.vehicles && company.vehicles.items) {
       const companyVehicles = company.vehicles.items.map(vehicle => {
         console.log(`=== VEHICLE DEBUG: ${vehicle.immat} ===`);
-        console.log('Vehicle IMEI:', vehicle.vehicleDeviceImei);
-        console.log('IMEI exists in deviceMap:', !!deviceMap[vehicle.vehicleDeviceImei]);
+        console.log('Vehicle device relation:', vehicle.device);
         
-        const associatedDevice = deviceMap[vehicle.vehicleDeviceImei];
+        // Nouveau schéma: utiliser la relation @hasOne avec Device
+        const associatedDevice = vehicle.device || deviceMap[vehicle.immat];
         console.log('Associated device found:', !!associatedDevice);
         
         if (associatedDevice) {
@@ -72,8 +72,7 @@ export const fetchCompaniesWithVehicles = async () => {
             sim: associatedDevice.sim
           });
         } else {
-          console.log('No device found for IMEI:', vehicle.vehicleDeviceImei);
-          console.log('Available IMEIs in map:', Object.keys(deviceMap).slice(0, 5));
+          console.log('No device found for vehicle:', vehicle.immat);
         }
         
         return {
@@ -81,16 +80,23 @@ export const fetchCompaniesWithVehicles = async () => {
           entreprise: company.name,
           type: "vehicle",
           immatriculation: vehicle.immat,
-          nomVehicule: vehicle.code || "",
-          imei: vehicle.vehicleDeviceImei || "",
-          typeBoitier: associatedDevice ? associatedDevice.protocolId : "",
-          marque: vehicle.vehicleBrandBrandName || "",
-          modele: vehicle.vehicleModeleId || "",
+          nomVehicule: vehicle.nomVehicule || vehicle.code || "",
+          imei: associatedDevice?.imei || "",
+          typeBoitier: associatedDevice ? associatedDevice.protocolId?.toString() : "",
+          marque: vehicle.marque || vehicle.brand?.brandName || "",
+          modele: vehicle.modele_id || vehicle.modele?.modele || "",
           kilometrage: vehicle.kilometerage?.toString() || "",
           telephone: associatedDevice?.sim || "",
-          emplacement: associatedDevice?.lastKnownLocation || vehicle.locations || "",
+          emplacement: vehicle.locations || "",
           deviceData: associatedDevice || null,
-          isAssociated: true
+          isAssociated: true,
+          // Nouveaux champs du schéma enrichi
+          AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
+          energie: vehicle.energie || "",
+          puissanceFiscale: vehicle.puissanceFiscale || "",
+          couleur: vehicle.couleur || "",
+          dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
+          VIN: vehicle.VIN || vehicle.AWN_VIN || ""
         };
       });
       allVehicles = allVehicles.concat(companyVehicles);
@@ -108,12 +114,12 @@ export const fetchCompaniesWithVehicles = async () => {
       immatriculation: "",
       nomVehicule: "",
       imei: device.imei,
-      typeBoitier: device.protocolId,
+      typeBoitier: device.protocolId?.toString() || "",
       marque: "",
       modele: "",
       kilometrage: "",
       telephone: device.sim || "",
-      emplacement: device.lastKnownLocation || "",
+      emplacement: "",
       deviceData: device,
       isAssociated: false
     }));
@@ -129,15 +135,26 @@ export const fetchCompaniesWithVehicles = async () => {
 
 export const updateVehicleData = async (data) => {
   await waitForAmplifyConfig();
+  
+  // Adapter aux nouveaux champs du schéma
   const vehicleDetails = {
     immat: data.immat,
-    vehicleDeviceImei: data.vehicleDeviceImei,
-    vehicleVehicleCategoryId: data.vehicleVehicleCategoryId,
-    vehicleBrandBrandName: data.vehicleBrandBrandName,
-    vehicleModeleId: data.vehicleModeleId,
+    code: data.code,
+    nomVehicule: data.nomVehicule,
     kilometerage: data.kilometerage,
     kilometerageStart: data.kilometerageStart,
-    code: data.code
+    locations: data.locations,
+    marque: data.marque,
+    modele_id: data.modele_id,
+    energie: data.energie,
+    couleur: data.couleur,
+    dateMiseEnCirculation: data.dateMiseEnCirculation,
+    VIN: data.VIN,
+    AWN_nom_commercial: data.AWN_nom_commercial,
+    puissanceFiscale: data.puissanceFiscale,
+    lastModificationDate: new Date().toISOString(),
+    // Relation avec l'entreprise (nouvelle structure)
+    companyVehiclesId: data.companyVehiclesId
   };
 
   await client.graphql({

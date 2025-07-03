@@ -17,14 +17,24 @@ interface AddCompanyFormProps {
 }
 
 export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormProps) {
-  // Champs entreprise (simplifiés selon le schéma)
+  // Champs entreprise (étendus selon le nouveau schéma)
   const [societe, setSociete] = useState("");
   const [siren, setSiren] = useState("");
+  const [address, setAddress] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [city, setCity] = useState("");
+  const [contact, setContact] = useState("");
+  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [phone, setPhone] = useState("");
   
-  // Champs utilisateur (simplifiés selon le schéma)
+  // Champs utilisateur (étendus selon le nouveau schéma)
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [userMobile, setUserMobile] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   
   // États
@@ -47,16 +57,26 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
     try {
       const companyData = {
         name: societe,
-        siren: siren
+        siret: siren,
+        address: address,
+        postalCode: postalCode,
+        city: city,
+        contact: contact,
+        email: email,
+        mobile: mobile,
+        phone: phone
       };
       
       const userData = {
         username: username,
         password: password,
-        email: email || 'default@test.com'
+        email: userEmail || email || 'default@test.com',
+        firstname: firstname,
+        lastname: lastname,
+        mobile: userMobile
       };
       
-      console.log("Creating company with user...", { companyData, userData });
+      console.log("Creating company with user (enhanced)...", { companyData, userData });
       
       await CompanyService.createCompanyWithUser({
         companyData,
@@ -103,9 +123,59 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
           </div>
           <div className="md:col-span-1">
             <Input 
-              placeholder="SIREN"
+              placeholder="SIRET"
               value={siren}
               onChange={(e) => setSiren(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Input 
+              placeholder="Adresse"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Code postal"
+              value={postalCode}
+              onChange={(e) => setPostalCode(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Ville"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Contact"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Email entreprise"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Mobile entreprise"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-1">
+            <Input 
+              placeholder="Téléphone entreprise"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
             />
           </div>
         </div>
@@ -123,13 +193,34 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
             </div>
             <div className="md:col-span-1">
               <Input 
-                placeholder="Email"
+                placeholder="Email utilisateur"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
               />
             </div>
-            <div className="relative md:col-span-2">
+            <div className="md:col-span-1">
+              <Input 
+                placeholder="Prénom"
+                value={firstname}
+                onChange={(e) => setFirstname(e.target.value)}
+              />
+            </div>
+            <div className="md:col-span-1">
+              <Input 
+                placeholder="Nom"
+                value={lastname}
+                onChange={(e) => setLastname(e.target.value)}
+              />
+            </div>
+            <div className="md:col-span-1">
+              <Input 
+                placeholder="Mobile utilisateur"
+                value={userMobile}
+                onChange={(e) => setUserMobile(e.target.value)}
+              />
+            </div>
+            <div className="relative md:col-span-1">
               <Input 
                 type={showPassword ? "text" : "password"}
                 placeholder="Mot de passe *"

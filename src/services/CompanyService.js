@@ -36,7 +36,7 @@ export const fetchFilteredCompanies = async (searchName, searchEmail, searchSire
   let filtersArray = [];
   
   if (searchSiret && searchSiret.trim()) {
-    filtersArray.push({ siren: { contains: searchSiret.trim() } });
+    filtersArray.push({ siret: { contains: searchSiret.trim() } });
   }
   
   if (searchName && searchName.trim()) {
@@ -81,10 +81,22 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
   try {
     console.log('Creating company with user:', { companyData, userData });
     
-    // Étape 1: Créer l'entreprise dans GraphQL (champs basiques seulement)
+    // Étape 1: Créer l'entreprise dans GraphQL avec les nouveaux champs
     const companyInput = {
       name: companyData.name,
-      siren: companyData.siren || ''
+      siret: companyData.siren || companyData.siret || '',
+      address: companyData.address || '',
+      postalCode: companyData.postalCode || '',
+      city: companyData.city || '',
+      countryCode: companyData.countryCode || '',
+      contact: companyData.contact || '',
+      email: companyData.email || '',
+      mobile: companyData.mobile || '',
+      phone: companyData.phone || '',
+      fax: companyData.fax || '',
+      creationDate: new Date().toISOString(),
+      subscriptionDate: companyData.subscriptionDate || new Date().toISOString(),
+      keyedStart: companyData.keyedStart || false
     };
     
     const companyResult = await client.graphql({
@@ -95,7 +107,7 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     createdCompany = companyResult.data.createCompany;
     console.log('Company created in GraphQL:', createdCompany);
     
-    // Étape 2: Créer l'utilisateur dans Cognito (comme dans votre exemple qui fonctionne)
+    // Étape 2: Créer l'utilisateur dans Cognito
     const user = await signUp({
       username: userData.username,
       password: userData.password,
@@ -108,12 +120,28 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     
     console.log('User created in Cognito:', user);
     
-    // Étape 3: Créer l'utilisateur dans GraphQL (comme dans votre exemple qui fonctionne)
+    // Étape 3: Créer l'utilisateur dans GraphQL avec les nouveaux champs
     const userDetails = {
       sub: user.userId.toString(),
       username: userData.username,
       email: userData.email || 'default@test.com',
       password: userData.password,
+      firstname: userData.firstname || '',
+      lastname: userData.lastname || '',
+      address: userData.address || '',
+      mobile: userData.mobile || '',
+      beginDate: userData.beginDate || new Date().toISOString(),
+      endDate: userData.endDate || '',
+      mappingId: userData.mappingId || '',
+      languageCode: userData.languageCode || 'fr',
+      lastModificationDate: new Date().toISOString(),
+      showReport: userData.showReport || 'true',
+      dispatcher: userData.dispatcher || '',
+      applicationVersion: userData.applicationVersion || '1.0.0',
+      themeId: userData.themeId || 'default',
+      role: userData.role || 'ADMIN',
+      accessType: userData.accessType || 'FULL_COMPANY',
+      accessibleVehicles: userData.accessibleVehicles || [],
       companyUsersId: createdCompany.id
     };
     
@@ -122,7 +150,7 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
       variables: { input: userDetails }
     });
     
-    console.log('User created in GraphQL:', newUser);
+    console.log('User created in GraphQL with enhanced fields:', newUser);
     
     return {
       success: true,
@@ -156,7 +184,19 @@ export const updateCompanyData = async (data) => {
   const companyDetails = {
     id: data.id,
     name: data.name,
-    siren: data.siren,
+    siret: data.siret || data.siren,
+    address: data.address || '',
+    postalCode: data.postalCode || '',
+    city: data.city || '',
+    countryCode: data.countryCode || '',
+    contact: data.contact || '',
+    email: data.email || '',
+    mobile: data.mobile || '',
+    phone: data.phone || '',
+    fax: data.fax || '',
+    subscriptionDate: data.subscriptionDate || '',
+    keyedStart: data.keyedStart || false,
+    lastModificationDate: new Date().toISOString()
   };
 
   await client.graphql({
@@ -178,13 +218,21 @@ export const updateCompanyAndUser = async ({ companyData, userData }) => {
       await updateCompanyData(companyData);
     }
     
-    // Mettre à jour l'utilisateur dans GraphQL
+    // Mettre à jour l'utilisateur dans GraphQL avec nouveaux champs
     if (userData && userData.sub) {
       const userInput = {
         sub: userData.sub,
         username: userData.username,
         email: userData.email,
-        password: userData.password
+        password: userData.password,
+        firstname: userData.firstname || '',
+        lastname: userData.lastname || '',
+        address: userData.address || '',
+        mobile: userData.mobile || '',
+        role: userData.role || 'ADMIN',
+        accessType: userData.accessType || 'FULL_COMPANY',
+        accessibleVehicles: userData.accessibleVehicles || [],
+        lastModificationDate: new Date().toISOString()
       };
       
       await client.graphql({
@@ -305,13 +353,20 @@ export const fetchCompaniesWithUsers = async () => {
           
           console.log(`Found ${companyUsers.length} users for company ${company.name}`);
           
-          // Clean and format user data
+          // Clean and format user data with new fields
           const formattedUsers = companyUsers.map(user => ({
             sub: user.sub,
             username: user.username || '',
             email: user.email || '',
             password: user.password || '',
-            nom: user.username || 'Utilisateur'
+            firstname: user.firstname || '',
+            lastname: user.lastname || '',
+            mobile: user.mobile || '',
+            role: user.role || 'ADMIN',
+            accessType: user.accessType || 'FULL_COMPANY',
+            nom: user.firstname && user.lastname ? 
+                 `${user.firstname} ${user.lastname}` : 
+                 user.username || 'Utilisateur'
           }));
           
           return {
