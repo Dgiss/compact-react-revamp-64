@@ -17,8 +17,7 @@ import * as VehicleService from "@/services/VehicleService";
 export default function VehiclesDevicesPage() {
   const {
     companies,
-    vehicles: combinedData,
-    devices,
+    devices: combinedData,
     loading,
     loadAllData,
     searchDevices,
