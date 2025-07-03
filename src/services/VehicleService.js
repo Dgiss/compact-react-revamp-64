@@ -77,9 +77,9 @@ export const fetchCompaniesWithVehicles = async () => {
         
         return {
           ...vehicle,
-          entreprise: company.name,
+          entreprise: company.name || "Non définie",
           type: "vehicle",
-          immatriculation: vehicle.immat,
+          immatriculation: vehicle.immat || "",
           nomVehicule: vehicle.nomVehicule || vehicle.code || "",
           imei: associatedDevice?.imei || "",
           typeBoitier: associatedDevice ? associatedDevice.protocolId?.toString() : "",
@@ -109,7 +109,7 @@ export const fetchCompaniesWithVehicles = async () => {
     .filter(device => device.imei && !associatedImeis.has(device.imei))
     .map(device => ({
       id: device.imei,
-      entreprise: "Non assigné",
+      entreprise: "Boîtier libre",
       type: "device",
       immatriculation: "",
       nomVehicule: "",

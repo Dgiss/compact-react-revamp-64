@@ -171,7 +171,9 @@ export default function VehiclesDevicesPage() {
           ) : (
             <Wifi className="h-4 w-4 text-green-500" />
           )}
-          <span>{value || "N/A"}</span>
+          <span className={!value ? "text-gray-400 italic" : ""}>
+            {value || (row.type === "vehicle" ? "Pas d'immatriculation" : "Boîtier")}
+          </span>
         </div>
       )
     },
@@ -181,8 +183,8 @@ export default function VehiclesDevicesPage() {
       sortable: true, 
       visible: true,
       renderCell: (value, row) => (
-        <span className={row.isAssociated ? "text-gray-900" : "text-orange-600 font-medium"}>
-          {value}
+        <span className={row.isAssociated ? "text-gray-900" : "text-blue-600 font-medium"}>
+          {value || "Entreprise non définie"}
         </span>
       )
     },
@@ -196,7 +198,7 @@ export default function VehiclesDevicesPage() {
       renderCell: (value, row) => (
         <div className="flex flex-col">
           <span className="font-medium">
-            {value ? `Protocol: ${value}` : "N/A"}
+            {value ? `Protocol: ${value}` : "Aucun protocole"}
           </span>
           {row.deviceData && (
             <span className="text-xs text-gray-500">
@@ -217,7 +219,7 @@ export default function VehiclesDevicesPage() {
       visible: true,
       renderCell: (value) => (
         <span className={value ? "text-gray-900" : "text-gray-400"}>
-          {value || "N/A"}
+          {value || "Pas de SIM"}
         </span>
       )
     },
