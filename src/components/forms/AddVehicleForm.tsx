@@ -48,11 +48,18 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     const fetchCompanies = async () => {
       try {
         const companies = await CompanyService.fetchCompanies();
-        setEntreprises(companies.map(company => company.name));
+        // Store full company objects to avoid duplicate keys
+        setEntreprises(companies);
       } catch (error) {
         console.error('Error fetching companies:', error);
-        // Fallback to hardcoded list on error
-        setEntreprises(["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"]);
+        // Fallback to hardcoded list on error with mock structure
+        setEntreprises([
+          { id: '1', name: 'MBSC' },
+          { id: '2', name: 'PHENIX IDFTP' },
+          { id: '3', name: 'ADANEV MOBILITES' },
+          { id: '4', name: 'Kick Services' },
+          { id: '5', name: 'MATTEI / HABICONFORT' }
+        ]);
       }
     };
 
@@ -61,13 +68,17 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
 
   // Load initial data for editing mode
   useEffect(() => {
-    if (initialData) {
+    if (initialData && entreprises.length > 0) {
       setNomVehicule(initialData.nomVehicule || "");
       setImmatriculation(initialData.immatriculation || "");
       setCategorie(initialData.categorie || "");
       setMarque(initialData.marque || "");
       setModele(initialData.modele || "");
-      setEntreprise(initialData.entreprise || "");
+      
+      // Find company ID by name for backward compatibility
+      const foundCompany = entreprises.find(company => company.name === initialData.entreprise);
+      setEntreprise(foundCompany ? foundCompany.id || foundCompany.name : initialData.entreprise || "");
+      
       setEmplacement(initialData.emplacement || "");
       setImei(initialData.imei || "");
       setTypeBoitier(initialData.typeBoitier || "");
@@ -76,10 +87,14 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       setKilometrage(initialData.kilometrage || "");
       setType(initialData.type || "vehicle");
     }
-  }, [initialData]);
+  }, [initialData, entreprises]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Find the company name from the selected ID for backward compatibility
+    const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
+    const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
     
     const formData = {
       nomVehicule,
@@ -87,7 +102,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       categorie,
       marque,
       modele,
-      entreprise,
+      entreprise: entrepriseName, // Send company name for compatibility
       emplacement,
       imei,
       typeBoitier,
@@ -110,9 +125,10 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
 
   const filteredModeles = marque ? modeles[marque as keyof typeof modeles] || [] : [];
   
-  const entrepriseOptions = entreprises.map(ent => ({
-    value: ent,
-    label: ent
+  // Create unique options using company ID as value and name as label
+  const entrepriseOptions = entreprises.map(company => ({
+    value: company.id || company.name, // Use ID as unique value, fallback to name
+    label: company.name
   }));
   
   const categorieOptions = categories.map(cat => ({
