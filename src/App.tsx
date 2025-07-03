@@ -26,16 +26,16 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/" element={<Navigate to="/entreprises" replace />} />
             <Route path="/" element={
               <ProtectedRoute>
                 <Layout />
               </ProtectedRoute>
             }>
-              <Route path="/entreprises" element={<EntreprisesPage />} />
-              <Route path="/vehicules-boitiers" element={<VehiclesDevicesPage />} />
-              <Route path="/sim-cards" element={<SimCardsPage />} />
-              <Route path="/fota-web" element={<FotaWebPage />} />
+              <Route index element={<Navigate to="/entreprises" replace />} />
+              <Route path="entreprises" element={<EntreprisesPage />} />
+              <Route path="vehicules-boitiers" element={<VehiclesDevicesPage />} />
+              <Route path="sim-cards" element={<SimCardsPage />} />
+              <Route path="fota-web" element={<FotaWebPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
