@@ -140,13 +140,19 @@ export const searchDevicesAndVehicles = async (filters) => {
  * @returns {Promise<Array>} Array of companies with id and name
  */
 export const fetchCompaniesForSelect = async () => {
+  console.log('=== FETCHING COMPANIES FOR SELECT ===');
   try {
     const companies = await CompanyService.fetchCompanies();
-    return companies.map(company => ({
+    console.log('Raw companies from service:', companies);
+    
+    const formattedCompanies = companies.map(company => ({
       id: company.id,
-      name: company.name,
+      name: company.name || company.nom,
       siret: company.siret
     }));
+    
+    console.log('Formatted companies for select:', formattedCompanies);
+    return formattedCompanies;
   } catch (error) {
     console.error('Error fetching companies for select:', error);
     throw error;

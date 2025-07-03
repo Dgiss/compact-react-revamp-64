@@ -252,8 +252,13 @@ export const createVehicleData = async (data) => {
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   await waitForAmplifyConfig();
   
+  console.log('=== ASSOCIATING DEVICE TO VEHICLE ===');
+  console.log('Device IMEI:', deviceImei);
+  console.log('Vehicle immat:', vehicleImmat);
+  
   try {
     // First, update the device to associate it with the vehicle
+    console.log('Updating device...');
     const deviceUpdate = await client.graphql({
       query: mutations.updateDevice,
       variables: {
@@ -263,8 +268,10 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
         }
       }
     });
+    console.log('Device update result:', deviceUpdate);
 
     // Then, update the vehicle to reference the device
+    console.log('Updating vehicle...');
     const vehicleUpdate = await client.graphql({
       query: mutations.updateVehicle,
       variables: {
@@ -274,11 +281,16 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
         }
       }
     });
+    console.log('Vehicle update result:', vehicleUpdate);
 
     console.log('Device associated successfully:', { deviceImei, vehicleImmat });
     return { success: true, deviceUpdate, vehicleUpdate };
   } catch (error) {
     console.error('Error associating device to vehicle:', error);
+    console.error('Error details:', error.message);
+    if (error.errors) {
+      console.error('GraphQL errors:', error.errors);
+    }
     throw error;
   }
 };

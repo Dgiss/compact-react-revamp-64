@@ -69,13 +69,23 @@ export const useCompanyVehicleDevice = () => {
 
   // Get vehicles for specific company
   const getVehiclesByCompany = useCallback(async (companyId) => {
+    console.log('=== LOADING VEHICLES FOR COMPANY ===', companyId);
     setLoading(true);
     setError(null);
     
     try {
       const companyVehicles = await CompanyVehicleDeviceService.fetchVehiclesByCompany(companyId);
-      return companyVehicles;
+      console.log('Vehicles found for company:', companyVehicles);
+      
+      // Filter for vehicles without an associated device (available for association)
+      const availableVehicles = companyVehicles.filter(vehicle => 
+        !vehicle.imei || vehicle.imei === "" || !vehicle.deviceData
+      );
+      
+      console.log('Available vehicles (no device):', availableVehicles);
+      return availableVehicles;
     } catch (err) {
+      console.error('Error getting vehicles by company:', err);
       setError(err.message);
       toast({
         title: "Erreur",
@@ -104,9 +114,14 @@ export const useCompanyVehicleDevice = () => {
 
   // Load companies for select components
   const loadCompaniesForSelect = useCallback(async () => {
+    console.log('=== LOADING COMPANIES FOR SELECT ===');
     try {
-      return await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+      const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+      console.log('Companies loaded for select:', loadedCompanies);
+      setCompanies(loadedCompanies); // Update the state!
+      return loadedCompanies;
     } catch (err) {
+      console.error('Error in loadCompaniesForSelect:', err);
       toast({
         title: "Erreur",
         description: `Erreur lors du chargement des entreprises: ${err.message}`,

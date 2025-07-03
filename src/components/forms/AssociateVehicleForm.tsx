@@ -42,11 +42,19 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   useEffect(() => {
     if (selectedCompany) {
       const loadVehicles = async () => {
+        console.log('=== LOADING VEHICLES FOR SELECTED COMPANY ===', selectedCompany);
         setIsLoading(true);
         try {
           const vehicles = await getVehiclesByCompany(selectedCompany);
-          // Filter vehicles that don't have a device associated
-          const availableVehicles = vehicles.filter(vehicle => !vehicle.imei || vehicle.imei === "");
+          console.log('Vehicles returned from hook:', vehicles);
+          
+          // The hook already filters for available vehicles, but let's double-check
+          const availableVehicles = vehicles.filter(vehicle => 
+            (!vehicle.imei || vehicle.imei === "") && 
+            (!vehicle.deviceData || !vehicle.deviceData.imei)
+          );
+          
+          console.log('Final available vehicles for association:', availableVehicles);
           setCompanyVehicles(availableVehicles);
           
           if (availableVehicles.length === 0) {
@@ -80,6 +88,11 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   }));
 
   const handleSubmit = async () => {
+    console.log('=== SUBMIT ASSOCIATION ===');
+    console.log('Selected company:', selectedCompany);
+    console.log('Selected vehicle:', selectedVehicle);
+    console.log('Device:', device);
+    
     if (!selectedCompany || !selectedVehicle) {
       toast({
         title: "Attention",
@@ -101,8 +114,10 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     setIsSubmitting(true);
     
     try {
+      console.log('Attempting to associate device', device.imei, 'to vehicle', selectedVehicle);
       // Associate device to vehicle
-      await VehicleService.associateDeviceToVehicle(device.imei, selectedVehicle);
+      const result = await VehicleService.associateDeviceToVehicle(device.imei, selectedVehicle);
+      console.log('Association result:', result);
       
       toast({
         title: "Association réussie",
@@ -112,9 +127,16 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       onSuccess();
     } catch (error) {
       console.error('Error associating device:', error);
+      console.error('Full error object:', error);
+      
+      let errorMessage = error.message;
+      if (error.errors && error.errors.length > 0) {
+        errorMessage = error.errors[0].message;
+      }
+      
       toast({
         title: "Erreur",
-        description: `Erreur lors de l'association: ${error.message}`,
+        description: `Erreur lors de l'association: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
