@@ -67,6 +67,10 @@ export default function VehiclesDevicesPage() {
 
     console.log('=== SEARCH INITIATED ===');
     console.log('Search criteria:', { searchImei, searchImmat, searchEntreprise });
+    console.log('Available data in hook:', { 
+      combinedDataLength: combinedData.length,
+      companiesLength: companies.length 
+    });
 
     try {
       // Determine search type based on how many criteria are filled
@@ -74,7 +78,7 @@ export default function VehiclesDevicesPage() {
       
       let results;
       if (filledCriteria.length === 1) {
-        // Single criteria search - use specific functions
+        // Single criteria search - use specific functions with optimized caching
         if (searchImei) {
           console.log('Single IMEI search for:', searchImei);
           results = await searchByImei(searchImei);
@@ -83,6 +87,8 @@ export default function VehiclesDevicesPage() {
           results = await searchByVehicle(searchImmat);
         } else if (searchEntreprise) {
           console.log('Single company search for:', searchEntreprise);
+          console.log('Company search term:', searchEntreprise);
+          // The searchByCompany function will now use cached data automatically
           results = await searchByCompany(searchEntreprise);
         }
       } else {
@@ -95,10 +101,17 @@ export default function VehiclesDevicesPage() {
         });
       }
       
-      console.log('Search results received:', results.length);
-      setFilteredData(results);
+      console.log('Search results received:', results?.length || 0);
+      console.log('First 3 results:', results?.slice(0, 3).map(r => ({
+        entreprise: r.entreprise,
+        imei: r.imei,
+        type: r.type,
+        immatriculation: r.immatriculation
+      })));
       
-      if (results.length === 0) {
+      setFilteredData(results || []);
+      
+      if (!results || results.length === 0) {
         toast({
           title: "Aucun résultat",
           description: "Aucun véhicule ou boîtier trouvé avec ces critères",
@@ -117,6 +130,7 @@ export default function VehiclesDevicesPage() {
         description: "Erreur lors de la recherche",
         variant: "destructive",
       });
+      setFilteredData([]);
     }
   };
 

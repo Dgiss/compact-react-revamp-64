@@ -236,18 +236,43 @@ export const searchByVehicle = async (vehicle) => {
 };
 
 /**
- * Search devices by company only
+ * Search devices by company only - optimized version using cached data
  * @param {string} company - Company to search for
+ * @param {Array} cachedVehicles - Pre-loaded vehicles data (optional)
+ * @param {Array} cachedCompanies - Pre-loaded companies data (optional)
  * @returns {Promise<Array>} Filtered results
  */
-export const searchByCompany = async (company) => {
+export const searchByCompany = async (company, cachedVehicles = null, cachedCompanies = null) => {
   try {
     console.log('=== COMPANY SEARCH DEBUG ===');
     console.log('Searching for company:', company);
+    console.log('Using cached data:', !!cachedVehicles);
     
-    const { companies, vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    console.log('Total vehicles loaded:', vehicles.length);
-    console.log('Total companies loaded:', companies.length);
+    let vehicles, companies;
+    
+    // Use cached data if available, otherwise fetch
+    if (cachedVehicles && cachedCompanies) {
+      vehicles = cachedVehicles;
+      companies = cachedCompanies;
+      console.log('Using cached data - vehicles:', vehicles.length, 'companies:', companies.length);
+    } else {
+      const data = await VehicleService.fetchCompaniesWithVehicles();
+      vehicles = data.vehicles;
+      companies = data.companies;
+      console.log('Fetched fresh data - vehicles:', vehicles.length, 'companies:', companies.length);
+    }
+    
+    // Normalize company name for better matching
+    const normalizeCompanyName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, ''); // Remove accents
+    };
+    
+    const normalizedSearchTerm = normalizeCompanyName(company);
+    console.log('Normalized search term:', normalizedSearchTerm);
     
     // Get all unique companies for debugging
     const allCompanies = [...new Set(vehicles
@@ -256,23 +281,28 @@ export const searchByCompany = async (company) => {
     )];
     console.log('All available companies:', allCompanies);
     
-    // Filter results with case-insensitive partial matching
+    // Filter results with enhanced matching
     const results = vehicles.filter(item => {
       if (!item.entreprise) return false;
       
-      const itemCompany = item.entreprise.toLowerCase();
-      const searchCompany = company.toLowerCase();
+      const normalizedItemCompany = normalizeCompanyName(item.entreprise);
       
       // Skip "Boîtier libre" when searching for real companies
       if (item.entreprise === "Boîtier libre" && company !== "Boîtier libre") {
         return false;
       }
       
-      return itemCompany.includes(searchCompany);
+      // Try exact match first, then partial match
+      return normalizedItemCompany === normalizedSearchTerm || 
+             normalizedItemCompany.includes(normalizedSearchTerm);
     });
     
     console.log('Search results count:', results.length);
-    console.log('Sample search results:', results.slice(0, 3));
+    console.log('Sample search results:', results.slice(0, 3).map(r => ({ 
+      entreprise: r.entreprise, 
+      imei: r.imei, 
+      type: r.type 
+    })));
     console.log('=== END SEARCH DEBUG ===');
     
     return results;
