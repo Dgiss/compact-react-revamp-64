@@ -112,7 +112,19 @@ export const fetchFreeDevices = async () => {
  */
 export const searchDevicesAndVehicles = async (filters) => {
   try {
+    console.log('=== SEARCH DEVICES AND VEHICLES DEBUG ===');
+    console.log('Search filters:', filters);
+    
     const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    
+    // Debug: Check field structure of first few items
+    console.log('Sample vehicle data structure:', vehicles.slice(0, 3).map(v => ({
+      imei: v.imei,
+      immatriculation: v.immatriculation,
+      immat: v.immat, // Check if raw immat field exists
+      entreprise: v.entreprise,
+      type: v.type
+    })));
     
     return vehicles.filter(item => {
       const matchesImei = !filters.imei || 
@@ -124,8 +136,21 @@ export const searchDevicesAndVehicles = async (filters) => {
       const matchesEntreprise = !filters.entreprise || 
         (item.entreprise && item.entreprise.toLowerCase().includes(filters.entreprise.toLowerCase()));
       
-      const matchesImmat = !filters.immatriculation || 
-        (item.immatriculation && item.immatriculation.toLowerCase().includes(filters.immatriculation.toLowerCase()));
+      // Enhanced immatriculation matching with debugging
+      const matchesImmat = !filters.immatriculation || (() => {
+        const searchTerm = filters.immatriculation.toLowerCase();
+        const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
+        const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
+        const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
+        
+        const matches = hasImmatriculation || hasImmat || hasNomVehicule;
+        
+        if (matches) {
+          console.log(`Immat match found: "${item.immatriculation || item.immat || item.nomVehicule}" matches "${filters.immatriculation}"`);
+        }
+        
+        return matches;
+      })();
       
       return matchesImei && matchesSim && matchesEntreprise && matchesImmat;
     });
@@ -223,12 +248,39 @@ export const searchBySim = async (sim) => {
  */
 export const searchByVehicle = async (vehicle) => {
   try {
+    console.log('=== SEARCH BY VEHICLE DEBUG ===');
+    console.log('Searching for vehicle:', vehicle);
+    
     const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
     
-    return vehicles.filter(item => 
-      (item.immatriculation && item.immatriculation.toLowerCase().includes(vehicle.toLowerCase())) ||
-      (item.nomVehicule && item.nomVehicule.toLowerCase().includes(vehicle.toLowerCase()))
-    );
+    // Debug: Check field structure of first few items
+    console.log('Sample vehicle data for immat search:', vehicles.slice(0, 3).map(v => ({
+      imei: v.imei,
+      immatriculation: v.immatriculation,
+      immat: v.immat, // Check if raw immat field exists
+      nomVehicule: v.nomVehicule,
+      type: v.type
+    })));
+    
+    const results = vehicles.filter(item => {
+      const searchTerm = vehicle.toLowerCase();
+      const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
+      const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
+      const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
+      
+      const matches = hasImmatriculation || hasImmat || hasNomVehicule;
+      
+      if (matches) {
+        console.log(`Vehicle match found: "${item.immatriculation || item.immat || item.nomVehicule}" matches "${vehicle}"`);
+      }
+      
+      return matches;
+    });
+    
+    console.log('Vehicle search results count:', results.length);
+    console.log('=== END VEHICLE SEARCH DEBUG ===');
+    
+    return results;
   } catch (error) {
     console.error('Error searching by vehicle:', error);
     throw error;
