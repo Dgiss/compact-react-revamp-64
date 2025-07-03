@@ -41,7 +41,15 @@ export const createDevice = async (deviceData) => {
   await waitForAmplifyConfig();
   
   try {
-    // First, add device to Flespi
+    console.log('=== CREATING DEVICE ===');
+    console.log('Input data:', deviceData);
+    
+    // Validate required fields
+    if (!deviceData.imei) {
+      throw new Error('IMEI is required for device creation');
+    }
+    
+    // First, add device to Flespi (optional, continue if it fails)
     let flespiDeviceId = null;
     try {
       flespiDeviceId = await addDeviceToFlespi({
@@ -53,24 +61,25 @@ export const createDevice = async (deviceData) => {
       console.warn('Failed to add device to Flespi, continuing with GraphQL creation:', flespiError.message);
     }
     
-    // Create device in GraphQL
+    // Prepare device details for GraphQL - ensure proper types
     const deviceDetails = {
-      imei: deviceData.imei,
-      sim: deviceData.sim,
-      protocolId: deviceData.protocolId || deviceData.typeBoitier,
-      flespiDeviceId: flespiDeviceId?.toString(),
-      // Add vehicle association if provided
-      deviceVehicleImmat: deviceData.deviceVehicleImmat
+      imei: String(deviceData.imei),
+      sim: deviceData.sim ? String(deviceData.sim) : null,
+      protocolId: deviceData.protocolId ? Number(deviceData.protocolId) : null,
+      flespiDeviceId: flespiDeviceId ? Number(flespiDeviceId) : null,
+      deviceVehicleImmat: deviceData.deviceVehicleImmat ? String(deviceData.deviceVehicleImmat) : null,
+      name: deviceData.name ? String(deviceData.name) : null,
+      enabled: deviceData.enabled !== undefined ? Boolean(deviceData.enabled) : true // Default to enabled
     };
     
-    // Remove undefined values to avoid GraphQL errors
+    // Remove null/undefined values to avoid GraphQL errors
     Object.keys(deviceDetails).forEach(key => {
-      if (deviceDetails[key] === undefined) {
+      if (deviceDetails[key] === null || deviceDetails[key] === undefined) {
         delete deviceDetails[key];
       }
     });
     
-    console.log('Creating device in GraphQL:', deviceDetails);
+    console.log('Creating device in GraphQL with cleaned data:', deviceDetails);
     
     const response = await client.graphql({
       query: mutations.createDevice,
@@ -84,6 +93,7 @@ export const createDevice = async (deviceData) => {
     
   } catch (error) {
     console.error('Error creating device:', error);
+    console.error('Full error details:', JSON.stringify(error, null, 2));
     throw error;
   }
 };

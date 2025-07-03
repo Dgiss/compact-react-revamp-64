@@ -246,6 +246,7 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
   try {
     console.log('=== COMPANY SEARCH DEBUG ===');
     console.log('Searching for company:', company);
+    console.log('Company type:', typeof company);
     console.log('Using cached data:', !!cachedVehicles);
     
     let vehicles, companies;
@@ -262,6 +263,20 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
       console.log('Fetched fresh data - vehicles:', vehicles.length, 'companies:', companies.length);
     }
     
+    // If company is an ID (UUID format), find the company name first
+    let searchTerm = company;
+    if (typeof company === 'string' && company.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      // This looks like a UUID, find the company name
+      const foundCompany = companies.find(c => c.id === company);
+      if (foundCompany) {
+        searchTerm = foundCompany.name;
+        console.log('UUID company ID found, using name:', searchTerm);
+      } else {
+        console.log('UUID company ID not found in companies list');
+        return [];
+      }
+    }
+    
     // Normalize company name for better matching
     const normalizeCompanyName = (name) => {
       if (!name) return '';
@@ -271,7 +286,7 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
         .replace(/[\u0300-\u036f]/g, ''); // Remove accents
     };
     
-    const normalizedSearchTerm = normalizeCompanyName(company);
+    const normalizedSearchTerm = normalizeCompanyName(searchTerm);
     console.log('Normalized search term:', normalizedSearchTerm);
     
     // Get all unique companies for debugging
@@ -279,7 +294,11 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
       .map(item => item.entreprise)
       .filter(Boolean)
     )];
-    console.log('All available companies:', allCompanies);
+    console.log('All available companies in vehicles:', allCompanies.slice(0, 10), '...'); // Show first 10
+    
+    // Also show company names from the companies list
+    const companyListNames = companies.map(c => c.name).slice(0, 10);
+    console.log('Company names from companies list:', companyListNames, '...');
     
     // Filter results with enhanced matching
     const results = vehicles.filter(item => {
@@ -288,13 +307,19 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
       const normalizedItemCompany = normalizeCompanyName(item.entreprise);
       
       // Skip "Boîtier libre" when searching for real companies
-      if (item.entreprise === "Boîtier libre" && company !== "Boîtier libre") {
+      if (item.entreprise === "Boîtier libre" && searchTerm !== "Boîtier libre") {
         return false;
       }
       
       // Try exact match first, then partial match
-      return normalizedItemCompany === normalizedSearchTerm || 
-             normalizedItemCompany.includes(normalizedSearchTerm);
+      const exactMatch = normalizedItemCompany === normalizedSearchTerm;
+      const partialMatch = normalizedItemCompany.includes(normalizedSearchTerm);
+      
+      if (exactMatch || partialMatch) {
+        console.log(`Match found: "${item.entreprise}" matches "${searchTerm}"`);
+      }
+      
+      return exactMatch || partialMatch;
     });
     
     console.log('Search results count:', results.length);
@@ -303,6 +328,16 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
       imei: r.imei, 
       type: r.type 
     })));
+    
+    if (results.length === 0) {
+      console.log('No results found. Debugging:');
+      console.log('- Search term:', searchTerm);
+      console.log('- Normalized search term:', normalizedSearchTerm);
+      console.log('- Companies with exact name match:', allCompanies.filter(name => 
+        normalizeCompanyName(name) === normalizedSearchTerm
+      ));
+    }
+    
     console.log('=== END SEARCH DEBUG ===');
     
     return results;

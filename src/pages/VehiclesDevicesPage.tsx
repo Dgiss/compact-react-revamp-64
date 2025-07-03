@@ -143,22 +143,37 @@ export default function VehiclesDevicesPage() {
     resetFilters();
   };
 
-  // Update vehicle
+  // Update or create vehicle
   const updateVehicleData = async (data) => {
     try {
-      await VehicleService.updateVehicleData(data);
-
-      toast({
-        title: "Succès",
-        description: "Véhicule modifié avec succès",
-      });
+      console.log('=== UPDATING/CREATING VEHICLE ===');
+      console.log('Data received:', data);
+      
+      // Check if this is a new vehicle creation or an update
+      const isNewVehicle = !data.immat && data.immatriculation;
+      
+      if (isNewVehicle) {
+        // Create new vehicle
+        await VehicleService.createVehicleData(data);
+        toast({
+          title: "Succès",
+          description: "Véhicule créé avec succès",
+        });
+      } else {
+        // Update existing vehicle
+        await VehicleService.updateVehicleData(data);
+        toast({
+          title: "Succès",
+          description: "Véhicule modifié avec succès",
+        });
+      }
       
       await loadAllData();
     } catch (err) {
-      console.error('Error updating vehicle:', err);
+      console.error('Error updating/creating vehicle:', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la modification",
+        description: `Erreur lors de la ${data.immat ? 'modification' : 'création'}`,
         variant: "destructive",
       });
     }
@@ -373,7 +388,13 @@ export default function VehiclesDevicesPage() {
               <DialogHeader>
                 <DialogTitle>Ajouter un Véhicule</DialogTitle>
               </DialogHeader>
-              <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} />
+              <AddVehicleForm 
+                onClose={() => setShowAddVehicleDialog(false)} 
+                onSave={async (data) => {
+                  await updateVehicleData(data);
+                  setShowAddVehicleDialog(false);
+                }}
+              />
             </DialogContent>
           </Dialog>
 

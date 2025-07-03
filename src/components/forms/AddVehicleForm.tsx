@@ -93,57 +93,108 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     setIsCreatingDevice(true);
     
     try {
-      // Find the company name from the selected ID for backward compatibility
+      // Find the company for proper mapping - ensure we use only primitive values
       const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
       const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
+      const companyId = selectedCompany ? selectedCompany.id : null;
       
-      // Create device first if IMEI is provided and we're creating a vehicle
+      // Validate required fields for vehicle creation
+      if (type === "vehicle" && !immatriculation) {
+        toast({
+          title: "Erreur",
+          description: "L'immatriculation est obligatoire pour créer un véhicule",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate required fields for device creation
+      if (type === "device" && !imei) {
+        toast({
+          title: "Erreur", 
+          description: "L'IMEI est obligatoire pour créer un boîtier",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Validate company selection
+      if (!companyId && !entrepriseName) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner une entreprise",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create device first if IMEI is provided and we're creating a vehicle or standalone device
       let deviceCreated = false;
-      if (imei && (type === "vehicle" || shouldCreateDevice) && !isEditing) {
+      if (imei && !isEditing) {
         try {
+          // Parse protocolId to number if it's provided
+          const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || null : null;
+          
           await createDevice({
             imei: imei,
-            sim: sim,
-            protocolId: typeBoitier,
-            constructor: imei,
-            deviceVehicleImmat: immatriculation // Associate with vehicle if creating vehicle
+            sim: sim || null,
+            protocolId: protocolIdNumber,
+            deviceVehicleImmat: type === "vehicle" ? immatriculation : null // Only associate if creating vehicle
           });
           deviceCreated = true;
           
           toast({
             title: "Boîtier créé",
-            description: `Boîtier ${imei} créé et ajouté à Flespi avec succès`,
+            description: `Boîtier ${imei} créé avec succès`,
           });
         } catch (deviceError) {
           console.error('Error creating device:', deviceError);
-          toast({
-            title: "Erreur boîtier",
-            description: "Erreur lors de la création du boîtier, mais le véhicule sera créé",
-            variant: "destructive",
-          });
+          
+          // Check if the error is because device already exists
+          if (deviceError.errors?.some(err => err.message?.includes('already exists') || err.message?.includes('duplicate'))) {
+            toast({
+              title: "Boîtier existant",
+              description: "Ce boîtier existe déjà et sera utilisé",
+            });
+            deviceCreated = true; // Continue with vehicle creation
+          } else {
+            toast({
+              title: "Erreur boîtier",
+              description: "Erreur lors de la création du boîtier",
+              variant: "destructive",
+            });
+            return; // Don't continue if device creation failed
+          }
         }
       }
       
-      // Create form data with only serializable values (primitives)
+      // Create form data with ONLY serializable primitive values
       const formData = {
-        nomVehicule: nomVehicule || "",
-        immatriculation: immatriculation || "",
-        categorie: categorie || "",
-        marque: marque || "",
-        modele: modele || "",
-        entreprise: entrepriseName || "", // Send company name for compatibility
-        companyVehiclesId: selectedCompany?.id, // Also send company ID for GraphQL
-        emplacement: emplacement || "",
-        imei: imei || "",
-        typeBoitier: typeBoitier || "",
-        sim: sim || "",
-        telephone: telephone || "",
-        kilometrage: kilometrage || "",
-        type: type || "vehicle",
-        deviceCreated: deviceCreated // Indicate if device was created
+        // Vehicle fields
+        nomVehicule: String(nomVehicule || ""),
+        immatriculation: String(immatriculation || ""),
+        categorie: String(categorie || ""),
+        marque: String(marque || ""),
+        modele: String(modele || ""),
+        
+        // Company info - use only strings/primitives
+        entreprise: String(entrepriseName || ""),
+        companyVehiclesId: String(companyId || ""), // Convert to string for safety
+        
+        // Device/location fields
+        emplacement: String(emplacement || ""),
+        imei: String(imei || ""),
+        typeBoitier: String(typeBoitier || ""),
+        sim: String(sim || ""),
+        telephone: String(telephone || ""),
+        kilometrage: String(kilometrage || ""),
+        
+        // Meta fields
+        type: String(type || "vehicle"),
+        deviceCreated: Boolean(deviceCreated)
       };
       
-      console.log('Form data being submitted:', formData);
+      console.log('Form data being submitted (all primitives):', formData);
       
       // Call onSave if provided (for editing mode)
       if (onSave) {
