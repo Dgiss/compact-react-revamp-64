@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import * as CompanyService from "@/services/CompanyService";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
 const marques = ["Peugeot", "Renault", "Citroën", "Toyota", "Fiat", "BMW", "Mercedes"];
@@ -41,6 +42,21 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [telephone, setTelephone] = useState("");
   const [kilometrage, setKilometrage] = useState("");
   const [type, setType] = useState("vehicle");
+  const [companies, setCompanies] = useState([]);
+
+  // Load companies on mount
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const companiesData = await CompanyService.fetchCompanies();
+        setCompanies(companiesData);
+      } catch (error) {
+        console.error('Error loading companies:', error);
+      }
+    };
+    
+    loadCompanies();
+  }, []);
 
   // Load initial data for editing mode
   useEffect(() => {
@@ -93,9 +109,9 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
 
   const filteredModeles = marque ? modeles[marque as keyof typeof modeles] || [] : [];
   
-  const entrepriseOptions = entreprises.map(ent => ({
-    value: ent,
-    label: ent
+  const entrepriseOptions = companies.map(company => ({
+    value: company.name,
+    label: company.name
   }));
   
   const categorieOptions = categories.map(cat => ({
