@@ -15,7 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { searchMockCompanies } from "@/services/MockDataService";
+import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 
 interface CompanySearchSelectProps {
   value: string;
@@ -23,6 +23,7 @@ interface CompanySearchSelectProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  searchFunction?: (searchTerm: string) => Promise<any[]>;
 }
 
 export function CompanySearchSelect({
@@ -30,7 +31,8 @@ export function CompanySearchSelect({
   onValueChange,
   placeholder = "Sélectionner une entreprise",
   className,
-  disabled = false
+  disabled = false,
+  searchFunction = searchCompaniesReal
 }: CompanySearchSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,7 +44,7 @@ export function CompanySearchSelect({
     const searchCompanies = async () => {
       setLoading(true);
       try {
-        const results = await searchMockCompanies(searchTerm);
+        const results = await searchFunction(searchTerm);
         setCompanies(results);
       } catch (error) {
         console.error("Error searching companies:", error);
@@ -53,7 +55,7 @@ export function CompanySearchSelect({
     };
 
     searchCompanies();
-  }, [searchTerm]);
+  }, [searchTerm, searchFunction]);
 
   // Load initial companies
   useEffect(() => {

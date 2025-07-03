@@ -8,6 +8,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { createDevice } from "@/services/DeviceService";
+import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { toast } from "@/components/ui/use-toast";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
@@ -294,6 +295,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
               value={entreprise}
               onValueChange={setEntreprise}
               placeholder="Rechercher une entreprise..."
+              searchFunction={searchCompaniesReal}
             />
           </div>
           <div>

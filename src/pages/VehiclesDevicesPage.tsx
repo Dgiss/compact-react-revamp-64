@@ -12,6 +12,8 @@ import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
+import { CompanySearchSelect } from "@/components/ui/company-search-select";
+import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
 
 export default function VehiclesDevicesPage() {
@@ -304,12 +306,11 @@ export default function VehiclesDevicesPage() {
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Entreprise</label>
-          <input
-            type="text"
-            className="w-full p-2 border rounded"
+          <CompanySearchSelect 
             value={searchEntreprise}
-            onChange={(e) => setSearchEntreprise(e.target.value)}
+            onValueChange={setSearchEntreprise}
             placeholder="Rechercher par entreprise..."
+            searchFunction={searchCompaniesReal}
           />
         </div>
         <div className="flex items-end gap-2">

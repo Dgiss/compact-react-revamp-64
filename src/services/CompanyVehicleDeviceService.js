@@ -160,6 +160,27 @@ export const fetchCompaniesForSelect = async () => {
 };
 
 /**
+ * Search companies by name with real data
+ * @param {string} searchTerm - Search term
+ * @returns {Promise<Array>} Filtered companies
+ */
+export const searchCompaniesReal = async (searchTerm) => {
+  try {
+    const companies = await fetchCompaniesForSelect();
+    
+    if (!searchTerm) return companies;
+    
+    return companies.filter(company => 
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.siret && company.siret.includes(searchTerm))
+    );
+  } catch (error) {
+    console.error('Error searching companies:', error);
+    throw error;
+  }
+};
+
+/**
  * Search devices by IMEI only
  * @param {string} imei - IMEI to search for
  * @returns {Promise<Array>} Filtered results

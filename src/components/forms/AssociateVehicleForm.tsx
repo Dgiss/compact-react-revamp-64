@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { X, Save, Loader2 } from "lucide-react";
 import { SheetClose } from "@/components/ui/sheet";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { toast } from "@/components/ui/use-toast";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
+import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
 
 interface AssociateVehicleFormProps {
@@ -150,11 +152,11 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
         <label className="block text-sm font-medium mb-2">
           Entreprise
         </label>
-        <SearchableSelect 
-          options={companyOptions}
+        <CompanySearchSelect 
           value={selectedCompany}
           onValueChange={setSelectedCompany}
           placeholder="Sélectionner une entreprise"
+          searchFunction={searchCompaniesReal}
         />
       </div>
       
