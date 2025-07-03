@@ -61,8 +61,8 @@ export const fetchCompaniesWithVehicles = async () => {
         console.log(`=== VEHICLE DEBUG: ${vehicle.immat} ===`);
         console.log('Vehicle device relation:', vehicle.device);
         
-        // Nouveau schéma: utiliser la relation @hasOne avec Device
-        const associatedDevice = vehicle.device || deviceMap[vehicle.immat];
+        // Use the @hasOne relation with Device from GraphQL
+        const associatedDevice = vehicle.device;
         console.log('Associated device found:', !!associatedDevice);
         
         if (associatedDevice) {
@@ -103,10 +103,10 @@ export const fetchCompaniesWithVehicles = async () => {
     }
   });
   
-  // Add unassociated devices
-  const associatedImeis = new Set(allVehicles.map(v => v.imei).filter(Boolean));
+  // Find devices that are not associated with any vehicle
+  const associatedDeviceImeis = new Set(allVehicles.map(v => v.deviceData?.imei).filter(Boolean));
   const unassociatedDevices = devices
-    .filter(device => device.imei && !associatedImeis.has(device.imei))
+    .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
     .map(device => ({
       id: device.imei,
       entreprise: "Boîtier libre",

@@ -11,16 +11,24 @@ import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
+import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import * as VehicleService from "@/services/VehicleService";
 
 export default function VehiclesDevicesPage() {
-  // States
-  const [companies, setCompanies] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [combinedData, setCombinedData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    companies,
+    vehicles: combinedData,
+    devices,
+    loading,
+    loadAllData,
+    searchDevices,
+    resetFilters,
+    isFiltered,
+    totalResults
+  } = useCompanyVehicleDevice();
+  
+  // Local state for filtered data when using search
   const [filteredData, setFilteredData] = useState([]);
-  const [isFiltered, setIsFiltered] = useState(false);
   
   // Dialog states
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
@@ -36,28 +44,10 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // Fetch all companies with their vehicles
-  const fetchCompaniesWithVehicles = async () => {
-    setLoading(true);
-    
-    try {
-      const { companies: allCompanies, vehicles: allVehicles } = await VehicleService.fetchCompaniesWithVehicles();
-      
-      setCompanies(allCompanies);
-      setVehicles(allVehicles);
-      setCombinedData(allVehicles);
-      
-    } catch (err) {
-      console.error('Error fetching companies and vehicles:', err);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la récupération des données: ${err.message || 'Erreur inconnue'}`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Load data on component mount
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   // Search vehicles with filters
   const searchVehicles = async () => {
@@ -70,35 +60,16 @@ export default function VehiclesDevicesPage() {
       return;
     }
 
-    setLoading(true);
-    let filteredVehicles = [];
-
     try {
-      // Filter vehicles based on search criteria
-      filteredVehicles = vehicles.filter(vehicle => {
-        const matchesImei = !searchImei || (vehicle.imei && vehicle.imei.toLowerCase().includes(searchImei.toLowerCase()));
-        const matchesImmat = !searchImmat || (vehicle.immatriculation && vehicle.immatriculation.toLowerCase().includes(searchImmat.toLowerCase()));
-        const matchesEntreprise = !searchEntreprise || (vehicle.entreprise && vehicle.entreprise.toLowerCase().includes(searchEntreprise.toLowerCase()));
-        
-        return matchesImei && matchesImmat && matchesEntreprise;
+      const results = await searchDevices({
+        imei: searchImei,
+        immatriculation: searchImmat,
+        entreprise: searchEntreprise
       });
-
-      setFilteredData(filteredVehicles);
-      setIsFiltered(true);
       
-      toast({
-        title: "Recherche réussie",
-        description: `${filteredVehicles.length} véhicule(s) trouvé(s)`,
-      });
+      setFilteredData(results);
     } catch (error) {
       console.error("Error searching vehicles:", error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la recherche",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -107,8 +78,8 @@ export default function VehiclesDevicesPage() {
     setSearchImei('');
     setSearchImmat('');
     setSearchEntreprise('');
-    setIsFiltered(false);
     setFilteredData([]);
+    resetFilters();
   };
 
   // Update vehicle
@@ -121,7 +92,7 @@ export default function VehiclesDevicesPage() {
         description: "Véhicule modifié avec succès",
       });
       
-      await fetchCompaniesWithVehicles();
+      await loadAllData();
     } catch (err) {
       console.error('Error updating vehicle:', err);
       toast({
@@ -142,7 +113,7 @@ export default function VehiclesDevicesPage() {
         description: "Véhicule supprimé avec succès",
       });
       
-      await fetchCompaniesWithVehicles();
+      await loadAllData();
     } catch (err) {
       console.error('Error deleting vehicle:', err);
       toast({
@@ -153,9 +124,6 @@ export default function VehiclesDevicesPage() {
     }
   };
 
-  useEffect(() => {
-    fetchCompaniesWithVehicles();
-  }, []);
 
   // Define columns for the table with enhanced device information
   const allColumns = [
@@ -354,7 +322,7 @@ export default function VehiclesDevicesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={isFiltered ? filteredData : combinedData}
+        data={filteredData.length > 0 ? filteredData : combinedData}
         onEdit={handleEdit}
         renderActions={(item) => (
           <div className="flex gap-1">

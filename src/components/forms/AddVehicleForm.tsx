@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import * as CompanyService from "@/services/CompanyService";
+import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
 const marques = ["Peugeot", "Renault", "Citroën", "Toyota", "Fiat", "BMW", "Mercedes"];
@@ -42,29 +42,22 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [kilometrage, setKilometrage] = useState("");
   const [type, setType] = useState("vehicle");
   const [entreprises, setEntreprises] = useState([]);
+  const { loadCompaniesForSelect } = useCompanyVehicleDevice();
 
   // Fetch companies on component mount
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const companies = await CompanyService.fetchCompanies();
-        // Store full company objects to avoid duplicate keys
+        const companies = await loadCompaniesForSelect();
         setEntreprises(companies);
       } catch (error) {
         console.error('Error fetching companies:', error);
-        // Fallback to hardcoded list on error with mock structure
-        setEntreprises([
-          { id: '1', name: 'MBSC' },
-          { id: '2', name: 'PHENIX IDFTP' },
-          { id: '3', name: 'ADANEV MOBILITES' },
-          { id: '4', name: 'Kick Services' },
-          { id: '5', name: 'MATTEI / HABICONFORT' }
-        ]);
+        setEntreprises([]);
       }
     };
 
     fetchCompanies();
-  }, []);
+  }, [loadCompaniesForSelect]);
 
   // Load initial data for editing mode
   useEffect(() => {
