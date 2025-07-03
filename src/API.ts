@@ -1,4 +1,3 @@
-
 /* tslint:disable */
 /* eslint-disable */
 //  This file was automatically generated and should not be edited.
@@ -643,6 +642,209 @@ export type ModelSubscriptionFloatInput = {
   between?: Array< number | null > | null,
   in?: Array< number | null > | null,
   notIn?: Array< number | null > | null,
+};
+
+export type CreateCompanyMutationVariables = {
+  input: CreateCompanyInput,
+  condition?: ModelCompanyConditionInput | null,
+};
+
+export type UpdateCompanyMutationVariables = {
+  input: UpdateCompanyInput,
+  condition?: ModelCompanyConditionInput | null,
+};
+
+export type DeleteCompanyMutationVariables = {
+  input: DeleteCompanyInput,
+  condition?: ModelCompanyConditionInput | null,
+};
+
+export type CreateUserMutationVariables = {
+  input: CreateUserInput,
+  condition?: ModelUserConditionInput | null,
+};
+
+export type UpdateUserMutationVariables = {
+  input: UpdateUserInput,
+  condition?: ModelUserConditionInput | null,
+};
+
+export type DeleteUserMutationVariables = {
+  input: DeleteUserInput,
+  condition?: ModelUserConditionInput | null,
+};
+
+export type CreateVehicleMutationVariables = {
+  input: CreateVehicleInput,
+  condition?: ModelVehicleConditionInput | null,
+};
+
+export type UpdateVehicleMutationVariables = {
+  input: UpdateVehicleInput,
+  condition?: ModelVehicleConditionInput | null,
+};
+
+export type DeleteVehicleMutationVariables = {
+  input: DeleteVehicleInput,
+  condition?: ModelVehicleConditionInput | null,
+};
+
+export type CreateDeviceMutationVariables = {
+  input: CreateDeviceInput,
+  condition?: ModelDeviceConditionInput | null,
+};
+
+export type UpdateDeviceMutationVariables = {
+  input: UpdateDeviceInput,
+  condition?: ModelDeviceConditionInput | null,
+};
+
+export type DeleteDeviceMutationVariables = {
+  input: DeleteDeviceInput,
+  condition?: ModelDeviceConditionInput | null,
+};
+
+export type CreateSimCardMutationVariables = {
+  input: CreateSimCardInput,
+  condition?: ModelSimCardConditionInput | null,
+};
+
+export type UpdateSimCardMutationVariables = {
+  input: UpdateSimCardInput,
+  condition?: ModelSimCardConditionInput | null,
+};
+
+export type DeleteSimCardMutationVariables = {
+  input: DeleteSimCardInput,
+  condition?: ModelSimCardConditionInput | null,
+};
+
+export type GetCompanyQueryVariables = {
+  id: string,
+};
+
+export type ListCompaniesQueryVariables = {
+  filter?: ModelCompanyFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type GetUserQueryVariables = {
+  id: string,
+};
+
+export type ListUsersQueryVariables = {
+  filter?: ModelUserFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type GetVehicleQueryVariables = {
+  id: string,
+};
+
+export type ListVehiclesQueryVariables = {
+  filter?: ModelVehicleFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type GetDeviceQueryVariables = {
+  id: string,
+};
+
+export type ListDevicesQueryVariables = {
+  filter?: ModelDeviceFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type GetSimCardQueryVariables = {
+  id: string,
+};
+
+export type ListSimCardsQueryVariables = {
+  filter?: ModelSimCardFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type UsersByCompanyUsersIdQueryVariables = {
+  companyUsersId: string,
+  sortDirection?: ModelSortDirection | null,
+  filter?: ModelUserFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type UsersByCompanyUsersIdQuery = {
+  __typename: "UsersByCompanyUsersIdQuery",
+  usersByCompanyUsersId?: ModelUserConnection | null,
+};
+
+export enum ModelSortDirection {
+  ASC = "ASC",
+  DESC = "DESC",
+}
+
+export type OnCreateCompanySubscriptionVariables = {
+  filter?: ModelSubscriptionCompanyFilterInput | null,
+};
+
+export type OnUpdateCompanySubscriptionVariables = {
+  filter?: ModelSubscriptionCompanyFilterInput | null,
+};
+
+export type OnDeleteCompanySubscriptionVariables = {
+  filter?: ModelSubscriptionCompanyFilterInput | null,
+};
+
+export type OnCreateUserSubscriptionVariables = {
+  filter?: ModelSubscriptionUserFilterInput | null,
+};
+
+export type OnUpdateUserSubscriptionVariables = {
+  filter?: ModelSubscriptionUserFilterInput | null,
+};
+
+export type OnDeleteUserSubscriptionVariables = {
+  filter?: ModelSubscriptionUserFilterInput | null,
+};
+
+export type OnCreateVehicleSubscriptionVariables = {
+  filter?: ModelSubscriptionVehicleFilterInput | null,
+};
+
+export type OnUpdateVehicleSubscriptionVariables = {
+  filter?: ModelSubscriptionVehicleFilterInput | null,
+};
+
+export type OnDeleteVehicleSubscriptionVariables = {
+  filter?: ModelSubscriptionVehicleFilterInput | null,
+};
+
+export type OnCreateDeviceSubscriptionVariables = {
+  filter?: ModelSubscriptionDeviceFilterInput | null,
+};
+
+export type OnUpdateDeviceSubscriptionVariables = {
+  filter?: ModelSubscriptionDeviceFilterInput | null,
+};
+
+export type OnDeleteDeviceSubscriptionVariables = {
+  filter?: ModelSubscriptionDeviceFilterInput | null,
+};
+
+export type OnCreateSimCardSubscriptionVariables = {
+  filter?: ModelSubscriptionSimCardFilterInput | null,
+};
+
+export type OnUpdateSimCardSubscriptionVariables = {
+  filter?: ModelSubscriptionSimCardFilterInput | null,
+};
+
+export type OnDeleteSimCardSubscriptionVariables = {
+  filter?: ModelSubscriptionSimCardFilterInput | null,
 };
 
 export type CreateCompanyMutation = {
