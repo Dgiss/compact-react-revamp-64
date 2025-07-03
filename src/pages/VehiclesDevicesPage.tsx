@@ -63,6 +63,9 @@ export default function VehiclesDevicesPage() {
       return;
     }
 
+    console.log('=== SEARCH INITIATED ===');
+    console.log('Search criteria:', { searchImei, searchImmat, searchEntreprise });
+
     try {
       // Determine search type based on how many criteria are filled
       const filledCriteria = [searchImei, searchImmat, searchEntreprise].filter(Boolean);
@@ -71,14 +74,18 @@ export default function VehiclesDevicesPage() {
       if (filledCriteria.length === 1) {
         // Single criteria search - use specific functions
         if (searchImei) {
+          console.log('Single IMEI search for:', searchImei);
           results = await searchByImei(searchImei);
         } else if (searchImmat) {
+          console.log('Single vehicle search for:', searchImmat);
           results = await searchByVehicle(searchImmat);
         } else if (searchEntreprise) {
+          console.log('Single company search for:', searchEntreprise);
           results = await searchByCompany(searchEntreprise);
         }
       } else {
         // Multiple criteria search - use combined search
+        console.log('Multiple criteria search');
         results = await searchDevices({
           imei: searchImei,
           immatriculation: searchImmat,
@@ -86,9 +93,28 @@ export default function VehiclesDevicesPage() {
         });
       }
       
+      console.log('Search results received:', results.length);
       setFilteredData(results);
+      
+      if (results.length === 0) {
+        toast({
+          title: "Aucun résultat",
+          description: "Aucun véhicule ou boîtier trouvé avec ces critères",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Recherche réussie",
+          description: `${results.length} résultat(s) trouvé(s)`,
+        });
+      }
     } catch (error) {
       console.error("Error searching vehicles:", error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la recherche",
+        variant: "destructive",
+      });
     }
   };
 

@@ -10,17 +10,20 @@ const client = generateClient();
 
 export const fetchCompaniesWithVehicles = async () => {
   return await withCredentialRetry(async () => {
+    console.log('=== FETCHING COMPANIES WITH VEHICLES ===');
     let allCompanies = [];
     let allVehicles = [];
     let allDevices = [];
     let nextToken = null;
     
-    // Fetch companies with vehicles (nouvelle relation)
+    // Fetch companies with vehicles
     do {
       const variables = {
         limit: 1000,
         nextToken: nextToken
       };
+      
+      console.log('Fetching companies batch with variables:', variables);
       
       const companyList = await client.graphql({
         query: queries.listCompanies,
@@ -28,108 +31,113 @@ export const fetchCompaniesWithVehicles = async () => {
       });
       
       const data = companyList.data.listCompanies;
+      console.log('Companies batch received:', data.items.length);
+      console.log('Sample company:', data.items[0]);
+      
       allCompanies = allCompanies.concat(data.items);
       nextToken = data.nextToken;
       
     } while (nextToken);
+    
+    console.log('Total companies fetched:', allCompanies.length);
+    console.log('Companies with vehicles:', allCompanies.filter(c => c.vehicles?.items?.length > 0).length);
   
-  // Fetch all devices
-  const devices = await fetchAllDevices();
-  console.log('=== DEVICE DEBUG INFO ===');
-  console.log('Total devices fetched:', devices.length);
-  console.log('First device sample:', devices[0]);
-  console.log('Device structure sample:', {
-    imei: devices[0]?.imei,
-    protocolId: devices[0]?.protocolId,
-    sim: devices[0]?.sim
-  });
-  
-  // Create a map of devices by IMEI for quick lookup
-  const deviceMap = {};
-  devices.forEach(device => {
-    if (device.imei) {
-      deviceMap[device.imei] = device;
-    }
-  });
-  
-  console.log('Device map keys (IMEIs):', Object.keys(deviceMap));
-  console.log('Device map sample entry:', deviceMap[Object.keys(deviceMap)[0]]);
-  
-  // Extract all vehicles from companies and enrich with device data
-  allCompanies.forEach(company => {
-    if (company.vehicles && company.vehicles.items) {
-      const companyVehicles = company.vehicles.items.map(vehicle => {
-        console.log(`=== VEHICLE DEBUG: ${vehicle.immat} ===`);
-        console.log('Vehicle device relation:', vehicle.device);
+    // Fetch all devices
+    const devices = await fetchAllDevices();
+    console.log('=== DEVICE DEBUG INFO ===');
+    console.log('Total devices fetched:', devices.length);
+    
+    // Create a map of devices by IMEI for quick lookup
+    const deviceMap = {};
+    devices.forEach(device => {
+      if (device.imei) {
+        deviceMap[device.imei] = device;
+      }
+    });
+    
+    console.log('Device map created with', Object.keys(deviceMap).length, 'devices');
+    
+    // Extract all vehicles from companies and enrich with device data
+    let totalVehiclesFromCompanies = 0;
+    allCompanies.forEach(company => {
+      if (company.vehicles && company.vehicles.items && company.vehicles.items.length > 0) {
+        console.log(`=== PROCESSING COMPANY: ${company.name} ===`);
+        console.log('Company vehicles count:', company.vehicles.items.length);
         
-        // Use the @hasOne relation with Device from GraphQL
-        const associatedDevice = vehicle.device;
-        console.log('Associated device found:', !!associatedDevice);
+        const companyVehicles = company.vehicles.items.map(vehicle => {
+          console.log(`Processing vehicle: ${vehicle.immat}`);
+          
+          // Use the @hasOne relation with Device from GraphQL
+          const associatedDevice = vehicle.device;
+          
+          const mappedVehicle = {
+            ...vehicle,
+            entreprise: company.name || company.nom || "Non définie",
+            type: "vehicle",
+            immatriculation: vehicle.immat || "",
+            nomVehicule: vehicle.nomVehicule || vehicle.code || "",
+            imei: associatedDevice?.imei || "",
+            typeBoitier: associatedDevice ? associatedDevice.protocolId?.toString() : "",
+            marque: vehicle.marque || vehicle.brand?.brandName || "",
+            modele: vehicle.modele_id || vehicle.modele?.modele || "",
+            kilometrage: vehicle.kilometerage?.toString() || "",
+            telephone: associatedDevice?.sim || "",
+            emplacement: vehicle.locations || "",
+            deviceData: associatedDevice || null,
+            isAssociated: !!associatedDevice,
+            // Additional fields
+            AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
+            energie: vehicle.energie || "",
+            puissanceFiscale: vehicle.puissanceFiscale || "",
+            couleur: vehicle.couleur || "",
+            dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
+            VIN: vehicle.VIN || vehicle.AWN_VIN || ""
+          };
+          
+          totalVehiclesFromCompanies++;
+          return mappedVehicle;
+        });
         
-        if (associatedDevice) {
-          console.log('Device data:', {
-            imei: associatedDevice.imei,
-            protocolId: associatedDevice.protocolId,
-            sim: associatedDevice.sim
-          });
-        } else {
-          console.log('No device found for vehicle:', vehicle.immat);
-        }
-        
-        return {
-          ...vehicle,
-          entreprise: company.name || "Non définie",
-          type: "vehicle",
-          immatriculation: vehicle.immat || "",
-          nomVehicule: vehicle.nomVehicule || vehicle.code || "",
-          imei: associatedDevice?.imei || "",
-          typeBoitier: associatedDevice ? associatedDevice.protocolId?.toString() : "",
-          marque: vehicle.marque || vehicle.brand?.brandName || "",
-          modele: vehicle.modele_id || vehicle.modele?.modele || "",
-          kilometrage: vehicle.kilometerage?.toString() || "",
-          telephone: associatedDevice?.sim || "",
-          emplacement: vehicle.locations || "",
-          deviceData: associatedDevice || null,
-          isAssociated: true,
-          // Nouveaux champs du schéma enrichi
-          AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
-          energie: vehicle.energie || "",
-          puissanceFiscale: vehicle.puissanceFiscale || "",
-          couleur: vehicle.couleur || "",
-          dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
-          VIN: vehicle.VIN || vehicle.AWN_VIN || ""
-        };
-      });
-      allVehicles = allVehicles.concat(companyVehicles);
-    }
-  });
-  
-  // Find devices that are not associated with any vehicle
-  const associatedDeviceImeis = new Set(allVehicles.map(v => v.deviceData?.imei).filter(Boolean));
-  const unassociatedDevices = devices
-    .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
-    .map(device => ({
-      id: device.imei,
-      entreprise: "Boîtier libre",
-      type: "device",
-      immatriculation: "",
-      nomVehicule: "",
-      imei: device.imei,
-      typeBoitier: device.protocolId?.toString() || "",
-      marque: "",
-      modele: "",
-      kilometrage: "",
-      telephone: device.sim || "",
-      emplacement: "",
-      deviceData: device,
-      isAssociated: false
-    }));
-  
-  allDevices = [...allVehicles, ...unassociatedDevices];
-  
-    console.log('=== FINAL RESULT SAMPLE ===');
-    console.log('Sample vehicle with device data:', allDevices.find(d => d.type === 'vehicle'));
-    console.log('Sample unassociated device:', allDevices.find(d => d.type === 'device'));
+        allVehicles = allVehicles.concat(companyVehicles);
+      }
+    });
+    
+    console.log('Total vehicles processed from companies:', totalVehiclesFromCompanies);
+    
+    // Find devices that are not associated with any vehicle
+    const associatedDeviceImeis = new Set(allVehicles.map(v => v.deviceData?.imei).filter(Boolean));
+    const unassociatedDevices = devices
+      .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
+      .map(device => ({
+        id: device.imei,
+        entreprise: "Boîtier libre",
+        type: "device",
+        immatriculation: "",
+        nomVehicule: "",
+        imei: device.imei,
+        typeBoitier: device.protocolId?.toString() || "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: device.sim || "",
+        emplacement: "",
+        deviceData: device,
+        isAssociated: false
+      }));
+    
+    console.log('Unassociated devices count:', unassociatedDevices.length);
+    
+    allDevices = [...allVehicles, ...unassociatedDevices];
+    
+    console.log('=== FINAL RESULT SUMMARY ===');
+    console.log('Total companies:', allCompanies.length);
+    console.log('Total vehicles:', allVehicles.length);
+    console.log('Total unassociated devices:', unassociatedDevices.length);
+    console.log('Total combined data:', allDevices.length);
+    
+    // Debug company names for search
+    const companyNames = [...new Set(allDevices.map(item => item.entreprise).filter(Boolean))];
+    console.log('Available company names for search:', companyNames);
     
     return { companies: allCompanies, vehicles: allDevices };
   });

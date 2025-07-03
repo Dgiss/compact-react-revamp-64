@@ -221,38 +221,37 @@ export const searchByVehicle = async (vehicle) => {
  */
 export const searchByCompany = async (company) => {
   try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
-    // Debug logging
     console.log('=== COMPANY SEARCH DEBUG ===');
     console.log('Searching for company:', company);
+    
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
     console.log('Total vehicles loaded:', vehicles.length);
     
-    // Get all unique companies
+    // Get all unique companies for debugging
     const allCompanies = [...new Set(vehicles
       .map(item => item.entreprise)
       .filter(Boolean)
     )];
     console.log('All available companies:', allCompanies);
     
-    // Check if exact match exists
-    const exactMatch = allCompanies.find(c => 
-      c.toLowerCase() === company.toLowerCase()
-    );
-    console.log('Exact match found:', exactMatch);
-    
-    // Check partial matches
-    const partialMatches = allCompanies.filter(c => 
-      c.toLowerCase().includes(company.toLowerCase())
-    );
-    console.log('Partial matches:', partialMatches);
-    
-    const results = vehicles.filter(item => 
-      item.entreprise && item.entreprise.toLowerCase().includes(company.toLowerCase())
-    );
+    // Filter results with case-insensitive partial matching
+    const results = vehicles.filter(item => {
+      if (!item.entreprise) return false;
+      
+      const itemCompany = item.entreprise.toLowerCase();
+      const searchCompany = company.toLowerCase();
+      
+      // Skip "Boîtier libre" when searching for real companies
+      if (item.entreprise === "Boîtier libre" && company !== "Boîtier libre") {
+        return false;
+      }
+      
+      return itemCompany.includes(searchCompany);
+    });
     
     console.log('Search results count:', results.length);
-    console.log('=== END DEBUG ===');
+    console.log('Sample search results:', results.slice(0, 3));
+    console.log('=== END SEARCH DEBUG ===');
     
     return results;
   } catch (error) {
