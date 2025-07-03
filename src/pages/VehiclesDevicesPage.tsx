@@ -388,12 +388,14 @@ export default function VehiclesDevicesPage() {
           <AssociateVehicleForm
             device={selectedDevice}
             onClose={() => setShowAssociateSheet(false)}
-            onSuccess={() => {
+            onSuccess={async () => {
               toast({
                 title: "Boîtier associé",
                 description: "Le boîtier a été associé au véhicule avec succès"
               });
               setShowAssociateSheet(false);
+              // Refresh data to show the new association
+              await loadAllData();
             }}
           />
         </SheetContent>

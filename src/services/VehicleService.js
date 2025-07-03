@@ -242,3 +242,43 @@ export const createVehicleData = async (data) => {
 
   return result;
 };
+
+/**
+ * Associate a device to a vehicle
+ * @param {string} deviceImei - Device IMEI
+ * @param {string} vehicleImmat - Vehicle immatriculation
+ * @returns {Promise<Object>} Association result
+ */
+export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
+  await waitForAmplifyConfig();
+  
+  try {
+    // First, update the device to associate it with the vehicle
+    const deviceUpdate = await client.graphql({
+      query: mutations.updateDevice,
+      variables: {
+        input: {
+          imei: deviceImei,
+          deviceVehicleImmat: vehicleImmat
+        }
+      }
+    });
+
+    // Then, update the vehicle to reference the device
+    const vehicleUpdate = await client.graphql({
+      query: mutations.updateVehicle,
+      variables: {
+        input: {
+          immat: vehicleImmat,
+          vehicleDeviceImei: deviceImei
+        }
+      }
+    });
+
+    console.log('Device associated successfully:', { deviceImei, vehicleImmat });
+    return { success: true, deviceUpdate, vehicleUpdate };
+  } catch (error) {
+    console.error('Error associating device to vehicle:', error);
+    throw error;
+  }
+};
