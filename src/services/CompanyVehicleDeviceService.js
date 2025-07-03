@@ -171,7 +171,7 @@ export const searchCompaniesReal = async (searchTerm) => {
     if (!searchTerm) return companies;
     
     return companies.filter(company => 
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.name && company.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (company.siret && company.siret.includes(searchTerm))
     );
   } catch (error) {
@@ -279,7 +279,7 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
     
     // Normalize company name for better matching
     const normalizeCompanyName = (name) => {
-      if (!name) return '';
+      if (!name || typeof name !== 'string') return '';
       return name.toLowerCase()
         .trim()
         .normalize('NFD')
@@ -297,7 +297,7 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
     console.log('All available companies in vehicles:', allCompanies.slice(0, 10), '...'); // Show first 10
     
     // Also show company names from the companies list
-    const companyListNames = companies.map(c => c.name).slice(0, 10);
+    const companyListNames = companies.map(c => c.name || c.nom || 'Unnamed').filter(Boolean).slice(0, 10);
     console.log('Company names from companies list:', companyListNames, '...');
     
     // Filter results with enhanced matching
