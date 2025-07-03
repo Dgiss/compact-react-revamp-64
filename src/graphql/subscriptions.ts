@@ -1,4 +1,3 @@
-
 /* tslint:disable */
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
@@ -9,28 +8,46 @@ type GeneratedSubscription<InputType, OutputType> = string & {
   __generatedSubscriptionOutput: OutputType;
 };
 
-export const onCreateCompany = /* GraphQL */ `subscription OnCreateCompany(
-  $filter: ModelSubscriptionCompanyFilterInput
-) {
+export const onCreateCompany = /* GraphQL */ `subscription OnCreateCompany($filter: ModelSubscriptionCompanyFilterInput) {
   onCreateCompany(filter: $filter) {
     id
     name
+    siret
     address
-    phone
+    postalCode
+    city
+    countryCode
+    contact
     email
-    contactName
-    isActive
+    mobile
+    phone
+    fax
+    creationDate
+    subscriptionDate
+    keyedStart
     users {
       items {
-        id
+        sub
+        firstname
+        lastname
+        address
+        mobile
         username
-        email
-        firstName
-        lastName
+        password
+        beginDate
+        endDate
+        mappingId
+        languageCode
+        lastModificationDate
+        showReport
+        dispatcher
+        applicationVersion
+        themeId
         role
-        isActive
-        companyId
-        lastLogin
+        accessExpiresAt
+        accessType
+        accessibleVehicles
+        companyUsersId
         createdAt
         updatedAt
         __typename
@@ -40,15 +57,232 @@ export const onCreateCompany = /* GraphQL */ `subscription OnCreateCompany(
     }
     vehicles {
       items {
-        id
-        licensePlate
-        make
-        model
+        immat
+        code_certificat_qualite_air
+        ad_blue
+        AWN_genre
+        emissions
+        AWN_nom_commercial
+        AWN_numero_de_serie
+        AWN_niveau_de_bruit_au_ralenti
+        AWN_consommation_ex_urbaine
+        AWN_consommation_urbaine
+        AWN_max_speed
+        AWN_emission_co_2_prf
+        AWN_depollution
+        AWN_nbr_soupapes
+        AWN_nbr_vitesses
+        AWN_nbr_portes
+        AWN_nbr_places
+        AWN_propulsion
+        AWN_date_30
+        AWN_date_cg
+        AWN_collection
+        AWN_segment
+        AWN_type_frein
+        AWN_group
+        AWN_VIN
+        AWN_k_type
+        AWN_version
+        AWN_label
+        AWN_code_moteur
+        AWN_nbr_cylindre_energie
+        AWN_nbr_cylindres
+        AWN_energie_code
+        AWN_mode_injection
+        AWN_type_injection
+        AWN_turbo_compressor
+        AWN_vitesse_moteur
+        AWN_generation
+        AWN_poids_total
+        AWN_poids_vide
+        AWN_poids_total_roulant
+        AWN_consommation_mixte
+        ad_green
+        AWN_poids_max_autorise
+        depollution
+        cl_environ_prf
+        AWN_model
+        AWN_model_image
+        dateMiseEnCirculation
+        puissanceFiscale
+        puissanceDin
+        energie
+        AWN_puissance_KW
+        boiteVitesse
+        couleur
+        carrosserie
+        marque
+        marque_id
+        modele_id
+        version
+        immatriculation
+        VIN
+        k_type
+        type_mine
+        AWN_url_image
         year
-        vin
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        nomVehicule
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    zones {
+      items {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    pois {
+      items {
+        id
+        name
+        adress
+        lat
+        lng
+        companyPoisId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    drivers {
+      items {
+        sub
+        firstname
+        lastname
+        password
+        username
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    trames {
+      items {
+        id
+        speed
+        lat
+        lng
+        distance
+        address
+        azimut
+        immobilisation
+        timestamp
+        state
+        fuel
+        ibuttonCode
         companyId
-        deviceId
-        isActive
+        driverFullName
+        vehicleBrandName
+        companyTramesId
+        processor
+        createdAt
+        updatedAt
+        trameDriverSub
+        trameVehicleImmat
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    maintenances {
+      items {
+        id
+        operationType
+        status
+        reminderDays
+        alertDate
+        cost
+        email
+        notes
+        creationDate
+        lastModificationDate
+        companyMaintenancesId
+        vehicleMaintenancesImmat
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
         createdAt
         updatedAt
         __typename
@@ -61,30 +295,50 @@ export const onCreateCompany = /* GraphQL */ `subscription OnCreateCompany(
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnCreateCompanySubscriptionVariables, APITypes.OnCreateCompanySubscription>;
-
-export const onUpdateCompany = /* GraphQL */ `subscription OnUpdateCompany(
-  $filter: ModelSubscriptionCompanyFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnCreateCompanySubscriptionVariables,
+  APITypes.OnCreateCompanySubscription
+>;
+export const onUpdateCompany = /* GraphQL */ `subscription OnUpdateCompany($filter: ModelSubscriptionCompanyFilterInput) {
   onUpdateCompany(filter: $filter) {
     id
     name
+    siret
     address
-    phone
+    postalCode
+    city
+    countryCode
+    contact
     email
-    contactName
-    isActive
+    mobile
+    phone
+    fax
+    creationDate
+    subscriptionDate
+    keyedStart
     users {
       items {
-        id
+        sub
+        firstname
+        lastname
+        address
+        mobile
         username
-        email
-        firstName
-        lastName
+        password
+        beginDate
+        endDate
+        mappingId
+        languageCode
+        lastModificationDate
+        showReport
+        dispatcher
+        applicationVersion
+        themeId
         role
-        isActive
-        companyId
-        lastLogin
+        accessExpiresAt
+        accessType
+        accessibleVehicles
+        companyUsersId
         createdAt
         updatedAt
         __typename
@@ -94,15 +348,232 @@ export const onUpdateCompany = /* GraphQL */ `subscription OnUpdateCompany(
     }
     vehicles {
       items {
-        id
-        licensePlate
-        make
-        model
+        immat
+        code_certificat_qualite_air
+        ad_blue
+        AWN_genre
+        emissions
+        AWN_nom_commercial
+        AWN_numero_de_serie
+        AWN_niveau_de_bruit_au_ralenti
+        AWN_consommation_ex_urbaine
+        AWN_consommation_urbaine
+        AWN_max_speed
+        AWN_emission_co_2_prf
+        AWN_depollution
+        AWN_nbr_soupapes
+        AWN_nbr_vitesses
+        AWN_nbr_portes
+        AWN_nbr_places
+        AWN_propulsion
+        AWN_date_30
+        AWN_date_cg
+        AWN_collection
+        AWN_segment
+        AWN_type_frein
+        AWN_group
+        AWN_VIN
+        AWN_k_type
+        AWN_version
+        AWN_label
+        AWN_code_moteur
+        AWN_nbr_cylindre_energie
+        AWN_nbr_cylindres
+        AWN_energie_code
+        AWN_mode_injection
+        AWN_type_injection
+        AWN_turbo_compressor
+        AWN_vitesse_moteur
+        AWN_generation
+        AWN_poids_total
+        AWN_poids_vide
+        AWN_poids_total_roulant
+        AWN_consommation_mixte
+        ad_green
+        AWN_poids_max_autorise
+        depollution
+        cl_environ_prf
+        AWN_model
+        AWN_model_image
+        dateMiseEnCirculation
+        puissanceFiscale
+        puissanceDin
+        energie
+        AWN_puissance_KW
+        boiteVitesse
+        couleur
+        carrosserie
+        marque
+        marque_id
+        modele_id
+        version
+        immatriculation
+        VIN
+        k_type
+        type_mine
+        AWN_url_image
         year
-        vin
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        nomVehicule
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    zones {
+      items {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    pois {
+      items {
+        id
+        name
+        adress
+        lat
+        lng
+        companyPoisId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    drivers {
+      items {
+        sub
+        firstname
+        lastname
+        password
+        username
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    trames {
+      items {
+        id
+        speed
+        lat
+        lng
+        distance
+        address
+        azimut
+        immobilisation
+        timestamp
+        state
+        fuel
+        ibuttonCode
         companyId
-        deviceId
-        isActive
+        driverFullName
+        vehicleBrandName
+        companyTramesId
+        processor
+        createdAt
+        updatedAt
+        trameDriverSub
+        trameVehicleImmat
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    maintenances {
+      items {
+        id
+        operationType
+        status
+        reminderDays
+        alertDate
+        cost
+        email
+        notes
+        creationDate
+        lastModificationDate
+        companyMaintenancesId
+        vehicleMaintenancesImmat
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
         createdAt
         updatedAt
         __typename
@@ -115,30 +586,50 @@ export const onUpdateCompany = /* GraphQL */ `subscription OnUpdateCompany(
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnUpdateCompanySubscriptionVariables, APITypes.OnUpdateCompanySubscription>;
-
-export const onDeleteCompany = /* GraphQL */ `subscription OnDeleteCompany(
-  $filter: ModelSubscriptionCompanyFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnUpdateCompanySubscriptionVariables,
+  APITypes.OnUpdateCompanySubscription
+>;
+export const onDeleteCompany = /* GraphQL */ `subscription OnDeleteCompany($filter: ModelSubscriptionCompanyFilterInput) {
   onDeleteCompany(filter: $filter) {
     id
     name
+    siret
     address
-    phone
+    postalCode
+    city
+    countryCode
+    contact
     email
-    contactName
-    isActive
+    mobile
+    phone
+    fax
+    creationDate
+    subscriptionDate
+    keyedStart
     users {
       items {
-        id
+        sub
+        firstname
+        lastname
+        address
+        mobile
         username
-        email
-        firstName
-        lastName
+        password
+        beginDate
+        endDate
+        mappingId
+        languageCode
+        lastModificationDate
+        showReport
+        dispatcher
+        applicationVersion
+        themeId
         role
-        isActive
-        companyId
-        lastLogin
+        accessExpiresAt
+        accessType
+        accessibleVehicles
+        companyUsersId
         createdAt
         updatedAt
         __typename
@@ -148,15 +639,232 @@ export const onDeleteCompany = /* GraphQL */ `subscription OnDeleteCompany(
     }
     vehicles {
       items {
-        id
-        licensePlate
-        make
-        model
+        immat
+        code_certificat_qualite_air
+        ad_blue
+        AWN_genre
+        emissions
+        AWN_nom_commercial
+        AWN_numero_de_serie
+        AWN_niveau_de_bruit_au_ralenti
+        AWN_consommation_ex_urbaine
+        AWN_consommation_urbaine
+        AWN_max_speed
+        AWN_emission_co_2_prf
+        AWN_depollution
+        AWN_nbr_soupapes
+        AWN_nbr_vitesses
+        AWN_nbr_portes
+        AWN_nbr_places
+        AWN_propulsion
+        AWN_date_30
+        AWN_date_cg
+        AWN_collection
+        AWN_segment
+        AWN_type_frein
+        AWN_group
+        AWN_VIN
+        AWN_k_type
+        AWN_version
+        AWN_label
+        AWN_code_moteur
+        AWN_nbr_cylindre_energie
+        AWN_nbr_cylindres
+        AWN_energie_code
+        AWN_mode_injection
+        AWN_type_injection
+        AWN_turbo_compressor
+        AWN_vitesse_moteur
+        AWN_generation
+        AWN_poids_total
+        AWN_poids_vide
+        AWN_poids_total_roulant
+        AWN_consommation_mixte
+        ad_green
+        AWN_poids_max_autorise
+        depollution
+        cl_environ_prf
+        AWN_model
+        AWN_model_image
+        dateMiseEnCirculation
+        puissanceFiscale
+        puissanceDin
+        energie
+        AWN_puissance_KW
+        boiteVitesse
+        couleur
+        carrosserie
+        marque
+        marque_id
+        modele_id
+        version
+        immatriculation
+        VIN
+        k_type
+        type_mine
+        AWN_url_image
         year
-        vin
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        nomVehicule
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
+        createdAt
+        updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    zones {
+      items {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    pois {
+      items {
+        id
+        name
+        adress
+        lat
+        lng
+        companyPoisId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    drivers {
+      items {
+        sub
+        firstname
+        lastname
+        password
+        username
+        fullname
+        birthDate
+        drivingLicenseNumber
+        drivingLicenseType
+        job
+        hiringDate
+        comment
+        driverKey
+        email
+        mobile
+        lastModificationDate
+        code
+        address
+        agencyId
+        cdc
+        pdm
+        nni
+        companyDriversId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    trames {
+      items {
+        id
+        speed
+        lat
+        lng
+        distance
+        address
+        azimut
+        immobilisation
+        timestamp
+        state
+        fuel
+        ibuttonCode
         companyId
-        deviceId
-        isActive
+        driverFullName
+        vehicleBrandName
+        companyTramesId
+        processor
+        createdAt
+        updatedAt
+        trameDriverSub
+        trameVehicleImmat
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    maintenances {
+      items {
+        id
+        operationType
+        status
+        reminderDays
+        alertDate
+        cost
+        email
+        notes
+        creationDate
+        lastModificationDate
+        companyMaintenancesId
+        vehicleMaintenancesImmat
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
         createdAt
         updatedAt
         __typename
@@ -169,28 +877,55 @@ export const onDeleteCompany = /* GraphQL */ `subscription OnDeleteCompany(
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnDeleteCompanySubscriptionVariables, APITypes.OnDeleteCompanySubscription>;
-
-export const onCreateUser = /* GraphQL */ `subscription OnCreateUser(
-  $filter: ModelSubscriptionUserFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnDeleteCompanySubscriptionVariables,
+  APITypes.OnDeleteCompanySubscription
+>;
+export const onCreateUser = /* GraphQL */ `subscription OnCreateUser($filter: ModelSubscriptionUserFilterInput) {
   onCreateUser(filter: $filter) {
-    id
+    sub
+    firstname
+    lastname
+    address
+    mobile
     username
-    email
-    firstName
-    lastName
+    password
+    beginDate
+    endDate
+    mappingId
+    languageCode
+    lastModificationDate
+    showReport
+    dispatcher
+    applicationVersion
+    themeId
+    picture {
+      bucket
+      region
+      key
+      __typename
+    }
     role
-    isActive
-    companyId
+    accessExpiresAt
+    accessType
+    accessibleVehicles
+    companyUsersId
     company {
       id
       name
+      siret
       address
-      phone
+      postalCode
+      city
+      countryCode
+      contact
       email
-      contactName
-      isActive
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
       users {
         nextToken
         __typename
@@ -199,38 +934,88 @@ export const onCreateUser = /* GraphQL */ `subscription OnCreateUser(
         nextToken
         __typename
       }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    lastLogin
     createdAt
     updatedAt
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnCreateUserSubscriptionVariables, APITypes.OnCreateUserSubscription>;
-
-export const onUpdateUser = /* GraphQL */ `subscription OnUpdateUser(
-  $filter: ModelSubscriptionUserFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnCreateUserSubscriptionVariables,
+  APITypes.OnCreateUserSubscription
+>;
+export const onUpdateUser = /* GraphQL */ `subscription OnUpdateUser($filter: ModelSubscriptionUserFilterInput) {
   onUpdateUser(filter: $filter) {
-    id
+    sub
+    firstname
+    lastname
+    address
+    mobile
     username
-    email
-    firstName
-    lastName
+    password
+    beginDate
+    endDate
+    mappingId
+    languageCode
+    lastModificationDate
+    showReport
+    dispatcher
+    applicationVersion
+    themeId
+    picture {
+      bucket
+      region
+      key
+      __typename
+    }
     role
-    isActive
-    companyId
+    accessExpiresAt
+    accessType
+    accessibleVehicles
+    companyUsersId
     company {
       id
       name
+      siret
       address
-      phone
+      postalCode
+      city
+      countryCode
+      contact
       email
-      contactName
-      isActive
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
       users {
         nextToken
         __typename
@@ -239,38 +1024,88 @@ export const onUpdateUser = /* GraphQL */ `subscription OnUpdateUser(
         nextToken
         __typename
       }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    lastLogin
     createdAt
     updatedAt
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnUpdateUserSubscriptionVariables, APITypes.OnUpdateUserSubscription>;
-
-export const onDeleteUser = /* GraphQL */ `subscription OnDeleteUser(
-  $filter: ModelSubscriptionUserFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnUpdateUserSubscriptionVariables,
+  APITypes.OnUpdateUserSubscription
+>;
+export const onDeleteUser = /* GraphQL */ `subscription OnDeleteUser($filter: ModelSubscriptionUserFilterInput) {
   onDeleteUser(filter: $filter) {
-    id
+    sub
+    firstname
+    lastname
+    address
+    mobile
     username
-    email
-    firstName
-    lastName
+    password
+    beginDate
+    endDate
+    mappingId
+    languageCode
+    lastModificationDate
+    showReport
+    dispatcher
+    applicationVersion
+    themeId
+    picture {
+      bucket
+      region
+      key
+      __typename
+    }
     role
-    isActive
-    companyId
+    accessExpiresAt
+    accessType
+    accessibleVehicles
+    companyUsersId
     company {
       id
       name
+      siret
       address
-      phone
+      postalCode
+      city
+      countryCode
+      contact
       email
-      contactName
-      isActive
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
       users {
         nextToken
         __typename
@@ -279,37 +1114,452 @@ export const onDeleteUser = /* GraphQL */ `subscription OnDeleteUser(
         nextToken
         __typename
       }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    lastLogin
     createdAt
     updatedAt
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnDeleteUserSubscriptionVariables, APITypes.OnDeleteUserSubscription>;
-
-export const onCreateVehicle = /* GraphQL */ `subscription OnCreateVehicle(
-  $filter: ModelSubscriptionVehicleFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnDeleteUserSubscriptionVariables,
+  APITypes.OnDeleteUserSubscription
+>;
+export const onCreateDriver = /* GraphQL */ `subscription OnCreateDriver($filter: ModelSubscriptionDriverFilterInput) {
+  onCreateDriver(filter: $filter) {
+    sub
+    firstname
+    lastname
+    password
+    username
+    fullname
+    birthDate
+    drivingLicenseNumber
+    drivingLicenseType
+    job
+    hiringDate
+    comment
+    driverKey
+    email
+    mobile
+    lastModificationDate
+    code
+    address
+    agencyId
+    cdc
+    pdm
+    nni
+    companyDriversId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateDriverSubscriptionVariables,
+  APITypes.OnCreateDriverSubscription
+>;
+export const onUpdateDriver = /* GraphQL */ `subscription OnUpdateDriver($filter: ModelSubscriptionDriverFilterInput) {
+  onUpdateDriver(filter: $filter) {
+    sub
+    firstname
+    lastname
+    password
+    username
+    fullname
+    birthDate
+    drivingLicenseNumber
+    drivingLicenseType
+    job
+    hiringDate
+    comment
+    driverKey
+    email
+    mobile
+    lastModificationDate
+    code
+    address
+    agencyId
+    cdc
+    pdm
+    nni
+    companyDriversId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateDriverSubscriptionVariables,
+  APITypes.OnUpdateDriverSubscription
+>;
+export const onDeleteDriver = /* GraphQL */ `subscription OnDeleteDriver($filter: ModelSubscriptionDriverFilterInput) {
+  onDeleteDriver(filter: $filter) {
+    sub
+    firstname
+    lastname
+    password
+    username
+    fullname
+    birthDate
+    drivingLicenseNumber
+    drivingLicenseType
+    job
+    hiringDate
+    comment
+    driverKey
+    email
+    mobile
+    lastModificationDate
+    code
+    address
+    agencyId
+    cdc
+    pdm
+    nni
+    companyDriversId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteDriverSubscriptionVariables,
+  APITypes.OnDeleteDriverSubscription
+>;
+export const onCreateVehicle = /* GraphQL */ `subscription OnCreateVehicle($filter: ModelSubscriptionVehicleFilterInput) {
   onCreateVehicle(filter: $filter) {
-    id
-    licensePlate
-    make
-    model
+    immat
+    code_certificat_qualite_air
+    ad_blue
+    AWN_genre
+    emissions
+    AWN_nom_commercial
+    AWN_numero_de_serie
+    AWN_niveau_de_bruit_au_ralenti
+    AWN_consommation_ex_urbaine
+    AWN_consommation_urbaine
+    AWN_max_speed
+    AWN_emission_co_2_prf
+    AWN_depollution
+    AWN_nbr_soupapes
+    AWN_nbr_vitesses
+    AWN_nbr_portes
+    AWN_nbr_places
+    AWN_propulsion
+    AWN_date_30
+    AWN_date_cg
+    AWN_collection
+    AWN_segment
+    AWN_type_frein
+    AWN_group
+    AWN_VIN
+    AWN_k_type
+    AWN_version
+    AWN_label
+    AWN_code_moteur
+    AWN_nbr_cylindre_energie
+    AWN_nbr_cylindres
+    AWN_energie_code
+    AWN_mode_injection
+    AWN_type_injection
+    AWN_turbo_compressor
+    AWN_vitesse_moteur
+    AWN_generation
+    AWN_poids_total
+    AWN_poids_vide
+    AWN_poids_total_roulant
+    AWN_consommation_mixte
+    ad_green
+    AWN_poids_max_autorise
+    depollution
+    cl_environ_prf
+    AWN_model
+    AWN_model_image
+    dateMiseEnCirculation
+    puissanceFiscale
+    puissanceDin
+    energie
+    AWN_puissance_KW
+    boiteVitesse
+    couleur
+    carrosserie
+    marque
+    marque_id
+    modele_id
+    version
+    immatriculation
+    VIN
+    k_type
+    type_mine
+    AWN_url_image
     year
-    vin
-    companyId
+    fuelType
+    consumption
+    maxSpeed
+    seatCount
+    icon
+    picture {
+      bucket
+      region
+      key
+      __typename
+    }
+    kilometerage
+    kilometerPrice
+    kilometerageStart
+    kilometerageDay
+    kilometerageLastUpdate
+    timeRunning
+    counterValue
+    co2
+    lastModificationDate
+    rollingTimeStart
+    rollingTimeDay
+    locations
+    installationPrecautions
+    code
+    nomVehicule
+    vehicleCategory {
+      id
+      category
+      description
+      createdAt
+      updatedAt
+      __typename
+    }
+    brand {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    modele {
+      id
+      modele
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleBrandModelsBrandName
+      __typename
+    }
+    gefcoSend
+    tankCapacity
+    canMileage
+    companyVehiclesId
     company {
       id
       name
+      siret
       address
-      phone
+      postalCode
+      city
+      countryCode
+      contact
       email
-      contactName
-      isActive
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
       users {
         nextToken
         __typename
@@ -318,80 +1568,381 @@ export const onCreateVehicle = /* GraphQL */ `subscription OnCreateVehicle(
         nextToken
         __typename
       }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    deviceId
     device {
-      id
       imei
-      serialNumber
-      model
-      firmwareVersion
-      isActive
-      vehicleId
+      protocolId
+      sim
+      messages_ttl
+      device_type_id
+      flespi_id
+      enabled
+      media_ttl
+      name
+      cid
+      media_rotate
+      messages_rotate
       vehicle {
-        id
-        licensePlate
-        make
-        model
+        immat
+        code_certificat_qualite_air
+        ad_blue
+        AWN_genre
+        emissions
+        AWN_nom_commercial
+        AWN_numero_de_serie
+        AWN_niveau_de_bruit_au_ralenti
+        AWN_consommation_ex_urbaine
+        AWN_consommation_urbaine
+        AWN_max_speed
+        AWN_emission_co_2_prf
+        AWN_depollution
+        AWN_nbr_soupapes
+        AWN_nbr_vitesses
+        AWN_nbr_portes
+        AWN_nbr_places
+        AWN_propulsion
+        AWN_date_30
+        AWN_date_cg
+        AWN_collection
+        AWN_segment
+        AWN_type_frein
+        AWN_group
+        AWN_VIN
+        AWN_k_type
+        AWN_version
+        AWN_label
+        AWN_code_moteur
+        AWN_nbr_cylindre_energie
+        AWN_nbr_cylindres
+        AWN_energie_code
+        AWN_mode_injection
+        AWN_type_injection
+        AWN_turbo_compressor
+        AWN_vitesse_moteur
+        AWN_generation
+        AWN_poids_total
+        AWN_poids_vide
+        AWN_poids_total_roulant
+        AWN_consommation_mixte
+        ad_green
+        AWN_poids_max_autorise
+        depollution
+        cl_environ_prf
+        AWN_model
+        AWN_model_image
+        dateMiseEnCirculation
+        puissanceFiscale
+        puissanceDin
+        energie
+        AWN_puissance_KW
+        boiteVitesse
+        couleur
+        carrosserie
+        marque
+        marque_id
+        modele_id
+        version
+        immatriculation
+        VIN
+        k_type
+        type_mine
+        AWN_url_image
         year
-        vin
-        companyId
-        deviceId
-        isActive
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        nomVehicule
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
         createdAt
         updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
         __typename
       }
-      simCardId
-      simCard {
-        id
-        iccid
-        phoneNumber
-        carrier
-        plan
-        isActive
-        deviceId
-        dataUsage
-        monthlyLimit
-        createdAt
-        updatedAt
-        __typename
-      }
-      lastSeen
       createdAt
       updatedAt
+      deviceVehicleImmat
       __typename
     }
-    isActive
+    alerts {
+      items {
+        id
+        vehicleImmat
+        alertId
+        isFlespi
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    tags {
+      items {
+        id
+        vehicleImmat
+        tagId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    maintenances {
+      items {
+        id
+        operationType
+        status
+        reminderDays
+        alertDate
+        cost
+        email
+        notes
+        creationDate
+        lastModificationDate
+        companyMaintenancesId
+        vehicleMaintenancesImmat
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
     createdAt
     updatedAt
+    vehicleVehicleCategoryId
+    vehicleBrandBrandName
+    vehicleModeleId
+    vehicleDeviceImei
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnCreateVehicleSubscriptionVariables, APITypes.OnCreateVehicleSubscription>;
-
-export const onUpdateVehicle = /* GraphQL */ `subscription OnUpdateVehicle(
-  $filter: ModelSubscriptionVehicleFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleSubscriptionVariables,
+  APITypes.OnCreateVehicleSubscription
+>;
+export const onUpdateVehicle = /* GraphQL */ `subscription OnUpdateVehicle($filter: ModelSubscriptionVehicleFilterInput) {
   onUpdateVehicle(filter: $filter) {
-    id
-    licensePlate
-    make
-    model
+    immat
+    code_certificat_qualite_air
+    ad_blue
+    AWN_genre
+    emissions
+    AWN_nom_commercial
+    AWN_numero_de_serie
+    AWN_niveau_de_bruit_au_ralenti
+    AWN_consommation_ex_urbaine
+    AWN_consommation_urbaine
+    AWN_max_speed
+    AWN_emission_co_2_prf
+    AWN_depollution
+    AWN_nbr_soupapes
+    AWN_nbr_vitesses
+    AWN_nbr_portes
+    AWN_nbr_places
+    AWN_propulsion
+    AWN_date_30
+    AWN_date_cg
+    AWN_collection
+    AWN_segment
+    AWN_type_frein
+    AWN_group
+    AWN_VIN
+    AWN_k_type
+    AWN_version
+    AWN_label
+    AWN_code_moteur
+    AWN_nbr_cylindre_energie
+    AWN_nbr_cylindres
+    AWN_energie_code
+    AWN_mode_injection
+    AWN_type_injection
+    AWN_turbo_compressor
+    AWN_vitesse_moteur
+    AWN_generation
+    AWN_poids_total
+    AWN_poids_vide
+    AWN_poids_total_roulant
+    AWN_consommation_mixte
+    ad_green
+    AWN_poids_max_autorise
+    depollution
+    cl_environ_prf
+    AWN_model
+    AWN_model_image
+    dateMiseEnCirculation
+    puissanceFiscale
+    puissanceDin
+    energie
+    AWN_puissance_KW
+    boiteVitesse
+    couleur
+    carrosserie
+    marque
+    marque_id
+    modele_id
+    version
+    immatriculation
+    VIN
+    k_type
+    type_mine
+    AWN_url_image
     year
-    vin
-    companyId
+    fuelType
+    consumption
+    maxSpeed
+    seatCount
+    icon
+    picture {
+      bucket
+      region
+      key
+      __typename
+    }
+    kilometerage
+    kilometerPrice
+    kilometerageStart
+    kilometerageDay
+    kilometerageLastUpdate
+    timeRunning
+    counterValue
+    co2
+    lastModificationDate
+    rollingTimeStart
+    rollingTimeDay
+    locations
+    installationPrecautions
+    code
+    nomVehicule
+    vehicleCategory {
+      id
+      category
+      description
+      createdAt
+      updatedAt
+      __typename
+    }
+    brand {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    modele {
+      id
+      modele
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleBrandModelsBrandName
+      __typename
+    }
+    gefcoSend
+    tankCapacity
+    canMileage
+    companyVehiclesId
     company {
       id
       name
+      siret
       address
-      phone
+      postalCode
+      city
+      countryCode
+      contact
       email
-      contactName
-      isActive
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
       users {
         nextToken
         __typename
@@ -400,80 +1951,381 @@ export const onUpdateVehicle = /* GraphQL */ `subscription OnUpdateVehicle(
         nextToken
         __typename
       }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    deviceId
     device {
-      id
       imei
-      serialNumber
-      model
-      firmwareVersion
-      isActive
-      vehicleId
+      protocolId
+      sim
+      messages_ttl
+      device_type_id
+      flespi_id
+      enabled
+      media_ttl
+      name
+      cid
+      media_rotate
+      messages_rotate
       vehicle {
-        id
-        licensePlate
-        make
-        model
+        immat
+        code_certificat_qualite_air
+        ad_blue
+        AWN_genre
+        emissions
+        AWN_nom_commercial
+        AWN_numero_de_serie
+        AWN_niveau_de_bruit_au_ralenti
+        AWN_consommation_ex_urbaine
+        AWN_consommation_urbaine
+        AWN_max_speed
+        AWN_emission_co_2_prf
+        AWN_depollution
+        AWN_nbr_soupapes
+        AWN_nbr_vitesses
+        AWN_nbr_portes
+        AWN_nbr_places
+        AWN_propulsion
+        AWN_date_30
+        AWN_date_cg
+        AWN_collection
+        AWN_segment
+        AWN_type_frein
+        AWN_group
+        AWN_VIN
+        AWN_k_type
+        AWN_version
+        AWN_label
+        AWN_code_moteur
+        AWN_nbr_cylindre_energie
+        AWN_nbr_cylindres
+        AWN_energie_code
+        AWN_mode_injection
+        AWN_type_injection
+        AWN_turbo_compressor
+        AWN_vitesse_moteur
+        AWN_generation
+        AWN_poids_total
+        AWN_poids_vide
+        AWN_poids_total_roulant
+        AWN_consommation_mixte
+        ad_green
+        AWN_poids_max_autorise
+        depollution
+        cl_environ_prf
+        AWN_model
+        AWN_model_image
+        dateMiseEnCirculation
+        puissanceFiscale
+        puissanceDin
+        energie
+        AWN_puissance_KW
+        boiteVitesse
+        couleur
+        carrosserie
+        marque
+        marque_id
+        modele_id
+        version
+        immatriculation
+        VIN
+        k_type
+        type_mine
+        AWN_url_image
         year
-        vin
-        companyId
-        deviceId
-        isActive
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        nomVehicule
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
         createdAt
         updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
         __typename
       }
-      simCardId
-      simCard {
-        id
-        iccid
-        phoneNumber
-        carrier
-        plan
-        isActive
-        deviceId
-        dataUsage
-        monthlyLimit
-        createdAt
-        updatedAt
-        __typename
-      }
-      lastSeen
       createdAt
       updatedAt
+      deviceVehicleImmat
       __typename
     }
-    isActive
+    alerts {
+      items {
+        id
+        vehicleImmat
+        alertId
+        isFlespi
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    tags {
+      items {
+        id
+        vehicleImmat
+        tagId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    maintenances {
+      items {
+        id
+        operationType
+        status
+        reminderDays
+        alertDate
+        cost
+        email
+        notes
+        creationDate
+        lastModificationDate
+        companyMaintenancesId
+        vehicleMaintenancesImmat
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
     createdAt
     updatedAt
+    vehicleVehicleCategoryId
+    vehicleBrandBrandName
+    vehicleModeleId
+    vehicleDeviceImei
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnUpdateVehicleSubscriptionVariables, APITypes.OnUpdateVehicleSubscription>;
-
-export const onDeleteVehicle = /* GraphQL */ `subscription OnDeleteVehicle(
-  $filter: ModelSubscriptionVehicleFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleSubscriptionVariables,
+  APITypes.OnUpdateVehicleSubscription
+>;
+export const onDeleteVehicle = /* GraphQL */ `subscription OnDeleteVehicle($filter: ModelSubscriptionVehicleFilterInput) {
   onDeleteVehicle(filter: $filter) {
-    id
-    licensePlate
-    make
-    model
+    immat
+    code_certificat_qualite_air
+    ad_blue
+    AWN_genre
+    emissions
+    AWN_nom_commercial
+    AWN_numero_de_serie
+    AWN_niveau_de_bruit_au_ralenti
+    AWN_consommation_ex_urbaine
+    AWN_consommation_urbaine
+    AWN_max_speed
+    AWN_emission_co_2_prf
+    AWN_depollution
+    AWN_nbr_soupapes
+    AWN_nbr_vitesses
+    AWN_nbr_portes
+    AWN_nbr_places
+    AWN_propulsion
+    AWN_date_30
+    AWN_date_cg
+    AWN_collection
+    AWN_segment
+    AWN_type_frein
+    AWN_group
+    AWN_VIN
+    AWN_k_type
+    AWN_version
+    AWN_label
+    AWN_code_moteur
+    AWN_nbr_cylindre_energie
+    AWN_nbr_cylindres
+    AWN_energie_code
+    AWN_mode_injection
+    AWN_type_injection
+    AWN_turbo_compressor
+    AWN_vitesse_moteur
+    AWN_generation
+    AWN_poids_total
+    AWN_poids_vide
+    AWN_poids_total_roulant
+    AWN_consommation_mixte
+    ad_green
+    AWN_poids_max_autorise
+    depollution
+    cl_environ_prf
+    AWN_model
+    AWN_model_image
+    dateMiseEnCirculation
+    puissanceFiscale
+    puissanceDin
+    energie
+    AWN_puissance_KW
+    boiteVitesse
+    couleur
+    carrosserie
+    marque
+    marque_id
+    modele_id
+    version
+    immatriculation
+    VIN
+    k_type
+    type_mine
+    AWN_url_image
     year
-    vin
-    companyId
+    fuelType
+    consumption
+    maxSpeed
+    seatCount
+    icon
+    picture {
+      bucket
+      region
+      key
+      __typename
+    }
+    kilometerage
+    kilometerPrice
+    kilometerageStart
+    kilometerageDay
+    kilometerageLastUpdate
+    timeRunning
+    counterValue
+    co2
+    lastModificationDate
+    rollingTimeStart
+    rollingTimeDay
+    locations
+    installationPrecautions
+    code
+    nomVehicule
+    vehicleCategory {
+      id
+      category
+      description
+      createdAt
+      updatedAt
+      __typename
+    }
+    brand {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    modele {
+      id
+      modele
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleBrandModelsBrandName
+      __typename
+    }
+    gefcoSend
+    tankCapacity
+    canMileage
+    companyVehiclesId
     company {
       id
       name
+      siret
       address
-      phone
+      postalCode
+      city
+      countryCode
+      contact
       email
-      contactName
-      isActive
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
       users {
         nextToken
         __typename
@@ -482,507 +2334,8957 @@ export const onDeleteVehicle = /* GraphQL */ `subscription OnDeleteVehicle(
         nextToken
         __typename
       }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    deviceId
     device {
-      id
       imei
-      serialNumber
-      model
-      firmwareVersion
-      isActive
-      vehicleId
+      protocolId
+      sim
+      messages_ttl
+      device_type_id
+      flespi_id
+      enabled
+      media_ttl
+      name
+      cid
+      media_rotate
+      messages_rotate
       vehicle {
-        id
-        licensePlate
-        make
-        model
+        immat
+        code_certificat_qualite_air
+        ad_blue
+        AWN_genre
+        emissions
+        AWN_nom_commercial
+        AWN_numero_de_serie
+        AWN_niveau_de_bruit_au_ralenti
+        AWN_consommation_ex_urbaine
+        AWN_consommation_urbaine
+        AWN_max_speed
+        AWN_emission_co_2_prf
+        AWN_depollution
+        AWN_nbr_soupapes
+        AWN_nbr_vitesses
+        AWN_nbr_portes
+        AWN_nbr_places
+        AWN_propulsion
+        AWN_date_30
+        AWN_date_cg
+        AWN_collection
+        AWN_segment
+        AWN_type_frein
+        AWN_group
+        AWN_VIN
+        AWN_k_type
+        AWN_version
+        AWN_label
+        AWN_code_moteur
+        AWN_nbr_cylindre_energie
+        AWN_nbr_cylindres
+        AWN_energie_code
+        AWN_mode_injection
+        AWN_type_injection
+        AWN_turbo_compressor
+        AWN_vitesse_moteur
+        AWN_generation
+        AWN_poids_total
+        AWN_poids_vide
+        AWN_poids_total_roulant
+        AWN_consommation_mixte
+        ad_green
+        AWN_poids_max_autorise
+        depollution
+        cl_environ_prf
+        AWN_model
+        AWN_model_image
+        dateMiseEnCirculation
+        puissanceFiscale
+        puissanceDin
+        energie
+        AWN_puissance_KW
+        boiteVitesse
+        couleur
+        carrosserie
+        marque
+        marque_id
+        modele_id
+        version
+        immatriculation
+        VIN
+        k_type
+        type_mine
+        AWN_url_image
         year
-        vin
-        companyId
-        deviceId
-        isActive
+        fuelType
+        consumption
+        maxSpeed
+        seatCount
+        icon
+        kilometerage
+        kilometerPrice
+        kilometerageStart
+        kilometerageDay
+        kilometerageLastUpdate
+        timeRunning
+        counterValue
+        co2
+        lastModificationDate
+        rollingTimeStart
+        rollingTimeDay
+        locations
+        installationPrecautions
+        code
+        nomVehicule
+        gefcoSend
+        tankCapacity
+        canMileage
+        companyVehiclesId
         createdAt
         updatedAt
+        vehicleVehicleCategoryId
+        vehicleBrandBrandName
+        vehicleModeleId
+        vehicleDeviceImei
         __typename
       }
-      simCardId
-      simCard {
+      createdAt
+      updatedAt
+      deviceVehicleImmat
+      __typename
+    }
+    alerts {
+      items {
         id
-        iccid
-        phoneNumber
-        carrier
-        plan
-        isActive
-        deviceId
-        dataUsage
-        monthlyLimit
+        vehicleImmat
+        alertId
+        isFlespi
         createdAt
         updatedAt
         __typename
       }
-      lastSeen
+      nextToken
+      __typename
+    }
+    tags {
+      items {
+        id
+        vehicleImmat
+        tagId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    maintenances {
+      items {
+        id
+        operationType
+        status
+        reminderDays
+        alertDate
+        cost
+        email
+        notes
+        creationDate
+        lastModificationDate
+        companyMaintenancesId
+        vehicleMaintenancesImmat
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleVehicleCategoryId
+    vehicleBrandBrandName
+    vehicleModeleId
+    vehicleDeviceImei
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleSubscriptionVariables,
+  APITypes.OnDeleteVehicleSubscription
+>;
+export const onCreateAlert = /* GraphQL */ `subscription OnCreateAlert($filter: ModelSubscriptionAlertFilterInput) {
+  onCreateAlert(filter: $filter) {
+    id
+    name
+    type
+    typeLabel
+    disabled
+    instantaneous
+    reportFrequency
+    byMail
+    bySms
+    byWhatsapp
+    smsTemplate
+    emailTemplate
+    sentToDriver
+    phones
+    emails
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    isActive
+    vehicles {
+      items {
+        id
+        vehicleImmat
+        alertId
+        isFlespi
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    extra
+    zone {
+      id
+      name
+      adress
+      lat
+      lng
+      radius
+      companyZonesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    alertCompanyId
+    alertZoneId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateAlertSubscriptionVariables,
+  APITypes.OnCreateAlertSubscription
+>;
+export const onUpdateAlert = /* GraphQL */ `subscription OnUpdateAlert($filter: ModelSubscriptionAlertFilterInput) {
+  onUpdateAlert(filter: $filter) {
+    id
+    name
+    type
+    typeLabel
+    disabled
+    instantaneous
+    reportFrequency
+    byMail
+    bySms
+    byWhatsapp
+    smsTemplate
+    emailTemplate
+    sentToDriver
+    phones
+    emails
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicles {
+      items {
+        id
+        vehicleImmat
+        alertId
+        isFlespi
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    extra
+    zone {
+      id
+      name
+      adress
+      lat
+      lng
+      radius
+      companyZonesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    alertCompanyId
+    alertZoneId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateAlertSubscriptionVariables,
+  APITypes.OnUpdateAlertSubscription
+>;
+export const onDeleteAlert = /* GraphQL */ `subscription OnDeleteAlert($filter: ModelSubscriptionAlertFilterInput) {
+  onDeleteAlert(filter: $filter) {
+    id
+    name
+    type
+    typeLabel
+    disabled
+    instantaneous
+    reportFrequency
+    byMail
+    bySms
+    byWhatsapp
+    smsTemplate
+    emailTemplate
+    sentToDriver
+    phones
+    emails
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicles {
+      items {
+        id
+        vehicleImmat
+        alertId
+        isFlespi
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    extra
+    zone {
+      id
+      name
+      adress
+      lat
+      lng
+      radius
+      companyZonesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    alertCompanyId
+    alertZoneId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteAlertSubscriptionVariables,
+  APITypes.OnDeleteAlertSubscription
+>;
+export const onCreateVehicleAlerts = /* GraphQL */ `subscription OnCreateVehicleAlerts(
+  $filter: ModelSubscriptionVehicleAlertsFilterInput
+) {
+  onCreateVehicleAlerts(filter: $filter) {
+    id
+    vehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    alertId
+    alert {
+      id
+      name
+      type
+      typeLabel
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+    isFlespi
     createdAt
     updatedAt
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnDeleteVehicleSubscriptionVariables, APITypes.OnDeleteVehicleSubscription>;
-
-export const onCreateDevice = /* GraphQL */ `subscription OnCreateDevice(
-  $filter: ModelSubscriptionDeviceFilterInput
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleAlertsSubscriptionVariables,
+  APITypes.OnCreateVehicleAlertsSubscription
+>;
+export const onUpdateVehicleAlerts = /* GraphQL */ `subscription OnUpdateVehicleAlerts(
+  $filter: ModelSubscriptionVehicleAlertsFilterInput
 ) {
+  onUpdateVehicleAlerts(filter: $filter) {
+    id
+    vehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    alertId
+    alert {
+      id
+      name
+      type
+      typeLabel
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+    isFlespi
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleAlertsSubscriptionVariables,
+  APITypes.OnUpdateVehicleAlertsSubscription
+>;
+export const onDeleteVehicleAlerts = /* GraphQL */ `subscription OnDeleteVehicleAlerts(
+  $filter: ModelSubscriptionVehicleAlertsFilterInput
+) {
+  onDeleteVehicleAlerts(filter: $filter) {
+    id
+    vehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    alertId
+    alert {
+      id
+      name
+      type
+      typeLabel
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+    isFlespi
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleAlertsSubscriptionVariables,
+  APITypes.OnDeleteVehicleAlertsSubscription
+>;
+export const onCreateAlertDefinition = /* GraphQL */ `subscription OnCreateAlertDefinition(
+  $filter: ModelSubscriptionAlertDefinitionFilterInput
+) {
+  onCreateAlertDefinition(filter: $filter) {
+    key
+    label
+    description
+    isFlespi
+    calculator
+    variables
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateAlertDefinitionSubscriptionVariables,
+  APITypes.OnCreateAlertDefinitionSubscription
+>;
+export const onUpdateAlertDefinition = /* GraphQL */ `subscription OnUpdateAlertDefinition(
+  $filter: ModelSubscriptionAlertDefinitionFilterInput
+) {
+  onUpdateAlertDefinition(filter: $filter) {
+    key
+    label
+    description
+    isFlespi
+    calculator
+    variables
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateAlertDefinitionSubscriptionVariables,
+  APITypes.OnUpdateAlertDefinitionSubscription
+>;
+export const onDeleteAlertDefinition = /* GraphQL */ `subscription OnDeleteAlertDefinition(
+  $filter: ModelSubscriptionAlertDefinitionFilterInput
+) {
+  onDeleteAlertDefinition(filter: $filter) {
+    key
+    label
+    description
+    isFlespi
+    calculator
+    variables
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteAlertDefinitionSubscriptionVariables,
+  APITypes.OnDeleteAlertDefinitionSubscription
+>;
+export const onCreateVehicleAlertState = /* GraphQL */ `subscription OnCreateVehicleAlertState(
+  $filter: ModelSubscriptionVehicleAlertStateFilterInput
+) {
+  onCreateVehicleAlertState(filter: $filter) {
+    id
+    alert
+    state
+    timestamp
+    zone {
+      id
+      name
+      adress
+      lat
+      lng
+      radius
+      companyZonesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleAlertStateZoneId
+    vehicleAlertStateVehicleImmat
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleAlertStateSubscriptionVariables,
+  APITypes.OnCreateVehicleAlertStateSubscription
+>;
+export const onUpdateVehicleAlertState = /* GraphQL */ `subscription OnUpdateVehicleAlertState(
+  $filter: ModelSubscriptionVehicleAlertStateFilterInput
+) {
+  onUpdateVehicleAlertState(filter: $filter) {
+    id
+    alert
+    state
+    timestamp
+    zone {
+      id
+      name
+      adress
+      lat
+      lng
+      radius
+      companyZonesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleAlertStateZoneId
+    vehicleAlertStateVehicleImmat
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleAlertStateSubscriptionVariables,
+  APITypes.OnUpdateVehicleAlertStateSubscription
+>;
+export const onDeleteVehicleAlertState = /* GraphQL */ `subscription OnDeleteVehicleAlertState(
+  $filter: ModelSubscriptionVehicleAlertStateFilterInput
+) {
+  onDeleteVehicleAlertState(filter: $filter) {
+    id
+    alert
+    state
+    timestamp
+    zone {
+      id
+      name
+      adress
+      lat
+      lng
+      radius
+      companyZonesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleAlertStateZoneId
+    vehicleAlertStateVehicleImmat
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleAlertStateSubscriptionVariables,
+  APITypes.OnDeleteVehicleAlertStateSubscription
+>;
+export const onCreateAlertHistory = /* GraphQL */ `subscription OnCreateAlertHistory(
+  $filter: ModelSubscriptionAlertHistoryFilterInput
+) {
+  onCreateAlertHistory(filter: $filter) {
+    id
+    type
+    imei
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    timestamp
+    config {
+      id
+      name
+      type
+      typeLabel
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+    data
+    createdAt
+    updatedAt
+    alertHistoryVehicleImmat
+    alertHistoryDriverSub
+    alertHistoryCompanyId
+    alertHistoryConfigId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateAlertHistorySubscriptionVariables,
+  APITypes.OnCreateAlertHistorySubscription
+>;
+export const onUpdateAlertHistory = /* GraphQL */ `subscription OnUpdateAlertHistory(
+  $filter: ModelSubscriptionAlertHistoryFilterInput
+) {
+  onUpdateAlertHistory(filter: $filter) {
+    id
+    type
+    imei
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    timestamp
+    config {
+      id
+      name
+      type
+      typeLabel
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+    data
+    createdAt
+    updatedAt
+    alertHistoryVehicleImmat
+    alertHistoryDriverSub
+    alertHistoryCompanyId
+    alertHistoryConfigId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateAlertHistorySubscriptionVariables,
+  APITypes.OnUpdateAlertHistorySubscription
+>;
+export const onDeleteAlertHistory = /* GraphQL */ `subscription OnDeleteAlertHistory(
+  $filter: ModelSubscriptionAlertHistoryFilterInput
+) {
+  onDeleteAlertHistory(filter: $filter) {
+    id
+    type
+    imei
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    timestamp
+    config {
+      id
+      name
+      type
+      typeLabel
+      disabled
+      instantaneous
+      reportFrequency
+      byMail
+      bySms
+      byWhatsapp
+      smsTemplate
+      emailTemplate
+      sentToDriver
+      phones
+      emails
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      extra
+      zone {
+        id
+        name
+        adress
+        lat
+        lng
+        radius
+        companyZonesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      alertCompanyId
+      alertZoneId
+      __typename
+    }
+    data
+    createdAt
+    updatedAt
+    alertHistoryVehicleImmat
+    alertHistoryDriverSub
+    alertHistoryCompanyId
+    alertHistoryConfigId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteAlertHistorySubscriptionVariables,
+  APITypes.OnDeleteAlertHistorySubscription
+>;
+export const onCreateZone = /* GraphQL */ `subscription OnCreateZone($filter: ModelSubscriptionZoneFilterInput) {
+  onCreateZone(filter: $filter) {
+    id
+    name
+    adress
+    lat
+    lng
+    radius
+    companyZonesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateZoneSubscriptionVariables,
+  APITypes.OnCreateZoneSubscription
+>;
+export const onUpdateZone = /* GraphQL */ `subscription OnUpdateZone($filter: ModelSubscriptionZoneFilterInput) {
+  onUpdateZone(filter: $filter) {
+    id
+    name
+    adress
+    lat
+    lng
+    radius
+    companyZonesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateZoneSubscriptionVariables,
+  APITypes.OnUpdateZoneSubscription
+>;
+export const onDeleteZone = /* GraphQL */ `subscription OnDeleteZone($filter: ModelSubscriptionZoneFilterInput) {
+  onDeleteZone(filter: $filter) {
+    id
+    name
+    adress
+    lat
+    lng
+    radius
+    companyZonesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteZoneSubscriptionVariables,
+  APITypes.OnDeleteZoneSubscription
+>;
+export const onCreatePoi = /* GraphQL */ `subscription OnCreatePoi($filter: ModelSubscriptionPoiFilterInput) {
+  onCreatePoi(filter: $filter) {
+    id
+    name
+    adress
+    lat
+    lng
+    companyPoisId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreatePoiSubscriptionVariables,
+  APITypes.OnCreatePoiSubscription
+>;
+export const onUpdatePoi = /* GraphQL */ `subscription OnUpdatePoi($filter: ModelSubscriptionPoiFilterInput) {
+  onUpdatePoi(filter: $filter) {
+    id
+    name
+    adress
+    lat
+    lng
+    companyPoisId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdatePoiSubscriptionVariables,
+  APITypes.OnUpdatePoiSubscription
+>;
+export const onDeletePoi = /* GraphQL */ `subscription OnDeletePoi($filter: ModelSubscriptionPoiFilterInput) {
+  onDeletePoi(filter: $filter) {
+    id
+    name
+    adress
+    lat
+    lng
+    companyPoisId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeletePoiSubscriptionVariables,
+  APITypes.OnDeletePoiSubscription
+>;
+export const onCreateVehicleCategory = /* GraphQL */ `subscription OnCreateVehicleCategory(
+  $filter: ModelSubscriptionVehicleCategoryFilterInput
+) {
+  onCreateVehicleCategory(filter: $filter) {
+    id
+    category
+    description
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleCategorySubscriptionVariables,
+  APITypes.OnCreateVehicleCategorySubscription
+>;
+export const onUpdateVehicleCategory = /* GraphQL */ `subscription OnUpdateVehicleCategory(
+  $filter: ModelSubscriptionVehicleCategoryFilterInput
+) {
+  onUpdateVehicleCategory(filter: $filter) {
+    id
+    category
+    description
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleCategorySubscriptionVariables,
+  APITypes.OnUpdateVehicleCategorySubscription
+>;
+export const onDeleteVehicleCategory = /* GraphQL */ `subscription OnDeleteVehicleCategory(
+  $filter: ModelSubscriptionVehicleCategoryFilterInput
+) {
+  onDeleteVehicleCategory(filter: $filter) {
+    id
+    category
+    description
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleCategorySubscriptionVariables,
+  APITypes.OnDeleteVehicleCategorySubscription
+>;
+export const onCreateVehicleBrand = /* GraphQL */ `subscription OnCreateVehicleBrand(
+  $filter: ModelSubscriptionVehicleBrandFilterInput
+) {
+  onCreateVehicleBrand(filter: $filter) {
+    brandName
+    logo {
+      bucket
+      region
+      key
+      __typename
+    }
+    models {
+      items {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleBrandSubscriptionVariables,
+  APITypes.OnCreateVehicleBrandSubscription
+>;
+export const onUpdateVehicleBrand = /* GraphQL */ `subscription OnUpdateVehicleBrand(
+  $filter: ModelSubscriptionVehicleBrandFilterInput
+) {
+  onUpdateVehicleBrand(filter: $filter) {
+    brandName
+    logo {
+      bucket
+      region
+      key
+      __typename
+    }
+    models {
+      items {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleBrandSubscriptionVariables,
+  APITypes.OnUpdateVehicleBrandSubscription
+>;
+export const onDeleteVehicleBrand = /* GraphQL */ `subscription OnDeleteVehicleBrand(
+  $filter: ModelSubscriptionVehicleBrandFilterInput
+) {
+  onDeleteVehicleBrand(filter: $filter) {
+    brandName
+    logo {
+      bucket
+      region
+      key
+      __typename
+    }
+    models {
+      items {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleBrandSubscriptionVariables,
+  APITypes.OnDeleteVehicleBrandSubscription
+>;
+export const onCreateVehicleModel = /* GraphQL */ `subscription OnCreateVehicleModel(
+  $filter: ModelSubscriptionVehicleModelFilterInput
+) {
+  onCreateVehicleModel(filter: $filter) {
+    id
+    modele
+    brand {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleBrandModelsBrandName
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleModelSubscriptionVariables,
+  APITypes.OnCreateVehicleModelSubscription
+>;
+export const onUpdateVehicleModel = /* GraphQL */ `subscription OnUpdateVehicleModel(
+  $filter: ModelSubscriptionVehicleModelFilterInput
+) {
+  onUpdateVehicleModel(filter: $filter) {
+    id
+    modele
+    brand {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleBrandModelsBrandName
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleModelSubscriptionVariables,
+  APITypes.OnUpdateVehicleModelSubscription
+>;
+export const onDeleteVehicleModel = /* GraphQL */ `subscription OnDeleteVehicleModel(
+  $filter: ModelSubscriptionVehicleModelFilterInput
+) {
+  onDeleteVehicleModel(filter: $filter) {
+    id
+    modele
+    brand {
+      brandName
+      logo {
+        bucket
+        region
+        key
+        __typename
+      }
+      models {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    vehicleBrandModelsBrandName
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleModelSubscriptionVariables,
+  APITypes.OnDeleteVehicleModelSubscription
+>;
+export const onCreateDevice = /* GraphQL */ `subscription OnCreateDevice($filter: ModelSubscriptionDeviceFilterInput) {
   onCreateDevice(filter: $filter) {
-    id
     imei
-    serialNumber
-    model
-    firmwareVersion
-    isActive
-    vehicleId
+    protocolId
+    sim
+    messages_ttl
+    device_type_id
+    flespi_id
+    enabled
+    media_ttl
+    name
+    cid
+    media_rotate
+    messages_rotate
     vehicle {
-      id
-      licensePlate
-      make
-      model
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
       year
-      vin
-      companyId
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
       company {
         id
         name
+        siret
         address
-        phone
+        postalCode
+        city
+        countryCode
+        contact
         email
-        contactName
-        isActive
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
         createdAt
         updatedAt
         __typename
       }
-      deviceId
       device {
-        id
         imei
-        serialNumber
-        model
-        firmwareVersion
-        isActive
-        vehicleId
-        simCardId
-        lastSeen
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
         createdAt
         updatedAt
+        deviceVehicleImmat
         __typename
       }
-      isActive
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
       __typename
     }
-    simCardId
-    simCard {
-      id
-      iccid
-      phoneNumber
-      carrier
-      plan
-      isActive
-      deviceId
-      device {
-        id
-        imei
-        serialNumber
-        model
-        firmwareVersion
-        isActive
-        vehicleId
-        simCardId
-        lastSeen
-        createdAt
-        updatedAt
-        __typename
-      }
-      dataUsage
-      monthlyLimit
-      createdAt
-      updatedAt
-      __typename
-    }
-    lastSeen
     createdAt
     updatedAt
+    deviceVehicleImmat
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnCreateDeviceSubscriptionVariables, APITypes.OnCreateDeviceSubscription>;
-
-export const onUpdateDevice = /* GraphQL */ `subscription OnUpdateDevice(
-  $filter: ModelSubscriptionDeviceFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnCreateDeviceSubscriptionVariables,
+  APITypes.OnCreateDeviceSubscription
+>;
+export const onUpdateDevice = /* GraphQL */ `subscription OnUpdateDevice($filter: ModelSubscriptionDeviceFilterInput) {
   onUpdateDevice(filter: $filter) {
-    id
     imei
-    serialNumber
-    model
-    firmwareVersion
-    isActive
-    vehicleId
+    protocolId
+    sim
+    messages_ttl
+    device_type_id
+    flespi_id
+    enabled
+    media_ttl
+    name
+    cid
+    media_rotate
+    messages_rotate
     vehicle {
-      id
-      licensePlate
-      make
-      model
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
       year
-      vin
-      companyId
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
       company {
         id
         name
+        siret
         address
-        phone
+        postalCode
+        city
+        countryCode
+        contact
         email
-        contactName
-        isActive
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
         createdAt
         updatedAt
         __typename
       }
-      deviceId
       device {
-        id
         imei
-        serialNumber
-        model
-        firmwareVersion
-        isActive
-        vehicleId
-        simCardId
-        lastSeen
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
         createdAt
         updatedAt
+        deviceVehicleImmat
         __typename
       }
-      isActive
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
       __typename
     }
-    simCardId
-    simCard {
-      id
-      iccid
-      phoneNumber
-      carrier
-      plan
-      isActive
-      deviceId
-      device {
-        id
-        imei
-        serialNumber
-        model
-        firmwareVersion
-        isActive
-        vehicleId
-        simCardId
-        lastSeen
-        createdAt
-        updatedAt
-        __typename
-      }
-      dataUsage
-      monthlyLimit
-      createdAt
-      updatedAt
-      __typename
-    }
-    lastSeen
     createdAt
     updatedAt
+    deviceVehicleImmat
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnUpdateDeviceSubscriptionVariables, APITypes.OnUpdateDeviceSubscription>;
-
-export const onDeleteDevice = /* GraphQL */ `subscription OnDeleteDevice(
-  $filter: ModelSubscriptionDeviceFilterInput
-) {
+` as GeneratedSubscription<
+  APITypes.OnUpdateDeviceSubscriptionVariables,
+  APITypes.OnUpdateDeviceSubscription
+>;
+export const onDeleteDevice = /* GraphQL */ `subscription OnDeleteDevice($filter: ModelSubscriptionDeviceFilterInput) {
   onDeleteDevice(filter: $filter) {
-    id
     imei
-    serialNumber
-    model
-    firmwareVersion
-    isActive
-    vehicleId
+    protocolId
+    sim
+    messages_ttl
+    device_type_id
+    flespi_id
+    enabled
+    media_ttl
+    name
+    cid
+    media_rotate
+    messages_rotate
     vehicle {
-      id
-      licensePlate
-      make
-      model
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
       year
-      vin
-      companyId
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
       company {
         id
         name
+        siret
         address
-        phone
+        postalCode
+        city
+        countryCode
+        contact
         email
-        contactName
-        isActive
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
         createdAt
         updatedAt
         __typename
       }
-      deviceId
       device {
-        id
         imei
-        serialNumber
-        model
-        firmwareVersion
-        isActive
-        vehicleId
-        simCardId
-        lastSeen
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
         createdAt
         updatedAt
+        deviceVehicleImmat
         __typename
       }
-      isActive
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    createdAt
+    updatedAt
+    deviceVehicleImmat
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteDeviceSubscriptionVariables,
+  APITypes.OnDeleteDeviceSubscription
+>;
+export const onCreateTrame = /* GraphQL */ `subscription OnCreateTrame($filter: ModelSubscriptionTrameFilterInput) {
+  onCreateTrame(filter: $filter) {
+    id
+    speed
+    lat
+    lng
+    distance
+    address
+    azimut
+    immobilisation
+    timestamp
+    state
+    fuel
+    ibuttonCode
+    companyId
+    driverFullName
+    vehicleBrandName
+    companyTramesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    simCardId
-    simCard {
-      id
-      iccid
-      phoneNumber
-      carrier
-      plan
-      isActive
-      deviceId
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
       device {
-        id
         imei
-        serialNumber
-        model
-        firmwareVersion
-        isActive
-        vehicleId
-        simCardId
-        lastSeen
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
         createdAt
         updatedAt
+        deviceVehicleImmat
         __typename
       }
-      dataUsage
-      monthlyLimit
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
       __typename
     }
-    lastSeen
+    processor
     createdAt
     updatedAt
+    trameDriverSub
+    trameVehicleImmat
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnDeleteDeviceSubscriptionVariables, APITypes.OnDeleteDeviceSubscription>;
-
-export const onCreateSimCard = /* GraphQL */ `subscription OnCreateSimCard(
-  $filter: ModelSubscriptionSimCardFilterInput
-) {
-  onCreateSimCard(filter: $filter) {
+` as GeneratedSubscription<
+  APITypes.OnCreateTrameSubscriptionVariables,
+  APITypes.OnCreateTrameSubscription
+>;
+export const onUpdateTrame = /* GraphQL */ `subscription OnUpdateTrame($filter: ModelSubscriptionTrameFilterInput) {
+  onUpdateTrame(filter: $filter) {
     id
-    iccid
-    phoneNumber
-    carrier
-    plan
-    isActive
-    deviceId
-    device {
+    speed
+    lat
+    lng
+    distance
+    address
+    azimut
+    immobilisation
+    timestamp
+    state
+    fuel
+    ibuttonCode
+    companyId
+    driverFullName
+    vehicleBrandName
+    companyTramesId
+    company {
       id
-      imei
-      serialNumber
-      model
-      firmwareVersion
-      isActive
-      vehicleId
-      vehicle {
-        id
-        licensePlate
-        make
-        model
-        year
-        vin
-        companyId
-        deviceId
-        isActive
-        createdAt
-        updatedAt
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
         __typename
       }
-      simCardId
-      simCard {
-        id
-        iccid
-        phoneNumber
-        carrier
-        plan
-        isActive
-        deviceId
-        dataUsage
-        monthlyLimit
-        createdAt
-        updatedAt
+      vehicles {
+        nextToken
         __typename
       }
-      lastSeen
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    dataUsage
-    monthlyLimit
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    processor
     createdAt
     updatedAt
+    trameDriverSub
+    trameVehicleImmat
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnCreateSimCardSubscriptionVariables, APITypes.OnCreateSimCardSubscription>;
-
-export const onUpdateSimCard = /* GraphQL */ `subscription OnUpdateSimCard(
-  $filter: ModelSubscriptionSimCardFilterInput
-) {
-  onUpdateSimCard(filter: $filter) {
+` as GeneratedSubscription<
+  APITypes.OnUpdateTrameSubscriptionVariables,
+  APITypes.OnUpdateTrameSubscription
+>;
+export const onDeleteTrame = /* GraphQL */ `subscription OnDeleteTrame($filter: ModelSubscriptionTrameFilterInput) {
+  onDeleteTrame(filter: $filter) {
     id
-    iccid
-    phoneNumber
-    carrier
-    plan
-    isActive
-    deviceId
-    device {
+    speed
+    lat
+    lng
+    distance
+    address
+    azimut
+    immobilisation
+    timestamp
+    state
+    fuel
+    ibuttonCode
+    companyId
+    driverFullName
+    vehicleBrandName
+    companyTramesId
+    company {
       id
-      imei
-      serialNumber
-      model
-      firmwareVersion
-      isActive
-      vehicleId
-      vehicle {
-        id
-        licensePlate
-        make
-        model
-        year
-        vin
-        companyId
-        deviceId
-        isActive
-        createdAt
-        updatedAt
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
         __typename
       }
-      simCardId
-      simCard {
-        id
-        iccid
-        phoneNumber
-        carrier
-        plan
-        isActive
-        deviceId
-        dataUsage
-        monthlyLimit
-        createdAt
-        updatedAt
+      vehicles {
+        nextToken
         __typename
       }
-      lastSeen
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    dataUsage
-    monthlyLimit
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    processor
     createdAt
     updatedAt
+    trameDriverSub
+    trameVehicleImmat
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnUpdateSimCardSubscriptionVariables, APITypes.OnUpdateSimCardSubscription>;
-
-export const onDeleteSimCard = /* GraphQL */ `subscription OnDeleteSimCard(
-  $filter: ModelSubscriptionSimCardFilterInput
-) {
-  onDeleteSimCard(filter: $filter) {
+` as GeneratedSubscription<
+  APITypes.OnDeleteTrameSubscriptionVariables,
+  APITypes.OnDeleteTrameSubscription
+>;
+export const onCreateDvD = /* GraphQL */ `subscription OnCreateDvD($filter: ModelSubscriptionDvDFilterInput) {
+  onCreateDvD(filter: $filter) {
     id
-    iccid
-    phoneNumber
-    carrier
-    plan
-    isActive
-    deviceId
-    device {
-      id
-      imei
-      serialNumber
-      model
-      firmwareVersion
-      isActive
-      vehicleId
-      vehicle {
+    dvDVehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
         id
-        licensePlate
-        make
-        model
-        year
-        vin
-        companyId
-        deviceId
-        isActive
+        category
+        description
         createdAt
         updatedAt
         __typename
       }
-      simCardId
-      simCard {
-        id
-        iccid
-        phoneNumber
-        carrier
-        plan
-        isActive
-        deviceId
-        dataUsage
-        monthlyLimit
+      brand {
+        brandName
         createdAt
         updatedAt
         __typename
       }
-      lastSeen
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    dvDDriverSub
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
       createdAt
       updatedAt
       __typename
     }
-    dataUsage
-    monthlyLimit
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    assignmentDate
+    unassignmentDate
+    createdAt
+    updatedAt
+    dvDCompanyId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateDvDSubscriptionVariables,
+  APITypes.OnCreateDvDSubscription
+>;
+export const onUpdateDvD = /* GraphQL */ `subscription OnUpdateDvD($filter: ModelSubscriptionDvDFilterInput) {
+  onUpdateDvD(filter: $filter) {
+    id
+    dvDVehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    dvDDriverSub
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    assignmentDate
+    unassignmentDate
+    createdAt
+    updatedAt
+    dvDCompanyId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateDvDSubscriptionVariables,
+  APITypes.OnUpdateDvDSubscription
+>;
+export const onDeleteDvD = /* GraphQL */ `subscription OnDeleteDvD($filter: ModelSubscriptionDvDFilterInput) {
+  onDeleteDvD(filter: $filter) {
+    id
+    dvDVehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    dvDDriverSub
+    driver {
+      sub
+      firstname
+      lastname
+      password
+      username
+      fullname
+      birthDate
+      drivingLicenseNumber
+      drivingLicenseType
+      job
+      hiringDate
+      comment
+      driverKey
+      email
+      mobile
+      lastModificationDate
+      code
+      address
+      agencyId
+      cdc
+      pdm
+      nni
+      companyDriversId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    assignmentDate
+    unassignmentDate
+    createdAt
+    updatedAt
+    dvDCompanyId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteDvDSubscriptionVariables,
+  APITypes.OnDeleteDvDSubscription
+>;
+export const onCreateMaintenance = /* GraphQL */ `subscription OnCreateMaintenance(
+  $filter: ModelSubscriptionMaintenanceFilterInput
+) {
+  onCreateMaintenance(filter: $filter) {
+    id
+    operationType
+    status
+    reminderDays
+    alertDate
+    cost
+    email
+    notes
+    creationDate
+    lastModificationDate
+    companyMaintenancesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicleMaintenancesImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
     createdAt
     updatedAt
     __typename
   }
 }
-` as GeneratedSubscription<APITypes.OnDeleteSimCardSubscriptionVariables, APITypes.OnDeleteSimCardSubscription>;
+` as GeneratedSubscription<
+  APITypes.OnCreateMaintenanceSubscriptionVariables,
+  APITypes.OnCreateMaintenanceSubscription
+>;
+export const onUpdateMaintenance = /* GraphQL */ `subscription OnUpdateMaintenance(
+  $filter: ModelSubscriptionMaintenanceFilterInput
+) {
+  onUpdateMaintenance(filter: $filter) {
+    id
+    operationType
+    status
+    reminderDays
+    alertDate
+    cost
+    email
+    notes
+    creationDate
+    lastModificationDate
+    companyMaintenancesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicleMaintenancesImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateMaintenanceSubscriptionVariables,
+  APITypes.OnUpdateMaintenanceSubscription
+>;
+export const onDeleteMaintenance = /* GraphQL */ `subscription OnDeleteMaintenance(
+  $filter: ModelSubscriptionMaintenanceFilterInput
+) {
+  onDeleteMaintenance(filter: $filter) {
+    id
+    operationType
+    status
+    reminderDays
+    alertDate
+    cost
+    email
+    notes
+    creationDate
+    lastModificationDate
+    companyMaintenancesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicleMaintenancesImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteMaintenanceSubscriptionVariables,
+  APITypes.OnDeleteMaintenanceSubscription
+>;
+export const onCreateTypeDepense = /* GraphQL */ `subscription OnCreateTypeDepense(
+  $filter: ModelSubscriptionTypeDepenseFilterInput
+) {
+  onCreateTypeDepense(filter: $filter) {
+    id
+    name
+    description
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateTypeDepenseSubscriptionVariables,
+  APITypes.OnCreateTypeDepenseSubscription
+>;
+export const onUpdateTypeDepense = /* GraphQL */ `subscription OnUpdateTypeDepense(
+  $filter: ModelSubscriptionTypeDepenseFilterInput
+) {
+  onUpdateTypeDepense(filter: $filter) {
+    id
+    name
+    description
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateTypeDepenseSubscriptionVariables,
+  APITypes.OnUpdateTypeDepenseSubscription
+>;
+export const onDeleteTypeDepense = /* GraphQL */ `subscription OnDeleteTypeDepense(
+  $filter: ModelSubscriptionTypeDepenseFilterInput
+) {
+  onDeleteTypeDepense(filter: $filter) {
+    id
+    name
+    description
+    depenses {
+      items {
+        id
+        vehicleImmat
+        typeDepenseId
+        prestataire
+        montantTTC
+        montantHT
+        associateDate
+        produit
+        ville
+        qte
+        description
+        companyDepensesId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteTypeDepenseSubscriptionVariables,
+  APITypes.OnDeleteTypeDepenseSubscription
+>;
+export const onCreateDepense = /* GraphQL */ `subscription OnCreateDepense($filter: ModelSubscriptionDepenseFilterInput) {
+  onCreateDepense(filter: $filter) {
+    id
+    vehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    typeDepenseId
+    typeDepense {
+      id
+      name
+      description
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    prestataire
+    montantTTC
+    montantHT
+    associateDate
+    produit
+    ville
+    qte
+    description
+    companyDepensesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateDepenseSubscriptionVariables,
+  APITypes.OnCreateDepenseSubscription
+>;
+export const onUpdateDepense = /* GraphQL */ `subscription OnUpdateDepense($filter: ModelSubscriptionDepenseFilterInput) {
+  onUpdateDepense(filter: $filter) {
+    id
+    vehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    typeDepenseId
+    typeDepense {
+      id
+      name
+      description
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    prestataire
+    montantTTC
+    montantHT
+    associateDate
+    produit
+    ville
+    qte
+    description
+    companyDepensesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateDepenseSubscriptionVariables,
+  APITypes.OnUpdateDepenseSubscription
+>;
+export const onDeleteDepense = /* GraphQL */ `subscription OnDeleteDepense($filter: ModelSubscriptionDepenseFilterInput) {
+  onDeleteDepense(filter: $filter) {
+    id
+    vehicleImmat
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    typeDepenseId
+    typeDepense {
+      id
+      name
+      description
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    prestataire
+    montantTTC
+    montantHT
+    associateDate
+    produit
+    ville
+    qte
+    description
+    companyDepensesId
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteDepenseSubscriptionVariables,
+  APITypes.OnDeleteDepenseSubscription
+>;
+export const onCreateLabelsCollection = /* GraphQL */ `subscription OnCreateLabelsCollection(
+  $filter: ModelSubscriptionLabelsCollectionFilterInput
+) {
+  onCreateLabelsCollection(filter: $filter) {
+    key
+    label
+    type
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateLabelsCollectionSubscriptionVariables,
+  APITypes.OnCreateLabelsCollectionSubscription
+>;
+export const onUpdateLabelsCollection = /* GraphQL */ `subscription OnUpdateLabelsCollection(
+  $filter: ModelSubscriptionLabelsCollectionFilterInput
+) {
+  onUpdateLabelsCollection(filter: $filter) {
+    key
+    label
+    type
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateLabelsCollectionSubscriptionVariables,
+  APITypes.OnUpdateLabelsCollectionSubscription
+>;
+export const onDeleteLabelsCollection = /* GraphQL */ `subscription OnDeleteLabelsCollection(
+  $filter: ModelSubscriptionLabelsCollectionFilterInput
+) {
+  onDeleteLabelsCollection(filter: $filter) {
+    key
+    label
+    type
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteLabelsCollectionSubscriptionVariables,
+  APITypes.OnDeleteLabelsCollectionSubscription
+>;
+export const onCreateTag = /* GraphQL */ `subscription OnCreateTag($filter: ModelSubscriptionTagFilterInput) {
+  onCreateTag(filter: $filter) {
+    id
+    name
+    description
+    color
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicles {
+      items {
+        id
+        vehicleImmat
+        tagId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    tagCompanyId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateTagSubscriptionVariables,
+  APITypes.OnCreateTagSubscription
+>;
+export const onUpdateTag = /* GraphQL */ `subscription OnUpdateTag($filter: ModelSubscriptionTagFilterInput) {
+  onUpdateTag(filter: $filter) {
+    id
+    name
+    description
+    color
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicles {
+      items {
+        id
+        vehicleImmat
+        tagId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    tagCompanyId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateTagSubscriptionVariables,
+  APITypes.OnUpdateTagSubscription
+>;
+export const onDeleteTag = /* GraphQL */ `subscription OnDeleteTag($filter: ModelSubscriptionTagFilterInput) {
+  onDeleteTag(filter: $filter) {
+    id
+    name
+    description
+    color
+    company {
+      id
+      name
+      siret
+      address
+      postalCode
+      city
+      countryCode
+      contact
+      email
+      mobile
+      phone
+      fax
+      creationDate
+      subscriptionDate
+      keyedStart
+      users {
+        nextToken
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      zones {
+        nextToken
+        __typename
+      }
+      pois {
+        nextToken
+        __typename
+      }
+      drivers {
+        nextToken
+        __typename
+      }
+      trames {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+    vehicles {
+      items {
+        id
+        vehicleImmat
+        tagId
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+    createdAt
+    updatedAt
+    tagCompanyId
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteTagSubscriptionVariables,
+  APITypes.OnDeleteTagSubscription
+>;
+export const onCreateVehicleTags = /* GraphQL */ `subscription OnCreateVehicleTags(
+  $filter: ModelSubscriptionVehicleTagsFilterInput
+) {
+  onCreateVehicleTags(filter: $filter) {
+    id
+    vehicleImmat
+    tagId
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    tag {
+      id
+      name
+      description
+      color
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      tagCompanyId
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnCreateVehicleTagsSubscriptionVariables,
+  APITypes.OnCreateVehicleTagsSubscription
+>;
+export const onUpdateVehicleTags = /* GraphQL */ `subscription OnUpdateVehicleTags(
+  $filter: ModelSubscriptionVehicleTagsFilterInput
+) {
+  onUpdateVehicleTags(filter: $filter) {
+    id
+    vehicleImmat
+    tagId
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    tag {
+      id
+      name
+      description
+      color
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      tagCompanyId
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnUpdateVehicleTagsSubscriptionVariables,
+  APITypes.OnUpdateVehicleTagsSubscription
+>;
+export const onDeleteVehicleTags = /* GraphQL */ `subscription OnDeleteVehicleTags(
+  $filter: ModelSubscriptionVehicleTagsFilterInput
+) {
+  onDeleteVehicleTags(filter: $filter) {
+    id
+    vehicleImmat
+    tagId
+    vehicle {
+      immat
+      code_certificat_qualite_air
+      ad_blue
+      AWN_genre
+      emissions
+      AWN_nom_commercial
+      AWN_numero_de_serie
+      AWN_niveau_de_bruit_au_ralenti
+      AWN_consommation_ex_urbaine
+      AWN_consommation_urbaine
+      AWN_max_speed
+      AWN_emission_co_2_prf
+      AWN_depollution
+      AWN_nbr_soupapes
+      AWN_nbr_vitesses
+      AWN_nbr_portes
+      AWN_nbr_places
+      AWN_propulsion
+      AWN_date_30
+      AWN_date_cg
+      AWN_collection
+      AWN_segment
+      AWN_type_frein
+      AWN_group
+      AWN_VIN
+      AWN_k_type
+      AWN_version
+      AWN_label
+      AWN_code_moteur
+      AWN_nbr_cylindre_energie
+      AWN_nbr_cylindres
+      AWN_energie_code
+      AWN_mode_injection
+      AWN_type_injection
+      AWN_turbo_compressor
+      AWN_vitesse_moteur
+      AWN_generation
+      AWN_poids_total
+      AWN_poids_vide
+      AWN_poids_total_roulant
+      AWN_consommation_mixte
+      ad_green
+      AWN_poids_max_autorise
+      depollution
+      cl_environ_prf
+      AWN_model
+      AWN_model_image
+      dateMiseEnCirculation
+      puissanceFiscale
+      puissanceDin
+      energie
+      AWN_puissance_KW
+      boiteVitesse
+      couleur
+      carrosserie
+      marque
+      marque_id
+      modele_id
+      version
+      immatriculation
+      VIN
+      k_type
+      type_mine
+      AWN_url_image
+      year
+      fuelType
+      consumption
+      maxSpeed
+      seatCount
+      icon
+      picture {
+        bucket
+        region
+        key
+        __typename
+      }
+      kilometerage
+      kilometerPrice
+      kilometerageStart
+      kilometerageDay
+      kilometerageLastUpdate
+      timeRunning
+      counterValue
+      co2
+      lastModificationDate
+      rollingTimeStart
+      rollingTimeDay
+      locations
+      installationPrecautions
+      code
+      nomVehicule
+      vehicleCategory {
+        id
+        category
+        description
+        createdAt
+        updatedAt
+        __typename
+      }
+      brand {
+        brandName
+        createdAt
+        updatedAt
+        __typename
+      }
+      modele {
+        id
+        modele
+        createdAt
+        updatedAt
+        vehicleBrandModelsBrandName
+        __typename
+      }
+      gefcoSend
+      tankCapacity
+      canMileage
+      companyVehiclesId
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      alerts {
+        nextToken
+        __typename
+      }
+      tags {
+        nextToken
+        __typename
+      }
+      maintenances {
+        nextToken
+        __typename
+      }
+      depenses {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      vehicleVehicleCategoryId
+      vehicleBrandBrandName
+      vehicleModeleId
+      vehicleDeviceImei
+      __typename
+    }
+    tag {
+      id
+      name
+      description
+      color
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      vehicles {
+        nextToken
+        __typename
+      }
+      createdAt
+      updatedAt
+      tagCompanyId
+      __typename
+    }
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+` as GeneratedSubscription<
+  APITypes.OnDeleteVehicleTagsSubscriptionVariables,
+  APITypes.OnDeleteVehicleTagsSubscription
+>;
