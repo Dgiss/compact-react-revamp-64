@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import * as CompanyService from "@/services/CompanyService";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
 const marques = ["Peugeot", "Renault", "Citroën", "Toyota", "Fiat", "BMW", "Mercedes"];
@@ -17,7 +18,6 @@ const modeles = {
   "BMW": ["Serie 1", "Serie 3", "Serie 5", "X5"],
   "Mercedes": ["Classe A", "Classe C", "Classe E", "Sprinter"]
 };
-const entreprises = ["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"];
 const emplacements = ["Paris", "Lyon", "Marseille", "Toulouse", "Lille", "Bordeaux", "Nantes", "Strasbourg", "Nice", "Rennes", "Montpellier"];
 
 interface AddVehicleFormProps {
@@ -41,6 +41,23 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [telephone, setTelephone] = useState("");
   const [kilometrage, setKilometrage] = useState("");
   const [type, setType] = useState("vehicle");
+  const [entreprises, setEntreprises] = useState([]);
+
+  // Fetch companies on component mount
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const companies = await CompanyService.fetchCompanies();
+        setEntreprises(companies.map(company => company.name));
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        // Fallback to hardcoded list on error
+        setEntreprises(["MBSC", "PHENIX IDFTP", "ADANEV MOBILITES", "Kick Services", "MATTEI / HABICONFORT"]);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   // Load initial data for editing mode
   useEffect(() => {
