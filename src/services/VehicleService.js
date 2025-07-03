@@ -4,6 +4,7 @@ import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { fetchAllDevices } from './DeviceService.js';
+import { cleanDataForGraphQL } from '@/lib/utils';
 
 const client = generateClient();
 
@@ -137,26 +138,38 @@ export const fetchCompaniesWithVehicles = async () => {
 export const updateVehicleData = async (data) => {
   await waitForAmplifyConfig();
   
+  // Clean and adapt data for GraphQL - remove non-serializable properties
+  const cleanedData = cleanDataForGraphQL(data);
+  
   // Adapter aux nouveaux champs du schéma
   const vehicleDetails = {
-    immat: data.immat,
-    code: data.code,
-    nomVehicule: data.nomVehicule,
-    kilometerage: data.kilometerage,
-    kilometerageStart: data.kilometerageStart,
-    locations: data.locations,
-    marque: data.marque,
-    modele_id: data.modele_id,
-    energie: data.energie,
-    couleur: data.couleur,
-    dateMiseEnCirculation: data.dateMiseEnCirculation,
-    VIN: data.VIN,
-    AWN_nom_commercial: data.AWN_nom_commercial,
-    puissanceFiscale: data.puissanceFiscale,
+    immat: cleanedData.immat || cleanedData.immatriculation,
+    code: cleanedData.code,
+    nomVehicule: cleanedData.nomVehicule,
+    kilometerage: cleanedData.kilometerage ? parseInt(cleanedData.kilometerage) : undefined,
+    kilometerageStart: cleanedData.kilometerageStart ? parseInt(cleanedData.kilometerageStart) : undefined,
+    locations: cleanedData.locations || cleanedData.emplacement,
+    marque: cleanedData.marque,
+    modele_id: cleanedData.modele_id || cleanedData.modele,
+    energie: cleanedData.energie,
+    couleur: cleanedData.couleur,
+    dateMiseEnCirculation: cleanedData.dateMiseEnCirculation,
+    VIN: cleanedData.VIN,
+    AWN_nom_commercial: cleanedData.AWN_nom_commercial,
+    puissanceFiscale: cleanedData.puissanceFiscale ? parseInt(cleanedData.puissanceFiscale) : undefined,
     lastModificationDate: new Date().toISOString(),
     // Relation avec l'entreprise (nouvelle structure)
-    companyVehiclesId: data.companyVehiclesId
+    companyVehiclesId: cleanedData.companyVehiclesId
   };
+
+  // Remove undefined values to avoid GraphQL errors
+  Object.keys(vehicleDetails).forEach(key => {
+    if (vehicleDetails[key] === undefined) {
+      delete vehicleDetails[key];
+    }
+  });
+
+  console.log('Cleaned vehicle data for GraphQL:', vehicleDetails);
 
   await client.graphql({
     query: mutations.updateVehicle,
@@ -168,12 +181,64 @@ export const updateVehicleData = async (data) => {
 
 export const deleteVehicleData = async (item) => {
   await waitForAmplifyConfig();
+  
+  // Clean data before sending to GraphQL
+  const cleanedItem = cleanDataForGraphQL(item);
+  
   const vehicleDetails = {
-    immat: item.immat
+    immat: cleanedItem.immat || cleanedItem.immatriculation
   };
+
+  console.log('Cleaned delete data for GraphQL:', vehicleDetails);
 
   await client.graphql({
     query: mutations.deleteVehicle,
     variables: { input: vehicleDetails }
   });
+};
+
+/**
+ * Create a new vehicle
+ */
+export const createVehicleData = async (data) => {
+  await waitForAmplifyConfig();
+  
+  // Clean and adapt data for GraphQL - remove non-serializable properties
+  const cleanedData = cleanDataForGraphQL(data);
+  
+  const vehicleDetails = {
+    immat: cleanedData.immatriculation,
+    code: cleanedData.code,
+    nomVehicule: cleanedData.nomVehicule,
+    kilometerage: cleanedData.kilometrage ? parseInt(cleanedData.kilometrage) : undefined,
+    locations: cleanedData.emplacement,
+    marque: cleanedData.marque,
+    modele_id: cleanedData.modele,
+    energie: cleanedData.energie,
+    couleur: cleanedData.couleur,
+    dateMiseEnCirculation: cleanedData.dateMiseEnCirculation,
+    VIN: cleanedData.VIN,
+    AWN_nom_commercial: cleanedData.AWN_nom_commercial,
+    puissanceFiscale: cleanedData.puissanceFiscale ? parseInt(cleanedData.puissanceFiscale) : undefined,
+    lastModificationDate: new Date().toISOString(),
+    companyVehiclesId: cleanedData.companyVehiclesId
+  };
+
+  // Remove undefined values to avoid GraphQL errors
+  Object.keys(vehicleDetails).forEach(key => {
+    if (vehicleDetails[key] === undefined) {
+      delete vehicleDetails[key];
+    }
+  });
+
+  console.log('Cleaned vehicle creation data for GraphQL:', vehicleDetails);
+
+  const result = await client.graphql({
+    query: mutations.createVehicle,
+    variables: {
+      input: vehicleDetails
+    }
+  });
+
+  return result;
 };

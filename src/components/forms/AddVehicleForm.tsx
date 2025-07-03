@@ -89,23 +89,25 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
     const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
     
+    // Create form data with only serializable values (primitives)
     const formData = {
-      nomVehicule,
-      immatriculation,
-      categorie,
-      marque,
-      modele,
-      entreprise: entrepriseName, // Send company name for compatibility
-      emplacement,
-      imei,
-      typeBoitier,
-      sim,
-      telephone,
-      kilometrage,
-      type
+      nomVehicule: nomVehicule || "",
+      immatriculation: immatriculation || "",
+      categorie: categorie || "",
+      marque: marque || "",
+      modele: modele || "",
+      entreprise: entrepriseName || "", // Send company name for compatibility
+      companyVehiclesId: selectedCompany?.id, // Also send company ID for GraphQL
+      emplacement: emplacement || "",
+      imei: imei || "",
+      typeBoitier: typeBoitier || "",
+      sim: sim || "",
+      telephone: telephone || "",
+      kilometrage: kilometrage || "",
+      type: type || "vehicle"
     };
     
-    console.log(formData);
+    console.log('Form data being submitted:', formData);
     
     // Call onSave if provided (for editing mode)
     if (onSave) {
