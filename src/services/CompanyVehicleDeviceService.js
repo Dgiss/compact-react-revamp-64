@@ -245,8 +245,9 @@ export const searchByCompany = async (company) => {
     console.log('=== COMPANY SEARCH DEBUG ===');
     console.log('Searching for company:', company);
     
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    const { companies, vehicles } = await VehicleService.fetchCompaniesWithVehicles();
     console.log('Total vehicles loaded:', vehicles.length);
+    console.log('Total companies loaded:', companies.length);
     
     // Get all unique companies for debugging
     const allCompanies = [...new Set(vehicles
@@ -277,7 +278,9 @@ export const searchByCompany = async (company) => {
     return results;
   } catch (error) {
     console.error('Error searching by company:', error);
-    throw error;
+    console.error('Full error:', error);
+    // Return empty array on error to prevent UI crashes
+    return [];
   }
 };
 

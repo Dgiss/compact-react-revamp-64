@@ -87,7 +87,10 @@ export const waitForAmplifyConfig = async () => {
   
   if (configurationPromise) {
     try {
-      return await configurationPromise;
+      const result = await configurationPromise;
+      // Add extra verification after config
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return result;
     } catch (error) {
       console.error('Erreur lors de l\'attente de la configuration:', error);
       // Reset promise to allow retry
@@ -97,7 +100,10 @@ export const waitForAmplifyConfig = async () => {
     }
   }
   
-  return await configureAmplify();
+  const result = await configureAmplify();
+  // Extra delay to ensure full initialization
+  await new Promise(resolve => setTimeout(resolve, 200));
+  return result;
 };
 
 // Vérifier si l'utilisateur a des credentials valides

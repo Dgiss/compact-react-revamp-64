@@ -120,11 +120,10 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
     
     console.log('User created in Cognito:', user);
     
-    // Étape 3: Créer l'utilisateur dans GraphQL avec les nouveaux champs
+    // Étape 3: Créer l'utilisateur dans GraphQL (champs conformes à CreateUserInput)
     const userDetails = {
       sub: user.userId.toString(),
       username: userData.username,
-      email: userData.email || 'default@test.com',
       password: userData.password,
       firstname: userData.firstname || '',
       lastname: userData.lastname || '',
@@ -144,6 +143,8 @@ export const createCompanyWithUser = async ({ companyData, userData }) => {
       accessibleVehicles: userData.accessibleVehicles || [],
       companyUsersId: createdCompany.id
     };
+    
+    console.log('Creating user in GraphQL with data:', userDetails);
     
     const newUser = await client.graphql({
       query: mutations.createUser,
@@ -223,7 +224,6 @@ export const updateCompanyAndUser = async ({ companyData, userData }) => {
       const userInput = {
         sub: userData.sub,
         username: userData.username,
-        email: userData.email,
         password: userData.password,
         firstname: userData.firstname || '',
         lastname: userData.lastname || '',
