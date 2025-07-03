@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
@@ -244,11 +245,10 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <SearchableSelect 
-              options={entrepriseOptions}
+            <CompanySearchSelect 
               value={entreprise}
               onValueChange={setEntreprise}
-              placeholder="Entreprise"
+              placeholder="Rechercher une entreprise..."
             />
           </div>
           <div>
