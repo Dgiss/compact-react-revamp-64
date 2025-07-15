@@ -30,6 +30,25 @@ export const fetchAllDevices = async () => {
     if (data.items.length > 0) {
       console.log('Sample device data:', data.items[0]);
       console.log('Device SIM field sample:', data.items.find(d => d.sim)?.sim || 'No SIM found in sample');
+      
+      // Enhanced SIM field debugging
+      const sampleDevice = data.items[0];
+      console.log('Sample device SIM-related fields:', {
+        sim: sampleDevice.sim,
+        iccid: sampleDevice.iccid,
+        telephone: sampleDevice.telephone,
+        phoneNumber: sampleDevice.phoneNumber,
+        msisdn: sampleDevice.msisdn
+      });
+      
+      // Count devices with various SIM fields
+      console.log('SIM field statistics:', {
+        withSim: data.items.filter(d => d.sim).length,
+        withIccid: data.items.filter(d => d.iccid).length,
+        withTelephone: data.items.filter(d => d.telephone).length,
+        withPhoneNumber: data.items.filter(d => d.phoneNumber).length,
+        withMsisdn: data.items.filter(d => d.msisdn).length
+      });
     }
     
     allDevices = allDevices.concat(data.items);

@@ -81,7 +81,34 @@ export const fetchCompaniesWithVehicles = async () => {
           }
           
           console.log('Final device to use:', deviceToUse);
-          console.log('Device SIM:', deviceToUse?.sim);
+          console.log('Device SIM data:', deviceToUse?.sim);
+          console.log('Device ICCID data:', deviceToUse?.iccid);
+          console.log('Device telephone data:', deviceToUse?.telephone);
+          console.log('All device SIM-related fields:', {
+            sim: deviceToUse?.sim,
+            iccid: deviceToUse?.iccid,
+            telephone: deviceToUse?.telephone,
+            phoneNumber: deviceToUse?.phoneNumber,
+            msisdn: deviceToUse?.msisdn
+          });
+          
+          // Enhanced SIM/ICCID mapping - try multiple field names
+          let simValue = "";
+          if (deviceToUse) {
+            simValue = deviceToUse.sim || 
+                      deviceToUse.iccid || 
+                      deviceToUse.telephone || 
+                      deviceToUse.phoneNumber || 
+                      deviceToUse.msisdn || 
+                      "";
+          }
+          
+          console.log('Extracted SIM value:', simValue);
+          console.log('Company name mapping:', { 
+            companyName: company.name, 
+            companyNom: company.nom, 
+            finalEntreprise: company.name || company.nom || "Non définie" 
+          });
           
           const mappedVehicle = {
             ...vehicle,
@@ -94,7 +121,7 @@ export const fetchCompaniesWithVehicles = async () => {
             marque: vehicle.marque || vehicle.brand?.brandName || "",
             modele: vehicle.modele_id || vehicle.modele?.modele || "",
             kilometrage: vehicle.kilometerage?.toString() || "",
-            telephone: deviceToUse?.sim || "",
+            telephone: simValue,
             emplacement: vehicle.locations || "",
             deviceData: deviceToUse || null,
             isAssociated: !!deviceToUse,
@@ -121,22 +148,41 @@ export const fetchCompaniesWithVehicles = async () => {
     const associatedDeviceImeis = new Set(allVehicles.map(v => v.deviceData?.imei).filter(Boolean));
     const unassociatedDevices = devices
       .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
-      .map(device => ({
-        id: device.imei,
-        entreprise: "Boîtier libre",
-        type: "device",
-        immatriculation: "",
-        nomVehicule: "",
-        imei: device.imei,
-        typeBoitier: device.protocolId?.toString() || "",
-        marque: "",
-        modele: "",
-        kilometrage: "",
-        telephone: device.sim || "",
-        emplacement: "",
-        deviceData: device,
-        isAssociated: false
-      }));
+      .map(device => {
+        // Enhanced SIM/ICCID mapping for unassociated devices too
+        const simValue = device.sim || 
+                        device.iccid || 
+                        device.telephone || 
+                        device.phoneNumber || 
+                        device.msisdn || 
+                        "";
+        
+        console.log(`Unassociated device ${device.imei} SIM mapping:`, {
+          sim: device.sim,
+          iccid: device.iccid,
+          telephone: device.telephone,
+          phoneNumber: device.phoneNumber,
+          msisdn: device.msisdn,
+          extractedSim: simValue
+        });
+        
+        return {
+          id: device.imei,
+          entreprise: "Boîtier libre",
+          type: "device",
+          immatriculation: "",
+          nomVehicule: "",
+          imei: device.imei,
+          typeBoitier: device.protocolId?.toString() || "",
+          marque: "",
+          modele: "",
+          kilometrage: "",
+          telephone: simValue,
+          emplacement: "",
+          deviceData: device,
+          isAssociated: false
+        };
+      });
     
     console.log('Unassociated devices count:', unassociatedDevices.length);
     
