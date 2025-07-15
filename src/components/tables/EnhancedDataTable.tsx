@@ -40,7 +40,6 @@ interface EnhancedDataTableProps {
   loading?: boolean;
   enablePagination?: boolean;
   defaultItemsPerPage?: number;
-  emptyMessage?: string;
 }
 
 export function EnhancedDataTable({ 
@@ -52,8 +51,7 @@ export function EnhancedDataTable({
   renderActions,
   loading = false,
   enablePagination = false,
-  defaultItemsPerPage = 50,
-  emptyMessage = "Aucune donnée disponible"
+  defaultItemsPerPage = 50
 }: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
     initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
@@ -272,7 +270,7 @@ export function EnhancedDataTable({
             {displayData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
-                  {emptyMessage}
+                  Aucune donnée disponible
                 </TableCell>
               </TableRow>
             ) : hasVisibleColumns ? (

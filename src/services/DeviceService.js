@@ -12,8 +12,6 @@ export const fetchAllDevices = async () => {
   let allDevices = [];
   let nextToken = null;
   
-  console.log('=== FETCHING ALL DEVICES ===');
-  
   do {
     const variables = {
       limit: 1000,
@@ -26,42 +24,10 @@ export const fetchAllDevices = async () => {
     });
     
     const data = deviceList.data.listDevices;
-    console.log(`Fetched ${data.items.length} devices in this batch`);
-    if (data.items.length > 0) {
-      console.log('Sample device data:', data.items[0]);
-      console.log('Device SIM field sample:', data.items.find(d => d.sim)?.sim || 'No SIM found in sample');
-      
-      // Enhanced SIM field debugging
-      const sampleDevice = data.items[0];
-      console.log('Sample device SIM-related fields:', {
-        sim: sampleDevice.sim,
-        iccid: sampleDevice.iccid,
-        telephone: sampleDevice.telephone,
-        phoneNumber: sampleDevice.phoneNumber,
-        msisdn: sampleDevice.msisdn
-      });
-      
-      // Count devices with various SIM fields
-      console.log('SIM field statistics:', {
-        withSim: data.items.filter(d => d.sim).length,
-        withIccid: data.items.filter(d => d.iccid).length,
-        withTelephone: data.items.filter(d => d.telephone).length,
-        withPhoneNumber: data.items.filter(d => d.phoneNumber).length,
-        withMsisdn: data.items.filter(d => d.msisdn).length
-      });
-    }
-    
     allDevices = allDevices.concat(data.items);
     nextToken = data.nextToken;
     
   } while (nextToken);
-  
-  console.log(`Total devices fetched: ${allDevices.length}`);
-  const devicesWithSim = allDevices.filter(d => d.sim);
-  console.log(`Devices with SIM: ${devicesWithSim.length}`);
-  if (devicesWithSim.length > 0) {
-    console.log('Sample SIM values:', devicesWithSim.slice(0, 3).map(d => d.sim));
-  }
   
   return allDevices;
 };

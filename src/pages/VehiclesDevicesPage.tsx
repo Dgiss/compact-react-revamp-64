@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, LogOut, AlertTriangle } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -16,12 +15,8 @@ import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 export default function VehiclesDevicesPage() {
-  const { sessionExpired, clearSessionExpired } = useAuth();
-  const navigate = useNavigate();
   const {
     companies,
     devices: combinedData,
@@ -35,7 +30,7 @@ export default function VehiclesDevicesPage() {
     resetFilters,
     isFiltered,
     totalResults
-  } = useCompanyVehicleDevice(false);
+  } = useCompanyVehicleDevice();
   
   // Local state for filtered data when using search
   const [filteredData, setFilteredData] = useState([]);
@@ -54,12 +49,10 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // No auto-loading - data loads only on search
-
-  const handleSessionExpired = () => {
-    clearSessionExpired();
-    navigate('/login');
-  };
+  // Load data on component mount
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   // Search vehicles with filters
   const searchVehicles = async () => {
@@ -132,20 +125,6 @@ export default function VehiclesDevicesPage() {
       }
     } catch (error) {
       console.error("Error searching vehicles:", error);
-      
-      // Vérifier si c'est une erreur d'authentification
-      if (error.message?.includes('authentification') || 
-          error.message?.includes('Session expirée') ||
-          error.message?.includes('veuillez vous reconnecter')) {
-        toast({
-          title: "Session expirée",
-          description: "Votre session a expiré. Vous allez être redirigé vers la connexion.",
-          variant: "destructive",
-        });
-        handleSessionExpired();
-        return;
-      }
-      
       toast({
         title: "Erreur",
         description: "Erreur lors de la recherche",
@@ -252,22 +231,19 @@ export default function VehiclesDevicesPage() {
       label: "Entreprise", 
       sortable: true, 
       visible: true,
-      renderCell: (value, row) => {
-        console.log('Rendering entreprise for row:', { id: row.id, entreprise: value, type: row.type });
-        return (
-          <div className="flex flex-col">
-            <span className={row.type === "vehicle" ? "text-blue-600 font-medium" : 
-                            row.isAssociated ? "text-gray-900" : "text-green-600 font-medium"}>
-              {value || "Entreprise non définie"}
+      renderCell: (value, row) => (
+        <div className="flex flex-col">
+          <span className={row.type === "vehicle" ? "text-blue-600 font-medium" : 
+                          row.isAssociated ? "text-gray-900" : "text-green-600 font-medium"}>
+            {value || "Entreprise non définie"}
+          </span>
+          {row.type === "device" && (
+            <span className="text-xs text-gray-500">
+              {row.isAssociated ? "Boîtier assigné" : "Boîtier disponible"}
             </span>
-            {row.type === "device" && (
-              <span className="text-xs text-gray-500">
-                {row.isAssociated ? "Boîtier assigné" : "Boîtier disponible"}
-              </span>
-            )}
-          </div>
-        );
-      }
+          )}
+        </div>
+      )
     },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
     { id: "imei", label: "IMEI", sortable: true, visible: true },
@@ -298,14 +274,11 @@ export default function VehiclesDevicesPage() {
       label: "SIM", 
       sortable: true, 
       visible: true,
-      renderCell: (value, row) => {
-        console.log('Rendering SIM for row:', { id: row.id, telephone: value, deviceData: row.deviceData });
-        return (
-          <span className={value ? "text-gray-900" : "text-gray-400"}>
-            {value || "Pas de SIM"}
-          </span>
-        );
-      }
+      renderCell: (value) => (
+        <span className={value ? "text-gray-900" : "text-gray-400"}>
+          {value || "Pas de SIM"}
+        </span>
+      )
     },
   ];
 
@@ -338,19 +311,6 @@ export default function VehiclesDevicesPage() {
 
   return (
     <div>
-      {/* Alert pour session expirée */}
-      {sessionExpired && (
-        <Alert variant="destructive" className="mb-4">
-          <LogOut className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            Votre session a expiré. Veuillez vous reconnecter pour continuer.
-            <Button onClick={handleSessionExpired} variant="outline" size="sm">
-              Se reconnecter
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Search Bar */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
         <div>
@@ -401,10 +361,9 @@ export default function VehiclesDevicesPage() {
         <div>
           <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {filteredData.length > 0 ? 
-              `${filteredData.filter(item => item.type === "vehicle").length} véhicules • ${filteredData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • ${filteredData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles` :
-              "Utilisez la barre de recherche pour afficher les véhicules et boîtiers"
-            }
+            {combinedData.filter(item => item.type === "vehicle").length} véhicules • {" "}
+            {combinedData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • {" "}
+            {combinedData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles
           </p>
         </div>
         {/* Keep existing buttons */}
@@ -458,7 +417,7 @@ export default function VehiclesDevicesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={filteredData}
+        data={filteredData.length > 0 ? filteredData : combinedData}
         onEdit={handleEdit}
         renderActions={(item) => (
           <div className="flex gap-1">
@@ -480,7 +439,6 @@ export default function VehiclesDevicesPage() {
         loading={loading}
         enablePagination={true}
         defaultItemsPerPage={50}
-        emptyMessage="Utilisez la barre de recherche ci-dessus pour rechercher des véhicules et boîtiers"
       />
 
       {/* Keep existing dialogs and sheets */}

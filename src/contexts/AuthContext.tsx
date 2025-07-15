@@ -11,12 +11,10 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   loading: boolean;
-  sessionExpired: boolean;
   login: (user: User) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
   forceLogout: () => Promise<void>;
-  clearSessionExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +35,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sessionExpired, setSessionExpired] = useState(false);
 
   const checkAuth = async () => {
     try {
@@ -63,16 +60,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(false);
       setUser(null);
       
-      // Vérifier si c'est une expiration de session
-      const isSessionExpired = error.message?.includes('Session expirée') ||
-                              error.message?.includes('not authenticated') ||
-                              error.name === 'NotAuthorizedException';
-      
-      if (isSessionExpired) {
-        console.log('AuthContext: Session expirée détectée');
-        setSessionExpired(true);
-      }
-      
       // En cas d'erreur, nettoyer complètement
       try {
         await forceSignOut();
@@ -88,18 +75,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthContext: Connexion utilisateur:', userData.username);
     setIsAuthenticated(true);
     setUser(userData);
-    setSessionExpired(false);
   };
 
   const logout = () => {
     console.log('AuthContext: Déconnexion utilisateur');
     setIsAuthenticated(false);
     setUser(null);
-    setSessionExpired(false);
-  };
-
-  const clearSessionExpired = () => {
-    setSessionExpired(false);
   };
 
   const forceLogout = async () => {
@@ -124,12 +105,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     user,
     loading,
-    sessionExpired,
     login,
     logout,
     checkAuth,
-    forceLogout,
-    clearSessionExpired
+    forceLogout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
