@@ -30,7 +30,7 @@ export default function VehiclesDevicesPage() {
     resetFilters,
     isFiltered,
     totalResults
-  } = useCompanyVehicleDevice(true);
+  } = useCompanyVehicleDevice(false);
   
   // Local state for filtered data when using search
   const [filteredData, setFilteredData] = useState([]);
@@ -358,9 +358,10 @@ export default function VehiclesDevicesPage() {
         <div>
           <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {combinedData.filter(item => item.type === "vehicle").length} véhicules • {" "}
-            {combinedData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • {" "}
-            {combinedData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles
+            {filteredData.length > 0 ? 
+              `${filteredData.filter(item => item.type === "vehicle").length} véhicules • ${filteredData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • ${filteredData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles` :
+              "Utilisez la barre de recherche pour afficher les véhicules et boîtiers"
+            }
           </p>
         </div>
         {/* Keep existing buttons */}
@@ -414,7 +415,7 @@ export default function VehiclesDevicesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={filteredData.length > 0 ? filteredData : combinedData}
+        data={filteredData}
         onEdit={handleEdit}
         renderActions={(item) => (
           <div className="flex gap-1">
@@ -436,11 +437,7 @@ export default function VehiclesDevicesPage() {
         loading={loading}
         enablePagination={true}
         defaultItemsPerPage={50}
-        emptyMessage={
-          filteredData.length === 0 && combinedData.length === 0 ? 
-          "Utilisez la barre de recherche ci-dessus pour rechercher des véhicules et boîtiers" : 
-          undefined
-        }
+        emptyMessage="Utilisez la barre de recherche ci-dessus pour rechercher des véhicules et boîtiers"
       />
 
       {/* Keep existing dialogs and sheets */}
