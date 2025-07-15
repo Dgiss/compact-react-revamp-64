@@ -228,19 +228,22 @@ export default function VehiclesDevicesPage() {
       label: "Entreprise", 
       sortable: true, 
       visible: true,
-      renderCell: (value, row) => (
-        <div className="flex flex-col">
-          <span className={row.type === "vehicle" ? "text-blue-600 font-medium" : 
-                          row.isAssociated ? "text-gray-900" : "text-green-600 font-medium"}>
-            {value || "Entreprise non définie"}
-          </span>
-          {row.type === "device" && (
-            <span className="text-xs text-gray-500">
-              {row.isAssociated ? "Boîtier assigné" : "Boîtier disponible"}
+      renderCell: (value, row) => {
+        console.log('Rendering entreprise for row:', { id: row.id, entreprise: value, type: row.type });
+        return (
+          <div className="flex flex-col">
+            <span className={row.type === "vehicle" ? "text-blue-600 font-medium" : 
+                            row.isAssociated ? "text-gray-900" : "text-green-600 font-medium"}>
+              {value || "Entreprise non définie"}
             </span>
-          )}
-        </div>
-      )
+            {row.type === "device" && (
+              <span className="text-xs text-gray-500">
+                {row.isAssociated ? "Boîtier assigné" : "Boîtier disponible"}
+              </span>
+            )}
+          </div>
+        );
+      }
     },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
     { id: "imei", label: "IMEI", sortable: true, visible: true },
@@ -271,11 +274,14 @@ export default function VehiclesDevicesPage() {
       label: "SIM", 
       sortable: true, 
       visible: true,
-      renderCell: (value) => (
-        <span className={value ? "text-gray-900" : "text-gray-400"}>
-          {value || "Pas de SIM"}
-        </span>
-      )
+      renderCell: (value, row) => {
+        console.log('Rendering SIM for row:', { id: row.id, telephone: value, deviceData: row.deviceData });
+        return (
+          <span className={value ? "text-gray-900" : "text-gray-400"}>
+            {value || "Pas de SIM"}
+          </span>
+        );
+      }
     },
   ];
 

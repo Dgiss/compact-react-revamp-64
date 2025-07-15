@@ -66,9 +66,22 @@ export const fetchCompaniesWithVehicles = async () => {
         
         const companyVehicles = company.vehicles.items.map(vehicle => {
           console.log(`Processing vehicle: ${vehicle.immat}`);
+          console.log('Vehicle data:', vehicle);
+          console.log('Company data:', { name: company.name, nom: company.nom });
           
           // Use the @hasOne relation with Device from GraphQL
           const associatedDevice = vehicle.device;
+          console.log('Associated device from GraphQL relation:', associatedDevice);
+          
+          // Fallback: try to find device by IMEI in the device map
+          let deviceToUse = associatedDevice;
+          if (!deviceToUse && vehicle.vehicleDeviceImei) {
+            deviceToUse = deviceMap[vehicle.vehicleDeviceImei];
+            console.log('Found device via deviceMap lookup:', deviceToUse);
+          }
+          
+          console.log('Final device to use:', deviceToUse);
+          console.log('Device SIM:', deviceToUse?.sim);
           
           const mappedVehicle = {
             ...vehicle,
@@ -76,15 +89,15 @@ export const fetchCompaniesWithVehicles = async () => {
             type: "vehicle",
             immatriculation: vehicle.immat || "",
             nomVehicule: vehicle.nomVehicule || vehicle.code || "",
-            imei: associatedDevice?.imei || "",
-            typeBoitier: associatedDevice ? associatedDevice.protocolId?.toString() : "",
+            imei: deviceToUse?.imei || "",
+            typeBoitier: deviceToUse ? deviceToUse.protocolId?.toString() : "",
             marque: vehicle.marque || vehicle.brand?.brandName || "",
             modele: vehicle.modele_id || vehicle.modele?.modele || "",
             kilometrage: vehicle.kilometerage?.toString() || "",
-            telephone: associatedDevice?.sim || "",
+            telephone: deviceToUse?.sim || "",
             emplacement: vehicle.locations || "",
-            deviceData: associatedDevice || null,
-            isAssociated: !!associatedDevice,
+            deviceData: deviceToUse || null,
+            isAssociated: !!deviceToUse,
             // Additional fields
             AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
             energie: vehicle.energie || "",
