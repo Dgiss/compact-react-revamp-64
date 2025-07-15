@@ -13,10 +13,9 @@ export const fetchCompaniesWithVehicles = async () => {
     console.log('=== FETCHING COMPANIES WITH VEHICLES ===');
     let allCompanies = [];
     let allVehicles = [];
-    let allDevices = [];
     let nextToken = null;
     
-    // Fetch companies with vehicles
+    // First, fetch all companies to get the list
     do {
       const variables = {
         limit: 1000,
@@ -32,7 +31,6 @@ export const fetchCompaniesWithVehicles = async () => {
       
       const data = companyList.data.listCompanies;
       console.log('Companies batch received:', data.items.length);
-      console.log('Sample company:', data.items[0]);
       
       allCompanies = allCompanies.concat(data.items);
       nextToken = data.nextToken;
@@ -40,67 +38,79 @@ export const fetchCompaniesWithVehicles = async () => {
     } while (nextToken);
     
     console.log('Total companies fetched:', allCompanies.length);
-    console.log('Companies with vehicles:', allCompanies.filter(c => c.vehicles?.items?.length > 0).length);
-  
-    // Fetch all devices
+    
+    // Fetch all devices for unassociated device handling
     const devices = await fetchAllDevices();
     console.log('=== DEVICE DEBUG INFO ===');
     console.log('Total devices fetched:', devices.length);
     
-    // Create a map of devices by IMEI for quick lookup
-    const deviceMap = {};
-    devices.forEach(device => {
-      if (device.imei) {
-        deviceMap[device.imei] = device;
-      }
-    });
-    
-    console.log('Device map created with', Object.keys(deviceMap).length, 'devices');
-    
-    // Extract all vehicles from companies and enrich with device data
+    // Now fetch vehicles for each company using vehiclesByCompanyVehiclesId
     let totalVehiclesFromCompanies = 0;
-    allCompanies.forEach(company => {
-      if (company.vehicles && company.vehicles.items && company.vehicles.items.length > 0) {
-        console.log(`=== PROCESSING COMPANY: ${company.name} ===`);
-        console.log('Company vehicles count:', company.vehicles.items.length);
+    for (const company of allCompanies) {
+      console.log(`=== PROCESSING COMPANY: ${company.name} (ID: ${company.id}) ===`);
+      
+      try {
+        let companyNextToken = null;
+        do {
+          const vehiclesResult = await client.graphql({
+            query: queries.vehiclesByCompanyVehiclesId,
+            variables: {
+              companyVehiclesId: company.id,
+              limit: 1000,
+              nextToken: companyNextToken
+            }
+          });
+          
+          const vehiclesData = vehiclesResult.data.vehiclesByCompanyVehiclesId;
+          console.log(`Company ${company.name} vehicles batch:`, vehiclesData.items.length);
+          
+          if (vehiclesData.items.length > 0) {
+            console.log('Sample vehicle with relations:', JSON.stringify(vehiclesData.items[0], null, 2));
+          }
+          
+          const companyVehicles = vehiclesData.items.map(vehicle => {
+            console.log(`Processing vehicle: ${vehicle.immat}`);
+            console.log('Vehicle company:', vehicle.company?.name);
+            console.log('Vehicle device:', vehicle.device?.imei, 'SIM:', vehicle.device?.sim);
+            
+            const mappedVehicle = {
+              ...vehicle,
+              entreprise: vehicle.company?.name || company.name || "Non définie",
+              type: "vehicle",
+              immatriculation: vehicle.immat || "",
+              nomVehicule: vehicle.nomVehicule || vehicle.code || "",
+              imei: vehicle.device?.imei || "",
+              typeBoitier: vehicle.device?.protocolId?.toString() || "",
+              marque: vehicle.marque || vehicle.brand?.brandName || "",
+              modele: vehicle.modele_id || vehicle.modele?.modele || "",
+              kilometrage: vehicle.kilometerage?.toString() || "",
+              telephone: vehicle.device?.sim || "",
+              emplacement: vehicle.locations || "",
+              deviceData: vehicle.device || null,
+              isAssociated: !!vehicle.device,
+              // Additional fields
+              AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
+              energie: vehicle.energie || "",
+              puissanceFiscale: vehicle.puissanceFiscale || "",
+              couleur: vehicle.couleur || "",
+              dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
+              VIN: vehicle.VIN || vehicle.AWN_VIN || ""
+            };
+            
+            console.log(`Mapped vehicle ${vehicle.immat}: entreprise="${mappedVehicle.entreprise}", telephone="${mappedVehicle.telephone}"`);
+            totalVehiclesFromCompanies++;
+            return mappedVehicle;
+          });
+          
+          allVehicles = allVehicles.concat(companyVehicles);
+          companyNextToken = vehiclesData.nextToken;
+          
+        } while (companyNextToken);
         
-        const companyVehicles = company.vehicles.items.map(vehicle => {
-          console.log(`Processing vehicle: ${vehicle.immat}`);
-          
-          // Use the @hasOne relation with Device from GraphQL
-          const associatedDevice = vehicle.device;
-          
-          const mappedVehicle = {
-            ...vehicle,
-            entreprise: company.name || company.nom || "Non définie",
-            type: "vehicle",
-            immatriculation: vehicle.immat || "",
-            nomVehicule: vehicle.nomVehicule || vehicle.code || "",
-            imei: associatedDevice?.imei || "",
-            typeBoitier: associatedDevice ? associatedDevice.protocolId?.toString() : "",
-            marque: vehicle.marque || vehicle.brand?.brandName || "",
-            modele: vehicle.modele_id || vehicle.modele?.modele || "",
-            kilometrage: vehicle.kilometerage?.toString() || "",
-            telephone: associatedDevice?.sim || "",
-            emplacement: vehicle.locations || "",
-            deviceData: associatedDevice || null,
-            isAssociated: !!associatedDevice,
-            // Additional fields
-            AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
-            energie: vehicle.energie || "",
-            puissanceFiscale: vehicle.puissanceFiscale || "",
-            couleur: vehicle.couleur || "",
-            dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
-            VIN: vehicle.VIN || vehicle.AWN_VIN || ""
-          };
-          
-          totalVehiclesFromCompanies++;
-          return mappedVehicle;
-        });
-        
-        allVehicles = allVehicles.concat(companyVehicles);
+      } catch (error) {
+        console.error(`Error fetching vehicles for company ${company.name}:`, error);
       }
-    });
+    }
     
     console.log('Total vehicles processed from companies:', totalVehiclesFromCompanies);
     
@@ -127,7 +137,7 @@ export const fetchCompaniesWithVehicles = async () => {
     
     console.log('Unassociated devices count:', unassociatedDevices.length);
     
-    allDevices = [...allVehicles, ...unassociatedDevices];
+    const allDevices = [...allVehicles, ...unassociatedDevices];
     
     console.log('=== FINAL RESULT SUMMARY ===');
     console.log('Total companies:', allCompanies.length);
