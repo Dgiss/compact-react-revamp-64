@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, LogOut, AlertTriangle } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -15,8 +16,12 @@ import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function VehiclesDevicesPage() {
+  const { sessionExpired, clearSessionExpired } = useAuth();
+  const navigate = useNavigate();
   const {
     companies,
     devices: combinedData,
@@ -50,6 +55,11 @@ export default function VehiclesDevicesPage() {
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
   // No auto-loading - data loads only on search
+
+  const handleSessionExpired = () => {
+    clearSessionExpired();
+    navigate('/login');
+  };
 
   // Search vehicles with filters
   const searchVehicles = async () => {
@@ -122,6 +132,20 @@ export default function VehiclesDevicesPage() {
       }
     } catch (error) {
       console.error("Error searching vehicles:", error);
+      
+      // Vérifier si c'est une erreur d'authentification
+      if (error.message?.includes('authentification') || 
+          error.message?.includes('Session expirée') ||
+          error.message?.includes('veuillez vous reconnecter')) {
+        toast({
+          title: "Session expirée",
+          description: "Votre session a expiré. Vous allez être redirigé vers la connexion.",
+          variant: "destructive",
+        });
+        handleSessionExpired();
+        return;
+      }
+      
       toast({
         title: "Erreur",
         description: "Erreur lors de la recherche",
@@ -314,6 +338,19 @@ export default function VehiclesDevicesPage() {
 
   return (
     <div>
+      {/* Alert pour session expirée */}
+      {sessionExpired && (
+        <Alert variant="destructive" className="mb-4">
+          <LogOut className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            Votre session a expiré. Veuillez vous reconnecter pour continuer.
+            <Button onClick={handleSessionExpired} variant="outline" size="sm">
+              Se reconnecter
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Search Bar */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
         <div>

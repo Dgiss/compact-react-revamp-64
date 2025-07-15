@@ -110,10 +110,30 @@ export const waitForAmplifyConfig = async () => {
 export const ensureCredentials = async () => {
   try {
     await waitForAmplifyConfig();
+    
+    // Vérifier l'expiration localStorage d'abord
+    const loginExpiration = localStorage.getItem('loginExpiration');
+    if (loginExpiration) {
+      const now = new Date().getTime();
+      if (now > parseInt(loginExpiration)) {
+        console.log('Session localStorage expirée, nettoyage des credentials...');
+        localStorage.removeItem('alreadyLogged');
+        localStorage.removeItem('loginExpiration');
+        return false;
+      }
+    }
+    
     const user = await getCurrentUser();
     return !!user;
   } catch (error) {
     console.warn('Aucun utilisateur authentifié trouvé:', error);
+    
+    // Nettoyer localStorage si Cognito n'a pas de session
+    if (error.name === 'NotAuthorizedException' || error.message?.includes('not authenticated')) {
+      localStorage.removeItem('alreadyLogged');
+      localStorage.removeItem('loginExpiration');
+    }
+    
     return false;
   }
 };
@@ -125,18 +145,39 @@ export const withCredentialRetry = async (operation, maxRetries = 2) => {
       // Vérifier les credentials avant chaque tentative
       const hasCredentials = await ensureCredentials();
       if (!hasCredentials) {
-        throw new Error('Utilisateur non authentifié - veuillez vous reconnecter');
+        console.log('Credentials invalides détectés, redirection nécessaire...');
+        // Déclencher une redirection vers login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        throw new Error('Session expirée - redirection vers la connexion');
       }
       
       return await operation();
     } catch (error) {
       console.warn(`Tentative ${attempt}/${maxRetries} échouée:`, error.message);
       
-      if (error.message?.includes('NoCredentials') || error.message?.includes('No credentials')) {
+      // Détecter les erreurs d'authentification communes
+      const isAuthError = error.message?.includes('NoCredentials') || 
+                         error.message?.includes('No credentials') ||
+                         error.message?.includes('NotAuthorizedException') ||
+                         error.message?.includes('not authenticated') ||
+                         error.name === 'NotAuthorizedException';
+      
+      if (isAuthError) {
+        console.log('Erreur d\'authentification détectée, nettoyage de session...');
+        localStorage.removeItem('alreadyLogged');
+        localStorage.removeItem('loginExpiration');
+        
         if (attempt < maxRetries) {
-          console.log('Nouvelle tentative avec attente...');
+          console.log('Nouvelle tentative après nettoyage...');
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
+        }
+        
+        // Redirection automatique après épuisement des tentatives
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
         }
         throw new Error('Erreur d\'authentification - veuillez vous reconnecter');
       }
