@@ -43,6 +43,10 @@ export const fetchFilteredCompanies = async (searchName, searchEmail, searchSire
     filtersArray.push({ name: { contains: searchName.trim() } });
   }
   
+  if (searchEmail && searchEmail.trim()) {
+    filtersArray.push({ email: { contains: searchEmail.trim() } });
+  }
+  
   if (filtersArray.length === 0) {
     throw new Error("Veuillez saisir au moins un critère de recherche");
   }

@@ -30,7 +30,7 @@ export default function VehiclesDevicesPage() {
     resetFilters,
     isFiltered,
     totalResults
-  } = useCompanyVehicleDevice();
+  } = useCompanyVehicleDevice(true);
   
   // Local state for filtered data when using search
   const [filteredData, setFilteredData] = useState([]);
