@@ -49,10 +49,7 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // Load data on component mount
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+  // No auto-loading - data loads only on search
 
   // Search vehicles with filters
   const searchVehicles = async () => {
@@ -439,6 +436,11 @@ export default function VehiclesDevicesPage() {
         loading={loading}
         enablePagination={true}
         defaultItemsPerPage={50}
+        emptyMessage={
+          filteredData.length === 0 && combinedData.length === 0 ? 
+          "Utilisez la barre de recherche ci-dessus pour rechercher des véhicules et boîtiers" : 
+          undefined
+        }
       />
 
       {/* Keep existing dialogs and sheets */}

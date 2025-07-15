@@ -13,7 +13,7 @@ import * as CompanyService from "@/services/CompanyService";
 export default function EntreprisesPage() {
   // States
   const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -25,7 +25,7 @@ export default function EntreprisesPage() {
   const [isFiltered, setIsFiltered] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  // Fetch all companies with users
+  // Fetch all companies with users (only called when needed)
   const fetchCompanies = async () => {
     setLoading(true);
     try {
@@ -33,6 +33,7 @@ export default function EntreprisesPage() {
       const allItems = await CompanyService.fetchCompaniesWithUsers();
       console.log('Companies fetched successfully:', allItems.length);
       setCompanies(allItems);
+      setIsFiltered(false);
     } catch (err) {
       console.error('Error fetching companies:', err);
       toast({
@@ -47,6 +48,16 @@ export default function EntreprisesPage() {
 
   // Search companies with filters
   const fetchFilteredCompanies = async () => {
+    // Require at least one search criteria
+    if (!searchName.trim() && !searchEmail.trim() && !searchSiret.trim()) {
+      toast({
+        title: "Attention",
+        description: "Veuillez saisir au moins un critère de recherche",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSearchLoading(true);
     
     try {
@@ -123,9 +134,7 @@ export default function EntreprisesPage() {
     }
   };
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
+  // No auto-loading - data loads only on search
 
   // Define columns for the table
   const allColumns = [
@@ -189,16 +198,7 @@ export default function EntreprisesPage() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Chargement des entreprises...</p>
-        </div>
-      </div>
-    );
-  }
+  // Remove the initial loading screen since we don't auto-load data anymore
 
   return (
     <div>
@@ -279,9 +279,14 @@ export default function EntreprisesPage() {
         columns={allColumns}
         data={companies}
         renderActions={renderActions}
-        loading={loading}
+        loading={loading || searchLoading}
         enablePagination={true}
         defaultItemsPerPage={50}
+        emptyMessage={
+          companies.length === 0 && !isFiltered ? 
+          "Utilisez la barre de recherche ci-dessus pour rechercher des entreprises" : 
+          undefined
+        }
       />
       
       {/* Edit Company Dialog */}

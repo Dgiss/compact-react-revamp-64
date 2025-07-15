@@ -5,8 +5,9 @@ import { toast } from '@/components/ui/use-toast';
 /**
  * Custom hook for managing company-vehicle-device data
  * Provides unified state management and loading states
+ * @param {boolean} autoLoad - Whether to automatically load data on mount (default: false)
  */
-export const useCompanyVehicleDevice = () => {
+export const useCompanyVehicleDevice = (autoLoad = false) => {
   const [companies, setCompanies] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [devices, setDevices] = useState([]);
@@ -260,6 +261,13 @@ export const useCompanyVehicleDevice = () => {
       setLoading(false);
     }
   }, [devices, companies]);
+
+  // Auto-load data on mount if enabled
+  useEffect(() => {
+    if (autoLoad) {
+      loadAllData();
+    }
+  }, [autoLoad, loadAllData]);
 
   // Reset to show all data
   const resetFilters = useCallback(() => {

@@ -16,7 +16,7 @@ export default function UtilisateursPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const columns = [
     { id: "nom", label: "Nom d'utilisateur", sortable: true },
@@ -58,8 +58,20 @@ export default function UtilisateursPage() {
     }
   };
 
+  // No auto-loading - data loads only on search
   useEffect(() => {
-    fetchData();
+    // Load only companies for the search form
+    const loadCompanies = async () => {
+      try {
+        const companiesData = await CompanyService.fetchCompanies();
+        setCompanies(companiesData);
+      } catch (err) {
+        console.error('Error fetching companies:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCompanies();
   }, []);
 
   const searchFields = [
@@ -75,9 +87,47 @@ export default function UtilisateursPage() {
     },
   ];
 
-  const handleSearch = (formData: any) => {
-    console.log("Searching with:", formData);
-    // Implement search logic with UserService.fetchFilteredUsers
+  const handleSearch = async (formData: any) => {
+    // Require at least one search criteria
+    if (!formData.nom?.trim() && !formData.entreprise?.trim()) {
+      toast({
+        title: "Attention",
+        description: "Veuillez saisir au moins un critère de recherche",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log("Searching with:", formData);
+      const usersData = await UserService.fetchFilteredUsers(formData.nom, formData.entreprise);
+      
+      // Map company names to users
+      const usersWithCompanies = usersData.map(user => {
+        const company = companies.find(c => c.id === user.companyUsersId);
+        return {
+          ...user,
+          entreprise: company ? company.name : 'N/A'
+        };
+      });
+      
+      setUsers(usersWithCompanies);
+      
+      toast({
+        title: "Recherche réussie",
+        description: `${usersWithCompanies.length} utilisateur(s) trouvé(s)`,
+      });
+    } catch (err) {
+      console.error('Error searching users:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la recherche",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEdit = (item: any) => {
@@ -91,9 +141,10 @@ export default function UtilisateursPage() {
       await UserService.deleteUserData(item);
       toast({
         title: "Utilisateur supprimé",
-        description: `L'utilisateur ${item.nom} a été supprimé avec succès.`
+        description: `L'utilisateur ${item.nom} a été supprimé avec succès. Recherchez à nouveau pour actualiser la liste.`
       });
-      await fetchData();
+      // Remove from current list without full reload
+      setUsers(users.filter(user => user.id !== item.id));
     } catch (err) {
       toast({
         title: "Erreur",
@@ -111,10 +162,10 @@ export default function UtilisateursPage() {
   const handleEditSuccess = () => {
     setEditDialogOpen(false);
     setSelectedUser(null);
-    fetchData();
+    // Don't auto-reload all data, user needs to search again
     toast({
       title: "Modification réussie",
-      description: "Les informations de l'utilisateur ont été mises à jour avec succès"
+      description: "Les informations de l'utilisateur ont été mises à jour avec succès. Recherchez à nouveau pour voir les modifications."
     });
   };
 
@@ -140,7 +191,19 @@ export default function UtilisateursPage() {
       <SearchForm
         fields={searchFields}
         onSubmit={handleSearch}
-        onReset={() => fetchData()}
+        onReset={() => {
+          setUsers([]);
+          // Re-fetch companies if needed
+          const loadCompanies = async () => {
+            try {
+              const companiesData = await CompanyService.fetchCompanies();
+              setCompanies(companiesData);
+            } catch (err) {
+              console.error('Error fetching companies:', err);
+            }
+          };
+          loadCompanies();
+        }}
         onAdd={handleAdd}
       />
       
@@ -151,6 +214,11 @@ export default function UtilisateursPage() {
         loading={loading}
         enablePagination={true}
         defaultItemsPerPage={50}
+        emptyMessage={
+          users.length === 0 ? 
+          "Utilisez la barre de recherche ci-dessus pour rechercher des utilisateurs" : 
+          undefined
+        }
       />
       
       {/* Dialog pour éditer un utilisateur */}
