@@ -22,14 +22,68 @@ export const useCompanyVehicleDevice = () => {
   // localStorage utilities
   const saveToLocalStorage = (data) => {
     try {
-      const cacheData = {
-        ...data,
+      // CRITICAL FIX: Reduce cache size to prevent QuotaExceededError
+      const compactData = {
+        companies: (data.companies || []).map(c => ({
+          id: c.id,
+          name: c.name,
+          siret: c.siret
+        })),
+        vehicles: (data.vehicles || []).map(v => ({
+          id: v.id,
+          immat: v.immat || v.immatriculation,
+          type: v.type,
+          marque: v.marque,
+          modele: v.modele,
+          companyVehiclesId: v.companyVehiclesId,
+          entreprise: v.entreprise,
+          // FIXED: Use actual GraphQL relation - device.imei instead of vehicleDeviceImei
+          deviceImei: v.device?.imei || null,
+          isAssociated: !!v.device?.imei
+        })),
         timestamp: Date.now()
       };
-      localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(cacheData));
-      console.log('Data saved to localStorage');
+      
+      // Check size before saving
+      const dataStr = JSON.stringify(compactData);
+      const sizeInMB = (dataStr.length * 2) / (1024 * 1024); // Rough estimate
+      
+      if (sizeInMB > 4) { // Limit to 4MB
+        console.warn('Cache data too large, using compact version');
+        const ultraCompactData = {
+          companies: compactData.companies.slice(0, 50),
+          vehicles: compactData.vehicles.slice(0, 200),
+          timestamp: Date.now()
+        };
+        localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(ultraCompactData));
+      } else {
+        localStorage.setItem('fleetwatch_vehicle_cache', dataStr);
+      }
+      
+      console.log('Data saved to localStorage (size:', sizeInMB.toFixed(2), 'MB)');
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      if (error.name === 'QuotaExceededError') {
+        console.error('LocalStorage quota exceeded, clearing cache');
+        localStorage.removeItem('fleetwatch_vehicle_cache');
+        // Try saving minimal data only
+        try {
+          const minimalData = {
+            companies: (data.companies || []).slice(0, 10).map(c => ({ id: c.id, name: c.name })),
+            vehicles: (data.vehicles || []).slice(0, 50).map(v => ({ 
+              immat: v.immat || v.immatriculation, 
+              type: v.type,
+              deviceImei: v.device?.imei || null
+            })),
+            timestamp: Date.now()
+          };
+          localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(minimalData));
+          console.log('Saved minimal cache after quota error');
+        } catch (fallbackError) {
+          console.error('Failed to save even minimal cache:', fallbackError);
+        }
+      } else {
+        console.error('Error saving to localStorage:', error);
+      }
     }
   };
   
@@ -180,14 +234,14 @@ export const useCompanyVehicleDevice = () => {
       
       console.log('Raw company vehicles found:', companyVehicles.length);
       
-      // Filter for vehicles WITHOUT an associated device (simplified logic)
+      // FIXED: Filter for vehicles WITHOUT an associated device using GraphQL relations
       const availableVehicles = companyVehicles.filter(vehicle => {
-        // Check ONLY vehicleDeviceImei field for simplicity
-        const hasDeviceImei = vehicle.vehicleDeviceImei && vehicle.vehicleDeviceImei !== "";
+        // Check device relation - use actual GraphQL schema
+        const hasDevice = vehicle.device?.imei || vehicle.deviceImei;
         
-        console.log(`Vehicle ${vehicle.immat || vehicle.immatriculation}: hasDeviceImei=${hasDeviceImei}, available=${!hasDeviceImei}`);
+        console.log(`Vehicle ${vehicle.immat || vehicle.immatriculation}: hasDevice=${!!hasDevice}, available=${!hasDevice}`);
         
-        return !hasDeviceImei; // Available if no device IMEI
+        return !hasDevice; // Available if no device associated
       });
       
       console.log('Available vehicles for association:', availableVehicles.length);
@@ -222,17 +276,15 @@ export const useCompanyVehicleDevice = () => {
       
       console.log('ALL company vehicles (including those with IMEI):', companyVehicles);
       
-      // Add status indicator for each vehicle
+      // FIXED: Add status indicator using actual GraphQL relations
       const vehiclesWithStatus = companyVehicles.map(vehicle => {
-        const hasImei = vehicle.imei && vehicle.imei !== "";
-        const hasDeviceImei = vehicle.vehicleDeviceImei && vehicle.vehicleDeviceImei !== "";
-        const hasDeviceData = vehicle.deviceData && vehicle.deviceData.imei;
-        const isAssociated = hasImei || hasDeviceImei || hasDeviceData;
+        const deviceImei = vehicle.device?.imei || vehicle.deviceImei;
+        const isAssociated = !!deviceImei;
         
         return {
           ...vehicle,
           isAssociated,
-          associatedDevice: hasImei ? vehicle.imei : (hasDeviceImei ? vehicle.vehicleDeviceImei : (hasDeviceData ? vehicle.deviceData.imei : null))
+          associatedDevice: deviceImei
         };
       });
       
