@@ -77,46 +77,13 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - SINGLE API CALL with localStorage optimization
+  // Load all data - SIMPLIFIED for API calls only when needed
   const loadAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('=== LOADING ALL DATA ===');
-      
-      // Check localStorage first (but don't reset isCacheReady if already true)
-      const cachedData = loadFromLocalStorage();
-      if (cachedData && !isCacheReady) {
-        console.log('Using cached data from localStorage');
-        setCompanies(cachedData.companies || []);
-        setDevices(cachedData.vehicles || []);
-        setAllDataCache(cachedData);
-        setIsCacheReady(true);
-        
-        // Update derived state
-        const freeDevicesCount = (cachedData.vehicles || []).filter(item => 
-          item.type === "device" && !item.isAssociated
-        ).length;
-        setFreeDevices(freeDevicesCount);
-        
-        const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
-        const associatedDeviceCount = (cachedData.vehicles || []).filter(item => 
-          item.type === "device" && item.isAssociated
-        ).length;
-        
-        setStats({
-          vehicleCount,
-          associatedDeviceCount,
-          freeDeviceCount: freeDevicesCount
-        });
-        
-        setLoading(false);
-        
-        // Refresh in background
-        refreshDataInBackground();
-        return;
-      }
+      console.log('=== LOADING ALL DATA FROM API ===');
       
       const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
       
@@ -196,7 +163,7 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
-  // Get vehicles for specific company - CLIENT-SIDE using cached data
+  // Get vehicles for specific company - SIMPLIFIED logic
   const getVehiclesByCompany = useCallback(async (companyId) => {
     if (!isCacheReady || !allDataCache) {
       console.log('Cache not ready for getVehiclesByCompany, cache ready:', isCacheReady);
@@ -211,27 +178,19 @@ export const useCompanyVehicleDevice = () => {
         allDataCache.companies
       );
       
-      console.log('Raw company vehicles found:', companyVehicles);
-      console.log('Company vehicles count:', companyVehicles.length);
+      console.log('Raw company vehicles found:', companyVehicles.length);
       
-      // Filter for vehicles without an associated device (available for association)
+      // Filter for vehicles WITHOUT an associated device (simplified logic)
       const availableVehicles = companyVehicles.filter(vehicle => {
-        const hasImei = vehicle.imei && vehicle.imei !== "";
+        // Check ONLY vehicleDeviceImei field for simplicity
         const hasDeviceImei = vehicle.vehicleDeviceImei && vehicle.vehicleDeviceImei !== "";
-        const hasDeviceData = vehicle.deviceData && vehicle.deviceData.imei;
         
-        console.log(`Vehicle ${vehicle.immat || vehicle.immatriculation}:`, {
-          hasImei,
-          hasDeviceImei, 
-          hasDeviceData,
-          available: !hasImei && !hasDeviceImei && !hasDeviceData
-        });
+        console.log(`Vehicle ${vehicle.immat || vehicle.immatriculation}: hasDeviceImei=${hasDeviceImei}, available=${!hasDeviceImei}`);
         
-        return !hasImei && !hasDeviceImei && !hasDeviceData;
+        return !hasDeviceImei; // Available if no device IMEI
       });
       
-      console.log('Available vehicles for association:', availableVehicles);
-      console.log('Available vehicles count:', availableVehicles.length);
+      console.log('Available vehicles for association:', availableVehicles.length);
       
       return availableVehicles;
     } catch (err) {
@@ -451,52 +410,49 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
-  // Initialize cache from localStorage on mount
+  // SIMPLIFIED: Initialize cache from localStorage IMMEDIATELY on mount
   useEffect(() => {
-    if (!initialized) {
-      console.log('=== INITIALIZING CACHE FROM LOCALSTORAGE ===');
-      const cachedData = loadFromLocalStorage();
+    console.log('=== INITIALIZING CACHE FROM LOCALSTORAGE ===');
+    const cachedData = loadFromLocalStorage();
+    
+    if (cachedData) {
+      console.log('Found cached data in localStorage, initializing IMMEDIATELY');
+      setAllDataCache(cachedData);
+      setCompanies(cachedData.companies || []);
+      setDevices(cachedData.vehicles || []);
+      setIsCacheReady(true); // Set cache ready IMMEDIATELY
       
-      if (cachedData) {
-        console.log('Found cached data in localStorage, initializing immediately');
-        setAllDataCache(cachedData);
-        setCompanies(cachedData.companies || []);
-        setDevices(cachedData.vehicles || []);
-        setIsCacheReady(true);
-        
-        // Update derived state
-        const freeDevicesCount = (cachedData.vehicles || []).filter(item => 
-          item.type === "device" && !item.isAssociated
-        ).length;
-        setFreeDevices(freeDevicesCount);
-        
-        const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
-        const associatedDeviceCount = (cachedData.vehicles || []).filter(item => 
-          item.type === "device" && item.isAssociated
-        ).length;
-        
-        setStats({
-          vehicleCount,
-          associatedDeviceCount,
-          freeDeviceCount: freeDevicesCount
-        });
-        
-        console.log('Cache initialized successfully:', {
-          companiesCount: cachedData.companies?.length || 0,
-          vehiclesCount: vehicleCount,
-          devicesCount: freeDevicesCount + associatedDeviceCount
-        });
-        
-        // Schedule background refresh
-        setTimeout(() => {
-          refreshDataInBackground();
-        }, 1000);
-      } else {
-        console.log('No cached data found, cache ready set to false');
-        setIsCacheReady(false);
-      }
+      // Update derived state
+      const freeDevicesCount = (cachedData.vehicles || []).filter(item => 
+        item.type === "device" && !item.isAssociated
+      ).length;
+      setFreeDevices(freeDevicesCount);
       
-      setInitialized(true);
+      const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
+      const associatedDeviceCount = (cachedData.vehicles || []).filter(item => 
+        item.type === "device" && item.isAssociated
+      ).length;
+      
+      setStats({
+        vehicleCount,
+        associatedDeviceCount,
+        freeDeviceCount: freeDevicesCount
+      });
+      
+      console.log('Cache initialized successfully - CACHE IS READY:', {
+        companiesCount: cachedData.companies?.length || 0,
+        vehiclesCount: vehicleCount,
+        devicesCount: freeDevicesCount + associatedDeviceCount,
+        isCacheReady: true
+      });
+      
+      // Schedule background refresh (non-blocking)
+      setTimeout(() => {
+        refreshDataInBackground();
+      }, 2000);
+    } else {
+      console.log('No cached data found, will need to load data from API');
+      setIsCacheReady(false);
     }
   }, [initialized]);
 

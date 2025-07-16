@@ -88,7 +88,7 @@ export const fetchCompaniesWithVehicles = async () => {
               type: "vehicle",
               immatriculation: vehicle.immat || "",
               nomVehicule: vehicle.nomVehicule || vehicle.code || "",
-              imei: vehicle.device?.imei || "",
+              imei: vehicle.device?.imei || vehicle.vehicleDeviceImei || "",
               typeBoitier: vehicle.device?.protocolId?.toString() || "",
               marque: vehicle.marque || vehicle.brand?.brandName || "",
               modele: vehicle.modele_id || vehicle.modele?.modele || "",
@@ -96,7 +96,9 @@ export const fetchCompaniesWithVehicles = async () => {
               telephone: vehicle.device?.sim || "",
               emplacement: vehicle.locations || "",
               deviceData: vehicle.device || null,
-              isAssociated: !!vehicle.device,
+              // FIXED: Use vehicleDeviceImei field for association detection
+              isAssociated: !!(vehicle.vehicleDeviceImei || vehicle.device),
+              vehicleDeviceImei: vehicle.vehicleDeviceImei || null,
               // Additional fields
               AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
               energie: vehicle.energie || "",
@@ -123,8 +125,13 @@ export const fetchCompaniesWithVehicles = async () => {
     
     console.log('Total vehicles processed from companies:', totalVehiclesFromCompanies);
     
-    // Find devices that are not associated with any vehicle
-    const associatedDeviceImeis = new Set(allVehicles.map(v => v.deviceData?.imei).filter(Boolean));
+    // FIXED: Find devices that are not associated with any vehicle using vehicleDeviceImei
+    const associatedDeviceImeis = new Set(
+      allVehicles
+        .map(v => v.vehicleDeviceImei || v.deviceData?.imei)
+        .filter(Boolean)
+    );
+    
     const unassociatedDevices = devices
       .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
       .map(device => ({
@@ -141,7 +148,8 @@ export const fetchCompaniesWithVehicles = async () => {
         telephone: device.sim || "",
         emplacement: "",
         deviceData: device,
-        isAssociated: false
+        isAssociated: false,
+        vehicleDeviceImei: null
       }));
     
     console.log('Unassociated devices count:', unassociatedDevices.length);
@@ -295,7 +303,7 @@ export const createVehicleData = async (data) => {
 };
 
 /**
- * Associate a device to a vehicle (simplified approach)
+ * Associate a device to a vehicle using vehicleDeviceImei field (FIXED)
  * @param {string} deviceImei - Device IMEI
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @returns {Promise<Object>} Association result
@@ -303,13 +311,12 @@ export const createVehicleData = async (data) => {
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  console.log('=== ASSOCIATING DEVICE TO VEHICLE (SIMPLIFIED) ===');
+  console.log('=== ASSOCIATING DEVICE TO VEHICLE (FIXED) ===');
   console.log('Device IMEI:', deviceImei);
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
-    // Only update the vehicle to reference the device (simplified approach)
-    console.log('Updating vehicle with device IMEI...');
+    // Update vehicle with device IMEI using vehicleDeviceImei field
     const vehicleUpdate = await client.graphql({
       query: mutations.updateVehicle,
       variables: {
@@ -319,10 +326,11 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
         }
       }
     });
-    console.log('Vehicle update result:', vehicleUpdate);
-
-    console.log('Device associated successfully:', { deviceImei, vehicleImmat });
-    return { success: true, vehicleUpdate };
+    
+    console.log('Vehicle association successful:', vehicleUpdate.data.updateVehicle);
+    console.log('Device associated successfully to vehicle');
+    
+    return { success: true, vehicleUpdate: vehicleUpdate.data.updateVehicle };
   } catch (error) {
     console.error('Error associating device to vehicle:', error);
     console.error('Error details:', error.message);

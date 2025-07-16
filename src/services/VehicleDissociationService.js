@@ -5,17 +5,18 @@ import { waitForAmplifyConfig } from '@/config/aws-config.js';
 const client = generateClient();
 
 /**
- * Dissociate a device from a vehicle by removing the vehicleDeviceImei
+ * Dissociate a device from a vehicle by setting vehicleDeviceImei to null
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @returns {Promise<Object>} Dissociation result
  */
 export const dissociateDeviceFromVehicle = async (vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  console.log('=== DISSOCIATING DEVICE FROM VEHICLE ===');
+  console.log('=== DISSOCIATING DEVICE FROM VEHICLE (FIXED) ===');
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
+    // Set vehicleDeviceImei to null to dissociate
     const vehicleUpdate = await client.graphql({
       query: mutations.updateVehicle,
       variables: {
@@ -26,10 +27,10 @@ export const dissociateDeviceFromVehicle = async (vehicleImmat) => {
       }
     });
     
-    console.log('Vehicle dissociation result:', vehicleUpdate);
+    console.log('Vehicle dissociation successful:', vehicleUpdate.data.updateVehicle);
     console.log('Device dissociated successfully from vehicle:', vehicleImmat);
     
-    return { success: true, vehicleUpdate };
+    return { success: true, vehicleUpdate: vehicleUpdate.data.updateVehicle };
   } catch (error) {
     console.error('Error dissociating device from vehicle:', error);
     console.error('Error details:', error.message);

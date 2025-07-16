@@ -65,10 +65,14 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     label: company.name || company.nom
   }));
 
-  // Load vehicles when company is selected (for device to vehicle association)
+  // SIMPLIFIED: Load vehicles when company is selected (for device to vehicle association)
   useEffect(() => {
     if (selectedCompany && isCacheReady && isDeviceToVehicle) {
+      console.log('=== LOADING VEHICLES FOR ASSOCIATION ===');
+      console.log('Company:', selectedCompany, 'Cache ready:', isCacheReady);
       loadVehiclesForCompany(selectedCompany);
+    } else {
+      console.log('Waiting for conditions - Company:', selectedCompany, 'Cache ready:', isCacheReady, 'Is device to vehicle:', isDeviceToVehicle);
     }
   }, [selectedCompany, isCacheReady, isDeviceToVehicle]);
   
@@ -80,36 +84,25 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   }, [selectedCompany, isCacheReady, isVehicleToDevice]);
 
   const loadVehiclesForCompany = async (companyName) => {
-    console.log('AssociateVehicleForm: Loading vehicles for company:', companyName, 'Cache ready:', isCacheReady);
+    console.log('=== LOADING VEHICLES FOR ASSOCIATION FORM ===');
+    console.log('Company:', companyName, 'Cache ready:', isCacheReady);
     setIsLoading(true);
     
     try {
       if (!isCacheReady) {
-        console.log('AssociateVehicleForm: Cache not ready, cannot load vehicles');
+        console.log('Cache not ready, aborting vehicle load');
         setCompanyVehicles([]);
         setIsLoading(false);
         return;
       }
 
-      let vehicles = await getVehiclesByCompany(companyName);
-      console.log('AssociateVehicleForm: Vehicles received from getVehiclesByCompany:', vehicles?.length || 0);
+      const vehicles = await getVehiclesByCompany(companyName);
+      console.log('Vehicles received:', vehicles?.length || 0);
       
-      if (!vehicles || vehicles.length === 0) {
-        console.log('AssociateVehicleForm: No available vehicles found, trying getAllVehiclesByCompany...');
-        const allVehicles = await getAllVehiclesByCompany(companyName);
-        console.log('AssociateVehicleForm: All vehicles received:', allVehicles?.length || 0);
-        
-        if (allVehicles && allVehicles.length > 0) {
-          vehicles = allVehicles;
-          setShowAllVehicles(true);
-        }
-      }
-      
-      console.log('AssociateVehicleForm: Setting company vehicles:', vehicles?.length || 0);
       setCompanyVehicles(vehicles || []);
       
     } catch (error) {
-      console.error('AssociateVehicleForm: Error loading vehicles:', error);
+      console.error('Error loading vehicles:', error);
       setCompanyVehicles([]);
       toast({
         title: "Erreur",
