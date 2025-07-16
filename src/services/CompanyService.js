@@ -7,28 +7,38 @@ import { signUp } from 'aws-amplify/auth';
 const client = generateClient();
 
 export const fetchCompanies = async () => {
-  await waitForAmplifyConfig();
-  let allItems = [];
-  let nextToken = null;
-  
-  do {
-    const variables = {
-      limit: 4000,
-      nextToken: nextToken
-    };
+  return await withCredentialRetry(async () => {
+    let allItems = [];
+    let nextToken = null;
     
-    const companyList = await client.graphql({
-      query: queries.listCompanies,
-      variables: variables
-    });
+    do {
+      const variables = {
+        limit: 1000,
+        nextToken: nextToken
+      };
+      
+      try {
+        const companyList = await client.graphql({
+          query: queries.listCompanies,
+          variables: variables
+        });
+        
+        const data = companyList.data.listCompanies;
+        allItems = allItems.concat(data.items);
+        nextToken = data.nextToken;
+        
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        if (error.errors) {
+          console.error('GraphQL errors:', error.errors);
+        }
+        throw new Error(`Failed to fetch companies: ${error.message}`);
+      }
+      
+    } while (nextToken);
     
-    const data = companyList.data.listCompanies;
-    allItems = allItems.concat(data.items);
-    nextToken = data.nextToken;
-    
-  } while (nextToken);
-  
-  return allItems;
+    return allItems;
+  });
 };
 
 export const fetchFilteredCompanies = async (searchName, searchEmail, searchSiret) => {

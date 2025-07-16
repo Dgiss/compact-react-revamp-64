@@ -13,6 +13,8 @@ import * as DeviceService from './DeviceService';
  */
 export const fetchCompaniesWithVehiclesAndDevices = async () => {
   try {
+    console.log('=== FETCHING COMPANIES WITH VEHICLES AND DEVICES ===');
+    
     // Try to use real service first, fallback to mock data if GraphQL fails
     let companies, vehicles;
     
@@ -20,14 +22,23 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       const result = await VehicleService.fetchCompaniesWithVehicles();
       companies = result.companies;
       vehicles = result.vehicles;
+      console.log('GraphQL data loaded successfully:', {
+        companiesCount: companies.length,
+        vehiclesCount: vehicles.length
+      });
     } catch (graphqlError) {
       console.warn('GraphQL service failed, using mock data:', graphqlError.message);
+      console.error('Full GraphQL error:', graphqlError);
       
       // Use mock data service as fallback
       const { fetchMockCompaniesWithVehicles } = await import('./MockDataService');
       const mockResult = await fetchMockCompaniesWithVehicles();
       companies = mockResult.companies;
       vehicles = mockResult.vehicles;
+      console.log('Mock data loaded as fallback:', {
+        companiesCount: companies.length,
+        vehiclesCount: vehicles.length
+      });
     }
     
     // Separate vehicles from free devices

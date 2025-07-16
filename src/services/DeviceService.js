@@ -2,34 +2,51 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { addDeviceToFlespi } from './FlespiService.js';
 
 const client = generateClient();
 
 export const fetchAllDevices = async () => {
-  await waitForAmplifyConfig();
-  let allDevices = [];
-  let nextToken = null;
-  
-  do {
-    const variables = {
-      limit: 1000,
-      nextToken: nextToken
-    };
+  return await withCredentialRetry(async () => {
+    console.log('=== FETCHING ALL DEVICES ===');
     
-    const deviceList = await client.graphql({
-      query: queries.listDevices,
-      variables: variables
-    });
+    let allDevices = [];
+    let nextToken = null;
     
-    const data = deviceList.data.listDevices;
-    allDevices = allDevices.concat(data.items);
-    nextToken = data.nextToken;
+    do {
+      const variables = {
+        limit: 1000,
+        nextToken: nextToken
+      };
+      
+      console.log('Fetching devices batch with variables:', variables);
+      
+      try {
+        const deviceList = await client.graphql({
+          query: queries.listDevices,
+          variables: variables
+        });
+        
+        const data = deviceList.data.listDevices;
+        console.log('Devices batch received:', data.items.length);
+        
+        allDevices = allDevices.concat(data.items);
+        nextToken = data.nextToken;
+        
+      } catch (error) {
+        console.error('Error fetching devices:', error);
+        if (error.errors) {
+          console.error('GraphQL errors:', error.errors);
+        }
+        throw new Error(`Failed to fetch devices: ${error.message}`);
+      }
+      
+    } while (nextToken);
     
-  } while (nextToken);
-  
-  return allDevices;
+    console.log('Total devices fetched:', allDevices.length);
+    return allDevices;
+  });
 };
 
 /**
@@ -38,7 +55,7 @@ export const fetchAllDevices = async () => {
  * @returns {Promise<Object>} Created device
  */
 export const createDevice = async (deviceData) => {
-  await waitForAmplifyConfig();
+  return await withCredentialRetry(async () => {
   
   try {
     console.log('=== CREATING DEVICE ===');
@@ -96,6 +113,7 @@ export const createDevice = async (deviceData) => {
     console.error('Full error details:', JSON.stringify(error, null, 2));
     throw error;
   }
+  });
 };
 
 /**
@@ -104,7 +122,7 @@ export const createDevice = async (deviceData) => {
  * @returns {Promise<Object>} Updated device
  */
 export const updateDevice = async (deviceData) => {
-  await waitForAmplifyConfig();
+  return await withCredentialRetry(async () => {
   
   const deviceDetails = {
     imei: deviceData.imei,
@@ -134,6 +152,7 @@ export const updateDevice = async (deviceData) => {
     console.error('Error updating device:', error);
     throw error;
   }
+  });
 };
 
 /**
@@ -142,7 +161,7 @@ export const updateDevice = async (deviceData) => {
  * @returns {Promise<boolean>} Success status
  */
 export const deleteDevice = async (deviceData) => {
-  await waitForAmplifyConfig();
+  return await withCredentialRetry(async () => {
   
   try {
     await client.graphql({
@@ -158,6 +177,7 @@ export const deleteDevice = async (deviceData) => {
     console.error('Error deleting device:', error);
     throw error;
   }
+  });
 };
 
 // Helper function to determine device type/name from protocolId

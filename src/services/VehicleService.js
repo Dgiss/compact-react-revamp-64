@@ -24,16 +24,25 @@ export const fetchCompaniesWithVehicles = async () => {
       
       console.log('Fetching companies batch with variables:', variables);
       
-      const companyList = await client.graphql({
-        query: queries.listCompanies,
-        variables: variables
-      });
-      
-      const data = companyList.data.listCompanies;
-      console.log('Companies batch received:', data.items.length);
-      
-      allCompanies = allCompanies.concat(data.items);
-      nextToken = data.nextToken;
+      try {
+        const companyList = await client.graphql({
+          query: queries.listCompanies,
+          variables: variables
+        });
+        
+        const data = companyList.data.listCompanies;
+        console.log('Companies batch received:', data.items.length);
+        
+        allCompanies = allCompanies.concat(data.items);
+        nextToken = data.nextToken;
+        
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+        if (error.errors) {
+          console.error('GraphQL errors:', error.errors);
+        }
+        throw new Error(`Failed to fetch companies: ${error.message}`);
+      }
       
     } while (nextToken);
     
