@@ -56,12 +56,10 @@ export default function VehiclesDevicesPage() {
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
 
-  // Load data on component mount - only if cache not ready
+  // Load data on component mount
   useEffect(() => {
-    if (!isCacheReady) {
-      loadAllData();
-    }
-  }, [loadAllData, isCacheReady]);
+    loadAllData();
+  }, [loadAllData]);
 
   // Search vehicles without IMEI
   const searchVehiclesWithoutImeiFunction = () => {
@@ -186,16 +184,8 @@ export default function VehiclesDevicesPage() {
       const isNewVehicle = !data.immat && data.immatriculation;
       
       if (isNewVehicle) {
-        // FIXED: Map entreprise UUID to companyVehiclesId
-        const adaptedData = {
-          ...data,
-          companyVehiclesId: data.entreprise || data.companyVehiclesId
-        };
-        
-        console.log('Adapted data for creation:', adaptedData);
-        
         // Create new vehicle
-        await VehicleService.createVehicleData(adaptedData);
+        await VehicleService.createVehicleData(data);
         toast({
           title: "Succès",
           description: "Véhicule créé avec succès",
@@ -209,13 +199,7 @@ export default function VehiclesDevicesPage() {
         });
       }
       
-      // Use cache update instead of full reload for better performance
-      if (isCacheReady) {
-        // Silently refresh cache in background
-        setTimeout(() => loadAllData(), 1000);
-      } else {
-        await loadAllData();
-      }
+      await loadAllData();
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
       toast({

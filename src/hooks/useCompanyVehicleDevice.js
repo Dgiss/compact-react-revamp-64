@@ -76,18 +76,8 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - CACHE-FIRST strategy
+  // Load all data - SIMPLIFIED for API calls only when needed
   const loadAllData = useCallback(async () => {
-    // If cache is ready, use it and optionally refresh in background
-    if (isCacheReady && allDataCache) {
-      console.log('Cache is ready, using cached data');
-      // Optionally refresh in background without showing loading
-      setTimeout(() => {
-        refreshDataInBackground();
-      }, 1000);
-      return;
-    }
-    
     setLoading(true);
     setError(null);
     
@@ -142,7 +132,7 @@ export const useCompanyVehicleDevice = () => {
     } finally {
       setLoading(false);
     }
-  }, [isCacheReady, allDataCache]);
+  }, []);
 
   // Search with filters - CLIENT-SIDE using cached data
   const searchDevices = useCallback(async (filters) => {
