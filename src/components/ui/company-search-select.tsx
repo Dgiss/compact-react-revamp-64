@@ -16,7 +16,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface CompanySearchSelectProps {
   value: string;
@@ -35,7 +34,6 @@ export function CompanySearchSelect({
   disabled = false,
   searchFunction = searchCompaniesReal
 }: CompanySearchSelectProps) {
-  const { isAuthenticated, loading: authLoading } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [companies, setCompanies] = useState([]);
@@ -44,12 +42,6 @@ export function CompanySearchSelect({
   // Search companies when search term changes
   useEffect(() => {
     const searchCompanies = async () => {
-      // Don't search if not authenticated
-      if (!isAuthenticated || authLoading) {
-        setCompanies([]);
-        return;
-      }
-      
       setLoading(true);
       try {
         const results = await searchFunction(searchTerm);
@@ -63,7 +55,7 @@ export function CompanySearchSelect({
     };
 
     searchCompanies();
-  }, [searchTerm, searchFunction, isAuthenticated, authLoading]);
+  }, [searchTerm, searchFunction]);
 
   // Load initial companies
   useEffect(() => {
@@ -89,10 +81,10 @@ export function CompanySearchSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          disabled={disabled || !isAuthenticated || authLoading}
+          disabled={disabled}
           className={cn("w-full justify-between", className)}
         >
-          {!isAuthenticated ? "Connexion requise" : selectedCompany ? selectedCompany.name : placeholder}
+          {selectedCompany ? selectedCompany.name : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

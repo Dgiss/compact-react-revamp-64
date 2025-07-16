@@ -10,7 +10,6 @@ import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { createDevice } from "@/services/DeviceService";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { toast } from "@/components/ui/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 
 const categories = ["Voiture", "Utilitaire", "Camion", "Moto"];
 const marques = ["Peugeot", "Renault", "Citroën", "Toyota", "Fiat", "BMW", "Mercedes"];
@@ -33,7 +32,6 @@ interface AddVehicleFormProps {
 }
 
 export default function AddVehicleForm({ onClose, onSave, initialData, isEditing = false }: AddVehicleFormProps) {
-  const { isAuthenticated, loading: authLoading } = useAuth();
   const [nomVehicule, setNomVehicule] = useState("");
   const [immatriculation, setImmatriculation] = useState("");
   const [categorie, setCategorie] = useState("");
@@ -52,14 +50,9 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [shouldCreateDevice, setShouldCreateDevice] = useState(false);
   const { loadCompaniesForSelect } = useCompanyVehicleDevice();
 
-  // Fetch companies on component mount - only when authenticated
+  // Fetch companies on component mount
   useEffect(() => {
     const fetchCompanies = async () => {
-      if (!isAuthenticated || authLoading) {
-        setEntreprises([]);
-        return;
-      }
-      
       try {
         const companies = await loadCompaniesForSelect();
         setEntreprises(companies);
@@ -70,7 +63,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     };
 
     fetchCompanies();
-  }, [loadCompaniesForSelect, isAuthenticated, authLoading]);
+  }, [loadCompaniesForSelect]);
 
   // Load initial data for editing mode
   useEffect(() => {
@@ -145,8 +138,8 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
           await createDevice({
             imei: imei,
             sim: sim || null,
-            protocolId: protocolIdNumber
-            // Remove deviceVehicleImmat to prevent GraphQL Vehicle relation errors
+            protocolId: protocolIdNumber,
+            deviceVehicleImmat: type === "vehicle" ? immatriculation : null // Only associate if creating vehicle
           });
           deviceCreated = true;
           
@@ -352,9 +345,8 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
             <CompanySearchSelect 
               value={entreprise}
               onValueChange={setEntreprise}
-              placeholder={!isAuthenticated ? "Connexion requise" : "Rechercher une entreprise..."}
+              placeholder="Rechercher une entreprise..."
               searchFunction={searchCompaniesReal}
-              disabled={!isAuthenticated || authLoading}
             />
           </div>
           <div>

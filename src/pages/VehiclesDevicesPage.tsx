@@ -19,7 +19,7 @@ import * as VehicleService from "@/services/VehicleService";
 export default function VehiclesDevicesPage() {
   const {
     companies,
-    devices,
+    devices: combinedData,
     loading,
     loadAllData,
     searchDevices,
@@ -49,25 +49,10 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // Don't load data automatically - only after search
-  // useEffect(() => {
-  //   loadAllData();
-  // }, [loadAllData]);
-
-  // Debug: Log data when it changes
+  // Load data on component mount
   useEffect(() => {
-    console.log('=== PAGE DATA DEBUG ===');
-    console.log('Devices count:', devices.length);
-    console.log('Companies count:', companies.length);
-    console.log('First 3 devices/vehicles:', devices.slice(0, 3).map(d => ({
-      type: d.type,
-      entreprise: d.entreprise,
-      immatriculation: d.immatriculation,
-      telephone: d.telephone,
-      imei: d.imei
-    })));
-    console.log('Loading state:', loading);
-  }, [devices, companies, loading]);
+    loadAllData();
+  }, [loadAllData]);
 
   // Search vehicles with filters
   const searchVehicles = async () => {
@@ -83,7 +68,7 @@ export default function VehiclesDevicesPage() {
     console.log('=== SEARCH INITIATED ===');
     console.log('Search criteria:', { searchImei, searchImmat, searchEntreprise });
     console.log('Available data in hook:', { 
-      devicesLength: devices.length,
+      combinedDataLength: combinedData.length,
       companiesLength: companies.length 
     });
 
@@ -376,9 +361,9 @@ export default function VehiclesDevicesPage() {
         <div>
           <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
           <p className="text-sm text-gray-600 mt-1">
-            {devices.filter(item => item.type === "vehicle").length} véhicules • {" "}
-            {devices.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • {" "}
-            {devices.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles
+            {combinedData.filter(item => item.type === "vehicle").length} véhicules • {" "}
+            {combinedData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • {" "}
+            {combinedData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles
           </p>
         </div>
         {/* Keep existing buttons */}
@@ -432,7 +417,7 @@ export default function VehiclesDevicesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={filteredData.length > 0 ? filteredData : []} 
+        data={filteredData.length > 0 ? filteredData : combinedData}
         onEdit={handleEdit}
         renderActions={(item) => (
           <div className="flex gap-1">
@@ -481,11 +466,11 @@ export default function VehiclesDevicesPage() {
       <MultipleImeiSearchDialog
         open={showMultipleImeiDialog}
         onOpenChange={setShowMultipleImeiDialog}
-        data={devices}
-        onUpdate={(devicesUpdated, newCompany) => {
-          const updatedData = [...devices];
+        data={combinedData}
+        onUpdate={(devices, newCompany) => {
+          const updatedData = [...combinedData];
           
-          devicesUpdated.forEach(selectedDevice => {
+          devices.forEach(selectedDevice => {
             const index = updatedData.findIndex(item => item.imei === selectedDevice.imei);
             if (index !== -1) {
               updatedData[index] = { ...updatedData[index], entreprise: newCompany };
@@ -493,7 +478,7 @@ export default function VehiclesDevicesPage() {
           });
           
           toast({
-            description: `${devicesUpdated.length} boîtier(s) modifié(s) avec succès`,
+            description: `${devices.length} boîtier(s) modifié(s) avec succès`,
           });
           setShowMultipleImeiDialog(false);
         }}

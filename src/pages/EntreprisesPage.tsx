@@ -9,11 +9,8 @@ import { CompanyUsersList } from "@/components/CompanyUsersList";
 import EditCompanyForm from "@/components/forms/EditCompanyForm";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import * as CompanyService from "@/services/CompanyService";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function EntreprisesPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
-  
   // States
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,13 +27,6 @@ export default function EntreprisesPage() {
 
   // Fetch all companies with users
   const fetchCompanies = async () => {
-    // Vérifier l'authentification avant de charger les données
-    if (!isAuthenticated) {
-      console.log('Utilisateur non authentifié, arrêt du chargement des entreprises');
-      setLoading(false);
-      return;
-    }
-    
     setLoading(true);
     try {
       console.log('Fetching companies with users...');
@@ -134,11 +124,8 @@ export default function EntreprisesPage() {
   };
 
   useEffect(() => {
-    // Attendre que l'authentification soit vérifiée avant de charger les données
-    if (!authLoading) {
-      fetchCompanies();
-    }
-  }, [authLoading, isAuthenticated]);
+    fetchCompanies();
+  }, []);
 
   // Define columns for the table
   const allColumns = [
@@ -202,22 +189,12 @@ export default function EntreprisesPage() {
     });
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>{authLoading ? 'Vérification de l\'authentification...' : 'Chargement des entreprises...'}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p>Vous devez être connecté pour voir cette page.</p>
+          <p>Chargement des entreprises...</p>
         </div>
       </div>
     );
