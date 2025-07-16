@@ -18,7 +18,6 @@ export const useCompanyVehicleDevice = () => {
   // Cache for all data - single source of truth
   const [allDataCache, setAllDataCache] = useState(null);
   const [isCacheReady, setIsCacheReady] = useState(false);
-  const [initialized, setInitialized] = useState(false);
 
   // localStorage utilities
   const saveToLocalStorage = (data) => {
@@ -454,7 +453,7 @@ export const useCompanyVehicleDevice = () => {
       console.log('No cached data found, will need to load data from API');
       setIsCacheReady(false);
     }
-  }, [initialized]);
+  }, []); // Empty dependency array - run only once on mount
 
   // Reset to show all data
   const resetFilters = useCallback(() => {
