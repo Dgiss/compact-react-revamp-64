@@ -250,13 +250,15 @@ export const createVehicleData = async (data) => {
     throw new Error('Immatriculation is required');
   }
   
-  if (!cleanedData.companyVehiclesId) {
+  // FIXED: Handle both entreprise and companyVehiclesId fields
+  const companyId = cleanedData.companyVehiclesId || cleanedData.entreprise;
+  if (!companyId) {
     throw new Error('Company ID is required');
   }
   
   const vehicleDetails = {
     immat: cleanedData.immatriculation,
-    companyVehiclesId: cleanedData.companyVehiclesId,
+    companyVehiclesId: companyId,
     // Optional fields
     code: cleanedData.code || null,
     nomVehicule: cleanedData.nomVehicule || null,
