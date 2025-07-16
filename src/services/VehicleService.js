@@ -88,7 +88,7 @@ export const fetchCompaniesWithVehicles = async () => {
               type: "vehicle",
               immatriculation: vehicle.immat || "",
               nomVehicule: vehicle.nomVehicule || vehicle.code || "",
-              imei: vehicle.device?.imei || vehicle.vehicleDeviceImei || "",
+              imei: vehicle.device?.imei || "",
               typeBoitier: vehicle.device?.protocolId?.toString() || "",
               marque: vehicle.marque || vehicle.brand?.brandName || "",
               modele: vehicle.modele_id || vehicle.modele?.modele || "",
@@ -96,9 +96,8 @@ export const fetchCompaniesWithVehicles = async () => {
               telephone: vehicle.device?.sim || "",
               emplacement: vehicle.locations || "",
               deviceData: vehicle.device || null,
-              // FIXED: Use vehicleDeviceImei field for association detection
-              isAssociated: !!(vehicle.vehicleDeviceImei || vehicle.device),
-              vehicleDeviceImei: vehicle.vehicleDeviceImei || null,
+              // FIXED: Use GraphQL relation for association detection
+              isAssociated: !!(vehicle.device?.imei),
               // Additional fields
               AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
               energie: vehicle.energie || "",
@@ -125,10 +124,10 @@ export const fetchCompaniesWithVehicles = async () => {
     
     console.log('Total vehicles processed from companies:', totalVehiclesFromCompanies);
     
-    // FIXED: Find devices that are not associated with any vehicle using vehicleDeviceImei
+    // FIXED: Find devices that are not associated with any vehicle using GraphQL relations
     const associatedDeviceImeis = new Set(
       allVehicles
-        .map(v => v.vehicleDeviceImei || v.deviceData?.imei)
+        .map(v => v.deviceData?.imei)
         .filter(Boolean)
     );
     
@@ -148,8 +147,7 @@ export const fetchCompaniesWithVehicles = async () => {
         telephone: device.sim || "",
         emplacement: "",
         deviceData: device,
-        isAssociated: false,
-        vehicleDeviceImei: null
+        isAssociated: false
       }));
     
     console.log('Unassociated devices count:', unassociatedDevices.length);
@@ -303,7 +301,7 @@ export const createVehicleData = async (data) => {
 };
 
 /**
- * Associate a device to a vehicle using vehicleDeviceImei field (FIXED)
+ * Associate a device to a vehicle using GraphQL relations (FIXED)
  * @param {string} deviceImei - Device IMEI
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @returns {Promise<Object>} Association result
@@ -311,26 +309,26 @@ export const createVehicleData = async (data) => {
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  console.log('=== ASSOCIATING DEVICE TO VEHICLE (FIXED) ===');
+  console.log('=== ASSOCIATING DEVICE TO VEHICLE (FIXED GRAPHQL) ===');
   console.log('Device IMEI:', deviceImei);
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
-    // Update vehicle with device IMEI using vehicleDeviceImei field
-    const vehicleUpdate = await client.graphql({
-      query: mutations.updateVehicle,
+    // CRITICAL FIX: Use GraphQL relations - update Device to link to Vehicle
+    const deviceUpdate = await client.graphql({
+      query: mutations.updateDevice,
       variables: {
         input: {
-          immat: vehicleImmat,
-          vehicleDeviceImei: deviceImei
+          imei: deviceImei,
+          vehicleImmat: vehicleImmat // This creates the @belongsTo relation
         }
       }
     });
     
-    console.log('Vehicle association successful:', vehicleUpdate.data.updateVehicle);
-    console.log('Device associated successfully to vehicle');
+    console.log('Device association successful:', deviceUpdate.data?.updateDevice);
+    console.log('Device associated successfully to vehicle via GraphQL relation');
     
-    return { success: true, vehicleUpdate: vehicleUpdate.data.updateVehicle };
+    return { success: true, deviceUpdate: deviceUpdate.data?.updateDevice };
   } catch (error) {
     console.error('Error associating device to vehicle:', error);
     console.error('Error details:', error.message);

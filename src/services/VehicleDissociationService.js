@@ -12,25 +12,25 @@ const client = generateClient();
 export const dissociateDeviceFromVehicle = async (vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  console.log('=== DISSOCIATING DEVICE FROM VEHICLE (FIXED) ===');
+  console.log('=== DISSOCIATING DEVICE FROM VEHICLE (FIXED GRAPHQL) ===');
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
-    // Set vehicleDeviceImei to null to dissociate
-    const vehicleUpdate = await client.graphql({
-      query: mutations.updateVehicle,
+    // CRITICAL FIX: Use GraphQL relations - find device and update it to remove vehicle relation
+    // Instead of updating Vehicle, we update Device to remove vehicleImmat
+    const deviceUpdate = await client.graphql({
+      query: mutations.updateDevice,
       variables: {
         input: {
-          immat: vehicleImmat,
-          vehicleDeviceImei: null
+          vehicleImmat: null // Remove the @belongsTo relation
         }
       }
     });
     
-    console.log('Vehicle dissociation successful:', vehicleUpdate.data.updateVehicle);
+    console.log('Device dissociation successful:', deviceUpdate.data?.updateDevice);
     console.log('Device dissociated successfully from vehicle:', vehicleImmat);
     
-    return { success: true, vehicleUpdate: vehicleUpdate.data.updateVehicle };
+    return { success: true, deviceUpdate: deviceUpdate.data?.updateDevice };
   } catch (error) {
     console.error('Error dissociating device from vehicle:', error);
     console.error('Error details:', error.message);
