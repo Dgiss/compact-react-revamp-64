@@ -230,44 +230,68 @@ export const deleteVehicleData = async (item) => {
 export const createVehicleData = async (data) => {
   await waitForAmplifyConfig();
   
+  console.log('=== CREATING VEHICLE ===');
+  console.log('Input data:', data);
+  
   // Clean and adapt data for GraphQL - remove non-serializable properties
   const cleanedData = cleanDataForGraphQL(data);
+  console.log('Cleaned data:', cleanedData);
+  
+  // Ensure required fields are present
+  if (!cleanedData.immatriculation) {
+    throw new Error('Immatriculation is required');
+  }
+  
+  if (!cleanedData.companyVehiclesId) {
+    throw new Error('Company ID is required');
+  }
   
   const vehicleDetails = {
     immat: cleanedData.immatriculation,
-    code: cleanedData.code,
-    nomVehicule: cleanedData.nomVehicule,
-    kilometerage: cleanedData.kilometrage ? parseInt(cleanedData.kilometrage) : undefined,
-    locations: cleanedData.emplacement,
-    marque: cleanedData.marque,
-    modele_id: cleanedData.modele,
-    energie: cleanedData.energie,
-    couleur: cleanedData.couleur,
-    dateMiseEnCirculation: cleanedData.dateMiseEnCirculation,
-    VIN: cleanedData.VIN,
-    AWN_nom_commercial: cleanedData.AWN_nom_commercial,
-    puissanceFiscale: cleanedData.puissanceFiscale ? parseInt(cleanedData.puissanceFiscale) : undefined,
-    lastModificationDate: new Date().toISOString(),
-    companyVehiclesId: cleanedData.companyVehiclesId
+    companyVehiclesId: cleanedData.companyVehiclesId,
+    // Optional fields
+    code: cleanedData.code || null,
+    nomVehicule: cleanedData.nomVehicule || null,
+    kilometerage: cleanedData.kilometrage ? cleanedData.kilometrage.toString() : null,
+    locations: cleanedData.emplacement || null,
+    marque: cleanedData.marque || null,
+    modele_id: cleanedData.modele || null,
+    energie: cleanedData.energie || null,
+    couleur: cleanedData.couleur || null,
+    dateMiseEnCirculation: cleanedData.dateMiseEnCirculation || null,
+    VIN: cleanedData.VIN || null,
+    AWN_nom_commercial: cleanedData.AWN_nom_commercial || null,
+    puissanceFiscale: cleanedData.puissanceFiscale || null,
+    lastModificationDate: new Date().toISOString()
   };
 
-  // Remove undefined values to avoid GraphQL errors
+  // Remove null/undefined values to avoid GraphQL errors
   Object.keys(vehicleDetails).forEach(key => {
-    if (vehicleDetails[key] === undefined) {
+    if (vehicleDetails[key] === null || vehicleDetails[key] === undefined || vehicleDetails[key] === '') {
       delete vehicleDetails[key];
     }
   });
 
-  console.log('Cleaned vehicle creation data for GraphQL:', vehicleDetails);
+  console.log('Final vehicle details for GraphQL:', vehicleDetails);
 
-  const result = await client.graphql({
-    query: mutations.createVehicle,
-    variables: {
-      input: vehicleDetails
+  try {
+    const result = await client.graphql({
+      query: mutations.createVehicle,
+      variables: {
+        input: vehicleDetails
+      }
+    });
+
+    console.log('Vehicle created successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('Error creating vehicle:', error);
+    console.error('Error details:', error.message);
+    if (error.errors) {
+      console.error('GraphQL errors:', error.errors);
     }
-  });
-
-  return result;
+    throw error;
+  }
 };
 
 /**
