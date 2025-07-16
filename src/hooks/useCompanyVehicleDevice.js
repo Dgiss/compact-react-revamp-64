@@ -17,6 +17,7 @@ export const useCompanyVehicleDevice = () => {
   
   // Cache for all data - single source of truth
   const [allDataCache, setAllDataCache] = useState(null);
+  const [isCacheReady, setIsCacheReady] = useState(false);
 
   // Load all data - SINGLE API CALL
   const loadAllData = useCallback(async () => {
@@ -29,6 +30,7 @@ export const useCompanyVehicleDevice = () => {
       
       // Cache all data for client-side operations
       setAllDataCache(data);
+      setIsCacheReady(true);
       
       // Set state
       setCompanies(data.companies);
@@ -78,8 +80,8 @@ export const useCompanyVehicleDevice = () => {
 
   // Get vehicles for specific company - CLIENT-SIDE using cached data
   const getVehiclesByCompany = useCallback(async (companyId) => {
-    if (!allDataCache) {
-      await loadAllData();
+    if (!isCacheReady || !allDataCache) {
+      console.log('Cache not ready for getVehiclesByCompany, cache ready:', isCacheReady);
       return [];
     }
     
@@ -124,12 +126,12 @@ export const useCompanyVehicleDevice = () => {
       });
       return [];
     }
-  }, [allDataCache, loadAllData]);
+  }, [allDataCache, isCacheReady]);
 
   // Get ALL vehicles for specific company (including those with IMEI) - fallback function
   const getAllVehiclesByCompany = useCallback(async (companyId) => {
-    if (!allDataCache) {
-      await loadAllData();
+    if (!isCacheReady || !allDataCache) {
+      console.log('Cache not ready for getAllVehiclesByCompany, cache ready:', isCacheReady);
       return [];
     }
     
@@ -163,7 +165,7 @@ export const useCompanyVehicleDevice = () => {
       setError(err.message);
       return [];
     }
-  }, [allDataCache, loadAllData]);
+  }, [allDataCache, isCacheReady]);
 
   // Get device status - CLIENT-SIDE using cached data
   const getDeviceStatus = useCallback(async (imei) => {
@@ -184,15 +186,23 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
-  // Load companies for select components - use cached data
+  // Load companies for select components - use cached data ONLY
   const loadCompaniesForSelect = useCallback(async () => {
-    if (allDataCache && allDataCache.companies.length > 0) {
+    if (isCacheReady && allDataCache && allDataCache.companies.length > 0) {
       // Use cached companies
+      console.log('Using cached companies:', allDataCache.companies.length);
       return allDataCache.companies;
+    }
+    
+    if (!isCacheReady) {
+      console.log('Cache not ready, waiting for data to load...');
+      // If cache is not ready, we should wait for the main data to load
+      return [];
     }
     
     try {
       // Fallback to API call if no cache available
+      console.log('No cached companies, fetching from API');
       const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
       return loadedCompanies;
     } catch (err) {
@@ -204,7 +214,7 @@ export const useCompanyVehicleDevice = () => {
       });
       return [];
     }
-  }, [allDataCache]);
+  }, [allDataCache, isCacheReady]);
 
   // Specific search functions for single criteria - CLIENT-SIDE using cached data
   const searchByImei = useCallback(async (imei) => {
@@ -339,6 +349,7 @@ export const useCompanyVehicleDevice = () => {
     // State
     loading,
     error,
+    isCacheReady,
     
     // Actions
     loadAllData,

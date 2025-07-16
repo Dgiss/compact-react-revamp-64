@@ -29,13 +29,17 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     companies,
     loadCompaniesForSelect,
     getVehiclesByCompany,
-    getAllVehiclesByCompany
+    getAllVehiclesByCompany,
+    isCacheReady,
+    loading: hookLoading
   } = useCompanyVehicleDevice();
 
-  // Load companies on mount
+  // Wait for cache to be ready before loading companies
   useEffect(() => {
-    loadCompaniesForSelect();
-  }, [loadCompaniesForSelect]);
+    if (isCacheReady) {
+      loadCompaniesForSelect();
+    }
+  }, [loadCompaniesForSelect, isCacheReady]);
 
   // Create company options for select
   const companyOptions = companies.map(company => ({
@@ -43,27 +47,21 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     label: company.name || company.nom
   }));
 
-  // Load vehicles when company is selected
+  // Load vehicles when company is selected AND cache is ready
   useEffect(() => {
-    if (selectedCompany) {
+    if (selectedCompany && isCacheReady) {
       setShowAllVehicles(false);
       setLoadingTimeout(false);
       
       const loadVehicles = async () => {
         console.log('=== LOADING VEHICLES FOR SELECTED COMPANY ===', selectedCompany);
+        console.log('Cache ready:', isCacheReady);
         setIsLoading(true);
         
-        // Set a timeout to detect stuck loading
-        const timeoutId = setTimeout(() => {
-          setLoadingTimeout(true);
-        }, 8000); // 8 seconds timeout
-        
         try {
+          // Directly use cached data - should be instant
           const vehicles = await getVehiclesByCompany(selectedCompany);
           console.log('Available vehicles returned from hook:', vehicles);
-          
-          clearTimeout(timeoutId);
-          setLoadingTimeout(false);
           
           if (vehicles.length === 0) {
             console.log('No available vehicles found, loading all vehicles as fallback');
@@ -92,7 +90,6 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
             setShowAllVehicles(false);
           }
         } catch (error) {
-          clearTimeout(timeoutId);
           console.error('Error loading vehicles:', error);
           
           // Try fallback even on error
@@ -121,11 +118,18 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       
       loadVehicles();
       setSelectedVehicle(""); // Reset vehicle selection
+    } else if (selectedCompany && !isCacheReady) {
+      // Show loading state if cache is not ready
+      setIsLoading(true);
+      setCompanyVehicles([]);
+      setShowAllVehicles(false);
+      setLoadingTimeout(false);
     } else {
       setCompanyVehicles([]);
       setShowAllVehicles(false);
+      setIsLoading(false);
     }
-  }, [selectedCompany, getVehiclesByCompany, getAllVehiclesByCompany]);
+  }, [selectedCompany, getVehiclesByCompany, getAllVehiclesByCompany, isCacheReady]);
 
   // Create vehicle options for select with status indicators
   const vehicleOptions = companyVehicles.map(vehicle => {
@@ -210,23 +214,20 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
         <CompanySearchSelect 
           value={selectedCompany}
           onValueChange={setSelectedCompany}
-          placeholder="Sélectionner une entreprise"
+          placeholder={!isCacheReady ? "Chargement des données..." : "Sélectionner une entreprise"}
           searchFunction={searchCompaniesReal}
+          disabled={!isCacheReady}
         />
       </div>
       
       <div>
         <label className="block text-sm font-medium mb-2">
           Véhicules ({vehicleOptions.length} trouvé{vehicleOptions.length !== 1 ? 's' : ''}) 
-          {isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
+          {!isCacheReady && <span className="text-sm text-orange-600">(Chargement du cache...)</span>}
+          {isCacheReady && isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
           {showAllVehicles && (
             <span className="ml-2 text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
               Tous les véhicules (y compris ceux avec boîtier)
-            </span>
-          )}
-          {loadingTimeout && (
-            <span className="ml-2 text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded">
-              Chargement lent détecté...
             </span>
           )}
         </label>
@@ -235,17 +236,19 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
           value={selectedVehicle}
           onValueChange={setSelectedVehicle}
           placeholder={
-            !selectedCompany 
-              ? "Sélectionner d'abord une entreprise" 
-              : isLoading 
-                ? "Chargement des véhicules..." 
-                : vehicleOptions.length === 0
-                  ? "Aucun véhicule trouvé"
-                  : showAllVehicles
-                    ? "Choisir un véhicule (certains ont déjà un boîtier)"
-                    : "Sélectionner un véhicule disponible"
+            !isCacheReady
+              ? "Chargement du cache en cours..."
+              : !selectedCompany 
+                ? "Sélectionner d'abord une entreprise" 
+                : isLoading 
+                  ? "Chargement des véhicules..." 
+                  : vehicleOptions.length === 0
+                    ? "Aucun véhicule trouvé"
+                    : showAllVehicles
+                      ? "Choisir un véhicule (certains ont déjà un boîtier)"
+                      : "Sélectionner un véhicule disponible"
           }
-          disabled={!selectedCompany || isLoading || vehicleOptions.length === 0}
+          disabled={!isCacheReady || !selectedCompany || isLoading || vehicleOptions.length === 0}
         />
         {selectedCompany && !isLoading && vehicleOptions.length === 0 && (
           <p className="text-sm text-muted-foreground mt-1">
@@ -279,7 +282,7 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
         </SheetClose>
         <Button 
           onClick={handleSubmit}
-          disabled={!selectedCompany || !selectedVehicle || isSubmitting || vehicleOptions.length === 0}
+          disabled={!isCacheReady || !selectedCompany || !selectedVehicle || isSubmitting || vehicleOptions.length === 0}
         >
           {isSubmitting ? (
             <>
