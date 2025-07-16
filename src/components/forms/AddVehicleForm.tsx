@@ -130,41 +130,35 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       
       // Create device first if IMEI is provided and we're creating a vehicle or standalone device
       let deviceCreated = false;
-      if (imei && !isEditing) {
+      if (imei && !isEditing && shouldCreateDevice) {
         try {
           // Parse protocolId to number if it's provided
           const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || null : null;
           
-          await createDevice({
+          const createdDevice = await createDevice({
             imei: imei,
             sim: sim || null,
             protocolId: protocolIdNumber,
             deviceVehicleImmat: type === "vehicle" ? immatriculation : null // Only associate if creating vehicle
           });
+          
           deviceCreated = true;
           
-          toast({
-            title: "Boîtier créé",
-            description: `Boîtier ${imei} créé avec succès`,
-          });
+          if (createdDevice) {
+            toast({
+              title: "Boîtier traité",
+              description: `Boîtier ${imei} ${createdDevice.imei === imei ? 'créé' : 'existant trouvé'} avec succès`,
+            });
+          }
         } catch (deviceError) {
           console.error('Error creating device:', deviceError);
           
-          // Check if the error is because device already exists
-          if (deviceError.errors?.some(err => err.message?.includes('already exists') || err.message?.includes('duplicate'))) {
-            toast({
-              title: "Boîtier existant",
-              description: "Ce boîtier existe déjà et sera utilisé",
-            });
-            deviceCreated = true; // Continue with vehicle creation
-          } else {
-            toast({
-              title: "Erreur boîtier",
-              description: "Erreur lors de la création du boîtier",
-              variant: "destructive",
-            });
-            return; // Don't continue if device creation failed
-          }
+          toast({
+            title: "Erreur boîtier",
+            description: "Erreur lors de la création du boîtier",
+            variant: "destructive",
+          });
+          return; // Don't continue if device creation failed
         }
       }
       
@@ -397,7 +391,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
           </div>
         )}
         
-        {isVehicle && imei && !isEditing && (
+        {imei && !isEditing && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
             <div className="flex items-center gap-2">
               <input
@@ -412,7 +406,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
               </label>
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              Le boîtier sera automatiquement créé et associé à ce véhicule, et ajouté à Flespi
+              Le boîtier sera automatiquement créé et associé à ce véhicule, et ajouté à Flespi. Si l'IMEI existe déjà, il sera utilisé.
             </p>
           </div>
         )}

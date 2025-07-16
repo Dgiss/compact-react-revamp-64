@@ -66,6 +66,24 @@ export const createDevice = async (deviceData) => {
       throw new Error('IMEI is required for device creation');
     }
     
+    // Check if device already exists first
+    try {
+      const existingDevice = await client.graphql({
+        query: queries.getDevice,
+        variables: {
+          imei: deviceData.imei
+        }
+      });
+      
+      if (existingDevice.data.getDevice) {
+        console.log('Device already exists:', existingDevice.data.getDevice);
+        return existingDevice.data.getDevice;
+      }
+    } catch (getError) {
+      // Device doesn't exist, continue with creation
+      console.log('Device does not exist, proceeding with creation');
+    }
+    
     // First, add device to Flespi (optional, continue if it fails)
     let flespiDeviceId = null;
     try {
@@ -110,6 +128,27 @@ export const createDevice = async (deviceData) => {
     
   } catch (error) {
     console.error('Error creating device:', error);
+    
+    // Handle DynamoDB conditional check failures (device already exists)
+    if (error.errors?.some(err => 
+      err.message?.includes('ConditionalCheckFailedException') ||
+      err.message?.includes('already exists') ||
+      err.message?.includes('duplicate')
+    )) {
+      console.log('Device already exists, fetching existing device');
+      try {
+        const existingDevice = await client.graphql({
+          query: queries.getDevice,
+          variables: {
+            imei: deviceData.imei
+          }
+        });
+        return existingDevice.data.getDevice;
+      } catch (fetchError) {
+        console.error('Failed to fetch existing device:', fetchError);
+      }
+    }
+    
     console.error('Full error details:', JSON.stringify(error, null, 2));
     throw error;
   }

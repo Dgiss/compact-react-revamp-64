@@ -429,8 +429,13 @@ export default function VehiclesDevicesPage() {
               description={`Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.`}
               onConfirm={() => deleteVehicleData(item)}
             />
-            {item.type === "device" && (
-              <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)}>
+            {item.type === "device" && !item.isAssociated && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => handleAssociate(item)}
+                title="Associer ce boîtier à un véhicule"
+              >
                 <Link className="h-4 w-4" />
               </Button>
             )}
