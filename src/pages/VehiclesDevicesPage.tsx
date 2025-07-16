@@ -15,12 +15,14 @@ import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
+import * as VehicleDissociationService from "@/services/VehicleDissociationService";
 
 export default function VehiclesDevicesPage() {
   const {
     companies,
     devices: combinedData,
     loading,
+    isCacheReady,
     loadAllData,
     searchDevices,
     searchByImei,
@@ -49,6 +51,10 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
   const [searchVehiclesWithoutImei, setSearchVehiclesWithoutImei] = useState(false);
+  
+  // Multi-selection for dissociation
+  const [selectedVehicles, setSelectedVehicles] = useState([]);
+  const [isSelectMode, setIsSelectMode] = useState(false);
 
   // Load data on component mount
   useEffect(() => {
@@ -225,9 +231,100 @@ export default function VehiclesDevicesPage() {
     }
   };
 
+  // Dissociate device from vehicle
+  const dissociateDevice = async (vehicleImmat) => {
+    try {
+      await VehicleDissociationService.dissociateDeviceFromVehicle(vehicleImmat);
+      
+      toast({
+        title: "Succès",
+        description: "Boîtier dissocié avec succès",
+      });
+      
+      await loadAllData();
+    } catch (err) {
+      console.error('Error dissociating device:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la dissociation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Bulk dissociate selected vehicles
+  const bulkDissociateSelected = async () => {
+    if (selectedVehicles.length === 0) return;
+    
+    try {
+      const result = await VehicleDissociationService.bulkDissociateDevicesFromVehicles(
+        selectedVehicles
+      );
+      
+      if (result.success) {
+        toast({
+          title: "Succès",
+          description: `${result.successful} véhicule(s) dissocié(s) avec succès`,
+        });
+      } else {
+        toast({
+          title: "Partiellement réussi",
+          description: `${result.successful} réussi(s), ${result.failed} échec(s)`,
+          variant: "default",
+        });
+      }
+      
+      setSelectedVehicles([]);
+      setIsSelectMode(false);
+      await loadAllData();
+    } catch (err) {
+      console.error('Error bulk dissociating:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la dissociation multiple",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Toggle select mode
+  const toggleSelectMode = () => {
+    setIsSelectMode(!isSelectMode);
+    setSelectedVehicles([]);
+  };
+
+  // Handle vehicle selection
+  const handleVehicleSelect = (immat, isSelected) => {
+    if (isSelected) {
+      setSelectedVehicles(prev => [...prev, immat]);
+    } else {
+      setSelectedVehicles(prev => prev.filter(id => id !== immat));
+    }
+  };
+
 
   // Define columns for the table with enhanced device information
   const allColumns = [
+    ...(isSelectMode ? [{
+      id: "select",
+      label: "Sélection",
+      sortable: false,
+      visible: true,
+      renderCell: (value, row) => {
+        // Only show checkbox for vehicles with associated devices
+        if (row.type === "vehicle" && row.imei && row.isAssociated) {
+          return (
+            <input
+              type="checkbox"
+              checked={selectedVehicles.includes(row.immatriculation || row.immat)}
+              onChange={(e) => handleVehicleSelect(row.immatriculation || row.immat, e.target.checked)}
+              className="h-4 w-4"
+            />
+          );
+        }
+        return null;
+      }
+    }] : []),
     { 
       id: "immatriculation", 
       label: "Immatriculation", 
@@ -312,8 +409,18 @@ export default function VehiclesDevicesPage() {
     setShowEditVehicleDialog(true);
   };
 
-  const handleAssociate = (device) => {
-    setSelectedDevice(device);
+  const handleAssociate = (item) => {
+    // Can associate either a device to a vehicle or a vehicle to a device
+    if (item.type === "device") {
+      setSelectedDevice(item);
+    } else {
+      // For vehicle, create a device-like object for the form
+      setSelectedDevice({
+        ...item,
+        type: "vehicle",
+        vehicleImmat: item.immatriculation || item.immat
+      });
+    }
     setShowAssociateSheet(true);
   };
 
@@ -415,9 +522,43 @@ export default function VehiclesDevicesPage() {
             {combinedData.filter(item => item.type === "device" && item.isAssociated).length} boîtiers assignés • {" "}
             {combinedData.filter(item => item.type === "device" && !item.isAssociated).length} boîtiers disponibles
           </p>
+          
+          {/* Multi-select controls */}
+          {isSelectMode && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm text-blue-600">
+                {selectedVehicles.length} véhicule(s) sélectionné(s)
+              </span>
+              {selectedVehicles.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={bulkDissociateSelected}
+                >
+                  Dissocier la sélection
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={toggleSelectMode}
+              >
+                Annuler
+              </Button>
+            </div>
+          )}
         </div>
-        {/* Keep existing buttons */}
+        {/* Action buttons */}
         <div className="flex gap-2">
+          {!isSelectMode && (
+            <Button
+              variant="outline"
+              onClick={toggleSelectMode}
+              disabled={!isCacheReady}
+            >
+              Sélection multiple
+            </Button>
+          )}
           <Button 
             variant="outline"
             size="default"
@@ -479,12 +620,41 @@ export default function VehiclesDevicesPage() {
               description={`Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.`}
               onConfirm={() => deleteVehicleData(item)}
             />
+            
+            {/* Association button for devices without association */}
             {item.type === "device" && !item.isAssociated && (
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => handleAssociate(item)}
                 title="Associer ce boîtier à un véhicule"
+                disabled={!isCacheReady}
+              >
+                <Link className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Association button for vehicles without device */}
+            {item.type === "vehicle" && (!item.imei || !item.isAssociated) && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => handleAssociate(item)}
+                title="Associer un boîtier à ce véhicule"
+                disabled={!isCacheReady}
+              >
+                <Link className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Dissociation button for associated vehicles */}
+            {item.type === "vehicle" && item.imei && item.isAssociated && !isSelectMode && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => dissociateDevice(item.immatriculation || item.immat)}
+                title="Dissocier le boîtier de ce véhicule"
+                className="text-orange-600 hover:text-orange-700"
               >
                 <Link className="h-4 w-4" />
               </Button>

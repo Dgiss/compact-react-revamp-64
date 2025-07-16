@@ -11,7 +11,7 @@ import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
 
 interface AssociateVehicleFormProps {
-  device?: any;
+  device?: any; // Can be a device or a vehicle for bidirectional association
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -19,20 +19,27 @@ interface AssociateVehicleFormProps {
 export default function AssociateVehicleForm({ device, onClose, onSuccess }: AssociateVehicleFormProps) {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [selectedDeviceImei, setSelectedDeviceImei] = useState("");
   const [companyVehicles, setCompanyVehicles] = useState([]);
+  const [companyDevices, setCompanyDevices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingDevices, setLoadingDevices] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAllVehicles, setShowAllVehicles] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   const {
     companies,
     loadCompaniesForSelect,
     getVehiclesByCompany,
     getAllVehiclesByCompany,
+    allDataCache,
     isCacheReady,
     loading: hookLoading
   } = useCompanyVehicleDevice();
+  
+  // Determine if we're associating a device to a vehicle or vice versa
+  const isDeviceToVehicle = device?.type === "device";
+  const isVehicleToDevice = device?.type === "vehicle";
 
   // Wait for cache to be ready before loading companies
   useEffect(() => {
@@ -47,255 +54,310 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     label: company.name || company.nom
   }));
 
-  // Load vehicles when company is selected AND cache is ready
+  // Load vehicles when company is selected (for device to vehicle association)
   useEffect(() => {
-    if (selectedCompany && isCacheReady) {
-      setShowAllVehicles(false);
-      setLoadingTimeout(false);
-      
-      const loadVehicles = async () => {
-        console.log('=== LOADING VEHICLES FOR SELECTED COMPANY ===', selectedCompany);
-        console.log('Cache ready:', isCacheReady);
-        setIsLoading(true);
-        
-        try {
-          // Directly use cached data - should be instant
-          const vehicles = await getVehiclesByCompany(selectedCompany);
-          console.log('Available vehicles returned from hook:', vehicles);
-          
-          if (vehicles.length === 0) {
-            console.log('No available vehicles found, loading all vehicles as fallback');
-            
-            // Fallback: load ALL vehicles (including those with IMEI)
-            const allVehicles = await getAllVehiclesByCompany(selectedCompany);
-            console.log('All vehicles (fallback):', allVehicles);
-            
-            setCompanyVehicles(allVehicles);
-            setShowAllVehicles(true);
-            
-            if (allVehicles.length === 0) {
-              toast({
-                title: "Aucun véhicule trouvé",
-                description: "Aucun véhicule trouvé pour cette entreprise",
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "Véhicules chargés",
-                description: `${allVehicles.length} véhicule(s) trouvé(s) (certains ont déjà un boîtier)`,
-              });
-            }
-          } else {
-            setCompanyVehicles(vehicles);
-            setShowAllVehicles(false);
-          }
-        } catch (error) {
-          console.error('Error loading vehicles:', error);
-          
-          // Try fallback even on error
-          try {
-            console.log('Error occurred, trying fallback to all vehicles');
-            const allVehicles = await getAllVehiclesByCompany(selectedCompany);
-            setCompanyVehicles(allVehicles);
-            setShowAllVehicles(true);
-            
-            toast({
-              title: "Véhicules chargés (mode de récupération)",
-              description: `${allVehicles.length} véhicule(s) chargé(s) malgré l'erreur`,
-            });
-          } catch (fallbackError) {
-            console.error('Fallback also failed:', fallbackError);
-            toast({
-              title: "Erreur",
-              description: "Erreur lors du chargement des véhicules",
-              variant: "destructive",
-            });
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      loadVehicles();
-      setSelectedVehicle(""); // Reset vehicle selection
-    } else if (selectedCompany && !isCacheReady) {
-      // Show loading state if cache is not ready
-      setIsLoading(true);
-      setCompanyVehicles([]);
-      setShowAllVehicles(false);
-      setLoadingTimeout(false);
-    } else {
-      setCompanyVehicles([]);
-      setShowAllVehicles(false);
-      setIsLoading(false);
+    if (selectedCompany && isCacheReady && isDeviceToVehicle) {
+      loadVehiclesForCompany(selectedCompany);
     }
-  }, [selectedCompany, getVehiclesByCompany, getAllVehiclesByCompany, isCacheReady]);
-
-  // Create vehicle options for select with status indicators
-  const vehicleOptions = companyVehicles.map(vehicle => {
-    const baseLabel = `${vehicle.immatriculation || vehicle.immat} - ${vehicle.nomVehicle || vehicle.nomVehicule || vehicle.marque}`;
-    
-    if (showAllVehicles && vehicle.isAssociated) {
-      return {
-        value: vehicle.immatriculation || vehicle.immat,
-        label: `${baseLabel} (Déjà associé - ${vehicle.associatedDevice})`
-      };
+  }, [selectedCompany, isCacheReady, isDeviceToVehicle]);
+  
+  // Load devices when company is selected (for vehicle to device association)
+  useEffect(() => {
+    if (selectedCompany && isCacheReady && isVehicleToDevice) {
+      loadDevicesForCompany(selectedCompany);
     }
-    
-    return {
-      value: vehicle.immatriculation || vehicle.immat,
-      label: baseLabel
-    };
-  });
+  }, [selectedCompany, isCacheReady, isVehicleToDevice]);
 
-  const handleSubmit = async () => {
-    console.log('=== SUBMIT ASSOCIATION ===');
-    console.log('Selected company:', selectedCompany);
-    console.log('Selected vehicle:', selectedVehicle);
-    console.log('Device:', device);
-    
-    if (!selectedCompany || !selectedVehicle) {
-      toast({
-        title: "Attention",
-        description: "Veuillez sélectionner une entreprise et un véhicule",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!device?.imei) {
-      toast({
-        title: "Erreur",
-        description: "IMEI du boîtier manquant",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
+  const loadVehiclesForCompany = async (companyName) => {
+    console.log('Loading vehicles for company:', companyName);
+    setIsLoading(true);
     
     try {
-      console.log('Attempting to associate device', device.imei, 'to vehicle', selectedVehicle);
-      // Associate device to vehicle
-      const result = await VehicleService.associateDeviceToVehicle(device.imei, selectedVehicle);
-      console.log('Association result:', result);
+      let vehicles = await getVehiclesByCompany(companyName);
+      console.log('Vehicles received from getVehiclesByCompany:', vehicles?.length || 0);
       
-      toast({
-        title: "Association réussie",
-        description: `Le boîtier ${device.imei} a été associé au véhicule ${selectedVehicle}`,
-      });
-      
-      onSuccess();
-    } catch (error) {
-      console.error('Error associating device:', error);
-      console.error('Full error object:', error);
-      
-      let errorMessage = error.message;
-      if (error.errors && error.errors.length > 0) {
-        errorMessage = error.errors[0].message;
+      if (!vehicles || vehicles.length === 0) {
+        console.log('No available vehicles found, trying getAllVehiclesByCompany...');
+        const allVehicles = await getAllVehiclesByCompany(companyName);
+        console.log('All vehicles received:', allVehicles?.length || 0);
+        
+        if (allVehicles && allVehicles.length > 0) {
+          vehicles = allVehicles;
+          setShowAllVehicles(true);
+        }
       }
       
+      console.log('Setting company vehicles:', vehicles?.length || 0);
+      setCompanyVehicles(vehicles || []);
+      
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+      setCompanyVehicles([]);
       toast({
         title: "Erreur",
-        description: `Erreur lors de l'association: ${errorMessage}`,
+        description: "Impossible de charger les véhicules",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
+    }
+  };
+  
+  const loadDevicesForCompany = async (companyName) => {
+    console.log('Loading devices for company:', companyName);
+    setLoadingDevices(true);
+    
+    try {
+      if (!allDataCache) {
+        setCompanyDevices([]);
+        return;
+      }
+      
+      // Get free devices from cache
+      const freeDevices = allDataCache.vehicles?.filter(item => 
+        item.type === "device" && 
+        !item.isAssociated &&
+        (item.entreprise === "Boîtier libre" || item.entreprise === companyName)
+      ) || [];
+      
+      console.log('Free devices found:', freeDevices.length);
+      setCompanyDevices(freeDevices);
+      
+    } catch (error) {
+      console.error('Error loading devices:', error);
+      setCompanyDevices([]);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les boîtiers",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+
+  // Generate vehicle options (for device to vehicle association)
+  const vehicleOptions = companyVehicles.map(vehicle => {
+    const isAlreadyAssociated = vehicle.imei && vehicle.isAssociated;
+    return {
+      value: vehicle.immatriculation || vehicle.immat,
+      label: `${vehicle.immatriculation || vehicle.immat}${vehicle.nomVehicule ? ` (${vehicle.nomVehicule})` : ''}${isAlreadyAssociated ? ' - Déjà associé' : ''}`,
+      disabled: isAlreadyAssociated
+    };
+  });
+
+  // Generate device options (for vehicle to device association)
+  const deviceOptions = companyDevices.map(device => ({
+    value: device.imei,
+    label: `${device.imei}${device.typeBoitier ? ` (Protocol: ${device.typeBoitier})` : ''}`,
+    disabled: false
+  }));
+
+  const handleSubmit = async () => {
+    if (!selectedCompany) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une entreprise",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isDeviceToVehicle) {
+      // Device to vehicle association
+      if (!selectedVehicle) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner un véhicule",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!device?.imei) {
+        toast({
+          title: "Erreur",
+          description: "IMEI du boîtier non trouvé",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        await VehicleService.associateDeviceToVehicle(device.imei, selectedVehicle);
+        
+        toast({
+          title: "Succès",
+          description: "Boîtier associé au véhicule avec succès",
+        });
+        
+        onSuccess();
+        onClose();
+      } catch (error) {
+        console.error('Error associating device to vehicle:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de l'association",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else if (isVehicleToDevice) {
+      // Vehicle to device association
+      if (!selectedDeviceImei) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner un boîtier",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!device?.vehicleImmat && !device?.immatriculation && !device?.immat) {
+        toast({
+          title: "Erreur",
+          description: "Immatriculation du véhicule non trouvée",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        const vehicleImmat = device.vehicleImmat || device.immatriculation || device.immat;
+        await VehicleService.associateDeviceToVehicle(selectedDeviceImei, vehicleImmat);
+        
+        toast({
+          title: "Succès",
+          description: "Véhicule associé au boîtier avec succès",
+        });
+        
+        onSuccess();
+        onClose();
+      } catch (error) {
+        console.error('Error associating vehicle to device:', error);
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de l'association",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
   
   return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Entreprise
-        </label>
-        <CompanySearchSelect 
-          value={selectedCompany}
-          onValueChange={setSelectedCompany}
-          placeholder={!isCacheReady ? "Chargement des données..." : "Sélectionner une entreprise"}
-          searchFunction={searchCompaniesReal}
-          disabled={!isCacheReady}
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          Véhicules ({vehicleOptions.length} trouvé{vehicleOptions.length !== 1 ? 's' : ''}) 
-          {!isCacheReady && <span className="text-sm text-orange-600">(Chargement du cache...)</span>}
-          {isCacheReady && isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
-          {showAllVehicles && (
-            <span className="ml-2 text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
-              Tous les véhicules (y compris ceux avec boîtier)
-            </span>
-          )}
-        </label>
-        <SearchableSelect 
-          options={vehicleOptions}
-          value={selectedVehicle}
-          onValueChange={setSelectedVehicle}
-          placeholder={
-            !isCacheReady
-              ? "Chargement du cache en cours..."
-              : !selectedCompany 
-                ? "Sélectionner d'abord une entreprise" 
-                : isLoading 
-                  ? "Chargement des véhicules..." 
-                  : vehicleOptions.length === 0
-                    ? "Aucun véhicule trouvé"
-                    : showAllVehicles
-                      ? "Choisir un véhicule (certains ont déjà un boîtier)"
-                      : "Sélectionner un véhicule disponible"
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">
+          {isDeviceToVehicle 
+            ? `Associer le boîtier ${device?.imei}` 
+            : `Associer un boîtier au véhicule ${device?.immatriculation || device?.immat}`
           }
-          disabled={!isCacheReady || !selectedCompany || isLoading || vehicleOptions.length === 0}
-        />
-        {selectedCompany && !isLoading && vehicleOptions.length === 0 && (
-          <p className="text-sm text-muted-foreground mt-1">
-            Aucun véhicule trouvé pour cette entreprise.
-          </p>
-        )}
-        {showAllVehicles && vehicleOptions.length > 0 && (
-          <p className="text-sm text-blue-600 mt-1">
-            ℹ️ Certains véhicules ont déjà un boîtier associé. Vous pouvez le remplacer si nécessaire.
-          </p>
-        )}
+        </h2>
       </div>
 
-      {device && (
-        <div className="bg-muted/40 p-3 rounded-md">
-          <h4 className="font-medium mb-2">Boîtier à associer :</h4>
-          <div className="space-y-1 text-sm">
-            <p><strong>IMEI :</strong> {device.imei}</p>
-            {device.telephone && <p><strong>SIM :</strong> {device.telephone}</p>}
-            {device.typeBoitier && <p><strong>Type :</strong> {device.typeBoitier}</p>}
-          </div>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Entreprise *
+          </label>
+          <CompanySearchSelect
+            value={selectedCompany}
+            onValueChange={setSelectedCompany}
+            placeholder="Sélectionner une entreprise..."
+            searchFunction={searchCompaniesReal}
+            disabled={!isCacheReady}
+          />
+          {!isCacheReady && (
+            <p className="text-sm text-gray-500 mt-1">
+              Chargement des données en cours...
+            </p>
+          )}
         </div>
-      )}
-      
-      <div className="flex justify-end gap-2 mt-6">
-        <SheetClose asChild>
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-            <X className="h-4 w-4 mr-2" />
+
+        {isDeviceToVehicle && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Véhicule *
+            </label>
+            <SearchableSelect
+              value={selectedVehicle}
+              onValueChange={setSelectedVehicle}
+              options={vehicleOptions}
+              placeholder={
+                !selectedCompany 
+                  ? "Sélectionner d'abord une entreprise" 
+                  : isLoading 
+                    ? "Chargement des véhicules..." 
+                    : companyVehicles.length === 0
+                      ? "Aucun véhicule disponible"
+                      : "Sélectionner un véhicule..."
+              }
+              disabled={!selectedCompany || isLoading || !isCacheReady}
+            />
+            {showAllVehicles && (
+              <p className="text-sm text-orange-600 mt-1">
+                ⚠️ Certains véhicules sont déjà associés à un boîtier
+              </p>
+            )}
+          </div>
+        )}
+
+        {isVehicleToDevice && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Boîtier *
+            </label>
+            <SearchableSelect
+              value={selectedDeviceImei}
+              onValueChange={setSelectedDeviceImei}
+              options={deviceOptions}
+              placeholder={
+                !selectedCompany 
+                  ? "Sélectionner d'abord une entreprise" 
+                  : loadingDevices 
+                    ? "Chargement des boîtiers..." 
+                    : companyDevices.length === 0
+                      ? "Aucun boîtier disponible"
+                      : "Sélectionner un boîtier..."
+              }
+              disabled={!selectedCompany || loadingDevices || !isCacheReady}
+            />
+            {companyDevices.length > 0 && (
+              <p className="text-sm text-green-600 mt-1">
+                ✓ {companyDevices.length} boîtier(s) disponible(s)
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+          >
             Annuler
           </Button>
-        </SheetClose>
-        <Button 
-          onClick={handleSubmit}
-          disabled={!isCacheReady || !selectedCompany || !selectedVehicle || isSubmitting || vehicleOptions.length === 0}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Association...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4 mr-2" />
-              Enregistrer
-            </>
-          )}
-        </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={
+              isSubmitting || 
+              !selectedCompany || 
+              (isDeviceToVehicle && !selectedVehicle) ||
+              (isVehicleToDevice && !selectedDeviceImei) ||
+              !isCacheReady
+            }
+          >
+            {isSubmitting ? "Association..." : "Associer"}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -19,32 +19,150 @@ export const useCompanyVehicleDevice = () => {
   const [allDataCache, setAllDataCache] = useState(null);
   const [isCacheReady, setIsCacheReady] = useState(false);
 
-  // Load all data - SINGLE API CALL
+  // localStorage utilities
+  const saveToLocalStorage = (data) => {
+    try {
+      const cacheData = {
+        ...data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(cacheData));
+      console.log('Data saved to localStorage');
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+  
+  const loadFromLocalStorage = () => {
+    try {
+      const cached = localStorage.getItem('fleetwatch_vehicle_cache');
+      if (!cached) return null;
+      
+      const data = JSON.parse(cached);
+      const now = Date.now();
+      const thirtyMinutes = 30 * 60 * 1000;
+      
+      if (now - data.timestamp > thirtyMinutes) {
+        console.log('Cache expired, removing from localStorage');
+        localStorage.removeItem('fleetwatch_vehicle_cache');
+        return null;
+      }
+      
+      console.log('Valid cache found in localStorage');
+      return data;
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+      localStorage.removeItem('fleetwatch_vehicle_cache');
+      return null;
+    }
+  };
+  
+  const refreshDataInBackground = async () => {
+    try {
+      console.log('Refreshing data in background...');
+      const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      
+      // Update cache
+      setAllDataCache(result);
+      saveToLocalStorage(result);
+      
+      // Update state silently
+      setCompanies(result.companies || []);
+      setDevices(result.vehicles || []);
+      
+      console.log('Background refresh completed');
+    } catch (error) {
+      console.error('Background refresh failed:', error);
+    }
+  };
+
+  // Load all data - SINGLE API CALL with localStorage optimization
   const loadAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setIsCacheReady(false);
     
     try {
-      // Single call to fetch all data
-      const data = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      console.log('=== LOADING ALL DATA ===');
       
-      // Cache all data for client-side operations
-      setAllDataCache(data);
+      // Check localStorage first
+      const cachedData = loadFromLocalStorage();
+      if (cachedData) {
+        console.log('Using cached data from localStorage');
+        setCompanies(cachedData.companies || []);
+        setDevices(cachedData.vehicles || []);
+        setAllDataCache(cachedData);
+        setIsCacheReady(true);
+        
+        // Update derived state
+        const freeDevicesCount = (cachedData.vehicles || []).filter(item => 
+          item.type === "device" && !item.isAssociated
+        ).length;
+        setFreeDevices(freeDevicesCount);
+        
+        const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
+        const associatedDeviceCount = (cachedData.vehicles || []).filter(item => 
+          item.type === "device" && item.isAssociated
+        ).length;
+        
+        setStats({
+          vehicleCount,
+          associatedDeviceCount,
+          freeDeviceCount: freeDevicesCount
+        });
+        
+        setLoading(false);
+        
+        // Refresh in background
+        refreshDataInBackground();
+        return;
+      }
+      
+      const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      
+      console.log('=== DATA LOADED SUCCESSFULLY ===');
+      console.log('Companies count:', result.companies?.length || 0);
+      console.log('Combined data count:', result.vehicles?.length || 0);
+      
+      // Update state
+      setCompanies(result.companies || []);
+      setDevices(result.vehicles || []);
+      
+      // Cache for client-side filtering
+      setAllDataCache(result);
       setIsCacheReady(true);
       
-      // Set state
-      setCompanies(data.companies);
-      setVehicles(data.vehicles);
-      setDevices(data.devices);
-      setFreeDevices(data.freeDevices);
-      setStats(data.stats);
-    } catch (err) {
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors du chargement des données: ${err.message}`,
-        variant: "destructive",
+      // Save to localStorage
+      saveToLocalStorage(result);
+      
+      // Update free devices
+      const freeDevicesCount = (result.vehicles || []).filter(item => 
+        item.type === "device" && !item.isAssociated
+      ).length;
+      setFreeDevices(freeDevicesCount);
+      
+      // Update stats
+      const vehicleCount = (result.vehicles || []).filter(item => item.type === "vehicle").length;
+      const associatedDeviceCount = (result.vehicles || []).filter(item => 
+        item.type === "device" && item.isAssociated
+      ).length;
+      
+      setStats({
+        vehicleCount,
+        associatedDeviceCount,
+        freeDeviceCount: freeDevicesCount
       });
+      
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError(err.message || 'An error occurred');
+      // Reset states on error
+      setCompanies([]);
+      setDevices([]);
+      setAllDataCache(null);
+      setIsCacheReady(false);
+      setFreeDevices(0);
+      setStats({});
     } finally {
       setLoading(false);
     }
@@ -350,6 +468,9 @@ export const useCompanyVehicleDevice = () => {
     loading,
     error,
     isCacheReady,
+    
+    // Cache status
+    allDataCache,
     
     // Actions
     loadAllData,

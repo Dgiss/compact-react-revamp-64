@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { checkAuthStatus, getCurrentUserInfo, forceSignOut } from '@/services/AuthService';
+import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
 
 interface User {
   username: string;
@@ -75,6 +76,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('AuthContext: Connexion utilisateur:', userData.username);
     setIsAuthenticated(true);
     setUser(userData);
+    
+    // Pre-load vehicle cache after successful login
+    preloadVehicleCache();
+  };
+  
+  const preloadVehicleCache = async () => {
+    try {
+      console.log('AuthContext: Pre-loading vehicle cache...');
+      const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      
+      const cacheData = {
+        ...result,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(cacheData));
+      console.log('AuthContext: Vehicle cache pre-loaded successfully');
+    } catch (error) {
+      console.error('AuthContext: Error pre-loading vehicle cache:', error);
+    }
   };
 
   const logout = () => {
