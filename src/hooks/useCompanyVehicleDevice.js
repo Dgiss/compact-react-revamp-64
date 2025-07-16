@@ -14,14 +14,23 @@ export const useCompanyVehicleDevice = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Cache for all data - single source of truth
+  const [allDataCache, setAllDataCache] = useState(null);
 
-  // Load all data
+  // Load all data - SINGLE API CALL
   const loadAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
     
     try {
+      // Single call to fetch all data
       const data = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      
+      // Cache all data for client-side operations
+      setAllDataCache(data);
+      
+      // Set state
       setCompanies(data.companies);
       setVehicles(data.vehicles);
       setDevices(data.devices);
@@ -39,14 +48,16 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
-  // Search with filters
+  // Search with filters - CLIENT-SIDE using cached data
   const searchDevices = useCallback(async (filters) => {
-    setLoading(true);
-    setError(null);
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
     
     try {
-      const results = await CompanyVehicleDeviceService.searchDevicesAndVehicles(filters);
-      setDevices(results);
+      // Client-side filtering using cached data
+      const results = CompanyVehicleDeviceService.filterDevicesLocal(allDataCache.devices, filters);
       
       toast({
         title: "Recherche réussie",
@@ -62,27 +73,29 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [allDataCache, loadAllData]);
 
-  // Get vehicles for specific company
+  // Get vehicles for specific company - CLIENT-SIDE using cached data
   const getVehiclesByCompany = useCallback(async (companyId) => {
-    console.log('=== LOADING VEHICLES FOR COMPANY ===', companyId);
-    setLoading(true);
-    setError(null);
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
     
     try {
-      const companyVehicles = await CompanyVehicleDeviceService.fetchVehiclesByCompany(companyId);
-      console.log('Vehicles found for company:', companyVehicles);
+      // Client-side filtering using cached data
+      const companyVehicles = CompanyVehicleDeviceService.filterVehiclesByCompanyLocal(
+        allDataCache.vehicles, 
+        companyId, 
+        allDataCache.companies
+      );
       
       // Filter for vehicles without an associated device (available for association)
       const availableVehicles = companyVehicles.filter(vehicle => 
         !vehicle.imei || vehicle.imei === "" || !vehicle.deviceData
       );
       
-      console.log('Available vehicles (no device):', availableVehicles);
       return availableVehicles;
     } catch (err) {
       console.error('Error getting vehicles by company:', err);
@@ -93,15 +106,18 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [allDataCache, loadAllData]);
 
-  // Get device status
+  // Get device status - CLIENT-SIDE using cached data
   const getDeviceStatus = useCallback(async (imei) => {
+    if (!allDataCache) {
+      await loadAllData();
+      return { found: false, message: 'No data available' };
+    }
+    
     try {
-      return await CompanyVehicleDeviceService.getDeviceStatus(imei);
+      return CompanyVehicleDeviceService.getDeviceStatusLocal(allDataCache.devices, imei);
     } catch (err) {
       toast({
         title: "Erreur",
@@ -110,15 +126,18 @@ export const useCompanyVehicleDevice = () => {
       });
       return { found: false, message: err.message };
     }
-  }, []);
+  }, [allDataCache, loadAllData]);
 
-  // Load companies for select components
+  // Load companies for select components - use cached data
   const loadCompaniesForSelect = useCallback(async () => {
-    console.log('=== LOADING COMPANIES FOR SELECT ===');
+    if (allDataCache && allDataCache.companies.length > 0) {
+      // Use cached companies
+      return allDataCache.companies;
+    }
+    
     try {
+      // Fallback to API call if no cache available
       const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
-      console.log('Companies loaded for select:', loadedCompanies);
-      setCompanies(loadedCompanies); // Update the state!
       return loadedCompanies;
     } catch (err) {
       console.error('Error in loadCompaniesForSelect:', err);
@@ -129,16 +148,17 @@ export const useCompanyVehicleDevice = () => {
       });
       return [];
     }
-  }, []);
+  }, [allDataCache]);
 
-  // Specific search functions for single criteria
+  // Specific search functions for single criteria - CLIENT-SIDE using cached data
   const searchByImei = useCallback(async (imei) => {
-    setLoading(true);
-    setError(null);
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
     
     try {
-      const results = await CompanyVehicleDeviceService.searchByImei(imei);
-      setDevices(results);
+      const results = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.devices, imei);
       
       toast({
         title: "Recherche par IMEI",
@@ -154,18 +174,17 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [allDataCache, loadAllData]);
 
   const searchBySim = useCallback(async (sim) => {
-    setLoading(true);
-    setError(null);
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
     
     try {
-      const results = await CompanyVehicleDeviceService.searchBySim(sim);
-      setDevices(results);
+      const results = CompanyVehicleDeviceService.filterBySimLocal(allDataCache.devices, sim);
       
       toast({
         title: "Recherche par SIM",
@@ -181,18 +200,17 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [allDataCache, loadAllData]);
 
   const searchByVehicle = useCallback(async (vehicle) => {
-    setLoading(true);
-    setError(null);
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
     
     try {
-      const results = await CompanyVehicleDeviceService.searchByVehicle(vehicle);
-      setDevices(results);
+      const results = CompanyVehicleDeviceService.filterByVehicleLocal(allDataCache.devices, vehicle);
       
       toast({
         title: "Recherche par véhicule",
@@ -208,36 +226,26 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [allDataCache, loadAllData]);
 
   const searchByCompany = useCallback(async (company) => {
-    setLoading(true);
-    setError(null);
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
     
     try {
-      // Use cached data if available for better performance
-      const cachedVehicles = devices.length > 0 ? devices : null;
-      const cachedCompanies = companies.length > 0 ? companies : null;
-      
-      console.log('searchByCompany - using cached data:', !!cachedVehicles);
-      console.log('searchByCompany - cached vehicles count:', cachedVehicles?.length || 0);
-      console.log('searchByCompany - cached companies count:', cachedCompanies?.length || 0);
-      
-      const results = await CompanyVehicleDeviceService.searchByCompany(
+      const results = CompanyVehicleDeviceService.filterByCompanyLocal(
+        allDataCache.devices, 
         company, 
-        cachedVehicles, 
-        cachedCompanies
+        allDataCache.companies
       );
-      
-      setDevices(results);
       
       if (results.length === 0) {
         toast({
           title: "Aucun résultat",
-          description: `Aucune entreprise trouvée pour "${company}". Vérifiez l'orthographe ou consultez la console pour voir les entreprises disponibles.`,
+          description: `Aucune entreprise trouvée pour "${company}". Vérifiez l'orthographe.`,
           variant: "destructive",
         });
       } else {
@@ -256,10 +264,8 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive",
       });
       return [];
-    } finally {
-      setLoading(false);
     }
-  }, [devices, companies]);
+  }, [allDataCache, loadAllData]);
 
   // Reset to show all data
   const resetFilters = useCallback(() => {

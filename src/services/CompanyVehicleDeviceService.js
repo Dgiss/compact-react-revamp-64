@@ -69,30 +69,29 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
 };
 
 /**
- * Get vehicles for a specific company
+ * CLIENT-SIDE: Filter vehicles by company using cached data
+ * @param {Array} vehicles - Cached vehicles data
  * @param {string} companyId - Company ID
- * @returns {Promise<Array>} Array of vehicles with device data
+ * @param {Array} companies - Cached companies data
+ * @returns {Array} Filtered vehicles
  */
-export const fetchVehiclesByCompany = async (companyId) => {
+export const filterVehiclesByCompanyLocal = (vehicles, companyId, companies) => {
   try {
-    const { companies, vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
     // Find the company
     const company = companies.find(c => c.id === companyId);
     if (!company) {
-      throw new Error(`Company with ID ${companyId} not found`);
+      console.warn(`Company with ID ${companyId} not found`);
+      return [];
     }
     
     // Filter vehicles for this company
-    const companyVehicles = vehicles.filter(vehicle => 
+    return vehicles.filter(vehicle => 
       vehicle.type === 'vehicle' && 
       vehicle.entreprise === company.name
     );
-    
-    return companyVehicles;
   } catch (error) {
-    console.error('Error fetching vehicles by company:', error);
-    throw error;
+    console.error('Error filtering vehicles by company:', error);
+    return [];
   }
 };
 
@@ -113,31 +112,14 @@ export const fetchFreeDevices = async () => {
 };
 
 /**
- * Search devices by multiple criteria
+ * CLIENT-SIDE: Filter devices by multiple criteria using cached data
+ * @param {Array} devices - Cached devices data
  * @param {Object} filters - Search filters
- * @param {string} filters.imei - IMEI filter
- * @param {string} filters.sim - SIM filter
- * @param {string} filters.entreprise - Company filter
- * @param {string} filters.immatriculation - License plate filter
- * @returns {Promise<Array>} Filtered results
+ * @returns {Array} Filtered results
  */
-export const searchDevicesAndVehicles = async (filters) => {
+export const filterDevicesLocal = (devices, filters) => {
   try {
-    console.log('=== SEARCH DEVICES AND VEHICLES DEBUG ===');
-    console.log('Search filters:', filters);
-    
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
-    // Debug: Check field structure of first few items
-    console.log('Sample vehicle data structure:', vehicles.slice(0, 3).map(v => ({
-      imei: v.imei,
-      immatriculation: v.immatriculation,
-      immat: v.immat, // Check if raw immat field exists
-      entreprise: v.entreprise,
-      type: v.type
-    })));
-    
-    return vehicles.filter(item => {
+    return devices.filter(item => {
       const matchesImei = !filters.imei || 
         (item.imei && item.imei.toLowerCase().includes(filters.imei.toLowerCase()));
       
@@ -147,27 +129,19 @@ export const searchDevicesAndVehicles = async (filters) => {
       const matchesEntreprise = !filters.entreprise || 
         (item.entreprise && item.entreprise.toLowerCase().includes(filters.entreprise.toLowerCase()));
       
-      // Enhanced immatriculation matching with debugging
       const matchesImmat = !filters.immatriculation || (() => {
         const searchTerm = filters.immatriculation.toLowerCase();
         const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
         const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
         const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
-        
-        const matches = hasImmatriculation || hasImmat || hasNomVehicule;
-        
-        if (matches) {
-          console.log(`Immat match found: "${item.immatriculation || item.immat || item.nomVehicule}" matches "${filters.immatriculation}"`);
-        }
-        
-        return matches;
+        return hasImmatriculation || hasImmat || hasNomVehicule;
       })();
       
       return matchesImei && matchesSim && matchesEntreprise && matchesImmat;
     });
   } catch (error) {
-    console.error('Error searching devices and vehicles:', error);
-    throw error;
+    console.error('Error filtering devices locally:', error);
+    return [];
   }
 };
 
@@ -217,125 +191,61 @@ export const searchCompaniesReal = async (searchTerm) => {
 };
 
 /**
- * Search devices by IMEI only
+ * CLIENT-SIDE: Filter devices by IMEI using cached data
+ * @param {Array} devices - Cached devices data
  * @param {string} imei - IMEI to search for
- * @returns {Promise<Array>} Filtered results
+ * @returns {Array} Filtered results
  */
-export const searchByImei = async (imei) => {
-  try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
-    return vehicles.filter(item => 
-      item.imei && item.imei.toLowerCase().includes(imei.toLowerCase())
-    );
-  } catch (error) {
-    console.error('Error searching by IMEI:', error);
-    throw error;
-  }
+export const filterByImeiLocal = (devices, imei) => {
+  return devices.filter(item => 
+    item.imei && item.imei.toLowerCase().includes(imei.toLowerCase())
+  );
 };
 
 /**
- * Search devices by SIM only
+ * CLIENT-SIDE: Filter devices by SIM using cached data
+ * @param {Array} devices - Cached devices data
  * @param {string} sim - SIM to search for
- * @returns {Promise<Array>} Filtered results
+ * @returns {Array} Filtered results
  */
-export const searchBySim = async (sim) => {
-  try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
-    return vehicles.filter(item => 
-      item.telephone && item.telephone.toLowerCase().includes(sim.toLowerCase())
-    );
-  } catch (error) {
-    console.error('Error searching by SIM:', error);
-    throw error;
-  }
+export const filterBySimLocal = (devices, sim) => {
+  return devices.filter(item => 
+    item.telephone && item.telephone.toLowerCase().includes(sim.toLowerCase())
+  );
 };
 
 /**
- * Search devices by vehicle/immatriculation only
+ * CLIENT-SIDE: Filter devices by vehicle/immatriculation using cached data
+ * @param {Array} devices - Cached devices data
  * @param {string} vehicle - Vehicle/immatriculation to search for
- * @returns {Promise<Array>} Filtered results
+ * @returns {Array} Filtered results
  */
-export const searchByVehicle = async (vehicle) => {
-  try {
-    console.log('=== SEARCH BY VEHICLE DEBUG ===');
-    console.log('Searching for vehicle:', vehicle);
-    
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
-    // Debug: Check field structure of first few items
-    console.log('Sample vehicle data for immat search:', vehicles.slice(0, 3).map(v => ({
-      imei: v.imei,
-      immatriculation: v.immatriculation,
-      immat: v.immat, // Check if raw immat field exists
-      nomVehicule: v.nomVehicule,
-      type: v.type
-    })));
-    
-    const results = vehicles.filter(item => {
-      const searchTerm = vehicle.toLowerCase();
-      const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
-      const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
-      const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
-      
-      const matches = hasImmatriculation || hasImmat || hasNomVehicule;
-      
-      if (matches) {
-        console.log(`Vehicle match found: "${item.immatriculation || item.immat || item.nomVehicule}" matches "${vehicle}"`);
-      }
-      
-      return matches;
-    });
-    
-    console.log('Vehicle search results count:', results.length);
-    console.log('=== END VEHICLE SEARCH DEBUG ===');
-    
-    return results;
-  } catch (error) {
-    console.error('Error searching by vehicle:', error);
-    throw error;
-  }
+export const filterByVehicleLocal = (devices, vehicle) => {
+  const searchTerm = vehicle.toLowerCase();
+  return devices.filter(item => {
+    const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
+    const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
+    const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
+    return hasImmatriculation || hasImmat || hasNomVehicule;
+  });
 };
 
 /**
- * Search devices by company only - optimized version using cached data
+ * CLIENT-SIDE: Filter devices by company using cached data
+ * @param {Array} devices - Cached devices data
  * @param {string} company - Company to search for
- * @param {Array} cachedVehicles - Pre-loaded vehicles data (optional)
- * @param {Array} cachedCompanies - Pre-loaded companies data (optional)
- * @returns {Promise<Array>} Filtered results
+ * @param {Array} companies - Cached companies data
+ * @returns {Array} Filtered results
  */
-export const searchByCompany = async (company, cachedVehicles = null, cachedCompanies = null) => {
+export const filterByCompanyLocal = (devices, company, companies) => {
   try {
-    console.log('=== COMPANY SEARCH DEBUG ===');
-    console.log('Searching for company:', company);
-    console.log('Company type:', typeof company);
-    console.log('Using cached data:', !!cachedVehicles);
-    
-    let vehicles, companies;
-    
-    // Use cached data if available, otherwise fetch
-    if (cachedVehicles && cachedCompanies) {
-      vehicles = cachedVehicles;
-      companies = cachedCompanies;
-      console.log('Using cached data - vehicles:', vehicles.length, 'companies:', companies.length);
-    } else {
-      const data = await VehicleService.fetchCompaniesWithVehicles();
-      vehicles = data.vehicles;
-      companies = data.companies;
-      console.log('Fetched fresh data - vehicles:', vehicles.length, 'companies:', companies.length);
-    }
-    
     // If company is an ID (UUID format), find the company name first
     let searchTerm = company;
     if (typeof company === 'string' && company.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      // This looks like a UUID, find the company name
       const foundCompany = companies.find(c => c.id === company);
       if (foundCompany) {
         searchTerm = foundCompany.name;
-        console.log('UUID company ID found, using name:', searchTerm);
       } else {
-        console.log('UUID company ID not found in companies list');
         return [];
       }
     }
@@ -350,21 +260,9 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
     };
     
     const normalizedSearchTerm = normalizeCompanyName(searchTerm);
-    console.log('Normalized search term:', normalizedSearchTerm);
-    
-    // Get all unique companies for debugging
-    const allCompanies = [...new Set(vehicles
-      .map(item => item.entreprise)
-      .filter(Boolean)
-    )];
-    console.log('All available companies in vehicles:', allCompanies.slice(0, 10), '...'); // Show first 10
-    
-    // Also show company names from the companies list
-    const companyListNames = companies.map(c => c.name || c.nom || 'Unnamed').filter(Boolean).slice(0, 10);
-    console.log('Company names from companies list:', companyListNames, '...');
     
     // Filter results with enhanced matching
-    const results = vehicles.filter(item => {
+    return devices.filter(item => {
       if (!item.entreprise) return false;
       
       const normalizedItemCompany = normalizeCompanyName(item.entreprise);
@@ -378,50 +276,23 @@ export const searchByCompany = async (company, cachedVehicles = null, cachedComp
       const exactMatch = normalizedItemCompany === normalizedSearchTerm;
       const partialMatch = normalizedItemCompany.includes(normalizedSearchTerm);
       
-      if (exactMatch || partialMatch) {
-        console.log(`Match found: "${item.entreprise}" matches "${searchTerm}"`);
-      }
-      
       return exactMatch || partialMatch;
     });
-    
-    console.log('Search results count:', results.length);
-    console.log('Sample search results:', results.slice(0, 3).map(r => ({ 
-      entreprise: r.entreprise, 
-      imei: r.imei, 
-      type: r.type 
-    })));
-    
-    if (results.length === 0) {
-      console.log('No results found. Debugging:');
-      console.log('- Search term:', searchTerm);
-      console.log('- Normalized search term:', normalizedSearchTerm);
-      console.log('- Companies with exact name match:', allCompanies.filter(name => 
-        normalizeCompanyName(name) === normalizedSearchTerm
-      ));
-    }
-    
-    console.log('=== END SEARCH DEBUG ===');
-    
-    return results;
   } catch (error) {
-    console.error('Error searching by company:', error);
-    console.error('Full error:', error);
-    // Return empty array on error to prevent UI crashes
+    console.error('Error filtering by company locally:', error);
     return [];
   }
 };
 
 /**
- * Get device status and association info
+ * CLIENT-SIDE: Get device status using cached data
+ * @param {Array} devices - Cached devices data
  * @param {string} imei - Device IMEI
- * @returns {Promise<Object>} Device status information
+ * @returns {Object} Device status information
  */
-export const getDeviceStatus = async (imei) => {
+export const getDeviceStatusLocal = (devices, imei) => {
   try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
-    
-    const device = vehicles.find(item => item.imei === imei);
+    const device = devices.find(item => item.imei === imei);
     
     if (!device) {
       return { found: false, message: 'Device not found' };
@@ -441,7 +312,7 @@ export const getDeviceStatus = async (imei) => {
       deviceData: device.deviceData
     };
   } catch (error) {
-    console.error('Error getting device status:', error);
-    throw error;
+    console.error('Error getting device status locally:', error);
+    return { found: false, message: 'Error retrieving device status' };
   }
 };
