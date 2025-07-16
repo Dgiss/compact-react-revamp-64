@@ -11,7 +11,7 @@ import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
-import { useOptimizedVehicleData } from "@/hooks/useOptimizedVehicleData";
+import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
@@ -19,15 +19,18 @@ import * as VehicleService from "@/services/VehicleService";
 export default function VehiclesDevicesPage() {
   const {
     companies,
-    vehicles: combinedData,
-    isLoading: loading,
-    refetch,
+    devices: combinedData,
+    loading,
+    loadAllData,
+    searchDevices,
     searchByImei,
+    searchBySim,
     searchByVehicle,
     searchByCompany,
-    totalVehicles,
-    totalCompanies
-  } = useOptimizedVehicleData();
+    resetFilters,
+    isFiltered,
+    totalResults
+  } = useCompanyVehicleDevice();
   
   // Local state for filtered data when using search
   const [filteredData, setFilteredData] = useState([]);
@@ -46,10 +49,13 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // Data is automatically loaded by the hook
+  // Load data on component mount
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
-  // Search vehicles with filters (client-side for better performance)
-  const searchVehicles = () => {
+  // Search vehicles with filters
+  const searchVehicles = async () => {
     if (!searchImei && !searchImmat && !searchEntreprise) {
       toast({
         title: "Attention",
@@ -59,42 +65,53 @@ export default function VehiclesDevicesPage() {
       return;
     }
 
+    console.log('=== SEARCH INITIATED ===');
+    console.log('Search criteria:', { searchImei, searchImmat, searchEntreprise });
+    console.log('Available data in hook:', { 
+      combinedDataLength: combinedData.length,
+      companiesLength: companies.length 
+    });
+
     try {
-      let results = [...combinedData];
+      // Determine search type based on how many criteria are filled
+      const filledCriteria = [searchImei, searchImmat, searchEntreprise].filter(Boolean);
       
-      // Apply filters based on search criteria
-      if (searchImei) {
-        results = searchByImei(searchImei);
-      }
-      
-      if (searchImmat) {
+      let results;
+      if (filledCriteria.length === 1) {
+        // Single criteria search - use specific functions with optimized caching
         if (searchImei) {
-          // If IMEI search was already applied, filter the results
-          results = results.filter(item => 
-            item.immatriculation?.toString().toLowerCase().includes(searchImmat.toLowerCase()) ||
-            item.nomVehicule?.toString().toLowerCase().includes(searchImmat.toLowerCase())
-          );
-        } else {
-          // If no IMEI search, use vehicle search function
-          results = searchByVehicle(searchImmat);
+          console.log('Single IMEI search for:', searchImei);
+          results = await searchByImei(searchImei);
+        } else if (searchImmat) {
+          console.log('Single vehicle search for:', searchImmat);
+          results = await searchByVehicle(searchImmat);
+        } else if (searchEntreprise) {
+          console.log('Single company search for:', searchEntreprise);
+          console.log('Company search term:', searchEntreprise);
+          // The searchByCompany function will now use cached data automatically
+          results = await searchByCompany(searchEntreprise);
         }
+      } else {
+        // Multiple criteria search - use combined search
+        console.log('Multiple criteria search');
+        results = await searchDevices({
+          imei: searchImei,
+          immatriculation: searchImmat,
+          entreprise: searchEntreprise
+        });
       }
       
-      if (searchEntreprise) {
-        if (searchImei || searchImmat) {
-          // Filter existing results
-          results = results.filter(item => 
-            item.entreprise?.toString().toLowerCase().includes(searchEntreprise.toLowerCase())
-          );
-        } else {
-          // Use company search function
-          results = searchByCompany(searchEntreprise);
-        }
-      }
+      console.log('Search results received:', results?.length || 0);
+      console.log('First 3 results:', results?.slice(0, 3).map(r => ({
+        entreprise: r.entreprise,
+        imei: r.imei,
+        type: r.type,
+        immatriculation: r.immatriculation
+      })));
       
-      setFilteredData(results);
+      setFilteredData(results || []);
       
-      if (results.length === 0) {
+      if (!results || results.length === 0) {
         toast({
           title: "Aucun résultat",
           description: "Aucun véhicule ou boîtier trouvé avec ces critères",
@@ -123,6 +140,7 @@ export default function VehiclesDevicesPage() {
     setSearchImmat('');
     setSearchEntreprise('');
     setFilteredData([]);
+    resetFilters();
   };
 
   // Update or create vehicle
@@ -150,7 +168,7 @@ export default function VehiclesDevicesPage() {
         });
       }
       
-      refetch();
+      await loadAllData();
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
       toast({
@@ -171,7 +189,7 @@ export default function VehiclesDevicesPage() {
         description: "Véhicule supprimé avec succès",
       });
       
-      refetch();
+      await loadAllData();
     } catch (err) {
       console.error('Error deleting vehicle:', err);
       toast({
@@ -286,25 +304,6 @@ export default function VehiclesDevicesPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p>Chargement des véhicules et boîtiers...</p>
-          <p className="text-sm text-gray-500 mt-2">Récupération des données depuis l'API...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show debug info if no data
-  if (!loading && (!combinedData || combinedData.length === 0)) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-gray-600">Aucune donnée trouvée</p>
-          <Button 
-            onClick={() => refetch()} 
-            variant="outline" 
-            className="mt-4"
-          >
-            Recharger
-          </Button>
         </div>
       </div>
     );
@@ -458,7 +457,7 @@ export default function VehiclesDevicesPage() {
               });
               setShowAssociateSheet(false);
               // Refresh data to show the new association
-              refetch();
+              await loadAllData();
             }}
           />
         </SheetContent>
