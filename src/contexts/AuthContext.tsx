@@ -39,6 +39,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuth = async () => {
     try {
       console.log('AuthContext: Vérification de l\'authentification...');
+      
+      // Attendre que la configuration Amplify soit complète
+      const { waitForAmplifyConfig } = await import('@/config/aws-config.js');
+      await waitForAmplifyConfig();
+      console.log('AuthContext: Configuration Amplify confirmée');
+      
       const { isAuthenticated: authStatus, user: authUser } = await checkAuthStatus();
       
       console.log('AuthContext: Statut auth:', authStatus);

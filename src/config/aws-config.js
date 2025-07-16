@@ -109,11 +109,13 @@ export const waitForAmplifyConfig = async () => {
 // Vérifier si l'utilisateur a des credentials valides
 export const ensureCredentials = async () => {
   try {
+    console.log('Vérification des credentials...');
     await waitForAmplifyConfig();
     const user = await getCurrentUser();
+    console.log('Utilisateur trouvé:', user ? user.username : 'aucun');
     return !!user;
   } catch (error) {
-    console.warn('Aucun utilisateur authentifié trouvé:', error);
+    console.warn('Aucun utilisateur authentifié trouvé:', error.message || error);
     return false;
   }
 };
@@ -132,13 +134,22 @@ export const withCredentialRetry = async (operation, maxRetries = 2) => {
     } catch (error) {
       console.warn(`Tentative ${attempt}/${maxRetries} échouée:`, error.message);
       
-      if (error.message?.includes('NoCredentials') || error.message?.includes('No credentials')) {
+      // Gérer spécifiquement les erreurs NoSignedUser
+      if (error.message?.includes('NoSignedUser') || 
+          error.message?.includes('NoCredentials') || 
+          error.message?.includes('No credentials') ||
+          error.message?.includes('No current user')) {
+        console.error('Erreur d\'authentification détectée:', error.message);
+        
         if (attempt < maxRetries) {
           console.log('Nouvelle tentative avec attente...');
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           continue;
         }
-        throw new Error('Erreur d\'authentification - veuillez vous reconnecter');
+        
+        // Rediriger vers la page de login après échec des retries
+        console.error('Redirection vers login nécessaire');
+        throw new Error('Session expirée - veuillez vous reconnecter');
       }
       
       // Pour les autres erreurs, ne pas retry
