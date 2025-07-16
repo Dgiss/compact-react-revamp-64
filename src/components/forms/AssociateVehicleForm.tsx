@@ -22,11 +22,14 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   const [companyVehicles, setCompanyVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAllVehicles, setShowAllVehicles] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   const {
     companies,
     loadCompaniesForSelect,
-    getVehiclesByCompany
+    getVehiclesByCompany,
+    getAllVehiclesByCompany
   } = useCompanyVehicleDevice();
 
   // Load companies on mount
@@ -43,33 +46,74 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   // Load vehicles when company is selected
   useEffect(() => {
     if (selectedCompany) {
+      setShowAllVehicles(false);
+      setLoadingTimeout(false);
+      
       const loadVehicles = async () => {
         console.log('=== LOADING VEHICLES FOR SELECTED COMPANY ===', selectedCompany);
         setIsLoading(true);
+        
+        // Set a timeout to detect stuck loading
+        const timeoutId = setTimeout(() => {
+          setLoadingTimeout(true);
+        }, 8000); // 8 seconds timeout
+        
         try {
           const vehicles = await getVehiclesByCompany(selectedCompany);
-          console.log('Vehicles returned from hook:', vehicles);
+          console.log('Available vehicles returned from hook:', vehicles);
           
-          // The hook already filters for available vehicles
-          const availableVehicles = vehicles;
+          clearTimeout(timeoutId);
+          setLoadingTimeout(false);
           
-          console.log('Final available vehicles for association:', availableVehicles);
-          setCompanyVehicles(availableVehicles);
+          if (vehicles.length === 0) {
+            console.log('No available vehicles found, loading all vehicles as fallback');
+            
+            // Fallback: load ALL vehicles (including those with IMEI)
+            const allVehicles = await getAllVehiclesByCompany(selectedCompany);
+            console.log('All vehicles (fallback):', allVehicles);
+            
+            setCompanyVehicles(allVehicles);
+            setShowAllVehicles(true);
+            
+            if (allVehicles.length === 0) {
+              toast({
+                title: "Aucun véhicule trouvé",
+                description: "Aucun véhicule trouvé pour cette entreprise",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Véhicules chargés",
+                description: `${allVehicles.length} véhicule(s) trouvé(s) (certains ont déjà un boîtier)`,
+              });
+            }
+          } else {
+            setCompanyVehicles(vehicles);
+            setShowAllVehicles(false);
+          }
+        } catch (error) {
+          clearTimeout(timeoutId);
+          console.error('Error loading vehicles:', error);
           
-          if (availableVehicles.length === 0) {
+          // Try fallback even on error
+          try {
+            console.log('Error occurred, trying fallback to all vehicles');
+            const allVehicles = await getAllVehiclesByCompany(selectedCompany);
+            setCompanyVehicles(allVehicles);
+            setShowAllVehicles(true);
+            
             toast({
-              title: "Aucun véhicule disponible",
-              description: "Tous les véhicules de cette entreprise ont déjà un boîtier associé",
+              title: "Véhicules chargés (mode de récupération)",
+              description: `${allVehicles.length} véhicule(s) chargé(s) malgré l'erreur`,
+            });
+          } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+            toast({
+              title: "Erreur",
+              description: "Erreur lors du chargement des véhicules",
               variant: "destructive",
             });
           }
-        } catch (error) {
-          console.error('Error loading vehicles:', error);
-          toast({
-            title: "Erreur",
-            description: "Erreur lors du chargement des véhicules",
-            variant: "destructive",
-          });
         } finally {
           setIsLoading(false);
         }
@@ -77,14 +121,28 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       
       loadVehicles();
       setSelectedVehicle(""); // Reset vehicle selection
+    } else {
+      setCompanyVehicles([]);
+      setShowAllVehicles(false);
     }
-  }, [selectedCompany, getVehiclesByCompany]);
+  }, [selectedCompany, getVehiclesByCompany, getAllVehiclesByCompany]);
 
-  // Create vehicle options for select
-  const vehicleOptions = companyVehicles.map(vehicle => ({
-    value: vehicle.immatriculation || vehicle.immat,
-    label: `${vehicle.immatriculation || vehicle.immat} - ${vehicle.nomVehicle || vehicle.nomVehicule || vehicle.marque}`
-  }));
+  // Create vehicle options for select with status indicators
+  const vehicleOptions = companyVehicles.map(vehicle => {
+    const baseLabel = `${vehicle.immatriculation || vehicle.immat} - ${vehicle.nomVehicle || vehicle.nomVehicule || vehicle.marque}`;
+    
+    if (showAllVehicles && vehicle.isAssociated) {
+      return {
+        value: vehicle.immatriculation || vehicle.immat,
+        label: `${baseLabel} (Déjà associé - ${vehicle.associatedDevice})`
+      };
+    }
+    
+    return {
+      value: vehicle.immatriculation || vehicle.immat,
+      label: baseLabel
+    };
+  });
 
   const handleSubmit = async () => {
     console.log('=== SUBMIT ASSOCIATION ===');
@@ -159,7 +217,18 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       
       <div>
         <label className="block text-sm font-medium mb-2">
-          Véhicules ({vehicleOptions.length} disponible{vehicleOptions.length !== 1 ? 's' : ''}) {isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
+          Véhicules ({vehicleOptions.length} trouvé{vehicleOptions.length !== 1 ? 's' : ''}) 
+          {isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
+          {showAllVehicles && (
+            <span className="ml-2 text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
+              Tous les véhicules (y compris ceux avec boîtier)
+            </span>
+          )}
+          {loadingTimeout && (
+            <span className="ml-2 text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded">
+              Chargement lent détecté...
+            </span>
+          )}
         </label>
         <SearchableSelect 
           options={vehicleOptions}
@@ -171,14 +240,21 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
               : isLoading 
                 ? "Chargement des véhicules..." 
                 : vehicleOptions.length === 0
-                  ? "Aucun véhicule disponible"
-                  : "Sélectionner un véhicule"
+                  ? "Aucun véhicule trouvé"
+                  : showAllVehicles
+                    ? "Choisir un véhicule (certains ont déjà un boîtier)"
+                    : "Sélectionner un véhicule disponible"
           }
           disabled={!selectedCompany || isLoading || vehicleOptions.length === 0}
         />
         {selectedCompany && !isLoading && vehicleOptions.length === 0 && (
           <p className="text-sm text-muted-foreground mt-1">
-            Tous les véhicules de cette entreprise ont déjà un boîtier associé.
+            Aucun véhicule trouvé pour cette entreprise.
+          </p>
+        )}
+        {showAllVehicles && vehicleOptions.length > 0 && (
+          <p className="text-sm text-blue-600 mt-1">
+            ℹ️ Certains véhicules ont déjà un boîtier associé. Vous pouvez le remplacer si nécessaire.
           </p>
         )}
       </div>

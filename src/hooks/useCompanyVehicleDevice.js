@@ -126,6 +126,45 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
+  // Get ALL vehicles for specific company (including those with IMEI) - fallback function
+  const getAllVehiclesByCompany = useCallback(async (companyId) => {
+    if (!allDataCache) {
+      await loadAllData();
+      return [];
+    }
+    
+    try {
+      // Client-side filtering using cached data - returns ALL vehicles
+      const companyVehicles = CompanyVehicleDeviceService.filterVehiclesByCompanyLocal(
+        allDataCache.vehicles, 
+        companyId, 
+        allDataCache.companies
+      );
+      
+      console.log('ALL company vehicles (including those with IMEI):', companyVehicles);
+      
+      // Add status indicator for each vehicle
+      const vehiclesWithStatus = companyVehicles.map(vehicle => {
+        const hasImei = vehicle.imei && vehicle.imei !== "";
+        const hasDeviceImei = vehicle.vehicleDeviceImei && vehicle.vehicleDeviceImei !== "";
+        const hasDeviceData = vehicle.deviceData && vehicle.deviceData.imei;
+        const isAssociated = hasImei || hasDeviceImei || hasDeviceData;
+        
+        return {
+          ...vehicle,
+          isAssociated,
+          associatedDevice: hasImei ? vehicle.imei : (hasDeviceImei ? vehicle.vehicleDeviceImei : (hasDeviceData ? vehicle.deviceData.imei : null))
+        };
+      });
+      
+      return vehiclesWithStatus;
+    } catch (err) {
+      console.error('Error getting all vehicles by company:', err);
+      setError(err.message);
+      return [];
+    }
+  }, [allDataCache, loadAllData]);
+
   // Get device status - CLIENT-SIDE using cached data
   const getDeviceStatus = useCallback(async (imei) => {
     if (!allDataCache) {
@@ -309,6 +348,7 @@ export const useCompanyVehicleDevice = () => {
     searchByVehicle,
     searchByCompany,
     getVehiclesByCompany,
+    getAllVehiclesByCompany,
     getDeviceStatus,
     loadCompaniesForSelect,
     resetFilters,
