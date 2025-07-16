@@ -1,6 +1,8 @@
 import * as VehicleService from './VehicleService';
 import * as CompanyService from './CompanyService';
 import * as DeviceService from './DeviceService';
+import { generateClient } from 'aws-amplify/api';
+import * as queries from '../graphql/queries';
 
 /**
  * Service for managing company-vehicle-device relationships
@@ -48,137 +50,174 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       companies = mockResult.companies;
       vehicles = mockResult.vehicles;
       
-      console.log('📝 Using mock data as fallback');
-      console.log(`Mock companies: ${companies.length}`);
-      console.log(`Mock vehicles: ${vehicles.length}`);
+      console.log('✅ Mock data service succeeded');
+      console.log(`Mock companies loaded: ${companies.length}`);
+      console.log(`Mock vehicles/devices loaded: ${vehicles.length}`);
     }
+
+    // Extract devices from vehicles data
+    const devices = vehicles || [];
     
-    // Separate vehicles from free devices
-    const actualVehicles = vehicles.filter(item => item.type === 'vehicle');
-    const freeDevices = vehicles.filter(item => item.type === 'device');
-    
-    // Generate statistics
+    // Calculate stats
     const stats = {
-      totalCompanies: companies.length,
-      totalVehicles: actualVehicles.length,
-      totalDevices: vehicles.length,
-      freeDevices: freeDevices.length,
-      associatedDevices: actualVehicles.filter(v => v.imei).length,
-      companiesWithVehicles: companies.filter(c => c.vehicles?.items?.length > 0).length
+      totalCompanies: companies ? companies.length : 0,
+      totalVehicles: vehicles ? vehicles.filter(v => v.type === 'vehicle').length : 0,
+      totalDevices: vehicles ? vehicles.filter(v => v.type === 'device').length : 0,
+      connectedDevices: vehicles ? vehicles.filter(v => v.type === 'device' && v.enabled).length : 0,
+      freeDevices: vehicles ? vehicles.filter(v => v.type === 'device' && !v.immatriculation).length : 0
     };
-    
+
+    console.log('Calculated stats:', stats);
+    console.log('=== END FETCHING COMPANIES WITH VEHICLES AND DEVICES ===');
+
     return {
-      companies,
-      vehicles: actualVehicles,
-      devices: vehicles, // Combined vehicles + free devices
-      freeDevices,
+      companies: companies || [],
+      vehicles: vehicles || [],
+      devices: devices,
       stats
     };
+
   } catch (error) {
-    console.error('Error fetching companies with vehicles and devices:', error);
+    console.error('Error in fetchCompaniesWithVehiclesAndDevices:', error);
     throw error;
   }
 };
 
 /**
- * Get vehicles for a specific company
+ * Fetch vehicles for a specific company
  * @param {string} companyId - Company ID
- * @returns {Promise<Array>} Array of vehicles with device data
+ * @returns {Promise<Array>} Vehicles for the company
  */
 export const fetchVehiclesByCompany = async (companyId) => {
   try {
-    const { companies, vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    console.log('=== FETCHING VEHICLES BY COMPANY ===');
+    console.log('Company ID:', companyId);
     
-    // Find the company
-    const company = companies.find(c => c.id === companyId);
-    if (!company) {
-      throw new Error(`Company with ID ${companyId} not found`);
-    }
+    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
     
-    // Filter vehicles for this company
+    // Filter vehicles by company ID
     const companyVehicles = vehicles.filter(vehicle => 
-      vehicle.type === 'vehicle' && 
-      vehicle.entreprise === company.name
+      vehicle.companyId === companyId || vehicle.entreprise_id === companyId
     );
     
+    console.log(`Found ${companyVehicles.length} vehicles for company ${companyId}`);
+    console.log('=== END FETCHING VEHICLES BY COMPANY ===');
+    
     return companyVehicles;
+    
   } catch (error) {
-    console.error('Error fetching vehicles by company:', error);
+    console.error('Error in fetchVehiclesByCompany:', error);
     throw error;
   }
 };
 
 /**
- * Get free (unassociated) devices
- * @returns {Promise<Array>} Array of free devices
+ * Fetch free devices (not associated with any vehicle)
+ * @returns {Promise<Array>} Free devices
  */
 export const fetchFreeDevices = async () => {
   try {
+    console.log('=== FETCHING FREE DEVICES ===');
+    
     const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
     
-    // Return only free devices
-    return vehicles.filter(item => item.type === 'device');
+    // Filter devices that are not associated with vehicles
+    const freeDevices = vehicles.filter(device => 
+      device.type === 'device' && (!device.immatriculation || device.immatriculation === 'Non assigné')
+    );
+    
+    console.log(`Found ${freeDevices.length} free devices`);
+    console.log('=== END FETCHING FREE DEVICES ===');
+    
+    return freeDevices;
+    
   } catch (error) {
-    console.error('Error fetching free devices:', error);
+    console.error('Error in fetchFreeDevices:', error);
     throw error;
   }
 };
 
 /**
- * Search devices by multiple criteria
- * @param {Object} filters - Search filters
- * @param {string} filters.imei - IMEI filter
- * @param {string} filters.sim - SIM filter
- * @param {string} filters.entreprise - Company filter
- * @param {string} filters.immatriculation - License plate filter
- * @returns {Promise<Array>} Filtered results
+ * Unified search function using direct GraphQL queries
+ * @param {Object} filters - Search filters (imei, sim, company, vehicle)
+ * @returns {Promise<Array>} Combined and formatted results
  */
 export const searchDevicesAndVehicles = async (filters) => {
   try {
-    console.log('=== SEARCH DEVICES AND VEHICLES DEBUG ===');
-    console.log('Search filters:', filters);
+    console.log('=== UNIFIED SEARCH DEBUG ===');
+    console.log('Filters:', filters);
     
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    const client = generateClient();
+    const { imei, sim, company, vehicle } = filters;
     
-    // Debug: Check field structure of first few items
-    console.log('Sample vehicle data structure:', vehicles.slice(0, 3).map(v => ({
-      imei: v.imei,
-      immatriculation: v.immatriculation,
-      immat: v.immat, // Check if raw immat field exists
-      entreprise: v.entreprise,
-      type: v.type
-    })));
+    // Build GraphQL filter based on provided criteria
+    let graphqlFilter = null;
     
-    return vehicles.filter(item => {
-      const matchesImei = !filters.imei || 
-        (item.imei && item.imei.toLowerCase().includes(filters.imei.toLowerCase()));
-      
-      const matchesSim = !filters.sim || 
-        (item.telephone && item.telephone.toLowerCase().includes(filters.sim.toLowerCase()));
-      
-      const matchesEntreprise = !filters.entreprise || 
-        (item.entreprise && item.entreprise.toLowerCase().includes(filters.entreprise.toLowerCase()));
-      
-      // Enhanced immatriculation matching with debugging
-      const matchesImmat = !filters.immatriculation || (() => {
-        const searchTerm = filters.immatriculation.toLowerCase();
-        const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
-        const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
-        const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
-        
-        const matches = hasImmatriculation || hasImmat || hasNomVehicule;
-        
-        if (matches) {
-          console.log(`Immat match found: "${item.immatriculation || item.immat || item.nomVehicule}" matches "${filters.immatriculation}"`);
-        }
-        
-        return matches;
-      })();
-      
-      return matchesImei && matchesSim && matchesEntreprise && matchesImmat;
+    if (imei && imei.trim()) {
+      graphqlFilter = {
+        or: [
+          { imei: { eq: imei.trim() } },
+          { imei: { beginsWith: imei.trim() } }
+        ]
+      };
+    } else if (sim && sim.trim()) {
+      graphqlFilter = {
+        sim: { contains: sim.trim() }
+      };
+    } else if (vehicle && vehicle.trim()) {
+      graphqlFilter = {
+        deviceVehicleImmat: { contains: vehicle.trim() }
+      };
+    } else if (company && company.trim()) {
+      graphqlFilter = {
+        name: { contains: company.trim() }
+      };
+    }
+    
+    if (!graphqlFilter) {
+      console.log('No valid search criteria provided');
+      return [];
+    }
+
+    console.log('Using GraphQL filter:', JSON.stringify(graphqlFilter, null, 2));
+
+    // Execute direct GraphQL search
+    const response = await client.graphql({
+      query: queries.listDevices,
+      variables: {
+        filter: graphqlFilter,
+        limit: 1000
+      }
     });
+
+    const devices = response.data.listDevices.items || [];
+    console.log('Direct GraphQL results:', devices.length);
+
+    // Format results to match expected structure
+    const formattedResults = devices.map(device => ({
+      type: 'device',
+      imei: device.imei,
+      protocol_id: device.protocolId,
+      sim: device.sim,
+      name: device.name,
+      entreprise: device.name || 'Non défini', // Use device name as company fallback
+      immatriculation: device.deviceVehicleImmat || 'Non assigné',
+      telephone: device.sim,
+      enabled: device.enabled,
+      device_type_id: device.device_type_id,
+      flespi_id: device.flespi_id,
+      cid: device.cid,
+      createdAt: device.createdAt,
+      updatedAt: device.updatedAt
+    }));
+
+    console.log('Formatted results:', formattedResults.length);
+    console.log('=== END UNIFIED SEARCH DEBUG ===');
+    
+    return formattedResults;
+    
   } catch (error) {
-    console.error('Error searching devices and vehicles:', error);
+    console.error('Error in searchDevicesAndVehicles:', error);
     throw error;
   }
 };
@@ -229,89 +268,166 @@ export const searchCompaniesReal = async (searchTerm) => {
 };
 
 /**
- * Search devices by IMEI only
+ * Search devices by IMEI using direct GraphQL
  * @param {string} imei - IMEI to search for
  * @returns {Promise<Array>} Filtered results
  */
 export const searchByImei = async (imei) => {
   try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    console.log('=== IMEI SEARCH DEBUG ===');
+    console.log('Searching for IMEI:', imei);
     
-    return vehicles.filter(item => 
-      item.imei && item.imei.toLowerCase().includes(imei.toLowerCase())
-    );
+    const client = generateClient();
+    
+    const response = await client.graphql({
+      query: queries.listDevices,
+      variables: {
+        filter: {
+          or: [
+            { imei: { eq: imei.trim() } },
+            { imei: { beginsWith: imei.trim() } }
+          ]
+        },
+        limit: 1000
+      }
+    });
+
+    const devices = response.data.listDevices.items || [];
+    console.log('IMEI search results:', devices.length);
+
+    // Format results
+    const formattedResults = devices.map(device => ({
+      type: 'device',
+      imei: device.imei,
+      protocol_id: device.protocolId,
+      sim: device.sim,
+      name: device.name,
+      entreprise: device.name || 'Non défini',
+      immatriculation: device.deviceVehicleImmat || 'Non assigné',
+      telephone: device.sim,
+      enabled: device.enabled,
+      device_type_id: device.device_type_id,
+      flespi_id: device.flespi_id,
+      cid: device.cid,
+      createdAt: device.createdAt,
+      updatedAt: device.updatedAt
+    }));
+
+    console.log('=== END IMEI SEARCH DEBUG ===');
+    return formattedResults;
+    
   } catch (error) {
-    console.error('Error searching by IMEI:', error);
+    console.error('Error in searchByImei:', error);
     throw error;
   }
 };
 
 /**
- * Search devices by SIM only
+ * Search devices by SIM using direct GraphQL
  * @param {string} sim - SIM to search for
  * @returns {Promise<Array>} Filtered results
  */
 export const searchBySim = async (sim) => {
   try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    console.log('=== SIM SEARCH DEBUG ===');
+    console.log('Searching for SIM:', sim);
     
-    return vehicles.filter(item => 
-      item.telephone && item.telephone.toLowerCase().includes(sim.toLowerCase())
-    );
+    const client = generateClient();
+    
+    const response = await client.graphql({
+      query: queries.listDevices,
+      variables: {
+        filter: {
+          sim: { contains: sim.trim() }
+        },
+        limit: 1000
+      }
+    });
+
+    const devices = response.data.listDevices.items || [];
+    console.log('SIM search results:', devices.length);
+
+    // Format results
+    const formattedResults = devices.map(device => ({
+      type: 'device',
+      imei: device.imei,
+      protocol_id: device.protocolId,
+      sim: device.sim,
+      name: device.name,
+      entreprise: device.name || 'Non défini',
+      immatriculation: device.deviceVehicleImmat || 'Non assigné',
+      telephone: device.sim,
+      enabled: device.enabled,
+      device_type_id: device.device_type_id,
+      flespi_id: device.flespi_id,
+      cid: device.cid,
+      createdAt: device.createdAt,
+      updatedAt: device.updatedAt
+    }));
+
+    console.log('=== END SIM SEARCH DEBUG ===');
+    return formattedResults;
+    
   } catch (error) {
-    console.error('Error searching by SIM:', error);
+    console.error('Error in searchBySim:', error);
     throw error;
   }
 };
 
 /**
- * Search devices by vehicle/immatriculation only
+ * Search devices by vehicle/immatriculation using direct GraphQL
  * @param {string} vehicle - Vehicle/immatriculation to search for
  * @returns {Promise<Array>} Filtered results
  */
 export const searchByVehicle = async (vehicle) => {
   try {
-    console.log('=== SEARCH BY VEHICLE DEBUG ===');
+    console.log('=== VEHICLE SEARCH DEBUG ===');
     console.log('Searching for vehicle:', vehicle);
     
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    const client = generateClient();
     
-    // Debug: Check field structure of first few items
-    console.log('Sample vehicle data for immat search:', vehicles.slice(0, 3).map(v => ({
-      imei: v.imei,
-      immatriculation: v.immatriculation,
-      immat: v.immat, // Check if raw immat field exists
-      nomVehicule: v.nomVehicule,
-      type: v.type
-    })));
-    
-    const results = vehicles.filter(item => {
-      const searchTerm = vehicle.toLowerCase();
-      const hasImmatriculation = item.immatriculation && item.immatriculation.toLowerCase().includes(searchTerm);
-      const hasImmat = item.immat && item.immat.toLowerCase().includes(searchTerm);
-      const hasNomVehicule = item.nomVehicule && item.nomVehicule.toLowerCase().includes(searchTerm);
-      
-      const matches = hasImmatriculation || hasImmat || hasNomVehicule;
-      
-      if (matches) {
-        console.log(`Vehicle match found: "${item.immatriculation || item.immat || item.nomVehicule}" matches "${vehicle}"`);
+    const response = await client.graphql({
+      query: queries.listDevices,
+      variables: {
+        filter: {
+          deviceVehicleImmat: { contains: vehicle.trim() }
+        },
+        limit: 1000
       }
-      
-      return matches;
     });
-    
-    console.log('Vehicle search results count:', results.length);
+
+    const devices = response.data.listDevices.items || [];
+    console.log('Vehicle search results:', devices.length);
+
+    // Format results
+    const formattedResults = devices.map(device => ({
+      type: 'device',
+      imei: device.imei,
+      protocol_id: device.protocolId,
+      sim: device.sim,
+      name: device.name,
+      entreprise: device.name || 'Non défini',
+      immatriculation: device.deviceVehicleImmat || 'Non assigné',
+      telephone: device.sim,
+      enabled: device.enabled,
+      device_type_id: device.device_type_id,
+      flespi_id: device.flespi_id,
+      cid: device.cid,
+      createdAt: device.createdAt,
+      updatedAt: device.updatedAt
+    }));
+
     console.log('=== END VEHICLE SEARCH DEBUG ===');
+    return formattedResults;
     
-    return results;
   } catch (error) {
-    console.error('Error searching by vehicle:', error);
+    console.error('Error in searchByVehicle:', error);
     throw error;
   }
 };
 
 /**
- * Search devices by company only - independent data loading
+ * Search devices by company using direct GraphQL
  * @param {string} company - Company to search for
  * @returns {Promise<Array>} Filtered results
  */
@@ -319,130 +435,129 @@ export const searchByCompany = async (company) => {
   try {
     console.log('=== COMPANY SEARCH DEBUG ===');
     console.log('Searching for company:', company);
-    console.log('Company type:', typeof company);
     
-    // Always fetch fresh data for search
-    const data = await VehicleService.fetchCompaniesWithVehicles();
-    const vehicles = data.vehicles;
-    const companies = data.companies;
-    console.log('Fetched fresh data - vehicles:', vehicles.length, 'companies:', companies.length);
+    const client = generateClient();
     
-    // If company is an ID (UUID format), find the company name first
-    let searchTerm = company;
-    if (typeof company === 'string' && company.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-      // This looks like a UUID, find the company name
-      const foundCompany = companies.find(c => c.id === company);
-      if (foundCompany) {
-        searchTerm = foundCompany.name;
-        console.log('UUID company ID found, using name:', searchTerm);
-      } else {
-        console.log('UUID company ID not found in companies list');
-        return [];
+    const response = await client.graphql({
+      query: queries.listDevices,
+      variables: {
+        filter: {
+          name: { contains: company.trim() }
+        },
+        limit: 1000
       }
-    }
-    
-    // Normalize company name for better matching
-    const normalizeCompanyName = (name) => {
-      if (!name || typeof name !== 'string') return '';
-      return name.toLowerCase()
-        .trim()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, ''); // Remove accents
-    };
-    
-    const normalizedSearchTerm = normalizeCompanyName(searchTerm);
-    console.log('Normalized search term:', normalizedSearchTerm);
-    
-    // Get all unique companies for debugging
-    const allCompanies = [...new Set(vehicles
-      .map(item => item.entreprise)
-      .filter(Boolean)
-    )];
-    console.log('All available companies in vehicles:', allCompanies.slice(0, 10), '...'); // Show first 10
-    
-    // Also show company names from the companies list
-    const companyListNames = companies.map(c => c.name || c.nom || 'Unnamed').filter(Boolean).slice(0, 10);
-    console.log('Company names from companies list:', companyListNames, '...');
-    
-    // Filter results with enhanced matching
-    const results = vehicles.filter(item => {
-      if (!item.entreprise) return false;
-      
-      const normalizedItemCompany = normalizeCompanyName(item.entreprise);
-      
-      // Skip "Boîtier libre" when searching for real companies
-      if (item.entreprise === "Boîtier libre" && searchTerm !== "Boîtier libre") {
-        return false;
-      }
-      
-      // Try exact match first, then partial match
-      const exactMatch = normalizedItemCompany === normalizedSearchTerm;
-      const partialMatch = normalizedItemCompany.includes(normalizedSearchTerm);
-      
-      if (exactMatch || partialMatch) {
-        console.log(`Match found: "${item.entreprise}" matches "${searchTerm}"`);
-      }
-      
-      return exactMatch || partialMatch;
     });
+
+    const devices = response.data.listDevices.items || [];
+    console.log('Company search results:', devices.length);
+
+    // Format results
+    const formattedResults = devices.map(device => ({
+      type: 'device',
+      imei: device.imei,
+      protocol_id: device.protocolId,
+      sim: device.sim,
+      name: device.name,
+      entreprise: device.name || 'Non défini',
+      immatriculation: device.deviceVehicleImmat || 'Non assigné',
+      telephone: device.sim,
+      enabled: device.enabled,
+      device_type_id: device.device_type_id,
+      flespi_id: device.flespi_id,
+      cid: device.cid,
+      createdAt: device.createdAt,
+      updatedAt: device.updatedAt
+    }));
+
+    console.log('=== END COMPANY SEARCH DEBUG ===');
+    return formattedResults;
     
-    console.log('Search results count:', results.length);
-    console.log('Sample search results:', results.slice(0, 3).map(r => ({ 
-      entreprise: r.entreprise, 
-      imei: r.imei, 
-      type: r.type 
-    })));
-    
-    if (results.length === 0) {
-      console.log('No results found. Debugging:');
-      console.log('- Search term:', searchTerm);
-      console.log('- Normalized search term:', normalizedSearchTerm);
-      console.log('- Companies with exact name match:', allCompanies.filter(name => 
-        normalizeCompanyName(name) === normalizedSearchTerm
-      ));
-    }
-    
-    console.log('=== END SEARCH DEBUG ===');
-    
-    return results;
   } catch (error) {
-    console.error('Error searching by company:', error);
-    console.error('Full error:', error);
-    // Return empty array on error to prevent UI crashes
-    return [];
+    console.error('Error in searchByCompany:', error);
+    throw error;
   }
 };
 
 /**
- * Get device status and association info
+ * Get device status and association info by IMEI
  * @param {string} imei - Device IMEI
- * @returns {Promise<Object>} Device status information
+ * @returns {Promise<Object>} Device status and associations
  */
 export const getDeviceStatus = async (imei) => {
   try {
-    const { vehicles } = await VehicleService.fetchCompaniesWithVehicles();
+    console.log('=== GET DEVICE STATUS DEBUG ===');
+    console.log('Getting status for IMEI:', imei);
     
-    const device = vehicles.find(item => item.imei === imei);
+    const client = generateClient();
+    
+    // Get device details
+    const deviceResponse = await client.graphql({
+      query: queries.getDevice,
+      variables: { imei: imei }
+    });
+
+    const device = deviceResponse.data.getDevice;
     
     if (!device) {
-      return { found: false, message: 'Device not found' };
+      console.log('Device not found');
+      return {
+        found: false,
+        device: null,
+        vehicle: null,
+        company: null
+      };
     }
+
+    // If device has vehicle association, get vehicle details
+    let vehicle = null;
+    let company = null;
     
-    return {
+    if (device.deviceVehicleImmat) {
+      // Search for vehicle by immatriculation
+      const vehicleData = await VehicleService.fetchCompaniesWithVehicles();
+      vehicle = vehicleData.vehicles.find(v => 
+        v.immatriculation === device.deviceVehicleImmat || 
+        v.immat === device.deviceVehicleImmat
+      );
+      
+      if (vehicle && vehicle.entreprise) {
+        company = vehicleData.companies.find(c => c.name === vehicle.entreprise);
+      }
+    }
+
+    const status = {
       found: true,
-      type: device.type,
-      isAssociated: device.isAssociated,
-      entreprise: device.entreprise,
-      vehicleInfo: device.type === 'vehicle' ? {
-        immatriculation: device.immatriculation,
-        nomVehicule: device.nomVehicule,
-        marque: device.marque,
-        modele: device.modele
+      device: {
+        imei: device.imei,
+        protocolId: device.protocolId,
+        sim: device.sim,
+        name: device.name,
+        enabled: device.enabled,
+        associatedVehicle: device.deviceVehicleImmat,
+        flespi_id: device.flespi_id,
+        device_type_id: device.device_type_id
+      },
+      vehicle: vehicle ? {
+        immatriculation: vehicle.immatriculation || vehicle.immat,
+        nomVehicule: vehicle.nomVehicule,
+        marque: vehicle.marque,
+        modele: vehicle.modele,
+        entreprise: vehicle.entreprise
       } : null,
-      deviceData: device.deviceData
+      company: company ? {
+        id: company.id,
+        name: company.name,
+        siret: company.siret
+      } : null
     };
+
+    console.log('Device status:', status);
+    console.log('=== END GET DEVICE STATUS DEBUG ===');
+    
+    return status;
+    
   } catch (error) {
-    console.error('Error getting device status:', error);
+    console.error('Error in getDeviceStatus:', error);
     throw error;
   }
 };
