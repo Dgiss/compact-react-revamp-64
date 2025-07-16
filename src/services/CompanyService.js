@@ -7,9 +7,10 @@ import { signUp } from 'aws-amplify/auth';
 const client = generateClient();
 
 export const fetchCompanies = async () => {
-  await waitForAmplifyConfig();
-  let allItems = [];
-  let nextToken = null;
+  return await withCredentialRetry(async () => {
+    await waitForAmplifyConfig();
+    let allItems = [];
+    let nextToken = null;
   
   do {
     const variables = {
@@ -26,14 +27,16 @@ export const fetchCompanies = async () => {
     allItems = allItems.concat(data.items);
     nextToken = data.nextToken;
     
-  } while (nextToken);
-  
-  return allItems;
+    } while (nextToken);
+    
+    return allItems;
+  });
 };
 
 export const fetchFilteredCompanies = async (searchName, searchEmail, searchSiret) => {
-  await waitForAmplifyConfig();
-  let filtersArray = [];
+  return await withCredentialRetry(async () => {
+    await waitForAmplifyConfig();
+    let filtersArray = [];
   
   if (searchSiret && searchSiret.trim()) {
     filtersArray.push({ siret: { contains: searchSiret.trim() } });
@@ -68,9 +71,10 @@ export const fetchFilteredCompanies = async (searchName, searchEmail, searchSire
     const fetchedCompanies = res.data.listCompanies.items;
     allCompanies = [...allCompanies, ...fetchedCompanies];
     nextToken = res.data.listCompanies.nextToken;
-  } while (nextToken); 
+    } while (nextToken); 
 
-  return allCompanies;
+    return allCompanies;
+  });
 };
 
 export const createCompanyWithUser = async ({ companyData, userData }) => {

@@ -251,19 +251,35 @@ export const fetchCompaniesForSelect = async () => {
  * @param {string} searchTerm - Search term
  * @returns {Promise<Array>} Filtered companies
  */
-export const searchCompaniesReal = async (searchTerm) => {
+export const searchCompaniesReal = async (searchTerm = '') => {
+  console.log('Searching companies with term:', searchTerm);
+  
   try {
+    // Check authentication first
+    const { checkAuthStatus } = await import('@/services/AuthService');
+    const { isAuthenticated } = await checkAuthStatus();
+    
+    if (!isAuthenticated) {
+      console.log('User not authenticated, returning empty companies list');
+      return [];
+    }
+    
     const companies = await fetchCompaniesForSelect();
     
-    if (!searchTerm) return companies;
+    if (!searchTerm || searchTerm.trim() === '') {
+      // Return first 20 companies if no search term
+      return companies.slice(0, 20);
+    }
     
-    return companies.filter(company => 
-      (company.name && company.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (company.siret && company.siret.includes(searchTerm))
+    // Filter companies by name (case insensitive)
+    const filtered = companies.filter(company => 
+      company.name && company.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    return filtered.slice(0, 20); // Limit to 20 results
   } catch (error) {
     console.error('Error searching companies:', error);
-    throw error;
+    return [];
   }
 };
 
