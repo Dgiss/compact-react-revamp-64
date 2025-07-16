@@ -18,6 +18,7 @@ export const useCompanyVehicleDevice = () => {
   // Cache for all data - single source of truth
   const [allDataCache, setAllDataCache] = useState(null);
   const [isCacheReady, setIsCacheReady] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // localStorage utilities
   const saveToLocalStorage = (data) => {
@@ -80,14 +81,13 @@ export const useCompanyVehicleDevice = () => {
   const loadAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setIsCacheReady(false);
     
     try {
       console.log('=== LOADING ALL DATA ===');
       
-      // Check localStorage first
+      // Check localStorage first (but don't reset isCacheReady if already true)
       const cachedData = loadFromLocalStorage();
-      if (cachedData) {
+      if (cachedData && !isCacheReady) {
         console.log('Using cached data from localStorage');
         setCompanies(cachedData.companies || []);
         setDevices(cachedData.vehicles || []);
@@ -450,6 +450,55 @@ export const useCompanyVehicleDevice = () => {
       return [];
     }
   }, [allDataCache, loadAllData]);
+
+  // Initialize cache from localStorage on mount
+  useEffect(() => {
+    if (!initialized) {
+      console.log('=== INITIALIZING CACHE FROM LOCALSTORAGE ===');
+      const cachedData = loadFromLocalStorage();
+      
+      if (cachedData) {
+        console.log('Found cached data in localStorage, initializing immediately');
+        setAllDataCache(cachedData);
+        setCompanies(cachedData.companies || []);
+        setDevices(cachedData.vehicles || []);
+        setIsCacheReady(true);
+        
+        // Update derived state
+        const freeDevicesCount = (cachedData.vehicles || []).filter(item => 
+          item.type === "device" && !item.isAssociated
+        ).length;
+        setFreeDevices(freeDevicesCount);
+        
+        const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
+        const associatedDeviceCount = (cachedData.vehicles || []).filter(item => 
+          item.type === "device" && item.isAssociated
+        ).length;
+        
+        setStats({
+          vehicleCount,
+          associatedDeviceCount,
+          freeDeviceCount: freeDevicesCount
+        });
+        
+        console.log('Cache initialized successfully:', {
+          companiesCount: cachedData.companies?.length || 0,
+          vehiclesCount: vehicleCount,
+          devicesCount: freeDevicesCount + associatedDeviceCount
+        });
+        
+        // Schedule background refresh
+        setTimeout(() => {
+          refreshDataInBackground();
+        }, 1000);
+      } else {
+        console.log('No cached data found, cache ready set to false');
+        setIsCacheReady(false);
+      }
+      
+      setInitialized(true);
+    }
+  }, [initialized]);
 
   // Reset to show all data
   const resetFilters = useCallback(() => {

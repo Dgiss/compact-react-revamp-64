@@ -41,9 +41,20 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   const isDeviceToVehicle = device?.type === "device";
   const isVehicleToDevice = device?.type === "vehicle";
 
+  // Debug cache status
+  useEffect(() => {
+    console.log('AssociateVehicleForm: Cache status changed:', {
+      isCacheReady,
+      hookLoading,
+      companiesCount: companies.length,
+      hasCache: !!allDataCache
+    });
+  }, [isCacheReady, hookLoading, companies.length, allDataCache]);
+
   // Wait for cache to be ready before loading companies
   useEffect(() => {
     if (isCacheReady) {
+      console.log('AssociateVehicleForm: Cache ready, loading companies...');
       loadCompaniesForSelect();
     }
   }, [loadCompaniesForSelect, isCacheReady]);
@@ -69,17 +80,24 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   }, [selectedCompany, isCacheReady, isVehicleToDevice]);
 
   const loadVehiclesForCompany = async (companyName) => {
-    console.log('Loading vehicles for company:', companyName);
+    console.log('AssociateVehicleForm: Loading vehicles for company:', companyName, 'Cache ready:', isCacheReady);
     setIsLoading(true);
     
     try {
+      if (!isCacheReady) {
+        console.log('AssociateVehicleForm: Cache not ready, cannot load vehicles');
+        setCompanyVehicles([]);
+        setIsLoading(false);
+        return;
+      }
+
       let vehicles = await getVehiclesByCompany(companyName);
-      console.log('Vehicles received from getVehiclesByCompany:', vehicles?.length || 0);
+      console.log('AssociateVehicleForm: Vehicles received from getVehiclesByCompany:', vehicles?.length || 0);
       
       if (!vehicles || vehicles.length === 0) {
-        console.log('No available vehicles found, trying getAllVehiclesByCompany...');
+        console.log('AssociateVehicleForm: No available vehicles found, trying getAllVehiclesByCompany...');
         const allVehicles = await getAllVehiclesByCompany(companyName);
-        console.log('All vehicles received:', allVehicles?.length || 0);
+        console.log('AssociateVehicleForm: All vehicles received:', allVehicles?.length || 0);
         
         if (allVehicles && allVehicles.length > 0) {
           vehicles = allVehicles;
@@ -87,11 +105,11 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
         }
       }
       
-      console.log('Setting company vehicles:', vehicles?.length || 0);
+      console.log('AssociateVehicleForm: Setting company vehicles:', vehicles?.length || 0);
       setCompanyVehicles(vehicles || []);
       
     } catch (error) {
-      console.error('Error loading vehicles:', error);
+      console.error('AssociateVehicleForm: Error loading vehicles:', error);
       setCompanyVehicles([]);
       toast({
         title: "Erreur",
