@@ -295,7 +295,7 @@ export const createVehicleData = async (data) => {
 };
 
 /**
- * Associate a device to a vehicle
+ * Associate a device to a vehicle (simplified approach)
  * @param {string} deviceImei - Device IMEI
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @returns {Promise<Object>} Association result
@@ -303,26 +303,13 @@ export const createVehicleData = async (data) => {
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  console.log('=== ASSOCIATING DEVICE TO VEHICLE ===');
+  console.log('=== ASSOCIATING DEVICE TO VEHICLE (SIMPLIFIED) ===');
   console.log('Device IMEI:', deviceImei);
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
-    // First, update the device to associate it with the vehicle
-    console.log('Updating device...');
-    const deviceUpdate = await client.graphql({
-      query: mutations.updateDevice,
-      variables: {
-        input: {
-          imei: deviceImei,
-          deviceVehicleImmat: vehicleImmat
-        }
-      }
-    });
-    console.log('Device update result:', deviceUpdate);
-
-    // Then, update the vehicle to reference the device
-    console.log('Updating vehicle...');
+    // Only update the vehicle to reference the device (simplified approach)
+    console.log('Updating vehicle with device IMEI...');
     const vehicleUpdate = await client.graphql({
       query: mutations.updateVehicle,
       variables: {
@@ -335,7 +322,7 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
     console.log('Vehicle update result:', vehicleUpdate);
 
     console.log('Device associated successfully:', { deviceImei, vehicleImmat });
-    return { success: true, deviceUpdate, vehicleUpdate };
+    return { success: true, vehicleUpdate };
   } catch (error) {
     console.error('Error associating device to vehicle:', error);
     console.error('Error details:', error.message);

@@ -91,10 +91,27 @@ export const useCompanyVehicleDevice = () => {
         allDataCache.companies
       );
       
+      console.log('Raw company vehicles found:', companyVehicles);
+      console.log('Company vehicles count:', companyVehicles.length);
+      
       // Filter for vehicles without an associated device (available for association)
-      const availableVehicles = companyVehicles.filter(vehicle => 
-        !vehicle.imei || vehicle.imei === "" || !vehicle.deviceData
-      );
+      const availableVehicles = companyVehicles.filter(vehicle => {
+        const hasImei = vehicle.imei && vehicle.imei !== "";
+        const hasDeviceImei = vehicle.vehicleDeviceImei && vehicle.vehicleDeviceImei !== "";
+        const hasDeviceData = vehicle.deviceData && vehicle.deviceData.imei;
+        
+        console.log(`Vehicle ${vehicle.immat || vehicle.immatriculation}:`, {
+          hasImei,
+          hasDeviceImei, 
+          hasDeviceData,
+          available: !hasImei && !hasDeviceImei && !hasDeviceData
+        });
+        
+        return !hasImei && !hasDeviceImei && !hasDeviceData;
+      });
+      
+      console.log('Available vehicles for association:', availableVehicles);
+      console.log('Available vehicles count:', availableVehicles.length);
       
       return availableVehicles;
     } catch (err) {

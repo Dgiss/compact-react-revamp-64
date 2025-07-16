@@ -50,11 +50,8 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
           const vehicles = await getVehiclesByCompany(selectedCompany);
           console.log('Vehicles returned from hook:', vehicles);
           
-          // The hook already filters for available vehicles, but let's double-check
-          const availableVehicles = vehicles.filter(vehicle => 
-            (!vehicle.imei || vehicle.imei === "") && 
-            (!vehicle.deviceData || !vehicle.deviceData.imei)
-          );
+          // The hook already filters for available vehicles
+          const availableVehicles = vehicles;
           
           console.log('Final available vehicles for association:', availableVehicles);
           setCompanyVehicles(availableVehicles);
@@ -162,7 +159,7 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       
       <div>
         <label className="block text-sm font-medium mb-2">
-          Véhicules {isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
+          Véhicules ({vehicleOptions.length} disponible{vehicleOptions.length !== 1 ? 's' : ''}) {isLoading && <span className="text-sm text-muted-foreground">(Chargement...)</span>}
         </label>
         <SearchableSelect 
           options={vehicleOptions}
