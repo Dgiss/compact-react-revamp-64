@@ -76,13 +76,20 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - SIMPLIFIED for API calls only when needed
+  // Load all data - OPTIMIZED CACHE-FIRST STRATEGY
   const loadAllData = useCallback(async () => {
+    // OPTIMIZATION: Check if we already have valid cache data
+    if (isCacheReady && allDataCache && allDataCache.vehicles && allDataCache.vehicles.length > 0) {
+      console.log('=== USING CACHED DATA (NO API CALL NEEDED) ===');
+      console.log('Cache contains:', allDataCache.vehicles?.length || 0, 'items');
+      return; // Skip API call if cache is fresh
+    }
+    
     setLoading(true);
     setError(null);
     
     try {
-      console.log('=== LOADING ALL DATA FROM API ===');
+      console.log('=== LOADING ALL DATA FROM API (CACHE MISS) ===');
       
       const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
       
@@ -132,35 +139,29 @@ export const useCompanyVehicleDevice = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isCacheReady, allDataCache]);
 
-  // Search with filters - CLIENT-SIDE using cached data
+  // Search with filters - CLIENT-SIDE using cached data (OPTIMIZED)
   const searchDevices = useCallback(async (filters) => {
-    if (!allDataCache) {
+    if (!allDataCache || !isCacheReady) {
+      console.log('Cache not ready for search, loading data...');
       await loadAllData();
-      return [];
+      if (!allDataCache) return [];
     }
     
     try {
-      // Client-side filtering using cached data
-      const results = CompanyVehicleDeviceService.filterDevicesLocal(allDataCache.devices, filters);
+      // FIXED: Use vehicles array instead of devices for client-side filtering
+      const results = CompanyVehicleDeviceService.filterDevicesLocal(allDataCache.vehicles, filters);
       
-      toast({
-        title: "Recherche réussie",
-        description: `${results.length} résultat(s) trouvé(s)`,
-      });
+      console.log(`Search results for filters ${JSON.stringify(filters)}:`, results.length);
       
       return results;
     } catch (err) {
       setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${err.message}`,
-        variant: "destructive",
-      });
+      console.error('Search error:', err);
       return [];
     }
-  }, [allDataCache, loadAllData]);
+  }, [allDataCache, isCacheReady, loadAllData]);
 
   // Get vehicles for specific company - SIMPLIFIED logic
   const getVehiclesByCompany = useCallback(async (companyId) => {

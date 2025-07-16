@@ -5,7 +5,7 @@ import { waitForAmplifyConfig } from '@/config/aws-config.js';
 const client = generateClient();
 
 /**
- * Associate a device to a vehicle using vehicleDeviceImei field
+ * Associate a device to a vehicle using vehicleDeviceImei field - CORRECTED
  * @param {string} deviceImei - Device IMEI
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @returns {Promise<Object>} Association result
@@ -13,12 +13,12 @@ const client = generateClient();
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  console.log('=== ASSOCIATING DEVICE TO VEHICLE (SIMPLIFIED) ===');
+  console.log('=== ASSOCIATING DEVICE TO VEHICLE (CORRECTED) ===');
   console.log('Device IMEI:', deviceImei);
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
-    // Update vehicle with device IMEI using vehicleDeviceImei field
+    // FIXED: Update vehicle with device IMEI using the existing vehicleDeviceImei field
     const vehicleUpdate = await client.graphql({
       query: mutations.updateVehicle,
       variables: {
@@ -29,10 +29,10 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
       }
     });
     
-    console.log('Vehicle update result:', vehicleUpdate);
+    console.log('Vehicle association successful:', vehicleUpdate.data?.updateVehicle);
     console.log('Device associated successfully to vehicle');
     
-    return { success: true, vehicleUpdate };
+    return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
   } catch (error) {
     console.error('Error associating device to vehicle:', error);
     console.error('Error details:', error.message);
@@ -44,17 +44,18 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
 };
 
 /**
- * Get free devices from cache (devices not associated with vehicles)
+ * Get free devices from cache (devices not associated with vehicles) - CORRECTED
  * @param {Array} cachedVehicles - Cached vehicles data
  * @returns {Array} Free devices
  */
 export const getFreeDevicesFromCache = (cachedVehicles) => {
   if (!cachedVehicles) return [];
   
+  // FIXED: Correctly identify free devices using vehicleDeviceImei absence
   const freeDevices = cachedVehicles.filter(item => 
     item.type === "device" && 
     !item.isAssociated &&
-    item.entreprise === "Boîtier libre"
+    (item.entreprise === "Boîtier libre" || !item.vehicleDeviceImei)
   );
   
   console.log('Free devices found in cache:', freeDevices.length);
@@ -62,7 +63,7 @@ export const getFreeDevicesFromCache = (cachedVehicles) => {
 };
 
 /**
- * Get vehicles available for association from cache (vehicles without deviceImei)
+ * Get vehicles available for association from cache (vehicles without deviceImei) - CORRECTED
  * @param {Array} cachedVehicles - Cached vehicles data
  * @param {string} companyId - Company ID
  * @returns {Array} Available vehicles
@@ -70,6 +71,7 @@ export const getFreeDevicesFromCache = (cachedVehicles) => {
 export const getAvailableVehiclesFromCache = (cachedVehicles, companyId) => {
   if (!cachedVehicles) return [];
   
+  // FIXED: Use consistent vehicleDeviceImei field check
   const availableVehicles = cachedVehicles.filter(item => 
     item.type === "vehicle" && 
     item.companyVehiclesId === companyId &&

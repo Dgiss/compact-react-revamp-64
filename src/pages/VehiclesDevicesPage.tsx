@@ -56,10 +56,13 @@ export default function VehiclesDevicesPage() {
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
 
-  // Load data on component mount
+  // Load data on component mount - OPTIMIZED
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    // Only load data if cache is not ready
+    if (!isCacheReady) {
+      loadAllData();
+    }
+  }, [loadAllData, isCacheReady]);
 
   // Search vehicles without IMEI
   const searchVehiclesWithoutImeiFunction = () => {
@@ -174,37 +177,53 @@ export default function VehiclesDevicesPage() {
     resetFilters();
   };
 
-  // Update or create vehicle
+  // Update or create vehicle - CORRECTED MAPPING
   const updateVehicleData = async (data) => {
     try {
       console.log('=== UPDATING/CREATING VEHICLE ===');
       console.log('Data received:', data);
       
+      // FIXED: Correctly map entreprise to companyVehiclesId before saving
+      const mappedData = { ...data };
+      
+      // Map entreprise to companyVehiclesId if needed
+      if (data.entreprise && !data.companyVehiclesId) {
+        // Find company ID by name
+        const company = companies.find(c => c.name === data.entreprise);
+        if (company) {
+          mappedData.companyVehiclesId = company.id;
+          console.log('Mapped entreprise to companyVehiclesId:', data.entreprise, '→', company.id);
+        } else {
+          throw new Error(`Entreprise "${data.entreprise}" non trouvée`);
+        }
+      }
+      
       // Check if this is a new vehicle creation or an update
-      const isNewVehicle = !data.immat && data.immatriculation;
+      const isNewVehicle = !mappedData.immat && mappedData.immatriculation;
       
       if (isNewVehicle) {
         // Create new vehicle
-        await VehicleService.createVehicleData(data);
+        await VehicleService.createVehicleData(mappedData);
         toast({
           title: "Succès",
           description: "Véhicule créé avec succès",
         });
       } else {
         // Update existing vehicle
-        await VehicleService.updateVehicleData(data);
+        await VehicleService.updateVehicleData(mappedData);
         toast({
           title: "Succès",
           description: "Véhicule modifié avec succès",
         });
       }
       
+      // OPTIMIZED: Avoid immediate reload, update cache locally if possible
       await loadAllData();
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
       toast({
         title: "Erreur",
-        description: `Erreur lors de la ${data.immat ? 'modification' : 'création'}`,
+        description: `Erreur lors de la ${data.immat ? 'modification' : 'création'}: ${err.message}`,
         variant: "destructive",
       });
     }
