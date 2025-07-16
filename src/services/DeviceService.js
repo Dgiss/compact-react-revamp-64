@@ -75,12 +75,12 @@ export const createDevice = async (deviceData) => {
     }
     
     // Prepare device details for GraphQL - ensure proper types
+    // Do NOT include deviceVehicleImmat to avoid GraphQL Vehicle relation errors
     const deviceDetails = {
       imei: String(deviceData.imei),
       sim: deviceData.sim ? String(deviceData.sim) : null,
       protocolId: deviceData.protocolId ? Number(deviceData.protocolId) : null,
       flespiDeviceId: flespiDeviceId ? Number(flespiDeviceId) : null,
-      deviceVehicleImmat: deviceData.deviceVehicleImmat ? String(deviceData.deviceVehicleImmat) : null,
       name: deviceData.name ? String(deviceData.name) : null,
       enabled: deviceData.enabled !== undefined ? Boolean(deviceData.enabled) : true // Default to enabled
     };

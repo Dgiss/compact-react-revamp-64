@@ -261,10 +261,14 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [devices, companies]);
 
-  // Reset to show all data
+  // Reset to empty state (no automatic loading)
   const resetFilters = useCallback(() => {
-    loadAllData();
-  }, [loadAllData]);
+    setDevices([]);
+    setCompanies([]);
+    setVehicles([]);
+    setFreeDevices([]);
+    setStats({});
+  }, []);
 
   return {
     // Data

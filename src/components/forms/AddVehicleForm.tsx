@@ -138,8 +138,8 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
           await createDevice({
             imei: imei,
             sim: sim || null,
-            protocolId: protocolIdNumber,
-            deviceVehicleImmat: type === "vehicle" ? immatriculation : null // Only associate if creating vehicle
+            protocolId: protocolIdNumber
+            // Remove deviceVehicleImmat to prevent GraphQL Vehicle relation errors
           });
           deviceCreated = true;
           

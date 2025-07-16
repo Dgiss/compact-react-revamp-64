@@ -49,10 +49,10 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // Load data on component mount
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+  // Don't load data automatically - only after search
+  // useEffect(() => {
+  //   loadAllData();
+  // }, [loadAllData]);
 
   // Debug: Log data when it changes
   useEffect(() => {
@@ -432,7 +432,7 @@ export default function VehiclesDevicesPage() {
       
       <EnhancedDataTable
         columns={allColumns}
-        data={filteredData.length > 0 ? filteredData : devices}
+        data={filteredData.length > 0 ? filteredData : []} 
         onEdit={handleEdit}
         renderActions={(item) => (
           <div className="flex gap-1">
