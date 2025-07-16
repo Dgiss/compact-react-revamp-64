@@ -311,32 +311,21 @@ export const searchByVehicle = async (vehicle) => {
 };
 
 /**
- * Search devices by company only - optimized version using cached data
+ * Search devices by company only - independent data loading
  * @param {string} company - Company to search for
- * @param {Array} cachedVehicles - Pre-loaded vehicles data (optional)
- * @param {Array} cachedCompanies - Pre-loaded companies data (optional)
  * @returns {Promise<Array>} Filtered results
  */
-export const searchByCompany = async (company, cachedVehicles = null, cachedCompanies = null) => {
+export const searchByCompany = async (company) => {
   try {
     console.log('=== COMPANY SEARCH DEBUG ===');
     console.log('Searching for company:', company);
     console.log('Company type:', typeof company);
-    console.log('Using cached data:', !!cachedVehicles);
     
-    let vehicles, companies;
-    
-    // Use cached data if available, otherwise fetch
-    if (cachedVehicles && cachedCompanies) {
-      vehicles = cachedVehicles;
-      companies = cachedCompanies;
-      console.log('Using cached data - vehicles:', vehicles.length, 'companies:', companies.length);
-    } else {
-      const data = await VehicleService.fetchCompaniesWithVehicles();
-      vehicles = data.vehicles;
-      companies = data.companies;
-      console.log('Fetched fresh data - vehicles:', vehicles.length, 'companies:', companies.length);
-    }
+    // Always fetch fresh data for search
+    const data = await VehicleService.fetchCompaniesWithVehicles();
+    const vehicles = data.vehicles;
+    const companies = data.companies;
+    console.log('Fetched fresh data - vehicles:', vehicles.length, 'companies:', companies.length);
     
     // If company is an ID (UUID format), find the company name first
     let searchTerm = company;

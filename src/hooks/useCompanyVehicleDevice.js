@@ -218,19 +218,8 @@ export const useCompanyVehicleDevice = () => {
     setError(null);
     
     try {
-      // Use cached data if available for better performance
-      const cachedVehicles = devices.length > 0 ? devices : null;
-      const cachedCompanies = companies.length > 0 ? companies : null;
-      
-      console.log('searchByCompany - using cached data:', !!cachedVehicles);
-      console.log('searchByCompany - cached vehicles count:', cachedVehicles?.length || 0);
-      console.log('searchByCompany - cached companies count:', cachedCompanies?.length || 0);
-      
-      const results = await CompanyVehicleDeviceService.searchByCompany(
-        company, 
-        cachedVehicles, 
-        cachedCompanies
-      );
+      // Fetch fresh data for search (no caching needed)
+      const results = await CompanyVehicleDeviceService.searchByCompany(company);
       
       setDevices(results);
       
@@ -259,7 +248,7 @@ export const useCompanyVehicleDevice = () => {
     } finally {
       setLoading(false);
     }
-  }, [devices, companies]);
+  }, []);
 
   // Reset to empty state (no automatic loading)
   const resetFilters = useCallback(() => {
