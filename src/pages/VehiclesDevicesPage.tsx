@@ -11,7 +11,7 @@ import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
-import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
+import { useOptimizedVehicleData } from "@/hooks/useOptimizedVehicleData";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
@@ -19,18 +19,15 @@ import * as VehicleService from "@/services/VehicleService";
 export default function VehiclesDevicesPage() {
   const {
     companies,
-    devices: combinedData,
-    loading,
-    loadAllData,
-    searchDevices,
+    vehicles: combinedData,
+    isLoading: loading,
+    refetch,
     searchByImei,
-    searchBySim,
     searchByVehicle,
     searchByCompany,
-    resetFilters,
-    isFiltered,
-    totalResults
-  } = useCompanyVehicleDevice();
+    totalVehicles,
+    totalCompanies
+  } = useOptimizedVehicleData();
   
   // Local state for filtered data when using search
   const [filteredData, setFilteredData] = useState([]);
@@ -49,13 +46,10 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
 
-  // Load data on component mount
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+  // Data is automatically loaded by the hook
 
-  // Search vehicles with filters
-  const searchVehicles = async () => {
+  // Search vehicles with filters (client-side for better performance)
+  const searchVehicles = () => {
     if (!searchImei && !searchImmat && !searchEntreprise) {
       toast({
         title: "Attention",
@@ -65,53 +59,28 @@ export default function VehiclesDevicesPage() {
       return;
     }
 
-    console.log('=== SEARCH INITIATED ===');
-    console.log('Search criteria:', { searchImei, searchImmat, searchEntreprise });
-    console.log('Available data in hook:', { 
-      combinedDataLength: combinedData.length,
-      companiesLength: companies.length 
-    });
-
     try {
-      // Determine search type based on how many criteria are filled
-      const filledCriteria = [searchImei, searchImmat, searchEntreprise].filter(Boolean);
+      let results = combinedData;
       
-      let results;
-      if (filledCriteria.length === 1) {
-        // Single criteria search - use specific functions with optimized caching
-        if (searchImei) {
-          console.log('Single IMEI search for:', searchImei);
-          results = await searchByImei(searchImei);
-        } else if (searchImmat) {
-          console.log('Single vehicle search for:', searchImmat);
-          results = await searchByVehicle(searchImmat);
-        } else if (searchEntreprise) {
-          console.log('Single company search for:', searchEntreprise);
-          console.log('Company search term:', searchEntreprise);
-          // The searchByCompany function will now use cached data automatically
-          results = await searchByCompany(searchEntreprise);
-        }
-      } else {
-        // Multiple criteria search - use combined search
-        console.log('Multiple criteria search');
-        results = await searchDevices({
-          imei: searchImei,
-          immatriculation: searchImmat,
-          entreprise: searchEntreprise
-        });
+      // Apply filters sequentially for multiple criteria
+      if (searchImei) {
+        results = searchByImei(searchImei);
+      }
+      if (searchImmat && results.length > 0) {
+        results = results.filter(item => 
+          item.immatriculation?.toLowerCase().includes(searchImmat.toLowerCase()) ||
+          item.nomVehicule?.toLowerCase().includes(searchImmat.toLowerCase())
+        );
+      }
+      if (searchEntreprise && results.length > 0) {
+        results = results.filter(item => 
+          item.entreprise?.toLowerCase().includes(searchEntreprise.toLowerCase())
+        );
       }
       
-      console.log('Search results received:', results?.length || 0);
-      console.log('First 3 results:', results?.slice(0, 3).map(r => ({
-        entreprise: r.entreprise,
-        imei: r.imei,
-        type: r.type,
-        immatriculation: r.immatriculation
-      })));
+      setFilteredData(results);
       
-      setFilteredData(results || []);
-      
-      if (!results || results.length === 0) {
+      if (results.length === 0) {
         toast({
           title: "Aucun résultat",
           description: "Aucun véhicule ou boîtier trouvé avec ces critères",
@@ -140,7 +109,6 @@ export default function VehiclesDevicesPage() {
     setSearchImmat('');
     setSearchEntreprise('');
     setFilteredData([]);
-    resetFilters();
   };
 
   // Update or create vehicle
@@ -168,7 +136,7 @@ export default function VehiclesDevicesPage() {
         });
       }
       
-      await loadAllData();
+      refetch();
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
       toast({
@@ -189,7 +157,7 @@ export default function VehiclesDevicesPage() {
         description: "Véhicule supprimé avec succès",
       });
       
-      await loadAllData();
+      refetch();
     } catch (err) {
       console.error('Error deleting vehicle:', err);
       toast({
@@ -457,7 +425,7 @@ export default function VehiclesDevicesPage() {
               });
               setShowAssociateSheet(false);
               // Refresh data to show the new association
-              await loadAllData();
+              refetch();
             }}
           />
         </SheetContent>
