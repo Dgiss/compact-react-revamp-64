@@ -17,11 +17,12 @@ export const useOptimizedVehicleData = () => {
     queryKey: QUERY_KEY,
     queryFn: fetchCompaniesWithVehicles,
     staleTime: STALE_TIME,
-    cacheTime: STALE_TIME * 2,
+    gcTime: STALE_TIME * 2,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     retry: 2,
     onError: (error) => {
+      console.error('Query error:', error);
       toast({
         title: "Erreur de chargement",
         description: `Erreur lors du chargement des données: ${error.message}`,
@@ -39,31 +40,35 @@ export const useOptimizedVehicleData = () => {
 
   // Search functions with client-side filtering for better performance
   const searchByImei = (imei) => {
-    if (!data?.vehicles) return [];
+    if (!data?.vehicles || !imei) return [];
+    const searchTerm = imei.toString().toLowerCase();
     return data.vehicles.filter(vehicle => 
-      vehicle.imei?.toLowerCase().includes(imei.toLowerCase())
+      vehicle.imei?.toString().toLowerCase().includes(searchTerm)
     );
   };
 
   const searchBySim = (sim) => {
-    if (!data?.vehicles) return [];
+    if (!data?.vehicles || !sim) return [];
+    const searchTerm = sim.toString().toLowerCase();
     return data.vehicles.filter(vehicle => 
-      vehicle.telephone?.toLowerCase().includes(sim.toLowerCase())
+      vehicle.telephone?.toString().toLowerCase().includes(searchTerm)
     );
   };
 
   const searchByCompany = (company) => {
-    if (!data?.vehicles) return [];
+    if (!data?.vehicles || !company) return [];
+    const searchTerm = company.toString().toLowerCase();
     return data.vehicles.filter(vehicle => 
-      vehicle.entreprise?.toLowerCase().includes(company.toLowerCase())
+      vehicle.entreprise?.toString().toLowerCase().includes(searchTerm)
     );
   };
 
   const searchByVehicle = (vehicle) => {
-    if (!data?.vehicles) return [];
+    if (!data?.vehicles || !vehicle) return [];
+    const searchTerm = vehicle.toString().toLowerCase();
     return data.vehicles.filter(v => 
-      v.immatriculation?.toLowerCase().includes(vehicle.toLowerCase()) ||
-      v.nomVehicule?.toLowerCase().includes(vehicle.toLowerCase())
+      v.immatriculation?.toString().toLowerCase().includes(searchTerm) ||
+      v.nomVehicule?.toString().toLowerCase().includes(searchTerm)
     );
   };
 

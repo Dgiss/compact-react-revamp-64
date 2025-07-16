@@ -60,22 +60,36 @@ export default function VehiclesDevicesPage() {
     }
 
     try {
-      let results = combinedData;
+      let results = [...combinedData];
       
-      // Apply filters sequentially for multiple criteria
+      // Apply filters based on search criteria
       if (searchImei) {
         results = searchByImei(searchImei);
       }
-      if (searchImmat && results.length > 0) {
-        results = results.filter(item => 
-          item.immatriculation?.toLowerCase().includes(searchImmat.toLowerCase()) ||
-          item.nomVehicule?.toLowerCase().includes(searchImmat.toLowerCase())
-        );
+      
+      if (searchImmat) {
+        if (searchImei) {
+          // If IMEI search was already applied, filter the results
+          results = results.filter(item => 
+            item.immatriculation?.toString().toLowerCase().includes(searchImmat.toLowerCase()) ||
+            item.nomVehicule?.toString().toLowerCase().includes(searchImmat.toLowerCase())
+          );
+        } else {
+          // If no IMEI search, use vehicle search function
+          results = searchByVehicle(searchImmat);
+        }
       }
-      if (searchEntreprise && results.length > 0) {
-        results = results.filter(item => 
-          item.entreprise?.toLowerCase().includes(searchEntreprise.toLowerCase())
-        );
+      
+      if (searchEntreprise) {
+        if (searchImei || searchImmat) {
+          // Filter existing results
+          results = results.filter(item => 
+            item.entreprise?.toString().toLowerCase().includes(searchEntreprise.toLowerCase())
+          );
+        } else {
+          // Use company search function
+          results = searchByCompany(searchEntreprise);
+        }
       }
       
       setFilteredData(results);
@@ -272,6 +286,25 @@ export default function VehiclesDevicesPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p>Chargement des véhicules et boîtiers...</p>
+          <p className="text-sm text-gray-500 mt-2">Récupération des données depuis l'API...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show debug info if no data
+  if (!loading && (!combinedData || combinedData.length === 0)) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-gray-600">Aucune donnée trouvée</p>
+          <Button 
+            onClick={() => refetch()} 
+            variant="outline" 
+            className="mt-4"
+          >
+            Recharger
+          </Button>
         </div>
       </div>
     );
