@@ -49,6 +49,18 @@ export const createDevice = async (deviceData) => {
       throw new Error('IMEI is required for device creation');
     }
     
+    // Check if device already exists to prevent ConditionalCheckFailedException
+    try {
+      const existingDevices = await fetchAllDevices();
+      const existingDevice = existingDevices.find(d => d.imei === deviceData.imei);
+      if (existingDevice) {
+        console.warn(`Device with IMEI ${deviceData.imei} already exists, returning existing device`);
+        return existingDevice;
+      }
+    } catch (checkError) {
+      console.warn('Could not check for existing device, proceeding with creation:', checkError.message);
+    }
+    
     // First, add device to Flespi (optional, continue if it fails)
     let flespiDeviceId = null;
     try {
@@ -58,7 +70,8 @@ export const createDevice = async (deviceData) => {
       });
       console.log('Device added to Flespi with ID:', flespiDeviceId);
     } catch (flespiError) {
-      console.warn('Failed to add device to Flespi, continuing with GraphQL creation:', flespiError.message);
+      console.warn('Failed to add device to Flespi (401 Unauthorized - API key may be invalid), continuing with GraphQL creation:', flespiError.message);
+      // Don't let Flespi errors stop device creation
     }
     
     // Prepare device details for GraphQL - ensure proper types
@@ -94,6 +107,22 @@ export const createDevice = async (deviceData) => {
   } catch (error) {
     console.error('Error creating device:', error);
     console.error('Full error details:', JSON.stringify(error, null, 2));
+    
+    // Handle specific DynamoDB errors
+    if (error.errorType === 'DynamoDB:ConditionalCheckFailedException') {
+      console.warn('Device may already exist due to ConditionalCheckFailedException, attempting to fetch existing device');
+      try {
+        const existingDevices = await fetchAllDevices();
+        const existingDevice = existingDevices.find(d => d.imei === deviceData.imei);
+        if (existingDevice) {
+          console.log('Found existing device, returning it:', existingDevice);
+          return existingDevice;
+        }
+      } catch (fetchError) {
+        console.error('Could not fetch existing device:', fetchError.message);
+      }
+    }
+    
     throw error;
   }
 };

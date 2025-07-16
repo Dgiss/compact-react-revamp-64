@@ -46,11 +46,16 @@ export const fetchCompaniesWithVehicles = async () => {
     
     // Now fetch vehicles for each company using vehiclesByCompanyVehiclesId
     let totalVehiclesFromCompanies = 0;
+    let successfulCompanies = 0;
+    let failedCompanies = 0;
+    
     for (const company of allCompanies) {
       console.log(`=== PROCESSING COMPANY: ${company.name} (ID: ${company.id}) ===`);
       
       try {
         let companyNextToken = null;
+        let companyVehicleCount = 0;
+        
         do {
           const vehiclesResult = await client.graphql({
             query: queries.vehiclesByCompanyVehiclesId,
@@ -63,6 +68,7 @@ export const fetchCompaniesWithVehicles = async () => {
           
           const vehiclesData = vehiclesResult.data.vehiclesByCompanyVehiclesId;
           console.log(`Company ${company.name} vehicles batch:`, vehiclesData.items.length);
+          companyVehicleCount += vehiclesData.items.length;
           
           if (vehiclesData.items.length > 0) {
             console.log('Sample vehicle with relations:', JSON.stringify(vehiclesData.items[0], null, 2));
@@ -107,10 +113,29 @@ export const fetchCompaniesWithVehicles = async () => {
           
         } while (companyNextToken);
         
+        console.log(`✅ Company ${company.name}: ${companyVehicleCount} vehicles processed successfully`);
+        successfulCompanies++;
+        
       } catch (error) {
-        console.error(`Error fetching vehicles for company ${company.name}:`, error);
+        console.error(`❌ Error fetching vehicles for company ${company.name}:`, error);
+        console.error('Error type:', error.errorType);
+        console.error('Error message:', error.message);
+        
+        // Continue processing other companies even if one fails
+        failedCompanies++;
+        
+        // Log the specific GraphQL error details
+        if (error.errors) {
+          console.error('GraphQL errors:', error.errors);
+        }
       }
     }
+    
+    console.log(`=== COMPANY PROCESSING SUMMARY ===`);
+    console.log(`Total companies: ${allCompanies.length}`);
+    console.log(`Successful: ${successfulCompanies}`);
+    console.log(`Failed: ${failedCompanies}`);
+    console.log(`Vehicles retrieved: ${totalVehiclesFromCompanies}`);
     
     console.log('Total vehicles processed from companies:', totalVehiclesFromCompanies);
     
