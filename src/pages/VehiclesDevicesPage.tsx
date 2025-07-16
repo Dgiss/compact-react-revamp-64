@@ -48,14 +48,38 @@ export default function VehiclesDevicesPage() {
   const [searchImei, setSearchImei] = useState('');
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
+  const [searchVehiclesWithoutImei, setSearchVehiclesWithoutImei] = useState(false);
 
   // Load data on component mount
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
 
+  // Search vehicles without IMEI
+  const searchVehiclesWithoutImeiFunction = () => {
+    console.log('=== SEARCHING VEHICLES WITHOUT IMEI ===');
+    const vehiclesWithoutImei = combinedData.filter(item => 
+      item.type === "vehicle" && 
+      (!item.imei || item.imei === "") && 
+      (!item.vehicleDeviceImei || item.vehicleDeviceImei === "")
+    );
+    
+    console.log('Vehicles without IMEI found:', vehiclesWithoutImei.length);
+    setFilteredData(vehiclesWithoutImei);
+    
+    toast({
+      title: "Recherche réussie",
+      description: `${vehiclesWithoutImei.length} véhicule(s) sans IMEI trouvé(s)`,
+    });
+  };
+
   // Search vehicles with filters
   const searchVehicles = async () => {
+    if (searchVehiclesWithoutImei) {
+      searchVehiclesWithoutImeiFunction();
+      return;
+    }
+    
     if (!searchImei && !searchImmat && !searchEntreprise) {
       toast({
         title: "Attention",
@@ -139,6 +163,7 @@ export default function VehiclesDevicesPage() {
     setSearchImei('');
     setSearchImmat('');
     setSearchEntreprise('');
+    setSearchVehiclesWithoutImei(false);
     setFilteredData([]);
     resetFilters();
   };
@@ -312,7 +337,7 @@ export default function VehiclesDevicesPage() {
   return (
     <div>
       {/* Search Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
         <div>
           <label className="block text-sm font-medium mb-2">IMEI</label>
           <input
@@ -321,6 +346,7 @@ export default function VehiclesDevicesPage() {
             value={searchImei}
             onChange={(e) => setSearchImei(e.target.value)}
             placeholder="Rechercher par IMEI..."
+            disabled={searchVehiclesWithoutImei}
           />
         </div>
         <div>
@@ -331,6 +357,7 @@ export default function VehiclesDevicesPage() {
             value={searchImmat}
             onChange={(e) => setSearchImmat(e.target.value)}
             placeholder="Rechercher par immatriculation..."
+            disabled={searchVehiclesWithoutImei}
           />
         </div>
         <div>
@@ -340,7 +367,30 @@ export default function VehiclesDevicesPage() {
             onValueChange={setSearchEntreprise}
             placeholder="Rechercher par entreprise..."
             searchFunction={searchCompaniesReal}
+            disabled={searchVehiclesWithoutImei}
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Filtres spéciaux</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="vehiclesWithoutImei"
+              checked={searchVehiclesWithoutImei}
+              onChange={(e) => {
+                setSearchVehiclesWithoutImei(e.target.checked);
+                if (e.target.checked) {
+                  setSearchImei('');
+                  setSearchImmat('');
+                  setSearchEntreprise('');
+                }
+              }}
+              className="h-4 w-4"
+            />
+            <label htmlFor="vehiclesWithoutImei" className="text-sm">
+              Véhicules sans IMEI
+            </label>
+          </div>
         </div>
         <div className="flex items-end gap-2">
           <Button 
