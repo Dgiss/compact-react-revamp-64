@@ -14,7 +14,7 @@ export const fetchAllDevices = async () => {
   
   do {
     const variables = {
-      limit: 1000,
+      limit: 2000, // Increased limit for fewer round trips
       nextToken: nextToken
     };
     
