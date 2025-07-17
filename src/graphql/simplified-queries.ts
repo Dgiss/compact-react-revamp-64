@@ -37,8 +37,9 @@ export const listDevicesSimple = /* GraphQL */ `
     ) {
       items {
         imei
-        typeBoitier
-        deviceVehicleImmat
+        protocolId
+        name
+        enabled
         __typename
       }
       nextToken

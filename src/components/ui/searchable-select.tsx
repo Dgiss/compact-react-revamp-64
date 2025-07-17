@@ -65,7 +65,7 @@ export function SearchableSelect({
       
       const deviceOptions = unassignedDevices.map(device => ({
         value: device.imei,
-        label: `${device.imei} ${device.protocolId ? `(Protocol: ${device.protocolId})` : ''}`
+        label: `${device.imei}${device.name ? ` (${device.name})` : device.protocolId ? ` (Protocol: ${device.protocolId})` : ''}`
       }))
       
       console.log('SearchableSelect: Loaded device options:', deviceOptions.length)
