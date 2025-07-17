@@ -202,6 +202,8 @@ type Vehicle @model
     gefcoSend: String
     tankCapacity: String
     canMileage: String
+    # Device association via IMEI field (direct association)
+    vehicleDeviceImei: String
     # Relationships
     companyVehiclesId: ID! @index(name: "vehiclesByCompany")
     company: Company! @belongsTo (fields: ["companyVehiclesId"])

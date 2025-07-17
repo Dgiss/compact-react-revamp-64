@@ -120,23 +120,13 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   };
   
   const loadDevicesForCompany = async (companyName) => {
-    console.log('Loading devices for company:', companyName);
+    console.log('Loading devices for company (vehicle-device association):', companyName);
     setLoadingDevices(true);
     
     try {
-      if (!allDataCache) {
-        setCompanyDevices([]);
-        return;
-      }
-      
-      // Get free devices from cache
-      const freeDevices = allDataCache.vehicles?.filter(item => 
-        item.type === "device" && 
-        !item.isAssociated &&
-        (item.entreprise === "Boîtier libre" || item.entreprise === companyName)
-      ) || [];
-      
-      console.log('Free devices found:', freeDevices.length);
+      // Use the updated function that checks both company and vehicle associations
+      const freeDevices = await CompanyDeviceService.getUnassignedDevices();
+      console.log('Free devices found for vehicle association:', freeDevices.length);
       setCompanyDevices(freeDevices);
       
     } catch (error) {
@@ -224,7 +214,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       setIsSubmitting(true);
 
       try {
-        await VehicleService.associateDeviceToVehicle(device.imei, selectedVehicle);
+        await VehicleService.associateVehicleToDevice(selectedVehicle, device.imei);
         
         toast({
           title: "Succès",
@@ -267,7 +257,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
 
       try {
         const vehicleImmat = device.vehicleImmat || device.immatriculation || device.immat;
-        await VehicleService.associateDeviceToVehicle(selectedDeviceImei, vehicleImmat);
+        await VehicleService.associateVehicleToDevice(vehicleImmat, selectedDeviceImei);
         
         toast({
           title: "Succès",

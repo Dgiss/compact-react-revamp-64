@@ -317,7 +317,7 @@ export const getDeviceStatusInfo = async (deviceImei) => {
 };
 
 /**
- * Get unassigned devices (devices not associated with any company)
+ * Get unassigned devices (devices not associated with any company OR vehicle)
  * @returns {Promise<Array>} Array of unassigned devices
  */
 export const getUnassignedDevices = async () => {
@@ -342,14 +342,28 @@ export const getUnassignedDevices = async () => {
     });
     
     const activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
-    const associatedDeviceImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
+    const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
     
-    // Filter out devices that are associated with companies
-    const unassignedDevices = allDevices.filter(device => 
-      !associatedDeviceImeis.has(device.imei)
+    // Get all vehicles to check for vehicleDeviceImei associations
+    const vehiclesResponse = await client.graphql({
+      query: queries.listVehicles
+    });
+    
+    const allVehicles = vehiclesResponse.data?.listVehicles?.items || [];
+    const vehicleAssociatedImeis = new Set(
+      allVehicles
+        .map(v => v.vehicleDeviceImei)
+        .filter(Boolean)
     );
     
-    console.log('Found unassigned devices:', unassignedDevices.length);
+    // Filter out devices that are associated with companies OR vehicles
+    const unassignedDevices = allDevices.filter(device => 
+      !companyAssociatedImeis.has(device.imei) && !vehicleAssociatedImeis.has(device.imei)
+    );
+    
+    console.log('Found unassigned devices (company + vehicle check):', unassignedDevices.length);
+    console.log('Company associated:', companyAssociatedImeis.size);
+    console.log('Vehicle associated:', vehicleAssociatedImeis.size);
     return unassignedDevices;
   } catch (error) {
     console.error('Error getting unassigned devices:', error);

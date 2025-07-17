@@ -88,7 +88,7 @@ export const fetchCompaniesWithVehicles = async () => {
               type: "vehicle",
               immatriculation: vehicle.immat || "",
               nomVehicule: vehicle.nomVehicule || vehicle.code || "",
-              imei: vehicle.device?.imei || "",
+              imei: vehicle.vehicleDeviceImei || vehicle.device?.imei || "",
               typeBoitier: vehicle.device?.protocolId?.toString() || "",
               marque: vehicle.marque || vehicle.brand?.brandName || "",
               modele: vehicle.modele_id || vehicle.modele?.modele || "",
@@ -96,8 +96,8 @@ export const fetchCompaniesWithVehicles = async () => {
               telephone: vehicle.device?.sim || "",
               emplacement: vehicle.locations || "",
               deviceData: vehicle.device || null,
-              // FIXED: Use GraphQL relation for association detection
-              isAssociated: !!(vehicle.device?.imei),
+              // Use vehicleDeviceImei for association detection
+              isAssociated: !!(vehicle.vehicleDeviceImei || vehicle.device?.imei),
               // Additional fields
               AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
               energie: vehicle.energie || "",
@@ -124,10 +124,10 @@ export const fetchCompaniesWithVehicles = async () => {
     
     console.log('Total vehicles processed from companies:', totalVehiclesFromCompanies);
     
-    // FIXED: Find devices that are not associated with any vehicle using GraphQL relations
+    // Find devices associated with vehicles (both via vehicleDeviceImei and device relation)
     const associatedDeviceImeis = new Set(
       allVehicles
-        .map(v => v.deviceData?.imei)
+        .map(v => v.vehicleDeviceImei || v.deviceData?.imei)
         .filter(Boolean)
     );
     
@@ -301,40 +301,84 @@ export const createVehicleData = async (data) => {
 };
 
 /**
- * Associate a device to a vehicle using GraphQL relations (FIXED)
- * @param {string} deviceImei - Device IMEI
+ * Associate a vehicle to a device using vehicleDeviceImei field
  * @param {string} vehicleImmat - Vehicle immatriculation
+ * @param {string} deviceImei - Device IMEI
  * @returns {Promise<Object>} Association result
  */
-export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
+export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
   await waitForAmplifyConfig();
   
-  console.log('=== ASSOCIATING DEVICE TO VEHICLE (FIXED GRAPHQL) ===');
-  console.log('Device IMEI:', deviceImei);
+  console.log('=== ASSOCIATING VEHICLE TO DEVICE (via vehicleDeviceImei) ===');
   console.log('Vehicle immat:', vehicleImmat);
+  console.log('Device IMEI:', deviceImei);
   
   try {
-    // CRITICAL FIX: Use GraphQL relations - update Device to link to Vehicle
-    const deviceUpdate = await client.graphql({
-      query: mutations.updateDevice,
+    const vehicleUpdate = await client.graphql({
+      query: mutations.updateVehicle,
       variables: {
         input: {
-          imei: deviceImei,
-          vehicleImmat: vehicleImmat // This creates the @belongsTo relation
+          immat: vehicleImmat,
+          vehicleDeviceImei: deviceImei
         }
       }
     });
     
-    console.log('Device association successful:', deviceUpdate.data?.updateDevice);
-    console.log('Device associated successfully to vehicle via GraphQL relation');
+    console.log('Vehicle-device association successful:', vehicleUpdate.data?.updateVehicle);
     
-    return { success: true, deviceUpdate: deviceUpdate.data?.updateDevice };
+    return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
   } catch (error) {
-    console.error('Error associating device to vehicle:', error);
+    console.error('Error associating vehicle to device:', error);
     console.error('Error details:', error.message);
     if (error.errors) {
       console.error('GraphQL errors:', error.errors);
     }
     throw error;
   }
+};
+
+/**
+ * Dissociate a vehicle from a device by removing vehicleDeviceImei
+ * @param {string} vehicleImmat - Vehicle immatriculation
+ * @returns {Promise<Object>} Dissociation result
+ */
+export const dissociateVehicleFromDevice = async (vehicleImmat) => {
+  await waitForAmplifyConfig();
+  
+  console.log('=== DISSOCIATING VEHICLE FROM DEVICE ===');
+  console.log('Vehicle immat:', vehicleImmat);
+  
+  try {
+    const vehicleUpdate = await client.graphql({
+      query: mutations.updateVehicle,
+      variables: {
+        input: {
+          immat: vehicleImmat,
+          vehicleDeviceImei: null
+        }
+      }
+    });
+    
+    console.log('Vehicle-device dissociation successful:', vehicleUpdate.data?.updateVehicle);
+    
+    return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
+  } catch (error) {
+    console.error('Error dissociating vehicle from device:', error);
+    console.error('Error details:', error.message);
+    if (error.errors) {
+      console.error('GraphQL errors:', error.errors);
+    }
+    throw error;
+  }
+};
+
+/**
+ * Associate a device to a vehicle using GraphQL relations (LEGACY - kept for compatibility)
+ * @param {string} deviceImei - Device IMEI
+ * @param {string} vehicleImmat - Vehicle immatriculation
+ * @returns {Promise<Object>} Association result
+ */
+export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
+  // Use new method
+  return await associateVehicleToDevice(vehicleImmat, deviceImei);
 };
