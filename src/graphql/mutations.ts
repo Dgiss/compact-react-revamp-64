@@ -11800,17 +11800,11 @@ export const createCompanyDevice = /* GraphQL */ `
         cid
         media_rotate
         messages_rotate
-
         createdAt
         updatedAt
         deviceVehicleImmat
         __typename
       }
-vehicle {
-          immat
-          realImmat
-          __typename
-        }
       createdAt
       updatedAt
       __typename
@@ -11863,11 +11857,6 @@ export const updateCompanyDevice = /* GraphQL */ `
         cid
         media_rotate
         messages_rotate
-        vehicle {
-          immat
-          realImmat
-          __typename
-        }
         createdAt
         updatedAt
         deviceVehicleImmat
