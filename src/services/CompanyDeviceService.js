@@ -12,30 +12,57 @@ const client = generateClient();
  * @returns {Promise<Object>} Device object
  */
 const ensureDeviceExists = async (deviceImei) => {
+  console.log('=== ENSURING DEVICE EXISTS ===');
+  console.log('Device IMEI to check:', deviceImei);
+  
   try {
     // Try to get the device first
+    console.log('Checking if device exists...');
     const deviceResponse = await client.graphql({
       query: queries.getDevice,
       variables: { imei: deviceImei }
     });
     
     if (deviceResponse.data?.getDevice) {
-      console.log('Device already exists:', deviceResponse.data.getDevice);
+      console.log('✅ Device already exists:', deviceResponse.data.getDevice);
       return deviceResponse.data.getDevice;
     }
+    console.log('❌ Device not found in database');
   } catch (error) {
-    console.log('Device not found, will create it:', error.message);
+    console.log('❌ Error checking device existence:', error.message);
   }
   
   // Device doesn't exist, create it with minimal data
-  console.log('Creating device with IMEI:', deviceImei);
-  const newDevice = await createDevice({
-    imei: deviceImei,
-    enabled: true
-  });
-  
-  console.log('Device created successfully:', newDevice);
-  return newDevice;
+  console.log('🔨 Creating new device with IMEI:', deviceImei);
+  try {
+    const newDevice = await createDevice({
+      imei: deviceImei,
+      enabled: true
+    });
+    
+    console.log('✅ Device created successfully:', newDevice);
+    
+    // Wait a bit for consistency
+    console.log('⏳ Waiting 500ms for database consistency...');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Verify the device was created
+    const verifyResponse = await client.graphql({
+      query: queries.getDevice,
+      variables: { imei: deviceImei }
+    });
+    
+    if (verifyResponse.data?.getDevice) {
+      console.log('✅ Device verified in database:', verifyResponse.data.getDevice);
+      return verifyResponse.data.getDevice;
+    } else {
+      console.log('⚠️ Device not found after creation - consistency issue');
+      return newDevice;
+    }
+  } catch (createError) {
+    console.error('❌ Error creating device:', createError);
+    throw createError;
+  }
 };
 
 /**

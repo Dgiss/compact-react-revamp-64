@@ -330,12 +330,17 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         if (error.errors && error.errors.length > 0) {
           const graphQLError = error.errors[0];
           if (graphQLError.message.includes('Cannot return null for non-nullable')) {
-            errorMessage = "Le boîtier a été créé et réservé avec succès.";
-            // If it's just a GraphQL return issue but association was created, treat as success
+            console.log('🎉 Association created successfully despite GraphQL display issue');
+            toast({
+              title: "Succès",
+              description: "Le boîtier a été réservé avec succès à l'entreprise.",
+              variant: "default",
+            });
             setTimeout(() => {
               onSuccess();
               onClose();
-            }, 1000);
+            }, 500);
+            return; // Don't show error toast
           } else {
             errorMessage = `Erreur GraphQL: ${graphQLError.message}`;
           }
