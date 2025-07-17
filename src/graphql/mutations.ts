@@ -11477,6 +11477,464 @@ export const deleteVehicleTags = /* GraphQL */ `mutation DeleteVehicleTags(
     __typename
   }
 }
+export const createCompanyDevice = /* GraphQL */ `
+  mutation CreateCompanyDevice(
+    $input: CreateCompanyDeviceInput!
+    $condition: ModelCompanyDeviceConditionInput
+  ) {
+    createCompanyDevice(input: $input, condition: $condition) {
+      id
+      companyID
+      deviceIMEI
+      associationDate
+      dissociationDate
+      isActive
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+vehicle {
+          immat
+          realImmat
+          __typename
+        }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+
+export const updateCompanyDevice = /* GraphQL */ `
+  mutation UpdateCompanyDevice(
+    $input: UpdateCompanyDeviceInput!
+    $condition: ModelCompanyDeviceConditionInput
+  ) {
+    updateCompanyDevice(input: $input, condition: $condition) {
+      id
+      companyID
+      deviceIMEI
+      associationDate
+      dissociationDate
+      isActive
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        vehicle {
+          immat
+          realImmat
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+
+--------------
+
+export const getCompanyDevice = /* GraphQL */ `
+  query GetCompanyDevice($id: ID!) {
+    getCompanyDevice(id: $id) {
+      id
+      companyID
+      deviceIMEI
+      associationDate
+      dissociationDate
+      isActive
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        companyDevices {
+          nextToken
+          __typename
+        }
+        vehicle {
+          immat
+          realImmat
+
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+
+export const companyDevicesByCompanyIDAndAssociationDate = /* GraphQL */ `
+  query CompanyDevicesByCompanyIDAndAssociationDate(
+    $companyID: ID!
+    $associationDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelCompanyDeviceFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    companyDevicesByCompanyIDAndAssociationDate(
+      companyID: $companyID
+      associationDate: $associationDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        companyID
+        deviceIMEI
+        associationDate
+        dissociationDate
+        isActive
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          messages_ttl
+          device_type_id
+          flespi_id
+          enabled
+          media_ttl
+          name
+          cid
+          media_rotate
+          messages_rotate
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`;
+export const companyDevicesByDeviceIMEIAndAssociationDate = /* GraphQL */ `
+  query CompanyDevicesByDeviceIMEIAndAssociationDate(
+    $deviceIMEI: String!
+    $associationDate: ModelStringKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelCompanyDeviceFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    companyDevicesByDeviceIMEIAndAssociationDate(
+      deviceIMEI: $deviceIMEI
+      associationDate: $associationDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        companyID
+        deviceIMEI
+        associationDate
+        dissociationDate
+        isActive
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          messages_ttl
+          device_type_id
+          flespi_id
+          enabled
+          media_ttl
+          name
+          cid
+          media_rotate
+          messages_rotate
+          createdAt
+          updatedAt
+          deviceVehicleImmat
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
+`export const CREATE_COMPANY_DEVICE = gql`
+  mutation CreateCompanyDevice(
+    $input: CreateCompanyDeviceInput!
+    $condition: ModelCompanyDeviceConditionInput
+  ) {
+    createCompanyDevice(input: $input, condition: $condition) {
+      id
+      companyID
+      deviceIMEI
+      associationDate
+      dissociationDate
+      isActive
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        vehicle {
+          immat
+          realImmat
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+
+// 🟠 Mutation : Mettre à jour une association Boîtier ⇨ Compagnie
+export const UPDATE_COMPANY_DEVICE = gql`
+  mutation UpdateCompanyDevice(
+    $input: UpdateCompanyDeviceInput!
+    $condition: ModelCompanyDeviceConditionInput
+  ) {
+    updateCompanyDevice(input: $input, condition: $condition) {
+      id
+      companyID
+      deviceIMEI
+      associationDate
+      dissociationDate
+      isActive
+      company {
+        id
+        name
+        siret
+        address
+        postalCode
+        city
+        countryCode
+        contact
+        email
+        mobile
+        phone
+        fax
+        creationDate
+        subscriptionDate
+        keyedStart
+        createdAt
+        updatedAt
+        __typename
+      }
+      device {
+        imei
+        protocolId
+        sim
+        messages_ttl
+        device_type_id
+        flespi_id
+        enabled
+        media_ttl
+        name
+        cid
+        media_rotate
+        messages_rotate
+        vehicle {
+          immat
+          realImmat
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      createdAt
+      updatedAt
+      __typename
+    }
+  }
+`;
+
 ` as GeneratedMutation<
   APITypes.DeleteVehicleTagsMutationVariables,
   APITypes.DeleteVehicleTagsMutation

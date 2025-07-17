@@ -41,7 +41,6 @@ type User @model
     sub: String! @primaryKey
     firstname: String
     lastname: String
-    address: String
     mobile: String
     username: String
     password: String
@@ -75,8 +74,6 @@ type Driver @model
     sub: String! @primaryKey
     firstname: String
     lastname: String
-    password: String
-    username: String
     fullname: String
     birthDate: String
     drivingLicenseNumber: String
@@ -517,6 +514,9 @@ type Trame @model
     state: String
     fuel: String
     ibuttonCode: String
+    marque: String
+    model: String
+    logoMarque: String
     # Filter
     companyId: String
     driverFullName: String
@@ -617,7 +617,6 @@ type Query {
 type Mutation {
   executeCustomAction(operation:CustomActionOperation!, request: AWSJSON!): CustomActionResponse @function(name: "FleetWatcherCustomActions-${env}")
   executeMaintenanceAction( action: MaintenanceAction! maintenanceId: ID! input: AWSJSON ): MaintenanceResponse @function(name: "FleetWatcherMaintenanceProcessor-${env}")
-  updateUserPassword( userPoolId: String! username: String! newPassword: String! ): UpdatePasswordResponse @function(name: "FleetWatcherUpdateUserPassword-${env}")
 }
 
 type LabelsCollection @model
@@ -651,12 +650,6 @@ enum MaintenanceAction {
   cancel_maintenance
   complete_maintenance
   update_maintenance  
-}
-
-
-type UpdatePasswordResponse {
-  message: String
-  error: String
 }
 
 # Type de réponse pour les actions de maintenance
@@ -897,4 +890,21 @@ enum UserRole {
 enum AccessType {
     FULL_COMPANY
     VEHICLE_LIST
+}
+type CompanyDevice @model
+@auth(
+  rules: [
+    { allow: private, provider: iam, operations: [read] },
+    { allow: groups, groups: ["admin"] }
+  ]
+) {
+  id: ID! @primaryKey
+  companyID: ID! @index(name: "byCompany", sortKeyFields: ["associationDate"])
+  deviceIMEI: String! @index(name: "byDevice", sortKeyFields: ["associationDate"])
+  associationDate: AWSDateTime!
+  dissociationDate: AWSDateTime
+  isActive: Boolean
+  # Relations
+  company: Company @belongsTo(fields: ["companyID"])
+  device: Device @belongsTo(fields: ["deviceIMEI"])
 }
