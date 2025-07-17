@@ -488,6 +488,46 @@ export default function VehiclesDevicesPage() {
         </span>
       )
     },
+    { 
+      id: "statut", 
+      label: "Statut", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value, row) => {
+        // Determine device status based on type and associations
+        let status = "Inconnu";
+        let badgeClass = "bg-gray-100 text-gray-800";
+        
+        if (row.type === "device") {
+          // For devices, determine status based on company association and vehicle association
+          if (!row.isAssociated && row.entreprise === "Boîtier libre") {
+            status = "Libre";
+            badgeClass = "bg-green-100 text-green-800";
+          } else if (row.isAssociated && row.immatriculation) {
+            status = "Associé véhicule";
+            badgeClass = "bg-blue-100 text-blue-800";
+          } else if (row.entreprise && row.entreprise !== "Boîtier libre") {
+            status = "Réservé client";
+            badgeClass = "bg-orange-100 text-orange-800";
+          }
+        } else if (row.type === "vehicle") {
+          // For vehicles, show association status
+          if (row.imei && row.isAssociated) {
+            status = "Avec boîtier";
+            badgeClass = "bg-blue-100 text-blue-800";
+          } else {
+            status = "Sans boîtier";
+            badgeClass = "bg-gray-100 text-gray-800";
+          }
+        }
+        
+        return (
+          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${badgeClass}`}>
+            {status}
+          </span>
+        );
+      }
+    },
   ];
 
   const handleEdit = (item) => {
@@ -908,8 +948,8 @@ export default function VehiclesDevicesPage() {
               onConfirm={() => deleteVehicleData(item)}
             />
             
-            {/* Association button for devices without association */}
-            {item.type === "device" && !item.isAssociated && (
+            {/* Association button for free devices (device-vehicle association) */}
+            {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre" && (
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -918,6 +958,23 @@ export default function VehiclesDevicesPage() {
                 disabled={!isCacheReady}
               >
                 <Link className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Reserve button for free devices (company-device association) */}
+            {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre" && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setSelectedDevice(item);
+                  setAssociationMode('company-device');
+                  setShowAssociateSheet(true);
+                }}
+                title="Réserver ce boîtier pour une entreprise"
+                disabled={!isCacheReady}
+              >
+                <Building className="h-4 w-4" />
               </Button>
             )}
             

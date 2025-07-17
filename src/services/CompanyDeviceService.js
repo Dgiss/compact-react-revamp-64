@@ -1,13 +1,12 @@
 import { generateClient } from 'aws-amplify/api';
-import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
-import { cleanDataForGraphQL } from '@/lib/utils';
+import * as queries from '../graphql/queries';
+import { waitForAmplifyConfig } from '@/config/aws-config.js';
 
 const client = generateClient();
 
 /**
- * Associate a device to a company (logical association for reserving devices)
+ * Associate a device to a company using CompanyDevice table
  * @param {string} deviceImei - Device IMEI
  * @param {string} companyId - Company ID
  * @returns {Promise<Object>} Association result
@@ -20,35 +19,26 @@ export const associateDeviceToCompany = async (deviceImei, companyId) => {
   console.log('Company ID:', companyId);
   
   try {
-    // Check if association already exists
-    const existingAssociation = await getCompanyDeviceAssociation(deviceImei);
-    if (existingAssociation && existingAssociation.isActive) {
-      throw new Error(`Device ${deviceImei} is already associated with company ${existingAssociation.company?.name}`);
-    }
+    const associationDate = new Date().toISOString();
     
-    const associationData = {
-      companyID: companyId,
-      deviceIMEI: deviceImei,
-      associationDate: new Date().toISOString(),
-      isActive: true
-    };
-    
-    const result = await client.graphql({
+    const companyDeviceCreate = await client.graphql({
       query: mutations.createCompanyDevice,
       variables: {
-        input: associationData
+        input: {
+          companyID: companyId,
+          deviceIMEI: deviceImei,
+          associationDate: associationDate,
+          isActive: true
+        }
       }
     });
     
-    console.log('Device-Company association created successfully:', result.data?.createCompanyDevice);
+    console.log('Company device association successful:', companyDeviceCreate.data?.createCompanyDevice);
     
-    return { 
-      success: true, 
-      association: result.data?.createCompanyDevice,
-      status: 'reserved' // Device is now reserved for the company
-    };
+    return { success: true, companyDevice: companyDeviceCreate.data?.createCompanyDevice };
   } catch (error) {
     console.error('Error associating device to company:', error);
+    console.error('Error details:', error.message);
     if (error.errors) {
       console.error('GraphQL errors:', error.errors);
     }
@@ -57,9 +47,9 @@ export const associateDeviceToCompany = async (deviceImei, companyId) => {
 };
 
 /**
- * Dissociate a device from a company (logical dissociation)
+ * Dissociate a device from a company (set isActive to false and add dissociationDate)
  * @param {string} deviceImei - Device IMEI
- * @param {string} companyId - Company ID (optional for validation)
+ * @param {string} companyId - Company ID (optional, will find active association if not provided)
  * @returns {Promise<Object>} Dissociation result
  */
 export const dissociateDeviceFromCompany = async (deviceImei, companyId = null) => {
@@ -70,40 +60,51 @@ export const dissociateDeviceFromCompany = async (deviceImei, companyId = null) 
   console.log('Company ID:', companyId);
   
   try {
-    // Find the active association
-    const association = await getCompanyDeviceAssociation(deviceImei);
-    if (!association || !association.isActive) {
-      throw new Error(`No active association found for device ${deviceImei}`);
+    // Find active association if companyId not provided
+    let activeAssociation;
+    if (!companyId) {
+      activeAssociation = await getActiveCompanyDeviceAssociation(deviceImei);
+      if (!activeAssociation) {
+        throw new Error('No active company association found for this device');
+      }
+    } else {
+      // Get association by company and device
+      const associations = await client.graphql({
+        query: queries.companyDevicesByDeviceIMEIAndAssociationDate,
+        variables: {
+          deviceIMEI: deviceImei,
+          filter: {
+            companyID: { eq: companyId },
+            isActive: { eq: true }
+          }
+        }
+      });
+      activeAssociation = associations.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items?.[0];
     }
     
-    // Optional validation: check if company matches
-    if (companyId && association.companyID !== companyId) {
-      throw new Error(`Device ${deviceImei} is not associated with the specified company`);
+    if (!activeAssociation) {
+      throw new Error('No active association found to dissociate');
     }
     
-    // Logical dissociation: set isActive to false and add dissociationDate
-    const updateData = {
-      id: association.id,
-      isActive: false,
-      dissociationDate: new Date().toISOString()
-    };
+    const dissociationDate = new Date().toISOString();
     
-    const result = await client.graphql({
+    const companyDeviceUpdate = await client.graphql({
       query: mutations.updateCompanyDevice,
       variables: {
-        input: updateData
+        input: {
+          id: activeAssociation.id,
+          dissociationDate: dissociationDate,
+          isActive: false
+        }
       }
     });
     
-    console.log('Device-Company dissociation successful:', result.data?.updateCompanyDevice);
+    console.log('Company device dissociation successful:', companyDeviceUpdate.data?.updateCompanyDevice);
     
-    return { 
-      success: true, 
-      association: result.data?.updateCompanyDevice,
-      status: 'free' // Device is now free
-    };
+    return { success: true, companyDevice: companyDeviceUpdate.data?.updateCompanyDevice };
   } catch (error) {
     console.error('Error dissociating device from company:', error);
+    console.error('Error details:', error.message);
     if (error.errors) {
       console.error('GraphQL errors:', error.errors);
     }
@@ -112,38 +113,37 @@ export const dissociateDeviceFromCompany = async (deviceImei, companyId = null) 
 };
 
 /**
- * Get company-device association for a specific device
+ * Get active company-device association for a device
  * @param {string} deviceImei - Device IMEI
- * @returns {Promise<Object|null>} Association data or null
+ * @returns {Promise<Object|null>} Active association or null
  */
-export const getCompanyDeviceAssociation = async (deviceImei) => {
+export const getActiveCompanyDeviceAssociation = async (deviceImei) => {
   await waitForAmplifyConfig();
   
   try {
-    const result = await client.graphql({
+    const response = await client.graphql({
       query: queries.companyDevicesByDeviceIMEIAndAssociationDate,
       variables: {
         deviceIMEI: deviceImei,
         filter: {
           isActive: { eq: true }
-        },
-        limit: 1
+        }
       }
     });
     
-    const associations = result.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
+    const associations = response.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
     return associations.length > 0 ? associations[0] : null;
   } catch (error) {
-    console.error('Error getting company device association:', error);
-    return null;
+    console.error('Error getting active company device association:', error);
+    throw error;
   }
 };
 
 /**
- * Get all devices associated with a company
+ * Get devices associated with a company
  * @param {string} companyId - Company ID
- * @param {boolean} activeOnly - Only return active associations
- * @returns {Promise<Array>} Array of devices
+ * @param {boolean} activeOnly - Whether to return only active associations
+ * @returns {Promise<Array>} Array of company device associations
  */
 export const getDevicesByCompany = async (companyId, activeOnly = true) => {
   await waitForAmplifyConfig();
@@ -151,28 +151,15 @@ export const getDevicesByCompany = async (companyId, activeOnly = true) => {
   try {
     const filter = activeOnly ? { isActive: { eq: true } } : {};
     
-    const result = await client.graphql({
+    const response = await client.graphql({
       query: queries.companyDevicesByCompanyIDAndAssociationDate,
       variables: {
         companyID: companyId,
-        filter,
-        limit: 1000
+        filter: filter
       }
     });
     
-    const associations = result.data?.companyDevicesByCompanyIDAndAssociationDate?.items || [];
-    
-    // Return devices with their association status
-    return associations.map(association => ({
-      ...association.device,
-      associationData: {
-        id: association.id,
-        associationDate: association.associationDate,
-        dissociationDate: association.dissociationDate,
-        isActive: association.isActive
-      },
-      status: getDeviceStatus(association)
-    }));
+    return response.data?.companyDevicesByCompanyIDAndAssociationDate?.items || [];
   } catch (error) {
     console.error('Error getting devices by company:', error);
     throw error;
@@ -180,66 +167,22 @@ export const getDevicesByCompany = async (companyId, activeOnly = true) => {
 };
 
 /**
- * Get devices that are not associated with any company (truly free devices)
- * @returns {Promise<Array>} Array of free devices
- */
-export const getUnassignedDevices = async () => {
-  await waitForAmplifyConfig();
-  
-  try {
-    // Get all devices
-    const { fetchAllDevices } = await import('./DeviceService.js');
-    const allDevices = await fetchAllDevices();
-    
-    // Get all active associations
-    const result = await client.graphql({
-      query: queries.listCompanyDevices,
-      variables: {
-        filter: {
-          isActive: { eq: true }
-        },
-        limit: 10000
-      }
-    });
-    
-    const activeAssociations = result.data?.listCompanyDevices?.items || [];
-    const associatedDeviceImeis = new Set(activeAssociations.map(a => a.deviceIMEI));
-    
-    // Filter devices that are not in any active association
-    const unassignedDevices = allDevices.filter(device => 
-      !associatedDeviceImeis.has(device.imei)
-    );
-    
-    return unassignedDevices.map(device => ({
-      ...device,
-      status: 'free',
-      associationData: null
-    }));
-  } catch (error) {
-    console.error('Error getting unassigned devices:', error);
-    throw error;
-  }
-};
-
-/**
- * Get historical associations for a device
+ * Get company device association history for a device
  * @param {string} deviceImei - Device IMEI
- * @returns {Promise<Array>} Array of historical associations
+ * @returns {Promise<Array>} Array of all associations for the device
  */
 export const getCompanyDeviceHistory = async (deviceImei) => {
   await waitForAmplifyConfig();
   
   try {
-    const result = await client.graphql({
+    const response = await client.graphql({
       query: queries.companyDevicesByDeviceIMEIAndAssociationDate,
       variables: {
-        deviceIMEI: deviceImei,
-        sortDirection: 'DESC', // Most recent first
-        limit: 100
+        deviceIMEI: deviceImei
       }
     });
     
-    return result.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
+    return response.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
   } catch (error) {
     console.error('Error getting company device history:', error);
     throw error;
@@ -247,7 +190,7 @@ export const getCompanyDeviceHistory = async (deviceImei) => {
 };
 
 /**
- * Transfer device from one company to another
+ * Transfer a device between companies
  * @param {string} deviceImei - Device IMEI
  * @param {string} fromCompanyId - Source company ID
  * @param {string} toCompanyId - Target company ID
@@ -256,18 +199,21 @@ export const getCompanyDeviceHistory = async (deviceImei) => {
 export const transferDeviceBetweenCompanies = async (deviceImei, fromCompanyId, toCompanyId) => {
   await waitForAmplifyConfig();
   
+  console.log('=== TRANSFERRING DEVICE BETWEEN COMPANIES ===');
+  console.log('Device IMEI:', deviceImei);
+  console.log('From Company:', fromCompanyId);
+  console.log('To Company:', toCompanyId);
+  
   try {
-    // First dissociate from the current company
+    // Dissociate from current company
     await dissociateDeviceFromCompany(deviceImei, fromCompanyId);
     
-    // Then associate with the new company
-    const result = await associateDeviceToCompany(deviceImei, toCompanyId);
+    // Associate with new company
+    const association = await associateDeviceToCompany(deviceImei, toCompanyId);
     
-    return {
-      success: true,
-      message: `Device ${deviceImei} transferred successfully`,
-      newAssociation: result.association
-    };
+    console.log('Device transfer successful');
+    
+    return { success: true, newAssociation: association.companyDevice };
   } catch (error) {
     console.error('Error transferring device between companies:', error);
     throw error;
@@ -275,66 +221,52 @@ export const transferDeviceBetweenCompanies = async (deviceImei, fromCompanyId, 
 };
 
 /**
- * Helper function to determine device status based on association and vehicle data
- * @param {Object} association - CompanyDevice association
- * @returns {string} Device status
- */
-const getDeviceStatus = (association) => {
-  if (!association.isActive) {
-    return 'dissociated';
-  }
-  
-  // Check if device is also associated with a vehicle
-  if (association.device?.vehicle?.immat) {
-    return 'vehicle_associated';
-  }
-  
-  return 'company_reserved';
-};
-
-/**
- * Get device status with company and vehicle information
+ * Get device status information (company and vehicle associations)
  * @param {string} deviceImei - Device IMEI
  * @returns {Promise<Object>} Device status information
  */
 export const getDeviceStatusInfo = async (deviceImei) => {
+  await waitForAmplifyConfig();
+  
   try {
     // Get company association
-    const companyAssociation = await getCompanyDeviceAssociation(deviceImei);
+    const companyAssociation = await getActiveCompanyDeviceAssociation(deviceImei);
     
-    // Get device info from DeviceService
-    const { fetchAllDevices } = await import('./DeviceService.js');
-    const allDevices = await fetchAllDevices();
-    const device = allDevices.find(d => d.imei === deviceImei);
+    // Get device info to check vehicle association
+    const deviceResponse = await client.graphql({
+      query: queries.getDevice,
+      variables: { imei: deviceImei }
+    });
     
-    if (!device) {
-      return { found: false, message: 'Device not found' };
-    }
-    
-    let status = 'free';
-    let statusInfo = {};
-    
-    if (companyAssociation && companyAssociation.isActive) {
-      status = 'company_reserved';
-      statusInfo.company = companyAssociation.company;
-      statusInfo.associationDate = companyAssociation.associationDate;
-      
-      // Check if also associated with vehicle
-      if (device.vehicle?.immat) {
-        status = 'vehicle_associated';
-        statusInfo.vehicle = device.vehicle;
-      }
-    }
+    const device = deviceResponse.data?.getDevice;
     
     return {
-      found: true,
-      device,
-      status,
-      statusInfo,
-      companyAssociation
+      deviceImei,
+      companyAssociation,
+      vehicleAssociation: device?.deviceVehicleImmat || null,
+      vehicle: device?.vehicle || null,
+      status: determineDeviceStatus(companyAssociation, device?.deviceVehicleImmat)
     };
   } catch (error) {
     console.error('Error getting device status info:', error);
-    return { found: false, message: 'Error retrieving device status' };
+    throw error;
   }
+};
+
+/**
+ * Determine device status based on associations
+ * @param {Object|null} companyAssociation - Company association object
+ * @param {string|null} vehicleImmat - Vehicle immatriculation
+ * @returns {string} Device status
+ */
+export const determineDeviceStatus = (companyAssociation, vehicleImmat) => {
+  if (!companyAssociation || !companyAssociation.isActive) {
+    return 'Libre';
+  }
+  
+  if (vehicleImmat) {
+    return 'Associé véhicule';
+  }
+  
+  return 'Réservé client';
 };
