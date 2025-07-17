@@ -93,6 +93,13 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   }, [isCompanyDeviceMode, isCacheReady]);
 
+  // Pre-fill device IMEI when device is passed in company-device mode
+  useEffect(() => {
+    if (isCompanyDeviceMode && device?.imei) {
+      setSelectedDeviceImei(device.imei);
+    }
+  }, [isCompanyDeviceMode, device?.imei]);
+
   const loadVehiclesForCompany = async (companyName) => {
     console.log('=== LOADING VEHICLES FOR ASSOCIATION FORM ===');
     console.log('Company:', companyName, 'Cache ready:', isCacheReady);
