@@ -36,6 +36,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     getAllVehiclesByCompany,
     allDataCache,
     isCacheReady,
+    companiesReady,
     loading: hookLoading
   } = useCompanyVehicleDevice();
   
@@ -46,21 +47,14 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
 
   // Debug cache status
   useEffect(() => {
-    console.log('AssociateVehicleForm: Cache status changed:', {
+    console.log('AssociateVehicleForm: Status changed:', {
       isCacheReady,
+      companiesReady,
       hookLoading,
       companiesCount: companies.length,
       hasCache: !!allDataCache
     });
-  }, [isCacheReady, hookLoading, companies.length, allDataCache]);
-
-  // Wait for cache to be ready before loading companies
-  useEffect(() => {
-    if (isCacheReady) {
-      console.log('AssociateVehicleForm: Cache ready, loading companies...');
-      loadCompaniesForSelect();
-    }
-  }, [loadCompaniesForSelect, isCacheReady]);
+  }, [isCacheReady, companiesReady, hookLoading, companies.length, allDataCache]);
 
   // Create company options for select
   const companyOptions = companies.map(company => ({
@@ -70,28 +64,28 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
 
   // SIMPLIFIED: Load vehicles when company is selected (for device to vehicle association)
   useEffect(() => {
-    if (selectedCompany && isCacheReady && isDeviceToVehicle) {
+    if (selectedCompany && isDeviceToVehicle) {
       console.log('=== LOADING VEHICLES FOR ASSOCIATION ===');
-      console.log('Company:', selectedCompany, 'Cache ready:', isCacheReady);
+      console.log('Company:', selectedCompany);
       loadVehiclesForCompany(selectedCompany);
     } else {
-      console.log('Waiting for conditions - Company:', selectedCompany, 'Cache ready:', isCacheReady, 'Is device to vehicle:', isDeviceToVehicle);
+      console.log('Waiting for conditions - Company:', selectedCompany, 'Is device to vehicle:', isDeviceToVehicle);
     }
-  }, [selectedCompany, isCacheReady, isDeviceToVehicle]);
+  }, [selectedCompany, isDeviceToVehicle]);
   
   // Load devices when company is selected (for vehicle to device association)
   useEffect(() => {
-    if (selectedCompany && isCacheReady && isVehicleToDevice) {
+    if (selectedCompany && isVehicleToDevice) {
       loadDevicesForCompany(selectedCompany);
     }
-  }, [selectedCompany, isCacheReady, isVehicleToDevice]);
+  }, [selectedCompany, isVehicleToDevice]);
 
   // Load free devices for company-device association mode
   useEffect(() => {
-    if (isCompanyDeviceMode && isCacheReady) {
+    if (isCompanyDeviceMode) {
       loadFreeDevicesForCompanyAssociation();
     }
-  }, [isCompanyDeviceMode, isCacheReady]);
+  }, [isCompanyDeviceMode]);
 
   // Pre-fill device IMEI when device is passed in company-device mode
   useEffect(() => {
@@ -106,13 +100,6 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     setIsLoading(true);
     
     try {
-      if (!isCacheReady) {
-        console.log('Cache not ready, aborting vehicle load');
-        setCompanyVehicles([]);
-        setIsLoading(false);
-        return;
-      }
-
       const vehicles = await getVehiclesByCompany(companyName);
       console.log('Vehicles received:', vehicles?.length || 0);
       
@@ -368,11 +355,11 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               onValueChange={setSelectedCompany}
               placeholder="Sélectionner une entreprise..."
               searchFunction={searchCompaniesReal}
-              disabled={!isCacheReady}
+              disabled={!companiesReady}
             />
-            {!isCacheReady && (
+            {!companiesReady && (
               <p className="text-sm text-gray-500 mt-1">
-                Chargement des données en cours...
+                Chargement des entreprises en cours...
               </p>
             )}
           </div>
@@ -386,11 +373,11 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               onValueChange={setSelectedCompany}
               placeholder="Sélectionner une entreprise..."
               searchFunction={searchCompaniesReal}
-              disabled={!isCacheReady}
+              disabled={!companiesReady}
             />
-            {!isCacheReady && (
+            {!companiesReady && (
               <p className="text-sm text-gray-500 mt-1">
-                Chargement des données en cours...
+                Chargement des entreprises en cours...
               </p>
             )}
           </div>
@@ -414,7 +401,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
                       ? "Aucun véhicule disponible"
                       : "Sélectionner un véhicule..."
               }
-              disabled={!selectedCompany || isLoading || !isCacheReady}
+              disabled={!selectedCompany || isLoading}
             />
             {showAllVehicles && (
               <p className="text-sm text-orange-600 mt-1">
@@ -442,7 +429,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
                       ? "Aucun boîtier disponible"
                       : "Sélectionner un boîtier..."
               }
-              disabled={!selectedCompany || loadingDevices || !isCacheReady}
+              disabled={!selectedCompany || loadingDevices}
             />
             {companyDevices.length > 0 && (
               <p className="text-sm text-green-600 mt-1">
@@ -469,7 +456,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
                     ? "Aucun boîtier libre disponible"
                     : "Sélectionner un boîtier libre..."
               }
-              disabled={loadingDevices || !isCacheReady}
+              disabled={loadingDevices}
             />
             {companyDevices.length > 0 && (
               <p className="text-sm text-green-600 mt-1">
@@ -495,7 +482,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               (isCompanyDeviceMode && (!selectedCompany || !selectedDeviceImei)) ||
               (isDeviceToVehicle && !selectedVehicle) ||
               (isVehicleToDevice && !selectedDeviceImei) ||
-              !isCacheReady
+              !companiesReady
             }
           >
             {isSubmitting 

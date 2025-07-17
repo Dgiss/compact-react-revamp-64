@@ -18,10 +18,29 @@ export const useCompanyVehicleDevice = () => {
   // Cache for all data - single source of truth
   const [allDataCache, setAllDataCache] = useState(null);
   const [isCacheReady, setIsCacheReady] = useState(false);
+  const [companiesReady, setCompaniesReady] = useState(false);
   
   // Loading mode states
   const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete'
   const [quickStats, setQuickStats] = useState(null);
+
+  // AUTO-LOAD companies on mount
+  useEffect(() => {
+    console.log('useCompanyVehicleDevice: Auto-loading companies...');
+    const loadInitialCompanies = async () => {
+      try {
+        const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+        console.log('Initial companies loaded:', loadedCompanies.length);
+        setCompanies(loadedCompanies);
+        setCompaniesReady(true);
+      } catch (error) {
+        console.error('Error auto-loading companies:', error);
+        setCompanies([]);
+        setCompaniesReady(false);
+      }
+    };
+    loadInitialCompanies();
+  }, []);
 
   // localStorage utilities
   const saveToLocalStorage = (data) => {
@@ -313,27 +332,25 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
-  // Load companies for select components - use cached data ONLY
+  // Load companies for select components - ALWAYS load companies
   const loadCompaniesForSelect = useCallback(async () => {
-    if (isCacheReady && allDataCache && allDataCache.companies.length > 0) {
-      // Use cached companies
-      console.log('Using cached companies:', allDataCache.companies.length);
-      return allDataCache.companies;
-    }
-    
-    if (!isCacheReady) {
-      console.log('Cache not ready, waiting for data to load...');
-      // If cache is not ready, we should wait for the main data to load
-      return [];
-    }
-    
     try {
-      // Fallback to API call if no cache available
+      // Try cached companies first
+      if (allDataCache && allDataCache.companies && allDataCache.companies.length > 0) {
+        console.log('Using cached companies:', allDataCache.companies.length);
+        setCompanies(allDataCache.companies);
+        return allDataCache.companies;
+      }
+      
+      // If no cache, load directly from API
       console.log('No cached companies, fetching from API');
       const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+      console.log('Companies loaded:', loadedCompanies.length);
+      setCompanies(loadedCompanies);
       return loadedCompanies;
     } catch (err) {
       console.error('Error in loadCompaniesForSelect:', err);
+      setCompanies([]);
       toast({
         title: "Erreur",
         description: `Erreur lors du chargement des entreprises: ${err.message}`,
@@ -341,7 +358,7 @@ export const useCompanyVehicleDevice = () => {
       });
       return [];
     }
-  }, [allDataCache, isCacheReady]);
+  }, [allDataCache]);
 
   // Specific search functions for single criteria - CLIENT-SIDE using cached data
   const searchByImei = useCallback(async (imei) => {
