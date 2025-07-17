@@ -326,8 +326,9 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
   try {
     console.log('=== FETCHING VEHICLES WITHOUT DEVICES (OPTIMIZED) ===');
     
-    const { API } = await import('aws-amplify');
+    const { generateClient } = await import('aws-amplify/api');
     const { listVehicles } = await import('../graphql/queries');
+    const client = generateClient();
     
     // Use GraphQL filter to get only vehicles without associated devices
     // In our schema, vehicles have a @hasOne relation with device, so we filter where device is null
@@ -340,7 +341,7 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
       limit: 1000
     };
     
-    const result = await API.graphql({
+    const result = await client.graphql({
       query: listVehicles,
       variables
     });
@@ -375,8 +376,9 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
   try {
     console.log('=== FETCHING DEVICES WITHOUT VEHICLES (OPTIMIZED) ===');
     
-    const { API } = await import('aws-amplify');
+    const { generateClient } = await import('aws-amplify/api');
     const { listDevices } = await import('../graphql/queries');
+    const client = generateClient();
     
     // Use GraphQL filter to get only devices without vehicle association
     // In our schema, devices have a @belongsTo relation with vehicle, so we filter where vehicle is null
@@ -389,7 +391,7 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
       limit: 1000
     };
     
-    const result = await API.graphql({
+    const result = await client.graphql({
       query: listDevices,
       variables
     });
