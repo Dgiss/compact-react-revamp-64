@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { checkAuthStatus, getCurrentUserInfo, forceSignOut } from '@/services/AuthService';
 import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
+import { removeCache, clearOldCaches } from '@/utils/cache-utils';
 
 interface User {
   username: string;
@@ -80,31 +81,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(true);
     setUser(userData);
     
-    // Pre-load vehicle cache after successful login
-    preloadVehicleCache();
-  };
-  
-  const preloadVehicleCache = async () => {
-    try {
-      console.log('AuthContext: Pre-loading vehicle cache...');
-      const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
-      
-      const cacheData = {
-        ...result,
-        timestamp: Date.now()
-      };
-      
-      localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(cacheData));
-      console.log('AuthContext: Vehicle cache pre-loaded successfully');
-    } catch (error) {
-      console.error('AuthContext: Error pre-loading vehicle cache:', error);
-    }
+    // REMOVED: No more pre-loading cache at login to avoid QuotaExceededError
+    // Cache will be loaded on-demand when user navigates to vehicles page
   };
 
   const logout = () => {
     console.log('AuthContext: Déconnexion utilisateur');
     setIsAuthenticated(false);
     setUser(null);
+    
+    // Clear cache on logout to free up localStorage space
+    removeCache('vehicle_cache');
+    clearOldCaches();
   };
 
   const forceLogout = async () => {
@@ -113,11 +101,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await forceSignOut();
       setIsAuthenticated(false);
       setUser(null);
+      
+      // Clear cache on force logout
+      removeCache('vehicle_cache');
+      clearOldCaches();
     } catch (error) {
       console.error('AuthContext: Erreur lors de la déconnexion forcée:', error);
       // Forcer la déconnexion côté client même si l'API échoue
       setIsAuthenticated(false);
       setUser(null);
+      
+      // Still try to clear cache
+      removeCache('vehicle_cache');
+      clearOldCaches();
     }
   };
 

@@ -1,6 +1,7 @@
 import * as VehicleService from './VehicleService';
 import * as CompanyService from './CompanyService';
 import * as DeviceService from './DeviceService';
+import { safeGetCache, safeSetCache, removeCache } from '@/utils/cache-utils';
 
 /**
  * Service for managing company-vehicle-device relationships
@@ -14,6 +15,12 @@ import * as DeviceService from './DeviceService';
 export const fetchCompaniesWithVehiclesAndDevices = async () => {
   try {
     console.log('=== FETCHING COMPANIES WITH VEHICLES AND DEVICES ===');
+    
+    // OPTIMIZED: Check for cached data first using safe cache utilities
+    const cachedData = safeGetCache('vehicle_cache', 300000); // 5 minutes
+    if (cachedData) {
+      return cachedData;
+    }
     
     // Try to use real service first, fallback to mock data if GraphQL fails
     let companies, vehicles;
@@ -104,13 +111,41 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       companiesWithVehicles: companies.filter(c => c.vehicles?.items?.length > 0).length
     };
     
-    return {
+    const result = {
       companies,
       vehicles: actualVehicles,
       devices: [...actualVehicles, ...freeDevices], // Combined vehicles + free devices + reserved devices
       freeDevices,
-      stats
+      stats,
+      timestamp: Date.now()
     };
+    
+    // OPTIMIZED: Save minimal cache data using safe cache utilities
+    const lightweightCache = {
+      companies: companies.map(c => ({ id: c.id, name: c.name })), // Only ID and name
+      vehicles: actualVehicles.map(v => ({
+        id: v.id,
+        immatriculation: v.immatriculation,
+        entreprise: v.entreprise,
+        imei: v.imei,
+        type: v.type,
+        isAssociated: v.isAssociated
+      })),
+      devices: [...actualVehicles, ...freeDevices].map(d => ({
+        id: d.id,
+        imei: d.imei,
+        entreprise: d.entreprise,
+        type: d.type,
+        isAssociated: d.isAssociated,
+        isReservedForCompany: d.isReservedForCompany
+      })),
+      stats: result.stats
+    };
+    
+    // Use safe cache utility to handle QuotaExceededError
+    safeSetCache('vehicle_cache', lightweightCache, 300000); // 5 minutes
+    
+    return result;
   } catch (error) {
     console.error('Error fetching companies with vehicles and devices:', error);
     throw error;
