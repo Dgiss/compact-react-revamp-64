@@ -418,6 +418,59 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
 };
 
 /**
+ * OPTIMIZED: Fetch vehicles with empty IMEI (vehicles that have association but no IMEI)
+ * @param {Object} filter - Optional filter criteria
+ * @returns {Promise<Array>} Array of vehicles with empty vehicleDeviceImei
+ */
+export const fetchVehiclesWithEmptyImei = async (filter = {}) => {
+  try {
+    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI ===');
+    
+    const { generateClient } = await import('aws-amplify/api');
+    const { listVehicles } = await import('../graphql/queries');
+    const client = generateClient();
+    
+    // Fetch all vehicles and filter client-side for empty IMEI
+    const variables = {
+      filter: filter,
+      limit: 1000
+    };
+    
+    const result = await client.graphql({
+      query: listVehicles,
+      variables
+    });
+    
+    const allVehicles = result.data?.listVehicles?.items || [];
+    
+    // Filter for vehicles with empty/null vehicleDeviceImei
+    const vehiclesWithEmptyImei = allVehicles.filter(vehicle => 
+      !vehicle.vehicleDeviceImei || 
+      vehicle.vehicleDeviceImei === '' || 
+      vehicle.vehicleDeviceImei === null
+    );
+    
+    console.log(`Found ${vehiclesWithEmptyImei.length} vehicles with empty IMEI out of ${allVehicles.length} total vehicles`);
+    
+    // Transform to match our data structure
+    return vehiclesWithEmptyImei.map(vehicle => ({
+      ...vehicle,
+      type: 'vehicle',
+      isAssociated: false, // They have no IMEI so considered not fully associated
+      entreprise: vehicle.company?.name || 'Entreprise inconnue',
+      immatriculation: vehicle.immat,
+      imei: null, // Explicitly null to show empty state
+      telephone: null,
+      vehicleDeviceImei: null // Make sure it's clearly null
+    }));
+    
+  } catch (error) {
+    console.error('Error fetching vehicles with empty IMEI:', error);
+    throw error;
+  }
+};
+
+/**
  * OPTIMIZED: Get statistics for unassociated items without loading full data
  * @returns {Promise<Object>} Statistics object
  */

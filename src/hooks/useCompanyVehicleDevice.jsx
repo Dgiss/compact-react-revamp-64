@@ -483,6 +483,29 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
+  // OPTIMIZED: Get vehicles with empty IMEI (no cache needed)
+  const getVehiclesWithEmptyImei = useCallback(async () => {
+    try {
+      const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithEmptyImei();
+      
+      toast({
+        title: "Véhicules sans IMEI",
+        description: `${vehicles.length} véhicule(s) sans IMEI assigné trouvé(s)`,
+      });
+      
+      return vehicles;
+    } catch (err) {
+      console.error('Error getting vehicles with empty IMEI:', err);
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la récupération des véhicules sans IMEI: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, []);
+
   // OPTIMIZED: Get devices without vehicles (no cache needed)
   const getDevicesWithoutVehicles = useCallback(async () => {
     try {
@@ -624,6 +647,7 @@ export const useCompanyVehicleDevice = () => {
     
     // OPTIMIZED: New specialized functions for unassociated items
     getVehiclesWithoutDevices,
+    getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
     getUnassociatedItemsStats,
     

@@ -38,6 +38,7 @@ export default function VehiclesDevicesPage() {
     totalResults,
     // OPTIMIZED: New specialized functions
     getVehiclesWithoutDevices,
+    getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
     getUnassociatedItemsStats
   } = useCompanyVehicleDevice();
@@ -65,6 +66,18 @@ export default function VehiclesDevicesPage() {
   const [isSelectMode, setIsSelectMode] = useState(false);
 
   // No longer auto-load data on mount - wait for user action
+
+  // OPTIMIZED: Search vehicles with empty IMEI - no cache loading needed
+  const searchVehiclesWithEmptyImeiOptimized = async () => {
+    try {
+      console.log('=== OPTIMIZED SEARCH: VEHICLES WITH EMPTY IMEI ===');
+      const vehiclesWithEmptyImei = await getVehiclesWithEmptyImei();
+      setFilteredData(vehiclesWithEmptyImei);
+      setLoadingMode('search');
+    } catch (error) {
+      console.error('Error searching vehicles with empty IMEI:', error);
+    }
+  };
 
   // OPTIMIZED: Search vehicles without devices - no cache loading needed
   const searchVehiclesWithoutDevicesOptimized = async () => {
@@ -413,7 +426,17 @@ export default function VehiclesDevicesPage() {
       )
     },
     { id: "nomVehicule", label: "Nom Véhicule", sortable: true, visible: true },
-    { id: "imei", label: "IMEI", sortable: true, visible: true },
+    { 
+      id: "imei", 
+      label: "IMEI", 
+      sortable: true, 
+      visible: true,
+      renderCell: (value, row) => (
+        <span className={!value ? "text-gray-400 italic" : "text-gray-900"}>
+          {value || "Non assigné"}
+        </span>
+      )
+    },
     { 
       id: "typeBoitier", 
       label: "Protocol ID", 
@@ -498,7 +521,7 @@ export default function VehiclesDevicesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
         <Button 
-          onClick={() => searchVehiclesWithoutDevicesOptimized()}
+          onClick={() => searchVehiclesWithEmptyImeiOptimized()}
           variant="outline" 
           className="h-20 text-left flex flex-col items-start justify-center p-4"
           disabled={loading}
@@ -506,7 +529,7 @@ export default function VehiclesDevicesPage() {
           <Car className="h-6 w-6 mb-2" />
           <div>
             <div className="font-medium">Véhicules sans IMEI</div>
-            <div className="text-sm text-muted-foreground">Voir les véhicules non associés</div>
+            <div className="text-sm text-muted-foreground">Voir les véhicules avec IMEI vide</div>
           </div>
         </Button>
 
