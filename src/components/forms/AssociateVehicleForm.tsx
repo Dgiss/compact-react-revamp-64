@@ -90,6 +90,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   // Pre-fill device IMEI when device is passed in company-device mode
   useEffect(() => {
     if (isCompanyDeviceMode && device?.imei) {
+      console.log('Pre-filling device IMEI for company-device mode:', device.imei);
       setSelectedDeviceImei(device.imei);
     }
   }, [isCompanyDeviceMode, device?.imei]);
@@ -286,11 +287,13 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         setIsSubmitting(false);
       }
     } else if (isCompanyDeviceMode) {
-      // Company-device association
-      if (!selectedDeviceImei) {
+      // Company-device association - use device IMEI from props
+      const deviceImei = device?.imei;
+      
+      if (!deviceImei) {
         toast({
           title: "Erreur",
-          description: "Veuillez sélectionner un boîtier",
+          description: "IMEI du boîtier non trouvé",
           variant: "destructive",
         });
         return;
@@ -308,7 +311,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       setIsSubmitting(true);
 
       try {
-        await CompanyDeviceService.associateDeviceToCompany(selectedDeviceImei, selectedCompany);
+        console.log('Associating device to company:', { deviceImei, selectedCompany });
+        await CompanyDeviceService.associateDeviceToCompany(deviceImei, selectedCompany);
         
         toast({
           title: "Succès",
@@ -355,13 +359,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               onValueChange={setSelectedCompany}
               placeholder="Sélectionner une entreprise..."
               searchFunction={searchCompaniesReal}
-              disabled={!companiesReady}
+              disabled={false}
             />
-            {!companiesReady && (
-              <p className="text-sm text-gray-500 mt-1">
-                Chargement des entreprises en cours...
-              </p>
-            )}
           </div>
         ) : (
           <div>
@@ -439,30 +438,22 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
           </div>
         )}
 
-        {/* Device selection for company-device mode */}
+        {/* Device selection for company-device mode - show as readonly input with device IMEI */}
         {isCompanyDeviceMode && (
           <div>
             <label className="block text-sm font-medium mb-2">
-              Boîtier libre *
+              Boîtier sélectionné
             </label>
-            <SearchableSelect
-              value={selectedDeviceImei}
-              onValueChange={setSelectedDeviceImei}
-              options={deviceOptions}
-              placeholder={
-                loadingDevices 
-                  ? "Chargement des boîtiers libres..." 
-                  : companyDevices.length === 0
-                    ? "Aucun boîtier libre disponible"
-                    : "Sélectionner un boîtier libre..."
-              }
-              disabled={loadingDevices}
+            <input
+              type="text"
+              value={device?.imei || ''}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+              placeholder="IMEI du boîtier"
             />
-            {companyDevices.length > 0 && (
-              <p className="text-sm text-green-600 mt-1">
-                ✓ {companyDevices.length} boîtier(s) libre(s) disponible(s)
-              </p>
-            )}
+            <p className="text-sm text-gray-500 mt-1">
+              Ce boîtier sera réservé pour l'entreprise sélectionnée
+            </p>
           </div>
         )}
 
@@ -479,10 +470,9 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
             disabled={
               isSubmitting || 
               (!isCompanyDeviceMode && !selectedCompany) || 
-              (isCompanyDeviceMode && (!selectedCompany || !selectedDeviceImei)) ||
+              (isCompanyDeviceMode && (!selectedCompany || !device?.imei)) ||
               (isDeviceToVehicle && !selectedVehicle) ||
-              (isVehicleToDevice && !selectedDeviceImei) ||
-              !companiesReady
+              (isVehicleToDevice && !selectedDeviceImei)
             }
           >
             {isSubmitting 
