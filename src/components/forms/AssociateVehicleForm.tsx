@@ -9,14 +9,16 @@ import { toast } from "@/components/ui/use-toast";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
+import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 
 interface AssociateVehicleFormProps {
   device?: any; // Can be a device or a vehicle for bidirectional association
+  mode?: 'vehicle-device' | 'company-device'; // New mode for company-device association
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function AssociateVehicleForm({ device, onClose, onSuccess }: AssociateVehicleFormProps) {
+export default function AssociateVehicleForm({ device, mode = 'vehicle-device', onClose, onSuccess }: AssociateVehicleFormProps) {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [selectedDeviceImei, setSelectedDeviceImei] = useState("");
@@ -37,9 +39,10 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     loading: hookLoading
   } = useCompanyVehicleDevice();
   
-  // Determine if we're associating a device to a vehicle or vice versa
-  const isDeviceToVehicle = device?.type === "device";
-  const isVehicleToDevice = device?.type === "vehicle";
+  // Determine the association mode
+  const isCompanyDeviceMode = mode === 'company-device';
+  const isDeviceToVehicle = !isCompanyDeviceMode && device?.type === "device";
+  const isVehicleToDevice = !isCompanyDeviceMode && device?.type === "vehicle";
 
   // Debug cache status
   useEffect(() => {
@@ -82,6 +85,13 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       loadDevicesForCompany(selectedCompany);
     }
   }, [selectedCompany, isCacheReady, isVehicleToDevice]);
+
+  // Load free devices for company-device association mode
+  useEffect(() => {
+    if (isCompanyDeviceMode && isCacheReady) {
+      loadFreeDevicesForCompanyAssociation();
+    }
+  }, [isCompanyDeviceMode, isCacheReady]);
 
   const loadVehiclesForCompany = async (companyName) => {
     console.log('=== LOADING VEHICLES FOR ASSOCIATION FORM ===');
@@ -147,6 +157,28 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     }
   };
 
+  const loadFreeDevicesForCompanyAssociation = async () => {
+    console.log('Loading free devices for company association');
+    setLoadingDevices(true);
+    
+    try {
+      const freeDevices = await CompanyDeviceService.getUnassignedDevices();
+      console.log('Free devices for company association:', freeDevices.length);
+      setCompanyDevices(freeDevices);
+      
+    } catch (error) {
+      console.error('Error loading free devices:', error);
+      setCompanyDevices([]);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les boîtiers libres",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+
   // Generate vehicle options (for device to vehicle association)
   const vehicleOptions = companyVehicles.map(vehicle => {
     const isAlreadyAssociated = vehicle.imei && vehicle.isAssociated;
@@ -165,7 +197,7 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
   }));
 
   const handleSubmit = async () => {
-    if (!selectedCompany) {
+    if (!selectedCompany && !isCompanyDeviceMode) {
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner une entreprise",
@@ -259,6 +291,48 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       } finally {
         setIsSubmitting(false);
       }
+    } else if (isCompanyDeviceMode) {
+      // Company-device association
+      if (!selectedDeviceImei) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner un boîtier",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!selectedCompany) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez sélectionner une entreprise",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        await CompanyDeviceService.associateDeviceToCompany(selectedDeviceImei, selectedCompany);
+        
+        toast({
+          title: "Succès",
+          description: "Boîtier réservé pour l'entreprise avec succès",
+        });
+        
+        onSuccess();
+        onClose();
+      } catch (error) {
+        console.error('Error associating device to company:', error);
+        toast({
+          title: "Erreur",
+          description: error.message || "Erreur lors de la réservation",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
   
@@ -266,7 +340,9 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">
-          {isDeviceToVehicle 
+          {isCompanyDeviceMode 
+            ? "Réserver un boîtier pour une entreprise"
+            : isDeviceToVehicle 
             ? `Associer le boîtier ${device?.imei}` 
             : `Associer un boîtier au véhicule ${device?.immatriculation || device?.immat}`
           }
@@ -274,23 +350,44 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
       </div>
 
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Entreprise *
-          </label>
-          <CompanySearchSelect
-            value={selectedCompany}
-            onValueChange={setSelectedCompany}
-            placeholder="Sélectionner une entreprise..."
-            searchFunction={searchCompaniesReal}
-            disabled={!isCacheReady}
-          />
-          {!isCacheReady && (
-            <p className="text-sm text-gray-500 mt-1">
-              Chargement des données en cours...
-            </p>
-          )}
-        </div>
+        {/* Company selection - show for all modes except direct device-vehicle */}
+        {!isDeviceToVehicle || isCompanyDeviceMode ? (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Entreprise *
+            </label>
+            <CompanySearchSelect
+              value={selectedCompany}
+              onValueChange={setSelectedCompany}
+              placeholder="Sélectionner une entreprise..."
+              searchFunction={searchCompaniesReal}
+              disabled={!isCacheReady}
+            />
+            {!isCacheReady && (
+              <p className="text-sm text-gray-500 mt-1">
+                Chargement des données en cours...
+              </p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Entreprise *
+            </label>
+            <CompanySearchSelect
+              value={selectedCompany}
+              onValueChange={setSelectedCompany}
+              placeholder="Sélectionner une entreprise..."
+              searchFunction={searchCompaniesReal}
+              disabled={!isCacheReady}
+            />
+            {!isCacheReady && (
+              <p className="text-sm text-gray-500 mt-1">
+                Chargement des données en cours...
+              </p>
+            )}
+          </div>
+        )}
 
         {isDeviceToVehicle && (
           <div>
@@ -348,6 +445,33 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
           </div>
         )}
 
+        {/* Device selection for company-device mode */}
+        {isCompanyDeviceMode && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Boîtier libre *
+            </label>
+            <SearchableSelect
+              value={selectedDeviceImei}
+              onValueChange={setSelectedDeviceImei}
+              options={deviceOptions}
+              placeholder={
+                loadingDevices 
+                  ? "Chargement des boîtiers libres..." 
+                  : companyDevices.length === 0
+                    ? "Aucun boîtier libre disponible"
+                    : "Sélectionner un boîtier libre..."
+              }
+              disabled={loadingDevices || !isCacheReady}
+            />
+            {companyDevices.length > 0 && (
+              <p className="text-sm text-green-600 mt-1">
+                ✓ {companyDevices.length} boîtier(s) libre(s) disponible(s)
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="flex justify-end gap-2 pt-4">
           <Button
             type="button"
@@ -360,13 +484,17 @@ export default function AssociateVehicleForm({ device, onClose, onSuccess }: Ass
             onClick={handleSubmit}
             disabled={
               isSubmitting || 
-              !selectedCompany || 
+              (!isCompanyDeviceMode && !selectedCompany) || 
+              (isCompanyDeviceMode && (!selectedCompany || !selectedDeviceImei)) ||
               (isDeviceToVehicle && !selectedVehicle) ||
               (isVehicleToDevice && !selectedDeviceImei) ||
               !isCacheReady
             }
           >
-            {isSubmitting ? "Association..." : "Associer"}
+            {isSubmitting 
+              ? (isCompanyDeviceMode ? "Réservation..." : "Association...") 
+              : (isCompanyDeviceMode ? "Réserver" : "Associer")
+            }
           </Button>
         </div>
       </div>

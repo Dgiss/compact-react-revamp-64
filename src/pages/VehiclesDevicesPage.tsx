@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
 import * as VehicleDissociationService from "@/services/VehicleDissociationService";
+import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 
 export default function VehiclesDevicesPage() {
   const {
@@ -49,6 +50,7 @@ export default function VehiclesDevicesPage() {
   // Dialog states
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [associationMode, setAssociationMode] = useState<'vehicle-device' | 'company-device'>('vehicle-device');
   const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
@@ -100,6 +102,22 @@ export default function VehiclesDevicesPage() {
       setLoadingMode('search');
     } catch (error) {
       console.error('Error searching devices without vehicles:', error);
+    }
+  };
+
+  // Search for company reserved devices
+  const searchCompanyReservedDevices = async () => {
+    try {
+      console.log('=== SEARCH: COMPANY RESERVED DEVICES ===');
+      const unassignedDevices = await CompanyDeviceService.getUnassignedDevices();
+      // Filter for devices that are actually reserved by companies (future enhancement)
+      const reservedDevices = unassignedDevices.filter(device => 
+        device.status === 'company_reserved'
+      );
+      setFilteredData(reservedDevices);
+      setLoadingMode('search');
+    } catch (error) {
+      console.error('Error searching company reserved devices:', error);
     }
   };
 
@@ -489,6 +507,13 @@ export default function VehiclesDevicesPage() {
         vehicleImmat: item.immatriculation || item.immat
       });
     }
+    setAssociationMode('vehicle-device');
+    setShowAssociateSheet(true);
+  };
+
+  const handleCompanyDeviceAssociation = () => {
+    setSelectedDevice(null);
+    setAssociationMode('company-device');
     setShowAssociateSheet(true);
   };
 
@@ -821,6 +846,15 @@ export default function VehiclesDevicesPage() {
             Recherche Multiple d'IMEI
           </Button>
           
+          <Button 
+            variant="outline"
+            size="default"
+            onClick={handleCompanyDeviceAssociation}
+          >
+            <Building className="h-4 w-4 mr-2" />
+            Réserver boîtier
+          </Button>
+          
           <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
             <DialogTrigger asChild>
               <Button>
@@ -927,13 +961,17 @@ export default function VehiclesDevicesPage() {
           </SheetHeader>
           <AssociateVehicleForm
             device={selectedDevice}
+            mode={associationMode}
             onClose={() => setShowAssociateSheet(false)}
             onSuccess={async () => {
               toast({
-                title: "Boîtier associé",
-                description: "Le boîtier a été associé au véhicule avec succès"
+                title: associationMode === 'company-device' ? "Boîtier réservé" : "Boîtier associé",
+                description: associationMode === 'company-device' 
+                  ? "Le boîtier a été réservé pour l'entreprise avec succès"
+                  : "Le boîtier a été associé au véhicule avec succès"
               });
               setShowAssociateSheet(false);
+              setAssociationMode('vehicle-device');
               // Refresh data to show the new association
               await loadAllData();
             }}
