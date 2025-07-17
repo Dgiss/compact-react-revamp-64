@@ -5,6 +5,7 @@ import { X, Save, Loader2 } from "lucide-react";
 import { SheetClose } from "@/components/ui/sheet";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
+import { DialogDescription } from "@/components/ui/dialog-description";
 import { toast } from "@/components/ui/use-toast";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
@@ -73,12 +74,14 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   }, [selectedCompany, isDeviceToVehicle]);
   
-  // Load devices when company is selected (for vehicle to device association)
+  // For vehicle to device association, load devices directly using vehicle's company
   useEffect(() => {
-    if (selectedCompany && isVehicleToDevice) {
-      loadDevicesForCompany(selectedCompany);
+    if (isVehicleToDevice && device?.companyVehiclesId) {
+      console.log('Loading devices for vehicle-to-device association using vehicle company:', device.companyVehiclesId);
+      setSelectedCompany(device.companyVehiclesId);
+      loadDevicesForVehicleAssociation();
     }
-  }, [selectedCompany, isVehicleToDevice]);
+  }, [isVehicleToDevice, device?.companyVehiclesId]);
 
   // Load free devices for company-device association mode
   useEffect(() => {
@@ -119,8 +122,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   };
   
-  const loadDevicesForCompany = async (companyName) => {
-    console.log('Loading devices for company (vehicle-device association):', companyName);
+  const loadDevicesForVehicleAssociation = async () => {
+    console.log('Loading devices for vehicle association');
     setLoadingDevices(true);
     
     try {
@@ -353,6 +356,14 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   
   return (
     <div className="space-y-4">
+      <DialogDescription className="sr-only">
+        {isCompanyDeviceMode 
+          ? "Formulaire pour réserver un boîtier pour une entreprise"
+          : isDeviceToVehicle 
+          ? "Formulaire pour associer un boîtier à un véhicule" 
+          : "Formulaire pour associer un véhicule à un boîtier"
+        }
+      </DialogDescription>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">
           {isCompanyDeviceMode 
@@ -365,21 +376,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       </div>
 
       <div className="space-y-4">
-        {/* Company selection - show for all modes except direct device-vehicle */}
-        {!isDeviceToVehicle || isCompanyDeviceMode ? (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Entreprise *
-            </label>
-            <CompanySearchSelect
-              value={selectedCompany}
-              onValueChange={setSelectedCompany}
-              placeholder="Sélectionner une entreprise..."
-              searchFunction={searchCompaniesReal}
-              disabled={false}
-            />
-          </div>
-        ) : (
+        {/* Company selection - only show for device-to-vehicle and company-device modes */}
+        {(isDeviceToVehicle || isCompanyDeviceMode) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               Entreprise *
@@ -396,6 +394,21 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
                 Chargement des entreprises en cours...
               </p>
             )}
+          </div>
+        )}
+
+        {/* Show vehicle company info for vehicle-to-device mode */}
+        {isVehicleToDevice && device?.company && (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Entreprise du véhicule
+            </label>
+            <input
+              type="text"
+              value={device.company.name || device.company.nom}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+            />
           </div>
         )}
 
@@ -437,15 +450,13 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               onValueChange={setSelectedDeviceImei}
               options={deviceOptions}
               placeholder={
-                !selectedCompany 
-                  ? "Sélectionner d'abord une entreprise" 
-                  : loadingDevices 
-                    ? "Chargement des boîtiers..." 
-                    : companyDevices.length === 0
-                      ? "Aucun boîtier disponible"
-                      : "Sélectionner un boîtier..."
+                loadingDevices 
+                  ? "Chargement des boîtiers..." 
+                  : companyDevices.length === 0
+                    ? "Aucun boîtier disponible"
+                    : "Sélectionner un boîtier..."
               }
-              disabled={!selectedCompany || loadingDevices}
+              disabled={loadingDevices}
             />
             {companyDevices.length > 0 && (
               <p className="text-sm text-green-600 mt-1">
@@ -486,9 +497,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
             onClick={handleSubmit}
             disabled={
               isSubmitting || 
-              (!isCompanyDeviceMode && !selectedCompany) || 
+              (isDeviceToVehicle && (!selectedCompany || !selectedVehicle)) || 
               (isCompanyDeviceMode && (!selectedCompany || !device?.imei)) ||
-              (isDeviceToVehicle && !selectedVehicle) ||
               (isVehicleToDevice && !selectedDeviceImei)
             }
           >
