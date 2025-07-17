@@ -972,7 +972,6 @@ export default function VehiclesDevicesPage() {
                   setShowAssociateSheet(true);
                 }}
                 title="Réserver ce boîtier pour une entreprise"
-                disabled={!isCacheReady}
               >
                 <Building className="h-4 w-4" />
               </Button>
