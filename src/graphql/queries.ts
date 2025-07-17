@@ -4978,108 +4978,14 @@ export const listDevices = /* GraphQL */ `
         imei
         protocolId
         sim
+        name
+        enabled
         vehicle {
           immat
-          # year
-          # fuelType
-          # consumption
-          # maxSpeed
-          # seatCount
-          # icon
-          # picture {
-          #   bucket
-          #   region
-          #   key
-          #   __typename
-          # }
-          # kilometerage
-          # kilometerPrice
-          # kilometerageStart
-          # kilometerageDay
-          # kilometerageLastUpdate
-          # timeRunning
-          # counterValue
-          # co2
-          # lastModificationDate
-          # rollingTimeStart
-          # rollingTimeDay
-          # locations
-          # installationPrecautions
-          # code
-          # vehicleCategory {
-          #   id
-          #   category
-          #   description
-          #   createdAt
-          #   updatedAt
-          #   __typename
-          # }
-          # brand {
-          #   brandName
-          #   createdAt
-          #   updatedAt
-          #   __typename
-          # }
-          # modele {
-          #   id
-          #   modele
-          #   createdAt
-          #   updatedAt
-          #   vehicleBrandModelsBrandName
-          #   __typename
-          # }
-          # gefcoSend
-          # tankCapacity
-          # canMileage
-          companyVehiclesId
-          company {
-            id
-            name
-            siret
-            address
-            postalCode
-            city
-            countryCode
-            contact
-            email
-            mobile
-            phone
-            fax
-            creationDate
-            subscriptionDate
-            keyedStart
-            createdAt
-            updatedAt
-            __typename
-          }
-          device {
-            imei
-            protocolId
-            sim
-            createdAt
-            updatedAt
-            deviceVehicleImmat
-            __typename
-          }
-          alerts {
-            nextToken
-            __typename
-          }
-          tags {
-            nextToken
-            __typename
-          }
-          createdAt
-          updatedAt
-          vehicleVehicleCategoryId
-          vehicleBrandBrandName
-          vehicleModeleId
-          vehicleDeviceImei
           __typename
         }
-        # createdAt
-        # updatedAt
-        deviceVehicleImmat
+        createdAt
+        updatedAt
         __typename
       }
       nextToken
