@@ -2,8 +2,41 @@ import { generateClient } from 'aws-amplify/api';
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { createDevice } from './DeviceService.js';
 
 const client = generateClient();
+
+/**
+ * Ensure device exists in the database, create if it doesn't
+ * @param {string} deviceImei - Device IMEI
+ * @returns {Promise<Object>} Device object
+ */
+const ensureDeviceExists = async (deviceImei) => {
+  try {
+    // Try to get the device first
+    const deviceResponse = await client.graphql({
+      query: queries.getDevice,
+      variables: { imei: deviceImei }
+    });
+    
+    if (deviceResponse.data?.getDevice) {
+      console.log('Device already exists:', deviceResponse.data.getDevice);
+      return deviceResponse.data.getDevice;
+    }
+  } catch (error) {
+    console.log('Device not found, will create it:', error.message);
+  }
+  
+  // Device doesn't exist, create it with minimal data
+  console.log('Creating device with IMEI:', deviceImei);
+  const newDevice = await createDevice({
+    imei: deviceImei,
+    enabled: true
+  });
+  
+  console.log('Device created successfully:', newDevice);
+  return newDevice;
+};
 
 /**
  * Associate a device to a company using CompanyDevice table
@@ -19,6 +52,9 @@ export const associateDeviceToCompany = async (deviceImei, companyId) => {
   console.log('Company ID:', companyId);
   
   try {
+    // Ensure the device exists before creating the association
+    await ensureDeviceExists(deviceImei);
+    
     const associationDate = new Date().toISOString();
     
     const companyDeviceCreate = await client.graphql({
@@ -249,6 +285,47 @@ export const getDeviceStatusInfo = async (deviceImei) => {
     };
   } catch (error) {
     console.error('Error getting device status info:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get unassigned devices (devices not associated with any company)
+ * @returns {Promise<Array>} Array of unassigned devices
+ */
+export const getUnassignedDevices = async () => {
+  await waitForAmplifyConfig();
+  
+  try {
+    // Get all devices
+    const devicesResponse = await client.graphql({
+      query: queries.listDevices
+    });
+    
+    const allDevices = devicesResponse.data?.listDevices?.items || [];
+    
+    // Get all active company device associations
+    const associationsResponse = await client.graphql({
+      query: queries.listCompanyDevices,
+      variables: {
+        filter: {
+          isActive: { eq: true }
+        }
+      }
+    });
+    
+    const activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
+    const associatedDeviceImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
+    
+    // Filter out devices that are associated with companies
+    const unassignedDevices = allDevices.filter(device => 
+      !associatedDeviceImeis.has(device.imei)
+    );
+    
+    console.log('Found unassigned devices:', unassignedDevices.length);
+    return unassignedDevices;
+  } catch (error) {
+    console.error('Error getting unassigned devices:', error);
     throw error;
   }
 };
