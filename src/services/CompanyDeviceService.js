@@ -324,12 +324,15 @@ export const getUnassignedDevices = async () => {
   await waitForAmplifyConfig();
   
   try {
+    console.log('=== GETTING UNASSIGNED DEVICES ===');
+    
     // Get all devices
     const devicesResponse = await client.graphql({
       query: queries.listDevices
     });
     
     const allDevices = devicesResponse.data?.listDevices?.items || [];
+    console.log('Total devices found:', allDevices.length);
     
     // Get all active company device associations
     const associationsResponse = await client.graphql({
@@ -343,6 +346,7 @@ export const getUnassignedDevices = async () => {
     
     const activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
     const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
+    console.log('Company associated devices:', Array.from(companyAssociatedImeis));
     
     // Get all vehicles to check for vehicleDeviceImei associations
     const vehiclesResponse = await client.graphql({
@@ -355,15 +359,19 @@ export const getUnassignedDevices = async () => {
         .map(v => v.vehicleDeviceImei)
         .filter(Boolean)
     );
+    console.log('Vehicle associated devices:', Array.from(vehicleAssociatedImeis));
     
     // Filter out devices that are associated with companies OR vehicles
     const unassignedDevices = allDevices.filter(device => 
       !companyAssociatedImeis.has(device.imei) && !vehicleAssociatedImeis.has(device.imei)
     );
     
-    console.log('Found unassigned devices (company + vehicle check):', unassignedDevices.length);
+    console.log('Total devices:', allDevices.length);
     console.log('Company associated:', companyAssociatedImeis.size);
     console.log('Vehicle associated:', vehicleAssociatedImeis.size);
+    console.log('Unassigned devices found:', unassignedDevices.length);
+    console.log('Unassigned device IMEIs:', unassignedDevices.map(d => d.imei));
+    
     return unassignedDevices;
   } catch (error) {
     console.error('Error getting unassigned devices:', error);

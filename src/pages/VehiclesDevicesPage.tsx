@@ -15,7 +15,6 @@ import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice.jsx";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import * as VehicleService from "@/services/VehicleService";
-import * as VehicleDissociationService from "@/services/VehicleDissociationService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 
 export default function VehiclesDevicesPage() {
@@ -310,7 +309,10 @@ export default function VehiclesDevicesPage() {
   // Dissociate device from vehicle
   const dissociateDevice = async (vehicleImmat) => {
     try {
-      await VehicleDissociationService.dissociateDeviceFromVehicle(vehicleImmat);
+      console.log('=== DISSOCIATING DEVICE FROM VEHICLE ===');
+      console.log('Vehicle immat:', vehicleImmat);
+      
+      await VehicleService.dissociateVehicleFromDevice(vehicleImmat);
       
       toast({
         title: "Succès",
@@ -332,20 +334,37 @@ export default function VehiclesDevicesPage() {
   const bulkDissociateSelected = async () => {
     if (selectedVehicles.length === 0) return;
     
+    console.log('=== BULK DISSOCIATING DEVICES FROM VEHICLES ===');
+    console.log('Vehicle immats:', selectedVehicles);
+    
     try {
-      const result = await VehicleDissociationService.bulkDissociateDevicesFromVehicles(
-        selectedVehicles
-      );
+      const results = [];
+      const errors = [];
       
-      if (result.success) {
+      for (const immat of selectedVehicles) {
+        try {
+          await VehicleService.dissociateVehicleFromDevice(immat);
+          results.push({ immat, success: true });
+        } catch (error) {
+          console.error(`Error dissociating ${immat}:`, error);
+          errors.push({ immat, error: error.message });
+        }
+      }
+      
+      console.log('Bulk dissociation completed:', {
+        successful: results.length,
+        failed: errors.length
+      });
+      
+      if (errors.length === 0) {
         toast({
           title: "Succès",
-          description: `${result.successful} véhicule(s) dissocié(s) avec succès`,
+          description: `${results.length} véhicule(s) dissocié(s) avec succès`,
         });
       } else {
         toast({
           title: "Partiellement réussi",
-          description: `${result.successful} réussi(s), ${result.failed} échec(s)`,
+          description: `${results.length} réussi(s), ${errors.length} échec(s)`,
           variant: "default",
         });
       }

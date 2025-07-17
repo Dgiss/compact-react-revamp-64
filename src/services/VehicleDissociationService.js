@@ -16,21 +16,12 @@ export const dissociateDeviceFromVehicle = async (vehicleImmat) => {
   console.log('Vehicle immat:', vehicleImmat);
   
   try {
-    // CRITICAL FIX: Use GraphQL relations - find device and update it to remove vehicle relation
-    // Instead of updating Vehicle, we update Device to remove vehicleImmat
-    const deviceUpdate = await client.graphql({
-      query: mutations.updateDevice,
-      variables: {
-        input: {
-          vehicleImmat: null // Remove the @belongsTo relation
-        }
-      }
-    });
+    // DEPRECATED: This service is replaced by VehicleService.dissociateVehicleFromDevice
+    console.warn('VehicleDissociationService is deprecated. Use VehicleService.dissociateVehicleFromDevice instead');
     
-    console.log('Device dissociation successful:', deviceUpdate.data?.updateDevice);
-    console.log('Device dissociated successfully from vehicle:', vehicleImmat);
-    
-    return { success: true, deviceUpdate: deviceUpdate.data?.updateDevice };
+    // For backwards compatibility, call the new method
+    const { VehicleService } = await import('./VehicleService');
+    return await VehicleService.dissociateVehicleFromDevice(vehicleImmat);
   } catch (error) {
     console.error('Error dissociating device from vehicle:', error);
     console.error('Error details:', error.message);

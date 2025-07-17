@@ -127,6 +127,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       // Use the updated function that checks both company and vehicle associations
       const freeDevices = await CompanyDeviceService.getUnassignedDevices();
       console.log('Free devices found for vehicle association:', freeDevices.length);
+      console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, type: d.typeBoitier })));
       setCompanyDevices(freeDevices);
       
     } catch (error) {
@@ -149,6 +150,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     try {
       const freeDevices = await CompanyDeviceService.getUnassignedDevices();
       console.log('Free devices for company association:', freeDevices.length);
+      console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, type: d.typeBoitier })));
       setCompanyDevices(freeDevices);
       
     } catch (error) {
