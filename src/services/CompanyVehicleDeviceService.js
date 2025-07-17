@@ -316,3 +316,127 @@ export const getDeviceStatusLocal = (devices, imei) => {
     return { found: false, message: 'Error retrieving device status' };
   }
 };
+
+/**
+ * OPTIMIZED: Fetch vehicles without devices directly from GraphQL
+ * @param {Object} filter - Optional filter criteria
+ * @returns {Promise<Array>} Array of vehicles without devices
+ */
+export const fetchVehiclesWithoutDevices = async (filter = {}) => {
+  try {
+    console.log('=== FETCHING VEHICLES WITHOUT DEVICES (OPTIMIZED) ===');
+    
+    const { API } = await import('aws-amplify');
+    const { listVehicles } = await import('../graphql/queries');
+    
+    // Use GraphQL filter to get only vehicles without associated devices
+    // In our schema, vehicles have a @hasOne relation with device, so we filter where device is null
+    const variables = {
+      filter: {
+        ...filter,
+        // Filter for vehicles that don't have a device relation
+        vehicleDeviceImei: { attributeExists: false }
+      },
+      limit: 1000
+    };
+    
+    const result = await API.graphql({
+      query: listVehicles,
+      variables
+    });
+    
+    const vehicles = result.data?.listVehicles?.items || [];
+    
+    console.log(`Found ${vehicles.length} vehicles without devices`);
+    
+    // Transform to match our data structure
+    return vehicles.map(vehicle => ({
+      ...vehicle,
+      type: 'vehicle',
+      isAssociated: false,
+      entreprise: vehicle.company?.name || 'Entreprise inconnue',
+      immatriculation: vehicle.immat,
+      imei: null,
+      telephone: null
+    }));
+    
+  } catch (error) {
+    console.error('Error fetching vehicles without devices:', error);
+    throw error;
+  }
+};
+
+/**
+ * OPTIMIZED: Fetch devices without vehicles directly from GraphQL
+ * @param {Object} filter - Optional filter criteria
+ * @returns {Promise<Array>} Array of devices without vehicles
+ */
+export const fetchDevicesWithoutVehicles = async (filter = {}) => {
+  try {
+    console.log('=== FETCHING DEVICES WITHOUT VEHICLES (OPTIMIZED) ===');
+    
+    const { API } = await import('aws-amplify');
+    const { listDevices } = await import('../graphql/queries');
+    
+    // Use GraphQL filter to get only devices without vehicle association
+    // In our schema, devices have a @belongsTo relation with vehicle, so we filter where vehicle is null
+    const variables = {
+      filter: {
+        ...filter,
+        // Filter for devices that don't have a vehicle relation
+        deviceVehicleImmat: { attributeExists: false }
+      },
+      limit: 1000
+    };
+    
+    const result = await API.graphql({
+      query: listDevices,
+      variables
+    });
+    
+    const devices = result.data?.listDevices?.items || [];
+    
+    console.log(`Found ${devices.length} devices without vehicles`);
+    
+    // Transform to match our data structure  
+    return devices.map(device => ({
+      ...device,
+      type: 'device',
+      isAssociated: false,
+      entreprise: 'Boîtier libre',
+      immatriculation: null,
+      nomVehicule: null,
+      telephone: device.sim || null
+    }));
+    
+  } catch (error) {
+    console.error('Error fetching devices without vehicles:', error);
+    throw error;
+  }
+};
+
+/**
+ * OPTIMIZED: Get statistics for unassociated items without loading full data
+ * @returns {Promise<Object>} Statistics object
+ */
+export const fetchUnassociatedItemsStats = async () => {
+  try {
+    console.log('=== FETCHING UNASSOCIATED ITEMS STATS (OPTIMIZED) ===');
+    
+    const [vehiclesWithoutDevices, devicesWithoutVehicles] = await Promise.all([
+      fetchVehiclesWithoutDevices(),
+      fetchDevicesWithoutVehicles()
+    ]);
+    
+    return {
+      vehiclesWithoutDevicesCount: vehiclesWithoutDevices.length,
+      devicesWithoutVehiclesCount: devicesWithoutVehicles.length,
+      totalVehicles: vehiclesWithoutDevices.length, // Could be enhanced with total count query
+      totalDevices: devicesWithoutVehicles.length   // Could be enhanced with total count query
+    };
+    
+  } catch (error) {
+    console.error('Error fetching unassociated items stats:', error);
+    throw error;
+  }
+};

@@ -462,6 +462,68 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
+  // OPTIMIZED: Get vehicles without devices (no cache needed)
+  const getVehiclesWithoutDevices = useCallback(async () => {
+    try {
+      const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithoutDevices();
+      
+      toast({
+        title: "Véhicules sans IMEI",
+        description: `${vehicles.length} véhicule(s) sans boîtier trouvé(s)`,
+      });
+      
+      return vehicles;
+    } catch (err) {
+      console.error('Error getting vehicles without devices:', err);
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la récupération des véhicules sans IMEI: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, []);
+
+  // OPTIMIZED: Get devices without vehicles (no cache needed)
+  const getDevicesWithoutVehicles = useCallback(async () => {
+    try {
+      const devices = await CompanyVehicleDeviceService.fetchDevicesWithoutVehicles();
+      
+      toast({
+        title: "Devices sans véhicules",
+        description: `${devices.length} boîtier(s) libre(s) trouvé(s)`,
+      });
+      
+      return devices;
+    } catch (err) {
+      console.error('Error getting devices without vehicles:', err);
+      setError(err.message);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors de la récupération des boîtiers libres: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, []);
+
+  // OPTIMIZED: Get stats for unassociated items
+  const getUnassociatedItemsStats = useCallback(async () => {
+    try {
+      return await CompanyVehicleDeviceService.fetchUnassociatedItemsStats();
+    } catch (err) {
+      console.error('Error getting unassociated items stats:', err);
+      setError(err.message);
+      return {
+        vehiclesWithoutDevicesCount: 0,
+        devicesWithoutVehiclesCount: 0,
+        totalVehicles: 0,
+        totalDevices: 0
+      };
+    }
+  }, []);
+
   // SIMPLIFIED: Initialize cache from localStorage IMMEDIATELY on mount
   useEffect(() => {
     console.log('=== INITIALIZING CACHE FROM LOCALSTORAGE ===');
@@ -541,6 +603,11 @@ export const useCompanyVehicleDevice = () => {
     getDeviceStatus,
     loadCompaniesForSelect,
     resetFilters,
+    
+    // OPTIMIZED: New specialized functions for unassociated items
+    getVehiclesWithoutDevices,
+    getDevicesWithoutVehicles,
+    getUnassociatedItemsStats,
     
     // Utilities
     isFiltered: devices.length !== stats.totalDevices,

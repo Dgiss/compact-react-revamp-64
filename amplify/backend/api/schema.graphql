@@ -612,11 +612,25 @@ type Query {
   getActivityReport(driverSub:String, vehicleImmat: String, tagId: String, from: String!, to:String!, page: Int!, mode: ReportCallMode!): ActivityReport @function(name: "FleetWatcherReportProcessor-${env}")
   getFuelReport(driverSub:String, vehicleImmat: String, tagId: String, from: String!, to:String!, page: Int!, mode: ReportCallMode!): FuelReport @function(name: "FleetWatcherReportProcessor-${env}")
   getProximitySearch(address: String!, companyId: ID!): [Trame] @function(name: "FleetWatcherproximitySearch-${env}")
+  
+  # OPTIMIZED queries for vehicles without devices and devices without vehicles
+  listVehiclesWithoutDevices(filter: ModelVehicleFilterInput, limit: Int, nextToken: String): ModelVehicleConnection
+    @auth(rules: [{ allow: groups, groups: ["admin"] }])
+  listDevicesWithoutVehicles(filter: ModelDeviceFilterInput, limit: Int, nextToken: String): ModelDeviceConnection
+    @auth(rules: [{ allow: groups, groups: ["admin"] }])
 }
 
 type Mutation {
   executeCustomAction(operation:CustomActionOperation!, request: AWSJSON!): CustomActionResponse @function(name: "FleetWatcherCustomActions-${env}")
   executeMaintenanceAction( action: MaintenanceAction! maintenanceId: ID! input: AWSJSON ): MaintenanceResponse @function(name: "FleetWatcherMaintenanceProcessor-${env}")
+}
+
+# Stats type for unassociated items
+type UnassociatedItemsStats {
+  vehiclesWithoutDevicesCount: Int!
+  devicesWithoutVehiclesCount: Int!
+  totalVehicles: Int!
+  totalDevices: Int!
 }
 
 type LabelsCollection @model

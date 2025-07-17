@@ -31,7 +31,11 @@ export default function VehiclesDevicesPage() {
     searchByCompany,
     resetFilters,
     isFiltered,
-    totalResults
+    totalResults,
+    // OPTIMIZED: New specialized functions
+    getVehiclesWithoutDevices,
+    getDevicesWithoutVehicles,
+    getUnassociatedItemsStats
   } = useCompanyVehicleDevice();
   
   // Local state for filtered data when using search
@@ -64,9 +68,31 @@ export default function VehiclesDevicesPage() {
     }
   }, [loadAllData, isCacheReady]);
 
-  // Search vehicles without IMEI
+  // OPTIMIZED: Search vehicles without devices - no cache loading needed
+  const searchVehiclesWithoutDevicesOptimized = async () => {
+    try {
+      console.log('=== OPTIMIZED SEARCH: VEHICLES WITHOUT DEVICES ===');
+      const vehiclesWithoutDevices = await getVehiclesWithoutDevices();
+      setFilteredData(vehiclesWithoutDevices);
+    } catch (error) {
+      console.error('Error searching vehicles without devices:', error);
+    }
+  };
+
+  // OPTIMIZED: Search devices without vehicles - no cache loading needed  
+  const searchDevicesWithoutVehiclesOptimized = async () => {
+    try {
+      console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
+      const devicesWithoutVehicles = await getDevicesWithoutVehicles();
+      setFilteredData(devicesWithoutVehicles);
+    } catch (error) {
+      console.error('Error searching devices without vehicles:', error);
+    }
+  };
+
+  // FALLBACK: Search vehicles without IMEI using cached data (for compatibility)
   const searchVehiclesWithoutImeiFunction = () => {
-    console.log('=== SEARCHING VEHICLES WITHOUT IMEI ===');
+    console.log('=== FALLBACK SEARCH: VEHICLES WITHOUT IMEI (CACHED) ===');
     const vehiclesWithoutImei = combinedData.filter(item => 
       item.type === "vehicle" && 
       (!item.imei || item.imei === "") && 
@@ -529,6 +555,37 @@ export default function VehiclesDevicesPage() {
             onClick={searchVehicles}
           >
             Rechercher
+          </Button>
+        </div>
+      </div>
+
+      {/* OPTIMIZED: Specialized Filter Buttons - Direct API calls without cache loading */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+        <div className="text-center">
+          <h3 className="text-sm font-semibold text-blue-700 mb-2">🚗 Véhicules sans boîtiers</h3>
+          <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
+          <Button 
+            variant="outline"
+            onClick={searchVehiclesWithoutDevicesOptimized}
+            className="w-full bg-blue-50 border-blue-300 hover:bg-blue-100"
+            disabled={loading}
+          >
+            <Car className="h-4 w-4 mr-2" />
+            Véhicules sans IMEI
+          </Button>
+        </div>
+        
+        <div className="text-center">
+          <h3 className="text-sm font-semibold text-green-700 mb-2">📡 Boîtiers libres</h3>
+          <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
+          <Button 
+            variant="outline"
+            onClick={searchDevicesWithoutVehiclesOptimized}
+            className="w-full bg-green-50 border-green-300 hover:bg-green-100"
+            disabled={loading}
+          >
+            <Wifi className="h-4 w-4 mr-2" />
+            Devices sans véhicules
           </Button>
         </div>
       </div>
