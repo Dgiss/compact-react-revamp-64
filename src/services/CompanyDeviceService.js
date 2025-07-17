@@ -1,7 +1,6 @@
 import { generateClient } from 'aws-amplify/api';
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
-import * as simplifiedQueries from '../graphql/simplified-queries';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
 import { createDevice } from './DeviceService.js';
 
@@ -327,12 +326,9 @@ export const getUnassignedDevices = async () => {
   try {
     console.log('=== GETTING UNASSIGNED DEVICES ===');
     
-    // Get all devices (using simplified query)
+    // Get all devices
     const devicesResponse = await client.graphql({
-      query: simplifiedQueries.listDevicesSimple,
-      variables: {
-        limit: 10000
-      }
+      query: queries.listDevices
     });
     
     const allDevices = devicesResponse.data?.listDevices?.items || [];
@@ -352,12 +348,9 @@ export const getUnassignedDevices = async () => {
     const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
     console.log('Company associated devices:', Array.from(companyAssociatedImeis));
     
-    // Get all vehicles to check for vehicleDeviceImei associations (using simplified query)
+    // Get all vehicles to check for vehicleDeviceImei associations
     const vehiclesResponse = await client.graphql({
-      query: simplifiedQueries.listVehiclesSimple,
-      variables: {
-        limit: 10000 // Get more vehicles in one batch
-      }
+      query: queries.listVehicles
     });
     
     const allVehicles = vehiclesResponse.data?.listVehicles?.items || [];
