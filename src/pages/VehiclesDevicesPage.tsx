@@ -500,13 +500,13 @@ export default function VehiclesDevicesPage() {
         
         if (row.type === "device") {
           // For devices, determine status based on company association and vehicle association
-          if (!row.isAssociated && row.entreprise === "Boîtier libre") {
+          if (!row.isAssociated && row.entreprise === "Boîtier libre" && !row.isReservedForCompany) {
             status = "Libre";
             badgeClass = "bg-green-100 text-green-800";
           } else if (row.isAssociated && row.immatriculation) {
             status = "Associé véhicule";
             badgeClass = "bg-blue-100 text-blue-800";
-          } else if (row.entreprise && row.entreprise !== "Boîtier libre") {
+          } else if (row.isReservedForCompany || (row.entreprise && row.entreprise !== "Boîtier libre")) {
             status = "Réservé client";
             badgeClass = "bg-orange-100 text-orange-800";
           }

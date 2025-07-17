@@ -43,14 +43,63 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
     
     // Separate vehicles from free devices
     const actualVehicles = vehicles.filter(item => item.type === 'vehicle');
-    const freeDevices = vehicles.filter(item => item.type === 'device');
+    let freeDevices = vehicles.filter(item => item.type === 'device');
+    
+    // NEW: Fetch company device associations to update device statuses
+    try {
+      const { generateClient } = await import('aws-amplify/api');
+      const { companyDevicesByCompanyIDAndAssociationDate } = await import('../graphql/mutations');
+      const client = generateClient();
+      
+      console.log('=== FETCHING COMPANY DEVICE ASSOCIATIONS ===');
+      
+      // For each company, get their device associations
+      for (const company of companies) {
+        try {
+          const result = await client.graphql({
+            query: companyDevicesByCompanyIDAndAssociationDate,
+            variables: {
+              companyID: company.id,
+              filter: { isActive: { eq: true } } // Only active associations
+            }
+          });
+          
+          const companyDevices = result.data?.companyDevicesByCompanyIDAndAssociationDate?.items || [];
+          console.log(`Company ${company.name} has ${companyDevices.length} reserved devices`);
+          
+          // Update free devices to show company reservation
+          companyDevices.forEach(companyDevice => {
+            const deviceIndex = freeDevices.findIndex(device => device.imei === companyDevice.deviceIMEI);
+            if (deviceIndex !== -1) {
+              // Update the device to show it's reserved for this company
+              freeDevices[deviceIndex] = {
+                ...freeDevices[deviceIndex],
+                entreprise: company.name,
+                isReservedForCompany: true,
+                companyReservation: {
+                  companyId: company.id,
+                  companyName: company.name,
+                  associationDate: companyDevice.associationDate
+                }
+              };
+              console.log(`Device ${companyDevice.deviceIMEI} marked as reserved for ${company.name}`);
+            }
+          });
+        } catch (error) {
+          console.warn(`Error fetching devices for company ${company.name}:`, error);
+        }
+      }
+    } catch (error) {
+      console.warn('Error fetching company device associations:', error);
+    }
     
     // Generate statistics
     const stats = {
       totalCompanies: companies.length,
       totalVehicles: actualVehicles.length,
-      totalDevices: vehicles.length,
-      freeDevices: freeDevices.length,
+      totalDevices: [...actualVehicles, ...freeDevices].length,
+      freeDevices: freeDevices.filter(d => !d.isReservedForCompany).length,
+      reservedDevices: freeDevices.filter(d => d.isReservedForCompany).length,
       associatedDevices: actualVehicles.filter(v => v.imei).length,
       companiesWithVehicles: companies.filter(c => c.vehicles?.items?.length > 0).length
     };
@@ -58,7 +107,7 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
     return {
       companies,
       vehicles: actualVehicles,
-      devices: vehicles, // Combined vehicles + free devices
+      devices: [...actualVehicles, ...freeDevices], // Combined vehicles + free devices + reserved devices
       freeDevices,
       stats
     };
