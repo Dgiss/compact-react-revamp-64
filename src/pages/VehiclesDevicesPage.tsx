@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,7 +23,11 @@ export default function VehiclesDevicesPage() {
     devices: combinedData,
     loading,
     isCacheReady,
+    loadingMode,
+    quickStats,
     loadAllData,
+    loadQuickStats,
+    setLoadingMode,
     searchDevices,
     searchByImei,
     searchBySim,
@@ -60,13 +64,7 @@ export default function VehiclesDevicesPage() {
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
 
-  // Load data on component mount - OPTIMIZED
-  useEffect(() => {
-    // Only load data if cache is not ready
-    if (!isCacheReady) {
-      loadAllData();
-    }
-  }, [loadAllData, isCacheReady]);
+  // No longer auto-load data on mount - wait for user action
 
   // OPTIMIZED: Search vehicles without devices - no cache loading needed
   const searchVehiclesWithoutDevicesOptimized = async () => {
@@ -74,6 +72,7 @@ export default function VehiclesDevicesPage() {
       console.log('=== OPTIMIZED SEARCH: VEHICLES WITHOUT DEVICES ===');
       const vehiclesWithoutDevices = await getVehiclesWithoutDevices();
       setFilteredData(vehiclesWithoutDevices);
+      setLoadingMode('search');
     } catch (error) {
       console.error('Error searching vehicles without devices:', error);
     }
@@ -85,6 +84,7 @@ export default function VehiclesDevicesPage() {
       console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
       const devicesWithoutVehicles = await getDevicesWithoutVehicles();
       setFilteredData(devicesWithoutVehicles);
+      setLoadingMode('search');
     } catch (error) {
       console.error('Error searching devices without vehicles:', error);
     }
@@ -475,19 +475,173 @@ export default function VehiclesDevicesPage() {
     setSelectedItem(null);
   };
 
+  // Initial view component
+  const InitialView = () => (
+    <div className="space-y-8 p-8 text-center">
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Véhicules & Dispositifs</h1>
+        <p className="text-muted-foreground">Choisissez une action pour commencer</p>
+      </div>
+
+      {quickStats && (
+        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="text-2xl font-bold text-primary">{quickStats.totalVehicles}</div>
+            <div className="text-sm text-muted-foreground">Véhicules</div>
+          </div>
+          <div className="p-4 bg-muted rounded-lg">
+            <div className="text-2xl font-bold text-primary">{quickStats.totalDevices}</div>
+            <div className="text-sm text-muted-foreground">Dispositifs</div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <Button 
+          onClick={() => searchVehiclesWithoutDevicesOptimized()}
+          variant="outline" 
+          className="h-20 text-left flex flex-col items-start justify-center p-4"
+          disabled={loading}
+        >
+          <Car className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Véhicules sans IMEI</div>
+            <div className="text-sm text-muted-foreground">Voir les véhicules non associés</div>
+          </div>
+        </Button>
+
+        <Button 
+          onClick={() => searchDevicesWithoutVehiclesOptimized()}
+          variant="outline" 
+          className="h-20 text-left flex flex-col items-start justify-center p-4"
+          disabled={loading}
+        >
+          <Smartphone className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Dispositifs libres</div>
+            <div className="text-sm text-muted-foreground">Voir les dispositifs non associés</div>
+          </div>
+        </Button>
+
+        <Button 
+          onClick={() => setLoadingMode('search')}
+          variant="outline" 
+          className="h-20 text-left flex flex-col items-start justify-center p-4"
+        >
+          <Search className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Rechercher</div>
+            <div className="text-sm text-muted-foreground">Recherche par critères</div>
+          </div>
+        </Button>
+
+        <Button 
+          onClick={() => loadAllData('complete')}
+          variant="outline" 
+          className="h-20 text-left flex flex-col items-start justify-center p-4"
+          disabled={loading}
+        >
+          <Database className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Charger tout</div>
+            <div className="text-sm text-muted-foreground">Voir toutes les données</div>
+          </div>
+        </Button>
+      </div>
+
+      <div className="flex gap-2 justify-center">
+        <Button onClick={() => setShowAddVehicleDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Ajouter Véhicule
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => setShowImportDevicesDialog(true)}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          Importer Devices
+        </Button>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Chargement des véhicules et boîtiers...</p>
+          <p>Chargement...</p>
         </div>
       </div>
     );
   }
 
+  // Show initial view when no specific mode is active
+  if (loadingMode === 'initial') {
+    return (
+      <div className="space-y-6">
+        <InitialView />
+        
+        {/* Dialogs for initial view */}
+        <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Ajouter un Véhicule</DialogTitle>
+            </DialogHeader>
+            <AddVehicleForm 
+              onClose={() => setShowAddVehicleDialog(false)} 
+              onSave={async (data) => {
+                await updateVehicleData(data);
+                setShowAddVehicleDialog(false);
+                loadQuickStats();
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Importer des Boîtiers</DialogTitle>
+            </DialogHeader>
+            <ImportDevicesForm onClose={() => {
+              setShowImportDevicesDialog(false);
+              loadQuickStats();
+            }} />
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold">Véhicules & Dispositifs</h1>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setLoadingMode('initial')}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Retour
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAddVehicleDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Ajouter Véhicule
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowImportDevicesDialog(true)}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Importer Devices
+          </Button>
+        </div>
+      </div>
       {/* Search Bar */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
         <div>

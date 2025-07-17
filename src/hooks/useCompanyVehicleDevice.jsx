@@ -18,6 +18,10 @@ export const useCompanyVehicleDevice = () => {
   // Cache for all data - single source of truth
   const [allDataCache, setAllDataCache] = useState(null);
   const [isCacheReady, setIsCacheReady] = useState(false);
+  
+  // Loading mode states
+  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete'
+  const [quickStats, setQuickStats] = useState(null);
 
   // localStorage utilities
   const saveToLocalStorage = (data) => {
@@ -130,20 +134,14 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - OPTIMIZED CACHE-FIRST STRATEGY
-  const loadAllData = useCallback(async () => {
-    // OPTIMIZATION: Check if we already have valid cache data
-    if (isCacheReady && allDataCache && allDataCache.vehicles && allDataCache.vehicles.length > 0) {
-      console.log('=== USING CACHED DATA (NO API CALL NEEDED) ===');
-      console.log('Cache contains:', allDataCache.vehicles?.length || 0, 'items');
-      return; // Skip API call if cache is fresh
-    }
-    
+  // Load all data - ON-DEMAND with mode control
+  const loadAllData = useCallback(async (mode = 'complete') => {
+    setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log('=== LOADING ALL DATA FROM API (CACHE MISS) ===');
+      console.log('=== LOADING ALL DATA FROM API ===');
       
       const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
       
@@ -193,7 +191,7 @@ export const useCompanyVehicleDevice = () => {
     } finally {
       setLoading(false);
     }
-  }, [isCacheReady, allDataCache]);
+  }, []);
 
   // Search with filters - CLIENT-SIDE using cached data (OPTIMIZED)
   const searchDevices = useCallback(async (filters) => {
@@ -524,50 +522,66 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
-  // SIMPLIFIED: Initialize cache from localStorage IMMEDIATELY on mount
+  // Load basic statistics without full data
+  const loadQuickStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { generateClient } = await import('aws-amplify/api');
+      const client = generateClient();
+      
+      // Simple count queries
+      const vehiclesQuery = `query GetVehicleCount {
+        listVehicles(limit: 1) {
+          items { id }
+        }
+      }`;
+      
+      const devicesQuery = `query GetDeviceCount {
+        listDevices(limit: 1) {
+          items { id }
+        }
+      }`;
+      
+      const [vehiclesResult, devicesResult] = await Promise.all([
+        client.graphql({ query: vehiclesQuery }),
+        client.graphql({ query: devicesQuery })
+      ]);
+      
+      setQuickStats({
+        totalVehicles: vehiclesResult.data?.listVehicles?.items?.length || 0,
+        totalDevices: devicesResult.data?.listDevices?.items?.length || 0
+      });
+    } catch (error) {
+      console.error('Error loading quick stats:', error);
+      // Fallback to cached data if available
+      const cachedData = loadFromLocalStorage();
+      if (cachedData) {
+        const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
+        const deviceCount = (cachedData.vehicles || []).filter(item => item.type === "device").length;
+        setQuickStats({
+          totalVehicles: vehicleCount,
+          totalDevices: deviceCount
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // MODIFIED: Initialize only cached data and quick stats on mount
   useEffect(() => {
-    console.log('=== INITIALIZING CACHE FROM LOCALSTORAGE ===');
+    console.log('=== INITIALIZING ON-DEMAND LOADING MODE ===');
     const cachedData = loadFromLocalStorage();
     
     if (cachedData) {
-      console.log('Found cached data in localStorage, initializing IMMEDIATELY');
+      console.log('Found cached data - setting as available but not loading to state');
       setAllDataCache(cachedData);
-      setCompanies(cachedData.companies || []);
-      setDevices(cachedData.vehicles || []);
-      setIsCacheReady(true); // Set cache ready IMMEDIATELY
-      
-      // Update derived state
-      const freeDevicesCount = (cachedData.vehicles || []).filter(item => 
-        item.type === "device" && !item.isAssociated
-      ).length;
-      setFreeDevices(freeDevicesCount);
-      
-      const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
-      const associatedDeviceCount = (cachedData.vehicles || []).filter(item => 
-        item.type === "device" && item.isAssociated
-      ).length;
-      
-      setStats({
-        vehicleCount,
-        associatedDeviceCount,
-        freeDeviceCount: freeDevicesCount
-      });
-      
-      console.log('Cache initialized successfully - CACHE IS READY:', {
-        companiesCount: cachedData.companies?.length || 0,
-        vehiclesCount: vehicleCount,
-        devicesCount: freeDevicesCount + associatedDeviceCount,
-        isCacheReady: true
-      });
-      
-      // Schedule background refresh (non-blocking)
-      setTimeout(() => {
-        refreshDataInBackground();
-      }, 2000);
-    } else {
-      console.log('No cached data found, will need to load data from API');
-      setIsCacheReady(false);
+      setIsCacheReady(true);
+      // Don't load to state automatically anymore
     }
+    
+    // Load quick stats for dashboard
+    loadQuickStats();
   }, []); // Empty dependency array - run only once on mount
 
   // Reset to show all data
@@ -587,12 +601,16 @@ export const useCompanyVehicleDevice = () => {
     loading,
     error,
     isCacheReady,
+    loadingMode,
+    quickStats,
     
     // Cache status
     allDataCache,
     
     // Actions
     loadAllData,
+    loadQuickStats,
+    setLoadingMode,
     searchDevices,
     searchByImei,
     searchBySim,
