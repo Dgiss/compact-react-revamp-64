@@ -25,7 +25,7 @@ export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
       variables: {
         input: {
           imei: deviceImei,
-          vehicleImmat: vehicleImmat // This creates the @belongsTo relation
+          deviceVehicleImmat: vehicleImmat // This creates the @belongsTo relation
         }
       }
     });
