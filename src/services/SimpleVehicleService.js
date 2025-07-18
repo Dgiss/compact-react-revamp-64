@@ -1,9 +1,32 @@
 
 import { generateClient } from 'aws-amplify/api';
+import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { withCredentialRetry } from '@/config/aws-config.js';
 
 const client = generateClient();
+
+/**
+ * Check if vehicle exists by immatriculation
+ * @param {string} immat - Vehicle immatriculation
+ * @returns {Promise<boolean>} True if vehicle exists
+ */
+export const checkVehicleExists = async (immat) => {
+  return await withCredentialRetry(async () => {
+    try {
+      const result = await client.graphql({
+        query: queries.getVehicle,
+        variables: { immat: immat }
+      });
+      
+      return !!result.data.getVehicle;
+    } catch (error) {
+      // If error (vehicle not found), vehicle doesn't exist
+      console.log('Vehicle does not exist:', immat);
+      return false;
+    }
+  });
+};
 
 /**
  * Create vehicle with simple logic using direct mutation
@@ -73,9 +96,21 @@ export const updateVehicleSimple = async (vehicleData) => {
     console.log('=== UPDATING VEHICLE SIMPLE ===');
     console.log('Vehicle data:', vehicleData);
     
+    const immat = vehicleData.immatriculation || vehicleData.immat;
+    if (!immat) {
+      throw new Error('Immatriculation is required for update');
+    }
+    
+    // Check if vehicle exists first
+    const vehicleExists = await checkVehicleExists(immat);
+    if (!vehicleExists) {
+      console.log('Vehicle does not exist, creating instead of updating');
+      return await createVehicleSimple(vehicleData);
+    }
+    
     // Map form data to GraphQL schema
     const vehicleInput = {
-      immat: vehicleData.immatriculation || vehicleData.immat,
+      immat: immat,
       companyVehiclesId: vehicleData.companyVehiclesId,
       code: vehicleData.code,
       nomVehicule: vehicleData.nomVehicule,
@@ -109,5 +144,33 @@ export const updateVehicleSimple = async (vehicleData) => {
     
     console.log('Vehicle updated:', result.data.updateVehicle);
     return result.data.updateVehicle;
+  });
+};
+
+/**
+ * Create or update vehicle with automatic detection
+ * @param {Object} vehicleData - Vehicle data
+ * @returns {Promise<Object>} Created or updated vehicle
+ */
+export const createOrUpdateVehicleSimple = async (vehicleData) => {
+  return await withCredentialRetry(async () => {
+    console.log('=== CREATE OR UPDATE VEHICLE SIMPLE ===');
+    console.log('Vehicle data:', vehicleData);
+    
+    const immat = vehicleData.immatriculation || vehicleData.immat;
+    if (!immat) {
+      throw new Error('Immatriculation is required');
+    }
+    
+    // Check if vehicle exists
+    const vehicleExists = await checkVehicleExists(immat);
+    
+    if (vehicleExists) {
+      console.log('Vehicle exists, updating...');
+      return await updateVehicleSimple(vehicleData);
+    } else {
+      console.log('Vehicle does not exist, creating...');
+      return await createVehicleSimple(vehicleData);
+    }
   });
 };

@@ -235,10 +235,10 @@ export default function VehiclesDevicesPage() {
     resetFilters();
   };
 
-  // Update or create vehicle - CORRECTED MAPPING
+  // Update or create vehicle - CORRECTED LOGIC
   const updateVehicleData = async (data) => {
     try {
-      console.log('=== UPDATING/CREATING VEHICLE (SIMPLIFIED) ===');
+      console.log('=== UPDATING/CREATING VEHICLE (CORRECTED) ===');
       console.log('Data received:', data);
       
       // Map entreprise to companyVehiclesId if needed
@@ -254,24 +254,14 @@ export default function VehiclesDevicesPage() {
         }
       }
       
-      // Check if this is a new vehicle creation or an update
-      const isNewVehicle = !mappedData.immat && mappedData.immatriculation;
+      // Use the corrected create or update function
+      const { createOrUpdateVehicleSimple } = await import('../services/SimpleVehicleService.js');
+      await createOrUpdateVehicleSimple(mappedData);
       
-      if (isNewVehicle) {
-        // Create new vehicle using simplified function
-        await createVehicleSimple(mappedData);
-        toast({
-          title: "Succès",
-          description: "Véhicule créé avec succès",
-        });
-      } else {
-        // Update existing vehicle using simplified function
-        await updateVehicleSimple(mappedData);
-        toast({
-          title: "Succès",
-          description: "Véhicule modifié avec succès",
-        });
-      }
+      toast({
+        title: "Succès",
+        description: "Véhicule traité avec succès",
+      });
       
       // Reload data
       await loadAllData();
@@ -279,7 +269,7 @@ export default function VehiclesDevicesPage() {
       console.error('Error updating/creating vehicle:', err);
       toast({
         title: "Erreur",
-        description: `Erreur lors de la ${data.immat ? 'modification' : 'création'}: ${err.message}`,
+        description: `Erreur lors du traitement: ${err.message}`,
         variant: "destructive",
       });
     }

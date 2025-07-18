@@ -1,4 +1,3 @@
-
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -138,13 +137,13 @@ export const checkDeviceExists = async (imei) => {
 };
 
 /**
- * Create device with immediate vehicle association - SIMPLIFIED VERSION
+ * Create device with immediate vehicle association - CORRECTED ORDER
  * @param {Object} data - Complete data for device and vehicle creation
  * @returns {Promise<Object>} Creation results
  */
 export const createDeviceWithVehicleAssociation = async (data) => {
   return await withCredentialRetry(async () => {
-    console.log('=== CREATING DEVICE WITH VEHICLE ASSOCIATION (SIMPLIFIED) ===');
+    console.log('=== CREATING DEVICE WITH VEHICLE ASSOCIATION (CORRECTED ORDER) ===');
     console.log('Input data:', data);
 
     try {
@@ -168,7 +167,23 @@ export const createDeviceWithVehicleAssociation = async (data) => {
         throw new Error('Aucun IMEI disponible');
       }
 
-      // Step 2: Create devices
+      // Step 2: Create vehicle FIRST (this was the problem - devices were created before vehicles)
+      const { createVehicleSimple } = await import('./SimpleVehicleService.js');
+      
+      const createdVehicle = await createVehicleSimple({
+        immatriculation: data.immatriculation,
+        categorie: data.categorie,
+        marque: data.brand,
+        modele: data.modele,
+        companyVehiclesId: data.companyVehiclesId,
+        nomVehicule: data.nomVehicule,
+        emplacement: data.emplacement,
+        kilometrage: data.kilometrage
+      });
+      
+      console.log('Vehicle created successfully:', createdVehicle.immat);
+
+      // Step 3: Create devices AFTER vehicle exists
       const successfulDevices = [];
       
       for (const imei of validImeis) {
@@ -180,6 +195,12 @@ export const createDeviceWithVehicleAssociation = async (data) => {
             constructor: data.constructor
           });
           
+          console.log('Device created successfully:', device.imei);
+          
+          // Step 4: Associate device to vehicle
+          await associateDeviceToVehicleSimple(data.immatriculation, imei);
+          console.log('Device associated to vehicle successfully');
+          
           successfulDevices.push({
             imei: device.imei,
             sim: device.sim || '',
@@ -188,26 +209,9 @@ export const createDeviceWithVehicleAssociation = async (data) => {
             vehicle: { company: { name: data.company?.name || '' } }
           });
         } catch (deviceError) {
-          console.error(`Error creating device ${imei}:`, deviceError);
+          console.error(`Error creating/associating device ${imei}:`, deviceError);
           errors.push(`${imei} (${deviceError.message})`);
         }
-      }
-
-      // Step 3: Create vehicle with device association
-      if (successfulDevices.length > 0) {
-        const { createVehicleSimple } = await import('./SimpleVehicleService.js');
-        
-        await createVehicleSimple({
-          immatriculation: data.immatriculation,
-          categorie: data.categorie,
-          marque: data.brand,
-          modele: data.modele,
-          companyVehiclesId: data.companyVehiclesId,
-          vehicleDeviceImei: validImeis[0], // Associate with first successful device
-          nomVehicule: data.nomVehicule,
-          emplacement: data.emplacement,
-          kilometrage: data.kilometrage
-        });
       }
 
       return {
@@ -215,7 +219,8 @@ export const createDeviceWithVehicleAssociation = async (data) => {
         successCount: successfulDevices.length,
         errorCount: errors.length,
         devices: successfulDevices,
-        errors: errors
+        errors: errors,
+        vehicle: createdVehicle
       };
 
     } catch (error) {
