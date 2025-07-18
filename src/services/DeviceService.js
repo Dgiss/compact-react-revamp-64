@@ -248,6 +248,5 @@ export const getDeviceTypeName = (protocolId) => {
 export { 
   checkImeiAvailable, 
   createDeviceSimple, 
-  associateDeviceToVehicleSimple,
-  createDeviceWithVehicleAssociation
+  associateDeviceToVehicleSimple
 };
