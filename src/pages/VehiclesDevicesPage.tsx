@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from 
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
+import AddDeviceWithVehicleForm from "@/components/forms/AddDeviceWithVehicleForm";
 import { toast } from "@/components/ui/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
@@ -54,6 +55,7 @@ export default function VehiclesDevicesPage() {
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
   const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
+  const [showAddDeviceWithVehicleDialog, setShowAddDeviceWithVehicleDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Search states
@@ -662,6 +664,13 @@ export default function VehiclesDevicesPage() {
           Ajouter Véhicule
         </Button>
         <Button 
+          variant="default"
+          onClick={() => setShowAddDeviceWithVehicleDialog(true)}
+        >
+          <Car className="mr-2 h-4 w-4" />
+          Créer Device + Véhicule
+        </Button>
+        <Button 
           variant="outline" 
           onClick={() => setShowImportDevicesDialog(true)}
         >
@@ -717,6 +726,23 @@ export default function VehiclesDevicesPage() {
             }} />
           </DialogContent>
         </Dialog>
+
+        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
+          <DialogContent className="max-w-2xl">
+            <AddDeviceWithVehicleForm 
+              onClose={() => setShowAddDeviceWithVehicleDialog(false)} 
+              onSuccess={(devices) => {
+                setShowAddDeviceWithVehicleDialog(false);
+                setFilteredData(devices);
+                setLoadingMode('search');
+                toast({
+                  title: "Succès",
+                  description: "Device et véhicule créés et associés avec succès",
+                });
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
@@ -739,6 +765,13 @@ export default function VehiclesDevicesPage() {
           <Button onClick={() => setShowAddVehicleDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter Véhicule
+          </Button>
+          <Button 
+            variant="default"
+            onClick={() => setShowAddDeviceWithVehicleDialog(true)}
+          >
+            <Car className="mr-2 h-4 w-4" />
+            Créer Device + Véhicule
           </Button>
           <Button 
             variant="outline" 
@@ -916,7 +949,7 @@ export default function VehiclesDevicesPage() {
           
           <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter un Véhicule
               </Button>
@@ -930,6 +963,29 @@ export default function VehiclesDevicesPage() {
                 onSave={async (data) => {
                   await updateVehicleData(data);
                   setShowAddVehicleDialog(false);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Car className="h-4 w-4 mr-2" />
+                Créer Device + Véhicule
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <AddDeviceWithVehicleForm 
+                onClose={() => setShowAddDeviceWithVehicleDialog(false)} 
+                onSuccess={(devices) => {
+                  setShowAddDeviceWithVehicleDialog(false);
+                  setFilteredData(devices);
+                  setLoadingMode('search');
+                  toast({
+                    title: "Succès",
+                    description: "Device et véhicule créés et associés avec succès",
+                  });
                 }}
               />
             </DialogContent>

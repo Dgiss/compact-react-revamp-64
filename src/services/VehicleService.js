@@ -268,7 +268,9 @@ export const createVehicleData = async (data) => {
     VIN: cleanedData.VIN || null,
     AWN_nom_commercial: cleanedData.AWN_nom_commercial || null,
     puissanceFiscale: cleanedData.puissanceFiscale || null,
-    lastModificationDate: new Date().toISOString()
+    lastModificationDate: new Date().toISOString(),
+    // Device association
+    vehicleDeviceImei: cleanedData.vehicleDeviceImei || null
   };
 
   // Remove null/undefined values to avoid GraphQL errors

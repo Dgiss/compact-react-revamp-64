@@ -219,6 +219,165 @@ export const deleteDevice = async (deviceData) => {
   });
 };
 
+/**
+ * Check if a device exists by IMEI
+ * @param {string} imei - Device IMEI to check
+ * @returns {Promise<boolean>} True if device exists
+ */
+export const checkDeviceExists = async (imei) => {
+  return await withCredentialRetry(async () => {
+    try {
+      const result = await client.graphql({
+        query: queries.getDevice,
+        variables: { imei }
+      });
+      return !!result.data.getDevice;
+    } catch (error) {
+      console.log('Device does not exist:', imei);
+      return false;
+    }
+  });
+};
+
+/**
+ * Toast utility function
+ */
+const showToast = (severity, summary, detail) => {
+  // This will be handled by the UI component calling this service
+  console.log(`[${severity.toUpperCase()}] ${summary}: ${detail}`);
+};
+
+/**
+ * Validate and get valid IMEIs
+ * @param {string} imei - Single IMEI to validate
+ * @param {Array} imeiList - List of IMEIs if multiple
+ * @returns {Promise<Array>} Array of valid IMEIs
+ */
+const getValidImeis = async (imei, imeiList = []) => {
+  if (imeiList.length > 0) return imeiList;
+
+  const trimmed = imei.trim();
+  if (!trimmed) {
+    throw new Error('Veuillez ajouter au moins un IMEI');
+  }
+
+  const exists = await checkDeviceExists(trimmed);
+  if (exists) {
+    throw new Error('IMEI déjà existant');
+  }
+
+  return [trimmed];
+};
+
+/**
+ * Process device creation with Flespi integration
+ * @param {Array} imeis - Array of IMEIs to process
+ * @param {Object} deviceInfo - Device information (constructor, etc.)
+ * @param {Object} vehicleInfo - Vehicle information for association
+ * @returns {Promise<Object>} Results object with success and error counts
+ */
+const processDevices = async (imeis, deviceInfo, vehicleInfo) => {
+  const successfulDevices = [];
+  const errors = [];
+
+  for (const imei of imeis) {
+    try {
+      const exists = await checkDeviceExists(imei);
+      if (exists) {
+        errors.push(`${imei} (existe déjà)`);
+        continue;
+      }
+
+      // Add to Flespi
+      const flespiId = await addDeviceToFlespi({
+        imei,
+        constructor: deviceInfo.constructor
+      });
+
+      // Add to database
+      await createDevice({ 
+        imei,
+        sim: deviceInfo.sim,
+        protocolId: deviceInfo.protocolId,
+        deviceVehicleImmat: vehicleInfo.immatriculation // Direct association
+      });
+
+      successfulDevices.push({
+        imei,
+        sim: deviceInfo.sim || '',
+        deviceVehicleImmat: vehicleInfo.immatriculation,
+        id: imei,
+        vehicle: { company: { name: vehicleInfo.company?.name || '' } }
+      });
+
+    } catch (err) {
+      errors.push(`${imei} (${err.message || 'Erreur inconnue'})`);
+    }
+  }
+
+  return { successfulDevices, errors };
+};
+
+/**
+ * Create device with immediate vehicle association - orchestrator function
+ * @param {Object} data - Complete data for device and vehicle creation
+ * @returns {Promise<Object>} Creation results
+ */
+export const createDeviceWithVehicleAssociation = async (data) => {
+  return await withCredentialRetry(async () => {
+    console.log('=== CREATING DEVICE WITH VEHICLE ASSOCIATION ===');
+    console.log('Input data:', data);
+
+    try {
+      // Validate IMEIs
+      const validImeis = await getValidImeis(data.imei, data.imeiList);
+      if (validImeis.length === 0) {
+        throw new Error('Aucun IMEI valide fourni');
+      }
+
+      // Process devices
+      const results = await processDevices(validImeis, {
+        constructor: data.constructor,
+        sim: data.sim,
+        protocolId: data.protocolId
+      }, {
+        immatriculation: data.immatriculation,
+        company: data.company
+      });
+
+      // Import createVehicleData here to avoid circular dependency
+      const { createVehicleData } = await import('./VehicleService.js');
+
+      // Create vehicle with device association for successful devices
+      if (results.successfulDevices.length > 0) {
+        await createVehicleData({
+          immatriculation: data.immatriculation,
+          categorie: data.categorie,
+          brand: data.brand,
+          modele: data.modele,
+          companyVehiclesId: data.companyVehiclesId,
+          vehicleDeviceImei: validImeis[0], // Associate with first successful device
+          nomVehicule: data.nomVehicule,
+          emplacement: data.emplacement,
+          kilometrage: data.kilometrage
+        });
+      }
+
+      return {
+        success: results.successfulDevices.length > 0,
+        successCount: results.successfulDevices.length,
+        errorCount: results.errors.length,
+        devices: results.successfulDevices,
+        errors: results.errors
+      };
+
+    } catch (error) {
+      console.error('Error in createDeviceWithVehicleAssociation:', error);
+      throw error;
+    }
+  });
+};
+
 // Helper function to determine device type/name from protocolId
 export const getDeviceTypeName = (protocolId) => {
   const deviceTypeMap = {
