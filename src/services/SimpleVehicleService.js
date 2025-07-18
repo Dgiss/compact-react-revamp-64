@@ -1,4 +1,3 @@
-
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -29,24 +28,59 @@ export const checkVehicleExists = async (immat) => {
 };
 
 /**
- * Validate required fields for vehicle creation
- * @param {Object} vehicleData - Vehicle data to validate
- * @throws {Error} If required fields are missing
+ * Extract meaningful error message from GraphQL error
+ * @param {Object} graphqlError - GraphQL error object
+ * @returns {string} Extracted error message
  */
-const validateRequiredFields = (vehicleData) => {
-  console.log('=== VALIDATING REQUIRED FIELDS ===');
+const extractGraphQLErrorMessage = (graphqlError) => {
+  console.log('=== EXTRACTING GRAPHQL ERROR MESSAGE ===');
+  console.log('GraphQL error object:', graphqlError);
+  
+  // Try to get message from errors array first
+  if (graphqlError.errors && graphqlError.errors.length > 0) {
+    const firstError = graphqlError.errors[0];
+    console.log('First error details:', firstError);
+    
+    if (firstError.message) {
+      console.log('Extracted error message:', firstError.message);
+      return firstError.message;
+    }
+  }
+  
+  // Fallback to top-level message
+  if (graphqlError.message) {
+    console.log('Using top-level error message:', graphqlError.message);
+    return graphqlError.message;
+  }
+  
+  // Last fallback
+  console.log('No specific error message found, using generic');
+  return 'GraphQL operation failed';
+};
+
+/**
+ * Validate required fields for vehicle creation/update
+ * @param {Object} vehicleData - Vehicle data to validate
+ * @param {boolean} isUpdate - Whether this is an update operation
+ * @throws {Error} If required fields are missing or invalid
+ */
+const validateVehicleData = (vehicleData, isUpdate = false) => {
+  console.log('=== VALIDATING VEHICLE DATA ===');
   console.log('Vehicle data to validate:', vehicleData);
+  console.log('Is update operation:', isUpdate);
   
   const immat = vehicleData.immatriculation || vehicleData.immat;
-  if (!immat) {
-    throw new Error('Immatriculation is required');
+  if (!immat || immat.trim() === '') {
+    throw new Error('Immatriculation is required and cannot be empty');
   }
   
-  if (!vehicleData.companyVehiclesId) {
-    throw new Error('Company ID (companyVehiclesId) is required');
+  if (!vehicleData.companyVehiclesId || vehicleData.companyVehiclesId.trim() === '') {
+    throw new Error('Company ID (companyVehiclesId) is required and cannot be empty');
   }
   
-  console.log('Required fields validation passed');
+  console.log('Vehicle data validation passed');
+  console.log('- immat:', immat);
+  console.log('- companyVehiclesId:', vehicleData.companyVehiclesId);
 };
 
 /**
@@ -60,7 +94,7 @@ const cleanVehicleInput = (vehicleInput) => {
   
   const cleaned = { ...vehicleInput };
   
-  // Required fields that should not be removed even if empty
+  // Required fields that must never be removed
   const requiredFields = ['immat', 'realImmat', 'companyVehiclesId'];
   
   // Remove undefined values and empty strings, but preserve required fields
@@ -68,15 +102,12 @@ const cleanVehicleInput = (vehicleInput) => {
     const value = cleaned[key];
     
     if (requiredFields.includes(key)) {
-      // Keep required fields even if empty, but convert empty string to meaningful value if needed
-      if (value === '') {
-        // For immat and realImmat, empty string is not acceptable
-        if (key === 'immat' || key === 'realImmat') {
-          console.warn(`Warning: ${key} is empty, this may cause issues`);
-        }
+      // Keep required fields, but validate they're not empty
+      if (value === '' || value === null || value === undefined) {
+        console.warn(`Warning: Required field ${key} is empty or null`);
       }
     } else {
-      // For non-required fields, remove undefined and empty values
+      // For non-required fields, remove undefined, null, and empty values
       if (value === undefined || value === '' || value === null) {
         delete cleaned[key];
       }
@@ -84,6 +115,11 @@ const cleanVehicleInput = (vehicleInput) => {
   });
   
   console.log('Cleaned input:', cleaned);
+  console.log('Required fields check:');
+  requiredFields.forEach(field => {
+    console.log(`- ${field}:`, cleaned[field]);
+  });
+  
   return cleaned;
 };
 
@@ -93,12 +129,12 @@ const cleanVehicleInput = (vehicleInput) => {
  * @returns {Promise<Object>} Created vehicle
  */
 export const createVehicleSimple = async (vehicleData) => {
-  console.log('=== CREATING VEHICLE SIMPLE (ENHANCED) ===');
+  console.log('=== CREATING VEHICLE SIMPLE (ENHANCED ERROR HANDLING) ===');
   console.log('Vehicle data:', vehicleData);
   
   try {
     // Validate required fields first
-    validateRequiredFields(vehicleData);
+    validateVehicleData(vehicleData, false);
     
     const immat = vehicleData.immatriculation || vehicleData.immat;
     
@@ -126,6 +162,22 @@ export const createVehicleSimple = async (vehicleData) => {
     // Clean the input
     const cleanedInput = cleanVehicleInput(vehicleInput);
     
+    // Final validation before GraphQL call
+    console.log('=== FINAL PRE-GRAPHQL VALIDATION ===');
+    console.log('Cleaned input being sent to GraphQL:', cleanedInput);
+    
+    // Ensure required fields are present and valid
+    if (!cleanedInput.immat || cleanedInput.immat.trim() === '') {
+      throw new Error('Pre-GraphQL validation failed: immat is required');
+    }
+    if (!cleanedInput.realImmat || cleanedInput.realImmat.trim() === '') {
+      throw new Error('Pre-GraphQL validation failed: realImmat is required');
+    }
+    if (!cleanedInput.companyVehiclesId || cleanedInput.companyVehiclesId.trim() === '') {
+      throw new Error('Pre-GraphQL validation failed: companyVehiclesId is required');
+    }
+    
+    console.log('Pre-GraphQL validation passed');
     console.log('Calling createVehicle mutation with:', cleanedInput);
     
     const result = await withCredentialRetry(async () => {
@@ -135,25 +187,30 @@ export const createVehicleSimple = async (vehicleData) => {
           variables: { input: cleanedInput }
         });
       } catch (graphqlError) {
-        console.error('=== GRAPHQL ERROR DETAILS ===');
+        console.error('=== ENHANCED GRAPHQL ERROR DETAILS ===');
         console.error('Full error object:', graphqlError);
         console.error('Error data:', graphqlError.data);
-        console.error('Error errors:', graphqlError.errors);
-        console.error('Error message:', graphqlError.message);
+        console.error('Error errors array:', graphqlError.errors);
+        console.error('Error message (top-level):', graphqlError.message);
         
-        if (graphqlError.errors) {
+        if (graphqlError.errors && graphqlError.errors.length > 0) {
           graphqlError.errors.forEach((err, index) => {
-            console.error(`Error ${index + 1}:`, {
+            console.error(`GraphQL Error ${index + 1}:`, {
               message: err.message,
               path: err.path,
               locations: err.locations,
-              errorType: err.errorType
+              errorType: err.errorType,
+              errorInfo: err.errorInfo
             });
           });
         }
         
-        // Re-throw with more context
-        throw new Error(`GraphQL createVehicle failed: ${graphqlError.message || 'Unknown error'}`);
+        // Extract meaningful error message
+        const errorMessage = extractGraphQLErrorMessage(graphqlError);
+        console.error('Extracted error message:', errorMessage);
+        
+        // Re-throw with extracted message
+        throw new Error(`GraphQL createVehicle failed: ${errorMessage}`);
       }
     });
     
@@ -184,7 +241,7 @@ export const createVehicleSimple = async (vehicleData) => {
  * @returns {Promise<Object>} Updated vehicle
  */
 export const updateVehicleSimple = async (vehicleData) => {
-  console.log('=== UPDATING VEHICLE SIMPLE (ENHANCED) ===');
+  console.log('=== UPDATING VEHICLE SIMPLE (ENHANCED ERROR HANDLING) ===');
   console.log('Vehicle data:', vehicleData);
   
   try {
@@ -199,6 +256,9 @@ export const updateVehicleSimple = async (vehicleData) => {
       console.log('Vehicle does not exist, creating instead of updating');
       return await createVehicleSimple(vehicleData);
     }
+    
+    // Validate data for update
+    validateVehicleData(vehicleData, true);
     
     // Map form data to GraphQL schema
     const vehicleInput = {
@@ -238,22 +298,27 @@ export const updateVehicleSimple = async (vehicleData) => {
           variables: { input: cleanedInput }
         });
       } catch (graphqlError) {
-        console.error('=== UPDATE GRAPHQL ERROR DETAILS ===');
+        console.error('=== UPDATE ENHANCED GRAPHQL ERROR DETAILS ===');
         console.error('Full error object:', graphqlError);
         console.error('Error data:', graphqlError.data);
-        console.error('Error errors:', graphqlError.errors);
+        console.error('Error errors array:', graphqlError.errors);
         
-        if (graphqlError.errors) {
+        if (graphqlError.errors && graphqlError.errors.length > 0) {
           graphqlError.errors.forEach((err, index) => {
-            console.error(`Update Error ${index + 1}:`, {
+            console.error(`Update GraphQL Error ${index + 1}:`, {
               message: err.message,
               path: err.path,
-              errorType: err.errorType
+              errorType: err.errorType,
+              errorInfo: err.errorInfo
             });
           });
         }
         
-        throw new Error(`GraphQL updateVehicle failed: ${graphqlError.message || 'Unknown error'}`);
+        // Extract meaningful error message
+        const errorMessage = extractGraphQLErrorMessage(graphqlError);
+        console.error('Extracted update error message:', errorMessage);
+        
+        throw new Error(`GraphQL updateVehicle failed: ${errorMessage}`);
       }
     });
     
@@ -274,7 +339,7 @@ export const updateVehicleSimple = async (vehicleData) => {
  * @returns {Promise<Object>} Created or updated vehicle
  */
 export const createOrUpdateVehicleSimple = async (vehicleData) => {
-  console.log('=== CREATE OR UPDATE VEHICLE SIMPLE (ENHANCED) ===');
+  console.log('=== CREATE OR UPDATE VEHICLE SIMPLE (ENHANCED ERROR HANDLING) ===');
   console.log('Vehicle data:', vehicleData);
   
   try {
