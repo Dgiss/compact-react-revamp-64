@@ -162,6 +162,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       const formData = {
         immat: String(immatriculation || ""),
         immatriculation: String(immatriculation || ""),
+        realImmat: String(immatriculation || ""),
         nomVehicule: String(nomVehicule || ""),
         categorie: String(categorie || ""),
         marque: String(marque || ""),
@@ -182,7 +183,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         deviceCreated: Boolean(deviceCreated)
       };
       
-      console.log('Form data being submitted (all primitives, corrected mapping):', formData);
+      console.log('Form data being submitted (all primitives, corrected mapping with realImmat):', formData);
       
       if (onSave) {
         onSave(formData);

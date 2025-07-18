@@ -1,3 +1,4 @@
+
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
@@ -60,7 +61,7 @@ const cleanVehicleInput = (vehicleInput) => {
   const cleaned = { ...vehicleInput };
   
   // Required fields that should not be removed even if empty
-  const requiredFields = ['immat', 'companyVehiclesId'];
+  const requiredFields = ['immat', 'realImmat', 'companyVehiclesId'];
   
   // Remove undefined values and empty strings, but preserve required fields
   Object.keys(cleaned).forEach(key => {
@@ -69,9 +70,9 @@ const cleanVehicleInput = (vehicleInput) => {
     if (requiredFields.includes(key)) {
       // Keep required fields even if empty, but convert empty string to meaningful value if needed
       if (value === '') {
-        // For immat, empty string is not acceptable
-        if (key === 'immat') {
-          console.warn('Warning: immat is empty, this may cause issues');
+        // For immat and realImmat, empty string is not acceptable
+        if (key === 'immat' || key === 'realImmat') {
+          console.warn(`Warning: ${key} is empty, this may cause issues`);
         }
       }
     } else {
@@ -99,9 +100,12 @@ export const createVehicleSimple = async (vehicleData) => {
     // Validate required fields first
     validateRequiredFields(vehicleData);
     
+    const immat = vehicleData.immatriculation || vehicleData.immat;
+    
     // Map form data to GraphQL schema
     const vehicleInput = {
-      immat: vehicleData.immatriculation || vehicleData.immat,
+      immat: immat,
+      realImmat: immat, // Add the missing realImmat field - use same value as immat
       companyVehiclesId: vehicleData.companyVehiclesId,
       code: vehicleData.code || null,
       nomVehicule: vehicleData.nomVehicule || null,
@@ -199,6 +203,7 @@ export const updateVehicleSimple = async (vehicleData) => {
     // Map form data to GraphQL schema
     const vehicleInput = {
       immat: immat,
+      realImmat: immat, // Add realImmat for updates too
       companyVehiclesId: vehicleData.companyVehiclesId,
       code: vehicleData.code || null,
       nomVehicule: vehicleData.nomVehicule || null,
