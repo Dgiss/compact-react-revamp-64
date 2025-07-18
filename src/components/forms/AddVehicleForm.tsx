@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,7 @@ import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
-import { createDevice } from "@/services/DeviceService";
+import { createDeviceSimple, checkImeiAvailable } from "@/services/SimpleDeviceService";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { toast } from "@/components/ui/use-toast";
 
@@ -50,7 +49,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [shouldCreateDevice, setShouldCreateDevice] = useState(false);
   const { loadCompaniesForSelect } = useCompanyVehicleDevice();
 
-  // Fetch companies on component mount
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
@@ -65,7 +63,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     fetchCompanies();
   }, [loadCompaniesForSelect]);
 
-  // Load initial data for editing mode
   useEffect(() => {
     if (initialData && entreprises.length > 0) {
       setNomVehicule(initialData.nomVehicule || "");
@@ -74,7 +71,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       setMarque(initialData.marque || "");
       setModele(initialData.modele || "");
       
-      // Find company ID by name for backward compatibility
       const foundCompany = entreprises.find(company => company.name === initialData.entreprise);
       setEntreprise(foundCompany ? foundCompany.id || foundCompany.name : initialData.entreprise || "");
       
@@ -93,12 +89,10 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     setIsCreatingDevice(true);
     
     try {
-      // Find the company for proper mapping - ensure we use only primitive values
       const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
       const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
       const companyId = selectedCompany ? selectedCompany.id : null;
       
-      // Validate required fields for vehicle creation
       if (type === "vehicle" && !immatriculation) {
         toast({
           title: "Erreur",
@@ -108,7 +102,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         return;
       }
       
-      // Validate required fields for device creation
       if (type === "device" && !imei) {
         toast({
           title: "Erreur", 
@@ -118,7 +111,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         return;
       }
       
-      // Validate company selection
       if (!companyId && !entrepriseName) {
         toast({
           title: "Erreur",
@@ -128,26 +120,31 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         return;
       }
       
-      // Create device first if IMEI is provided and we're creating a vehicle or standalone device
       let deviceCreated = false;
       if (imei && !isEditing && shouldCreateDevice) {
         try {
-          // Parse protocolId to number if it's provided
-          const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || null : null;
-          
-          const createdDevice = await createDevice({
-            imei: imei,
-            sim: sim || null,
-            protocolId: protocolIdNumber,
-            deviceVehicleImmat: type === "vehicle" ? immatriculation : null // Only associate if creating vehicle
-          });
-          
-          deviceCreated = true;
-          
-          if (createdDevice) {
+          const isAvailable = await checkImeiAvailable(imei);
+          if (!isAvailable) {
             toast({
-              title: "Boîtier traité",
-              description: `Boîtier ${imei} ${createdDevice.imei === imei ? 'créé' : 'existant trouvé'} avec succès`,
+              title: "IMEI existant",
+              description: `L'IMEI ${imei} existe déjà et sera associé`,
+            });
+            deviceCreated = true;
+          } else {
+            const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || null : null;
+            
+            const createdDevice = await createDeviceSimple({
+              imei: imei,
+              sim: sim || null,
+              protocolId: protocolIdNumber,
+              name: `Device ${imei}`
+            });
+            
+            deviceCreated = true;
+            
+            toast({
+              title: "Boîtier créé",
+              description: `Boîtier ${imei} créé avec succès`,
             });
           }
         } catch (deviceError) {
@@ -155,47 +152,42 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
           
           toast({
             title: "Erreur boîtier",
-            description: "Erreur lors de la création du boîtier",
+            description: `Erreur lors de la création du boîtier: ${deviceError.message}`,
             variant: "destructive",
           });
-          return; // Don't continue if device creation failed
+          return;
         }
       }
       
-      // Create form data with ONLY serializable primitive values
       const formData = {
-        // Vehicle fields
-        nomVehicule: String(nomVehicule || ""),
+        immat: String(immatriculation || ""),
         immatriculation: String(immatriculation || ""),
+        nomVehicule: String(nomVehicule || ""),
         categorie: String(categorie || ""),
         marque: String(marque || ""),
         modele: String(modele || ""),
         
-        // Company info - use only strings/primitives
         entreprise: String(entrepriseName || ""),
-        companyVehiclesId: String(companyId || ""), // Convert to string for safety
+        companyVehiclesId: String(companyId || ""),
         
-        // Device/location fields
         emplacement: String(emplacement || ""),
         imei: String(imei || ""),
+        vehicleDeviceImei: String(imei || ""),
         typeBoitier: String(typeBoitier || ""),
         sim: String(sim || ""),
         telephone: String(telephone || ""),
         kilometrage: String(kilometrage || ""),
         
-        // Meta fields
         type: String(type || "vehicle"),
         deviceCreated: Boolean(deviceCreated)
       };
       
-      console.log('Form data being submitted (all primitives):', formData);
+      console.log('Form data being submitted (all primitives, corrected mapping):', formData);
       
-      // Call onSave if provided (for editing mode)
       if (onSave) {
         onSave(formData);
       }
       
-      // Call onClose if provided
       if (onClose) onClose();
       
     } catch (error) {
@@ -212,9 +204,8 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
 
   const filteredModeles = marque ? modeles[marque as keyof typeof modeles] || [] : [];
   
-  // Create unique options using company ID as value and name as label
   const entrepriseOptions = entreprises.map(company => ({
-    value: company.id || company.name, // Use ID as unique value, fallback to name
+    value: company.id || company.name,
     label: company.name
   }));
   
@@ -244,7 +235,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     label: type
   }));
 
-  // Determine form fields based on the item type
   const isVehicle = type === "vehicle";
   const isDevice = type === "device";
 
@@ -257,7 +247,6 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Common fields for both vehicle and device */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {isVehicle && (
             <>
@@ -285,7 +274,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
                   placeholder="IMEI"
                   value={imei} 
                   onChange={(e) => setImei(e.target.value)}
-                  readOnly={isEditing} // IMEI shouldn't be editable in edit mode
+                  readOnly={isEditing}
                 />
               </div>
               <div>
@@ -385,7 +374,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
                 placeholder="IMEI (optionnel)"
                 value={imei} 
                 onChange={(e) => setImei(e.target.value)}
-                readOnly={isEditing} // IMEI shouldn't be editable in edit mode
+                readOnly={isEditing}
               />
             </div>
           </div>
@@ -406,7 +395,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
               </label>
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              Le boîtier sera automatiquement créé et associé à ce véhicule, et ajouté à Flespi. Si l'IMEI existe déjà, il sera utilisé.
+              Le système vérifiera si l'IMEI est disponible. S'il est disponible, le boîtier sera créé et ajouté à Flespi. S'il existe déjà, il sera simplement associé.
             </p>
           </div>
         )}

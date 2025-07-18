@@ -1,9 +1,11 @@
+
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { addDeviceToFlespi } from './FlespiService.js';
 import { hasFlespiApiKey } from './ApiConfigService';
+import { checkImeiAvailable, createDeviceSimple, associateDeviceToVehicleSimple } from './SimpleDeviceService.js';
 
 const client = generateClient();
 
@@ -50,115 +52,16 @@ export const fetchAllDevices = async () => {
 };
 
 /**
- * Create a new device with automatic Flespi integration
+ * Create a new device using simplified logic
  * @param {Object} deviceData - Device data including IMEI, SIM, etc.
  * @returns {Promise<Object>} Created device
  */
 export const createDevice = async (deviceData) => {
-  return await withCredentialRetry(async () => {
+  console.log('=== CREATING DEVICE (SIMPLIFIED) ===');
+  console.log('Input data:', deviceData);
   
-  try {
-    console.log('=== CREATING DEVICE ===');
-    console.log('Input data:', deviceData);
-    
-    // Validate required fields
-    if (!deviceData.imei) {
-      throw new Error('IMEI is required for device creation');
-    }
-    
-    // Check if device already exists first
-    try {
-      const existingDevice = await client.graphql({
-        query: queries.getDevice,
-        variables: {
-          imei: deviceData.imei
-        }
-      });
-      
-      if (existingDevice.data.getDevice) {
-        console.log('Device already exists:', existingDevice.data.getDevice);
-        return existingDevice.data.getDevice;
-      }
-    } catch (getError) {
-      // Device doesn't exist, continue with creation
-      console.log('Device does not exist, proceeding with creation');
-    }
-    
-    // First, add device to Flespi (optional, continue if it fails)
-    let flespiDeviceId = null;
-    try {
-      if (!hasFlespiApiKey()) {
-        console.warn('Flespi API key not configured, skipping Flespi integration');
-        throw new Error('Flespi API key not configured. Device will be created without Flespi integration.');
-      }
-      
-      flespiDeviceId = await addDeviceToFlespi({
-        imei: deviceData.imei,
-        constructor: deviceData.constructor || deviceData.imei
-      });
-      console.log('Device added to Flespi with ID:', flespiDeviceId);
-    } catch (flespiError) {
-      console.warn('Failed to add device to Flespi, continuing with GraphQL creation:', flespiError.message);
-      // Don't throw here, continue with GraphQL creation
-    }
-    
-    // Prepare device details for GraphQL - ensure proper types
-    const deviceDetails = {
-      imei: String(deviceData.imei),
-      sim: deviceData.sim ? String(deviceData.sim) : null,
-      protocolId: deviceData.protocolId ? Number(deviceData.protocolId) : null,
-      flespiDeviceId: flespiDeviceId ? Number(flespiDeviceId) : null,
-      deviceVehicleImmat: deviceData.deviceVehicleImmat ? String(deviceData.deviceVehicleImmat) : null,
-      name: deviceData.name ? String(deviceData.name) : null,
-      enabled: deviceData.enabled !== undefined ? Boolean(deviceData.enabled) : true // Default to enabled
-    };
-    
-    // Remove null/undefined values to avoid GraphQL errors
-    Object.keys(deviceDetails).forEach(key => {
-      if (deviceDetails[key] === null || deviceDetails[key] === undefined) {
-        delete deviceDetails[key];
-      }
-    });
-    
-    console.log('Creating device in GraphQL with cleaned data:', deviceDetails);
-    
-    const response = await client.graphql({
-      query: mutations.createDevice,
-      variables: {
-        input: deviceDetails
-      }
-    });
-    
-    console.log('Device created successfully:', response.data.createDevice);
-    return response.data.createDevice;
-    
-  } catch (error) {
-    console.error('Error creating device:', error);
-    
-    // Handle DynamoDB conditional check failures (device already exists)
-    if (error.errors?.some(err => 
-      err.message?.includes('ConditionalCheckFailedException') ||
-      err.message?.includes('already exists') ||
-      err.message?.includes('duplicate')
-    )) {
-      console.log('Device already exists, fetching existing device');
-      try {
-        const existingDevice = await client.graphql({
-          query: queries.getDevice,
-          variables: {
-            imei: deviceData.imei
-          }
-        });
-        return existingDevice.data.getDevice;
-      } catch (fetchError) {
-        console.error('Failed to fetch existing device:', fetchError);
-      }
-    }
-    
-    console.error('Full error details:', JSON.stringify(error, null, 2));
-    throw error;
-  }
-  });
+  // Use the new simplified device creation
+  return await createDeviceSimple(deviceData);
 };
 
 /**
@@ -173,7 +76,6 @@ export const updateDevice = async (deviceData) => {
     imei: deviceData.imei,
     sim: deviceData.sim,
     protocolId: deviceData.protocolId || deviceData.typeBoitier,
-    deviceVehicleImmat: deviceData.deviceVehicleImmat
   };
   
   // Remove undefined values to avoid GraphQL errors
@@ -231,145 +133,74 @@ export const deleteDevice = async (deviceData) => {
  * @returns {Promise<boolean>} True if device exists
  */
 export const checkDeviceExists = async (imei) => {
-  return await withCredentialRetry(async () => {
-    try {
-      const result = await client.graphql({
-        query: queries.getDevice,
-        variables: { imei }
-      });
-      return !!result.data.getDevice;
-    } catch (error) {
-      console.log('Device does not exist:', imei);
-      return false;
-    }
-  });
+  const isAvailable = await checkImeiAvailable(imei);
+  return !isAvailable; // checkImeiAvailable returns true if available (doesn't exist)
 };
 
 /**
- * Toast utility function
- */
-const showToast = (severity, summary, detail) => {
-  // This will be handled by the UI component calling this service
-  console.log(`[${severity.toUpperCase()}] ${summary}: ${detail}`);
-};
-
-/**
- * Validate and get valid IMEIs
- * @param {string} imei - Single IMEI to validate
- * @param {Array} imeiList - List of IMEIs if multiple
- * @returns {Promise<Array>} Array of valid IMEIs
- */
-const getValidImeis = async (imei, imeiList = []) => {
-  if (imeiList.length > 0) return imeiList;
-
-  const trimmed = imei.trim();
-  if (!trimmed) {
-    throw new Error('Veuillez ajouter au moins un IMEI');
-  }
-
-  const exists = await checkDeviceExists(trimmed);
-  if (exists) {
-    throw new Error('IMEI déjà existant');
-  }
-
-  return [trimmed];
-};
-
-/**
- * Process device creation with Flespi integration
- * @param {Array} imeis - Array of IMEIs to process
- * @param {Object} deviceInfo - Device information (constructor, etc.)
- * @param {Object} vehicleInfo - Vehicle information for association
- * @returns {Promise<Object>} Results object with success and error counts
- */
-const processDevices = async (imeis, deviceInfo, vehicleInfo) => {
-  const successfulDevices = [];
-  const errors = [];
-
-  for (const imei of imeis) {
-    try {
-      const exists = await checkDeviceExists(imei);
-      if (exists) {
-        errors.push(`${imei} (existe déjà)`);
-        continue;
-      }
-
-      // Add to Flespi (optional)
-      let flespiId = null;
-      try {
-        if (hasFlespiApiKey()) {
-          flespiId = await addDeviceToFlespi({
-            imei,
-            constructor: deviceInfo.constructor
-          });
-        } else {
-          console.warn('Flespi not configured, skipping for IMEI:', imei);
-        }
-      } catch (flespiError) {
-        console.warn(`Flespi integration failed for ${imei}:`, flespiError.message);
-        // Continue without Flespi integration
-      }
-
-      // Add to database
-      await createDevice({ 
-        imei,
-        sim: deviceInfo.sim,
-        protocolId: deviceInfo.protocolId,
-        deviceVehicleImmat: vehicleInfo.immatriculation // Direct association
-      });
-
-      successfulDevices.push({
-        imei,
-        sim: deviceInfo.sim || '',
-        deviceVehicleImmat: vehicleInfo.immatriculation,
-        id: imei,
-        vehicle: { company: { name: vehicleInfo.company?.name || '' } }
-      });
-
-    } catch (err) {
-      errors.push(`${imei} (${err.message || 'Erreur inconnue'})`);
-    }
-  }
-
-  return { successfulDevices, errors };
-};
-
-/**
- * Create device with immediate vehicle association - orchestrator function
+ * Create device with immediate vehicle association - SIMPLIFIED VERSION
  * @param {Object} data - Complete data for device and vehicle creation
  * @returns {Promise<Object>} Creation results
  */
 export const createDeviceWithVehicleAssociation = async (data) => {
   return await withCredentialRetry(async () => {
-    console.log('=== CREATING DEVICE WITH VEHICLE ASSOCIATION ===');
+    console.log('=== CREATING DEVICE WITH VEHICLE ASSOCIATION (SIMPLIFIED) ===');
     console.log('Input data:', data);
 
     try {
-      // Validate IMEIs
-      const validImeis = await getValidImeis(data.imei, data.imeiList);
-      if (validImeis.length === 0) {
-        throw new Error('Aucun IMEI valide fourni');
+      // Step 1: Validate IMEI availability
+      const imeiList = data.imeiList || [data.imei];
+      const validImeis = [];
+      const errors = [];
+
+      for (const imei of imeiList) {
+        if (!imei?.trim()) continue;
+        
+        const isAvailable = await checkImeiAvailable(imei.trim());
+        if (isAvailable) {
+          validImeis.push(imei.trim());
+        } else {
+          errors.push(`${imei} (déjà existant)`);
+        }
       }
 
-      // Process devices
-      const results = await processDevices(validImeis, {
-        constructor: data.constructor,
-        sim: data.sim,
-        protocolId: data.protocolId
-      }, {
-        immatriculation: data.immatriculation,
-        company: data.company
-      });
+      if (validImeis.length === 0) {
+        throw new Error('Aucun IMEI disponible');
+      }
 
-      // Import createVehicleData here to avoid circular dependency
-      const { createVehicleData } = await import('./VehicleService.js');
+      // Step 2: Create devices
+      const successfulDevices = [];
+      
+      for (const imei of validImeis) {
+        try {
+          const device = await createDeviceSimple({
+            imei: imei,
+            sim: data.sim,
+            protocolId: data.protocolId,
+            constructor: data.constructor
+          });
+          
+          successfulDevices.push({
+            imei: device.imei,
+            sim: device.sim || '',
+            deviceVehicleImmat: data.immatriculation,
+            id: device.imei,
+            vehicle: { company: { name: data.company?.name || '' } }
+          });
+        } catch (deviceError) {
+          console.error(`Error creating device ${imei}:`, deviceError);
+          errors.push(`${imei} (${deviceError.message})`);
+        }
+      }
 
-      // Create vehicle with device association for successful devices
-      if (results.successfulDevices.length > 0) {
-        await createVehicleData({
+      // Step 3: Create vehicle with device association
+      if (successfulDevices.length > 0) {
+        const { createVehicleSimple } = await import('./SimpleVehicleService.js');
+        
+        await createVehicleSimple({
           immatriculation: data.immatriculation,
           categorie: data.categorie,
-          brand: data.brand,
+          marque: data.brand,
           modele: data.modele,
           companyVehiclesId: data.companyVehiclesId,
           vehicleDeviceImei: validImeis[0], // Associate with first successful device
@@ -380,11 +211,11 @@ export const createDeviceWithVehicleAssociation = async (data) => {
       }
 
       return {
-        success: results.successfulDevices.length > 0,
-        successCount: results.successfulDevices.length,
-        errorCount: results.errors.length,
-        devices: results.successfulDevices,
-        errors: results.errors
+        success: successfulDevices.length > 0,
+        successCount: successfulDevices.length,
+        errorCount: errors.length,
+        devices: successfulDevices,
+        errors: errors
       };
 
     } catch (error) {
@@ -407,3 +238,6 @@ export const getDeviceTypeName = (protocolId) => {
   
   return deviceTypeMap[protocolId] || 'GPS Tracker';
 };
+
+// Export the new simplified functions
+export { checkImeiAvailable, createDeviceSimple, associateDeviceToVehicleSimple };

@@ -1,10 +1,10 @@
-
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { fetchAllDevices } from './DeviceService.js';
 import { cleanDataForGraphQL } from '@/lib/utils';
+import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService.js';
 
 const client = generateClient();
 
@@ -168,48 +168,24 @@ export const fetchCompaniesWithVehicles = async () => {
   });
 };
 
+/**
+ * Update vehicle data using simplified approach
+ */
 export const updateVehicleData = async (data) => {
-  await waitForAmplifyConfig();
+  console.log('=== UPDATING VEHICLE DATA (SIMPLIFIED) ===');
+  console.log('Input data:', data);
   
-  // Clean and adapt data for GraphQL - remove non-serializable properties
-  const cleanedData = cleanDataForGraphQL(data);
+  return await updateVehicleSimple(data);
+};
+
+/**
+ * Create vehicle data using simplified approach
+ */
+export const createVehicleData = async (data) => {
+  console.log('=== CREATING VEHICLE DATA (SIMPLIFIED) ===');
+  console.log('Input data:', data);
   
-  // Adapter aux nouveaux champs du schéma
-  const vehicleDetails = {
-    immat: cleanedData.immat || cleanedData.immatriculation,
-    code: cleanedData.code,
-    nomVehicule: cleanedData.nomVehicule,
-    kilometerage: cleanedData.kilometerage ? parseInt(cleanedData.kilometerage) : undefined,
-    kilometerageStart: cleanedData.kilometerageStart ? parseInt(cleanedData.kilometerageStart) : undefined,
-    locations: cleanedData.locations || cleanedData.emplacement,
-    marque: cleanedData.marque,
-    modele_id: cleanedData.modele_id || cleanedData.modele,
-    energie: cleanedData.energie,
-    couleur: cleanedData.couleur,
-    dateMiseEnCirculation: cleanedData.dateMiseEnCirculation,
-    VIN: cleanedData.VIN,
-    AWN_nom_commercial: cleanedData.AWN_nom_commercial,
-    puissanceFiscale: cleanedData.puissanceFiscale ? parseInt(cleanedData.puissanceFiscale) : undefined,
-    lastModificationDate: new Date().toISOString(),
-    // Relation avec l'entreprise (nouvelle structure)
-    companyVehiclesId: cleanedData.companyVehiclesId
-  };
-
-  // Remove undefined values to avoid GraphQL errors
-  Object.keys(vehicleDetails).forEach(key => {
-    if (vehicleDetails[key] === undefined) {
-      delete vehicleDetails[key];
-    }
-  });
-
-  console.log('Cleaned vehicle data for GraphQL:', vehicleDetails);
-
-  await client.graphql({
-    query: mutations.updateVehicle,
-    variables: {
-      input: vehicleDetails
-    }
-  });
+  return await createVehicleSimple(data);
 };
 
 export const deleteVehicleData = async (item) => {
@@ -231,112 +207,40 @@ export const deleteVehicleData = async (item) => {
 };
 
 /**
- * Create a new vehicle
- */
-export const createVehicleData = async (data) => {
-  await waitForAmplifyConfig();
-  
-  console.log('=== CREATING VEHICLE ===');
-  console.log('Input data:', data);
-  
-  // Clean and adapt data for GraphQL - remove non-serializable properties
-  const cleanedData = cleanDataForGraphQL(data);
-  console.log('Cleaned data:', cleanedData);
-  
-  // Ensure required fields are present
-  if (!cleanedData.immatriculation) {
-    throw new Error('Immatriculation is required');
-  }
-  
-  if (!cleanedData.companyVehiclesId) {
-    throw new Error('Company ID is required');
-  }
-  
-  const vehicleDetails = {
-    immat: cleanedData.immatriculation,
-    companyVehiclesId: cleanedData.companyVehiclesId,
-    // Optional fields
-    code: cleanedData.code || null,
-    nomVehicule: cleanedData.nomVehicule || null,
-    kilometerage: cleanedData.kilometrage ? cleanedData.kilometrage.toString() : null,
-    locations: cleanedData.emplacement || null,
-    marque: cleanedData.marque || null,
-    modele_id: cleanedData.modele || null,
-    energie: cleanedData.energie || null,
-    couleur: cleanedData.couleur || null,
-    dateMiseEnCirculation: cleanedData.dateMiseEnCirculation || null,
-    VIN: cleanedData.VIN || null,
-    AWN_nom_commercial: cleanedData.AWN_nom_commercial || null,
-    puissanceFiscale: cleanedData.puissanceFiscale || null,
-    lastModificationDate: new Date().toISOString(),
-    // Device association
-    vehicleDeviceImei: cleanedData.vehicleDeviceImei || null
-  };
-
-  // Remove null/undefined values to avoid GraphQL errors
-  Object.keys(vehicleDetails).forEach(key => {
-    if (vehicleDetails[key] === null || vehicleDetails[key] === undefined || vehicleDetails[key] === '') {
-      delete vehicleDetails[key];
-    }
-  });
-
-  console.log('Final vehicle details for GraphQL:', vehicleDetails);
-
-  try {
-    const result = await client.graphql({
-      query: mutations.createVehicle,
-      variables: {
-        input: vehicleDetails
-      }
-    });
-
-    console.log('Vehicle created successfully:', result);
-    return result;
-  } catch (error) {
-    console.error('Error creating vehicle:', error);
-    console.error('Error details:', error.message);
-    if (error.errors) {
-      console.error('GraphQL errors:', error.errors);
-    }
-    throw error;
-  }
-};
-
-/**
- * Associate a vehicle to a device using vehicleDeviceImei field
+ * Associate a vehicle to a device using vehicleDeviceImei field - SIMPLIFIED
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @param {string} deviceImei - Device IMEI
  * @returns {Promise<Object>} Association result
  */
 export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
-  await waitForAmplifyConfig();
-  
-  console.log('=== ASSOCIATING VEHICLE TO DEVICE (via vehicleDeviceImei) ===');
-  console.log('Vehicle immat:', vehicleImmat);
-  console.log('Device IMEI:', deviceImei);
-  
-  try {
-    const vehicleUpdate = await client.graphql({
-      query: mutations.updateVehicle,
-      variables: {
-        input: {
-          immat: vehicleImmat,
-          vehicleDeviceImei: deviceImei
+  return await withCredentialRetry(async () => {
+    console.log('=== ASSOCIATING VEHICLE TO DEVICE (SIMPLIFIED) ===');
+    console.log('Vehicle immat:', vehicleImmat);
+    console.log('Device IMEI:', deviceImei);
+    
+    try {
+      const vehicleUpdate = await client.graphql({
+        query: mutations.updateVehicle,
+        variables: {
+          input: {
+            immat: vehicleImmat,
+            vehicleDeviceImei: deviceImei
+          }
         }
+      });
+      
+      console.log('Vehicle-device association successful:', vehicleUpdate.data?.updateVehicle);
+      
+      return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
+    } catch (error) {
+      console.error('Error associating vehicle to device:', error);
+      console.error('Error details:', error.message);
+      if (error.errors) {
+        console.error('GraphQL errors:', error.errors);
       }
-    });
-    
-    console.log('Vehicle-device association successful:', vehicleUpdate.data?.updateVehicle);
-    
-    return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
-  } catch (error) {
-    console.error('Error associating vehicle to device:', error);
-    console.error('Error details:', error.message);
-    if (error.errors) {
-      console.error('GraphQL errors:', error.errors);
+      throw error;
     }
-    throw error;
-  }
+  });
 };
 
 /**
@@ -345,33 +249,33 @@ export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
  * @returns {Promise<Object>} Dissociation result
  */
 export const dissociateVehicleFromDevice = async (vehicleImmat) => {
-  await waitForAmplifyConfig();
-  
-  console.log('=== DISSOCIATING VEHICLE FROM DEVICE ===');
-  console.log('Vehicle immat:', vehicleImmat);
-  
-  try {
-    const vehicleUpdate = await client.graphql({
-      query: mutations.updateVehicle,
-      variables: {
-        input: {
-          immat: vehicleImmat,
-          vehicleDeviceImei: null
+  return await withCredentialRetry(async () => {
+    console.log('=== DISSOCIATING VEHICLE FROM DEVICE ===');
+    console.log('Vehicle immat:', vehicleImmat);
+    
+    try {
+      const vehicleUpdate = await client.graphql({
+        query: mutations.updateVehicle,
+        variables: {
+          input: {
+            immat: vehicleImmat,
+            vehicleDeviceImei: null
+          }
         }
+      });
+      
+      console.log('Vehicle-device dissociation successful:', vehicleUpdate.data?.updateVehicle);
+      
+      return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
+    } catch (error) {
+      console.error('Error dissociating vehicle from device:', error);
+      console.error('Error details:', error.message);
+      if (error.errors) {
+        console.error('GraphQL errors:', error.errors);
       }
-    });
-    
-    console.log('Vehicle-device dissociation successful:', vehicleUpdate.data?.updateVehicle);
-    
-    return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
-  } catch (error) {
-    console.error('Error dissociating vehicle from device:', error);
-    console.error('Error details:', error.message);
-    if (error.errors) {
-      console.error('GraphQL errors:', error.errors);
+      throw error;
     }
-    throw error;
-  }
+  });
 };
 
 /**

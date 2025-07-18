@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building } from "lucide-react";
@@ -15,7 +14,8 @@ import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmatio
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice.jsx";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
-import * as VehicleService from "@/services/VehicleService";
+import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehicleService";
+import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 
 export default function VehiclesDevicesPage() {
@@ -238,15 +238,13 @@ export default function VehiclesDevicesPage() {
   // Update or create vehicle - CORRECTED MAPPING
   const updateVehicleData = async (data) => {
     try {
-      console.log('=== UPDATING/CREATING VEHICLE ===');
+      console.log('=== UPDATING/CREATING VEHICLE (SIMPLIFIED) ===');
       console.log('Data received:', data);
       
-      // FIXED: Correctly map entreprise to companyVehiclesId before saving
+      // Map entreprise to companyVehiclesId if needed
       const mappedData = { ...data };
       
-      // Map entreprise to companyVehiclesId if needed
       if (data.entreprise && !data.companyVehiclesId) {
-        // Find company ID by name
         const company = companies.find(c => c.name === data.entreprise);
         if (company) {
           mappedData.companyVehiclesId = company.id;
@@ -260,22 +258,22 @@ export default function VehiclesDevicesPage() {
       const isNewVehicle = !mappedData.immat && mappedData.immatriculation;
       
       if (isNewVehicle) {
-        // Create new vehicle
-        await VehicleService.createVehicleData(mappedData);
+        // Create new vehicle using simplified function
+        await createVehicleSimple(mappedData);
         toast({
           title: "Succès",
           description: "Véhicule créé avec succès",
         });
       } else {
-        // Update existing vehicle
-        await VehicleService.updateVehicleData(mappedData);
+        // Update existing vehicle using simplified function
+        await updateVehicleSimple(mappedData);
         toast({
           title: "Succès",
           description: "Véhicule modifié avec succès",
         });
       }
       
-      // OPTIMIZED: Avoid immediate reload, update cache locally if possible
+      // Reload data
       await loadAllData();
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
@@ -288,9 +286,9 @@ export default function VehiclesDevicesPage() {
   };
 
   // Delete vehicle
-  const deleteVehicleData = async (item) => {
+  const deleteVehicleDataLocal = async (item) => {
     try {
-      await VehicleService.deleteVehicleData(item);
+      await deleteVehicleData(item);
 
       toast({
         title: "Succès",
@@ -314,7 +312,7 @@ export default function VehiclesDevicesPage() {
       console.log('=== DISSOCIATING DEVICE FROM VEHICLE ===');
       console.log('Vehicle immat:', vehicleImmat);
       
-      await VehicleService.dissociateVehicleFromDevice(vehicleImmat);
+      await dissociateVehicleFromDevice(vehicleImmat);
       
       toast({
         title: "Succès",
@@ -345,7 +343,7 @@ export default function VehiclesDevicesPage() {
       
       for (const immat of selectedVehicles) {
         try {
-          await VehicleService.dissociateVehicleFromDevice(immat);
+          await dissociateVehicleFromDevice(immat);
           results.push({ immat, success: true });
         } catch (error) {
           console.error(`Error dissociating ${immat}:`, error);
@@ -1020,7 +1018,7 @@ export default function VehiclesDevicesPage() {
             <DeleteConfirmationDialog
               title="Supprimer le véhicule"
               description={`Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.`}
-              onConfirm={() => deleteVehicleData(item)}
+              onConfirm={() => deleteVehicleDataLocal(item)}
             />
             
             {/* Association button for free devices (device-vehicle association) */}
