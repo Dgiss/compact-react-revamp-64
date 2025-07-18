@@ -244,5 +244,10 @@ export const getDeviceTypeName = (protocolId) => {
   return deviceTypeMap[protocolId] || 'GPS Tracker';
 };
 
-// Export the new simplified functions
-export { checkImeiAvailable, createDeviceSimple, associateDeviceToVehicleSimple };
+// Export the new simplified functions and the main function
+export { 
+  checkImeiAvailable, 
+  createDeviceSimple, 
+  associateDeviceToVehicleSimple,
+  createDeviceWithVehicleAssociation
+};
