@@ -104,7 +104,7 @@ export function FlespiConfigDialog({ open, onOpenChange }: FlespiConfigDialogPro
   };
 
   const handleClear = () => {
-    ApiConfigService.clearFlespiApiKey();
+    ApiConfigService.removeFlespiApiKey();
     setApiKey('');
     setConnectionStatus('unknown');
     
