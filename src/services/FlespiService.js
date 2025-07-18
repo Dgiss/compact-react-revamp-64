@@ -1,7 +1,24 @@
+
 import axios from 'axios';
+import { getFlespiApiKey, hasFlespiApiKey } from './ApiConfigService';
 
 const FLESPI_API_URL = 'https://flespi.io/gw/devices';
-const FLESPI_API_KEY = 'ufUl31yxQmsFlB4DpApEaiDYhOrzSArJAtLxcCLCnCOMRVSJdIenMySuAyMnTZYe';
+
+/**
+ * Get authorization headers with configured API key
+ * @returns {Object|null} Headers object or null if no key configured
+ */
+const getAuthHeaders = () => {
+  const apiKey = getFlespiApiKey();
+  
+  if (!apiKey) {
+    throw new Error('Flespi API key not configured. Please configure your API key in settings.');
+  }
+  
+  return {
+    'Authorization': `FlespiToken ${apiKey}`
+  };
+};
 
 /**
  * Add a device to Flespi platform
@@ -9,9 +26,11 @@ const FLESPI_API_KEY = 'ufUl31yxQmsFlB4DpApEaiDYhOrzSArJAtLxcCLCnCOMRVSJdIenMySu
  * @returns {Promise<number|null>} Device ID if created, null if already exists
  */
 export const addDeviceToFlespi = async (deviceDetails) => {
-  const headers = {
-    'Authorization': `FlespiToken ${FLESPI_API_KEY}`
-  };
+  if (!hasFlespiApiKey()) {
+    throw new Error('Flespi API key not configured. Please configure your API key in settings.');
+  }
+
+  const headers = getAuthHeaders();
   
   const device = [{
     device_type_id: 68,
@@ -30,6 +49,8 @@ export const addDeviceToFlespi = async (deviceDetails) => {
     if (error.response && error.response.status === 409) {
       console.log('Device already exists in Flespi. Skipping creation process for:', deviceDetails.imei);
       return null;
+    } else if (error.response && error.response.status === 401) {
+      throw new Error('Invalid or expired Flespi API key. Please check your API key configuration.');
     } else {
       console.error('Error adding device to Flespi:', error.message);
       throw error;
@@ -43,9 +64,11 @@ export const addDeviceToFlespi = async (deviceDetails) => {
  * @returns {Promise<boolean>} Success status
  */
 export const removeDeviceFromFlespi = async (deviceId) => {
-  const headers = {
-    'Authorization': `FlespiToken ${FLESPI_API_KEY}`
-  };
+  if (!hasFlespiApiKey()) {
+    throw new Error('Flespi API key not configured. Please configure your API key in settings.');
+  }
+
+  const headers = getAuthHeaders();
   
   try {
     console.log('Removing device from Flespi:', deviceId);
@@ -53,6 +76,9 @@ export const removeDeviceFromFlespi = async (deviceId) => {
     console.log('Device removed successfully from Flespi:', deviceId);
     return true;
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      throw new Error('Invalid or expired Flespi API key. Please check your API key configuration.');
+    }
     console.error('Error removing device from Flespi:', error.message);
     throw error;
   }
@@ -64,14 +90,19 @@ export const removeDeviceFromFlespi = async (deviceId) => {
  * @returns {Promise<Object>} Device information
  */
 export const getDeviceFromFlespi = async (deviceId) => {
-  const headers = {
-    'Authorization': `FlespiToken ${FLESPI_API_KEY}`
-  };
+  if (!hasFlespiApiKey()) {
+    throw new Error('Flespi API key not configured. Please configure your API key in settings.');
+  }
+
+  const headers = getAuthHeaders();
   
   try {
     const response = await axios.get(`${FLESPI_API_URL}/${deviceId}`, { headers });
     return response.data.result;
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      throw new Error('Invalid or expired Flespi API key. Please check your API key configuration.');
+    }
     console.error('Error getting device from Flespi:', error.message);
     throw error;
   }

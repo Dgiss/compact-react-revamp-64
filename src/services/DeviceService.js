@@ -1,9 +1,9 @@
-
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 import { addDeviceToFlespi } from './FlespiService.js';
+import { hasFlespiApiKey } from './ApiConfigService';
 
 const client = generateClient();
 
@@ -87,6 +87,11 @@ export const createDevice = async (deviceData) => {
     // First, add device to Flespi (optional, continue if it fails)
     let flespiDeviceId = null;
     try {
+      if (!hasFlespiApiKey()) {
+        console.warn('Flespi API key not configured, skipping Flespi integration');
+        throw new Error('Flespi API key not configured. Device will be created without Flespi integration.');
+      }
+      
       flespiDeviceId = await addDeviceToFlespi({
         imei: deviceData.imei,
         constructor: deviceData.constructor || deviceData.imei
@@ -94,6 +99,7 @@ export const createDevice = async (deviceData) => {
       console.log('Device added to Flespi with ID:', flespiDeviceId);
     } catch (flespiError) {
       console.warn('Failed to add device to Flespi, continuing with GraphQL creation:', flespiError.message);
+      // Don't throw here, continue with GraphQL creation
     }
     
     // Prepare device details for GraphQL - ensure proper types
@@ -288,11 +294,21 @@ const processDevices = async (imeis, deviceInfo, vehicleInfo) => {
         continue;
       }
 
-      // Add to Flespi
-      const flespiId = await addDeviceToFlespi({
-        imei,
-        constructor: deviceInfo.constructor
-      });
+      // Add to Flespi (optional)
+      let flespiId = null;
+      try {
+        if (hasFlespiApiKey()) {
+          flespiId = await addDeviceToFlespi({
+            imei,
+            constructor: deviceInfo.constructor
+          });
+        } else {
+          console.warn('Flespi not configured, skipping for IMEI:', imei);
+        }
+      } catch (flespiError) {
+        console.warn(`Flespi integration failed for ${imei}:`, flespiError.message);
+        // Continue without Flespi integration
+      }
 
       // Add to database
       await createDevice({ 
