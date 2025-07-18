@@ -73,12 +73,12 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   }, [selectedCompany, isDeviceToVehicle]);
   
-  // Load devices when mode is vehicle to device (no company selection needed)
+  // Load devices when company is selected (for vehicle to device association)
   useEffect(() => {
-    if (isVehicleToDevice) {
-      loadDevicesForVehicleAssociation();
+    if (selectedCompany && isVehicleToDevice) {
+      loadDevicesForCompany(selectedCompany);
     }
-  }, [isVehicleToDevice]);
+  }, [selectedCompany, isVehicleToDevice]);
 
   // Load free devices for company-device association mode
   useEffect(() => {
@@ -119,15 +119,15 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   };
   
-  const loadDevicesForVehicleAssociation = async () => {
-    console.log('Loading free devices for vehicle-device association');
+  const loadDevicesForCompany = async (companyName) => {
+    console.log('Loading devices for company (vehicle-device association):', companyName);
     setLoadingDevices(true);
     
     try {
       // Use the updated function that checks both company and vehicle associations
       const freeDevices = await CompanyDeviceService.getUnassignedDevices();
       console.log('Free devices found for vehicle association:', freeDevices.length);
-      console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, protocolId: d.protocolId, name: d.name })));
+      console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, type: d.typeBoitier })));
       setCompanyDevices(freeDevices);
       
     } catch (error) {
@@ -135,7 +135,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       setCompanyDevices([]);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les boîtiers libres",
+        description: "Impossible de charger les boîtiers",
         variant: "destructive",
       });
     } finally {
@@ -150,7 +150,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     try {
       const freeDevices = await CompanyDeviceService.getUnassignedDevices();
       console.log('Free devices for company association:', freeDevices.length);
-      console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, protocolId: d.protocolId, name: d.name })));
+      console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, type: d.typeBoitier })));
       setCompanyDevices(freeDevices);
       
     } catch (error) {
@@ -179,7 +179,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   // Generate device options (for vehicle to device association)
   const deviceOptions = companyDevices.map(device => ({
     value: device.imei,
-    label: `${device.imei}${device.protocolId ? ` (Protocol: ${device.protocolId})` : ''}${device.name ? ` - ${device.name}` : ''}`,
+    label: `${device.imei}${device.typeBoitier ? ` (Protocol: ${device.typeBoitier})` : ''}`,
     disabled: false
   }));
 
@@ -365,8 +365,21 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       </div>
 
       <div className="space-y-4">
-        {/* Company selection - only show for device-vehicle and company-device modes */}
-        {(isDeviceToVehicle || isCompanyDeviceMode) && (
+        {/* Company selection - show for all modes except direct device-vehicle */}
+        {!isDeviceToVehicle || isCompanyDeviceMode ? (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Entreprise *
+            </label>
+            <CompanySearchSelect
+              value={selectedCompany}
+              onValueChange={setSelectedCompany}
+              placeholder="Sélectionner une entreprise..."
+              searchFunction={searchCompaniesReal}
+              disabled={false}
+            />
+          </div>
+        ) : (
           <div>
             <label className="block text-sm font-medium mb-2">
               Entreprise *
@@ -424,13 +437,15 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               onValueChange={setSelectedDeviceImei}
               options={deviceOptions}
               placeholder={
-                loadingDevices 
-                  ? "Chargement des boîtiers libres..." 
-                  : companyDevices.length === 0
-                    ? "Aucun boîtier libre disponible"
-                    : "Sélectionner un boîtier libre..."
+                !selectedCompany 
+                  ? "Sélectionner d'abord une entreprise" 
+                  : loadingDevices 
+                    ? "Chargement des boîtiers..." 
+                    : companyDevices.length === 0
+                      ? "Aucun boîtier disponible"
+                      : "Sélectionner un boîtier..."
               }
-              disabled={loadingDevices}
+              disabled={!selectedCompany || loadingDevices}
             />
             {companyDevices.length > 0 && (
               <p className="text-sm text-green-600 mt-1">
@@ -471,9 +486,10 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
             onClick={handleSubmit}
             disabled={
               isSubmitting || 
-              (isDeviceToVehicle && (!selectedCompany || !selectedVehicle)) ||
-              (isVehicleToDevice && !selectedDeviceImei) ||
-              (isCompanyDeviceMode && (!selectedCompany || !device?.imei))
+              (!isCompanyDeviceMode && !selectedCompany) || 
+              (isCompanyDeviceMode && (!selectedCompany || !device?.imei)) ||
+              (isDeviceToVehicle && !selectedVehicle) ||
+              (isVehicleToDevice && !selectedDeviceImei)
             }
           >
             {isSubmitting 

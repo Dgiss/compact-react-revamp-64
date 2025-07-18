@@ -326,7 +326,7 @@ export const getUnassignedDevices = async () => {
   try {
     console.log('=== GETTING UNASSIGNED DEVICES ===');
     
-    // Get all devices using simplified query
+    // Get all devices
     const devicesResponse = await client.graphql({
       query: queries.listDevices
     });
@@ -348,20 +348,27 @@ export const getUnassignedDevices = async () => {
     const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
     console.log('Company associated devices:', Array.from(companyAssociatedImeis));
     
-    // Filter out devices that have vehicle associations OR company associations
-    // A device is considered assigned if:
-    // 1. It has an active company association OR
-    // 2. It has a vehicle relation (device.vehicle exists)
-    const unassignedDevices = allDevices.filter(device => {
-      const hasCompanyAssociation = companyAssociatedImeis.has(device.imei);
-      const hasVehicleAssociation = device.vehicle && device.vehicle.immat;
-      
-      return !hasCompanyAssociation && !hasVehicleAssociation;
+    // Get all vehicles to check for vehicleDeviceImei associations
+    const vehiclesResponse = await client.graphql({
+      query: queries.listVehicles
     });
+    
+    const allVehicles = vehiclesResponse.data?.listVehicles?.items || [];
+    const vehicleAssociatedImeis = new Set(
+      allVehicles
+        .map(v => v.vehicleDeviceImei)
+        .filter(Boolean)
+    );
+    console.log('Vehicle associated devices:', Array.from(vehicleAssociatedImeis));
+    
+    // Filter out devices that are associated with companies OR vehicles
+    const unassignedDevices = allDevices.filter(device => 
+      !companyAssociatedImeis.has(device.imei) && !vehicleAssociatedImeis.has(device.imei)
+    );
     
     console.log('Total devices:', allDevices.length);
     console.log('Company associated:', companyAssociatedImeis.size);
-    console.log('Vehicle associated:', allDevices.filter(d => d.vehicle?.immat).length);
+    console.log('Vehicle associated:', vehicleAssociatedImeis.size);
     console.log('Unassigned devices found:', unassignedDevices.length);
     console.log('Unassigned device IMEIs:', unassignedDevices.map(d => d.imei));
     
