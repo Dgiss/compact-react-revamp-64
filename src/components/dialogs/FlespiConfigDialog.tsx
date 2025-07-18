@@ -3,227 +3,220 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { 
-  getFlespiApiKey, 
-  setFlespiApiKey, 
-  removeFlespiApiKey, 
-  validateFlespiApiKey,
-  hasFlespiApiKey 
-} from '@/services/ApiConfigService';
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, CheckCircle, XCircle, Key } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import * as ApiConfigService from '@/services/ApiConfigService';
+import * as FlespiService from '@/services/FlespiService';
 
 interface FlespiConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const FlespiConfigDialog: React.FC<FlespiConfigDialogProps> = ({
-  open,
-  onOpenChange
-}) => {
+export function FlespiConfigDialog({ open, onOpenChange }: FlespiConfigDialogProps) {
   const [apiKey, setApiKey] = useState('');
-  const [isValidating, setIsValidating] = useState(false);
-  const [isValid, setIsValid] = useState<boolean | null>(null);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const { toast } = useToast();
-
+  const [testing, setTesting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'valid' | 'invalid'>('unknown');
+  
+  // Load current API key on open
   useEffect(() => {
     if (open) {
-      const existingKey = getFlespiApiKey();
-      if (existingKey) {
-        setApiKey(existingKey);
-        // Don't auto-validate on open to avoid unnecessary API calls
+      const currentKey = ApiConfigService.getFlespiApiKey();
+      setApiKey(currentKey || '');
+      
+      // Test current key if it exists
+      if (currentKey) {
+        testConnection(currentKey);
       }
     }
   }, [open]);
 
-  const handleValidateKey = async () => {
-    if (!apiKey.trim()) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez saisir une clé API",
-        variant: "destructive"
-      });
+  const testConnection = async (keyToTest?: string) => {
+    const testKey = keyToTest || apiKey;
+    if (!testKey) {
+      setConnectionStatus('invalid');
       return;
     }
 
-    setIsValidating(true);
-    setIsValid(null);
-
+    setTesting(true);
     try {
-      const valid = await validateFlespiApiKey(apiKey);
-      setIsValid(valid);
+      // Temporarily set the key for testing
+      if (keyToTest) {
+        ApiConfigService.setFlespiApiKey(testKey);
+      }
       
-      if (valid) {
+      const isValid = await FlespiService.testConnection();
+      setConnectionStatus(isValid ? 'valid' : 'invalid');
+      
+      if (isValid) {
         toast({
-          title: "Succès",
-          description: "Clé API Flespi valide"
+          title: "Connexion réussie",
+          description: "La clé API Flespi est valide et fonctionnelle",
         });
       } else {
         toast({
-          title: "Erreur",
-          description: "Clé API Flespi invalide ou expirée",
-          variant: "destructive"
+          title: "Connexion échouée",
+          description: "La clé API Flespi est invalide ou ne fonctionne pas",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error validating API key:', error);
-      setIsValid(false);
+      console.error('Error testing Flespi connection:', error);
+      setConnectionStatus('invalid');
       toast({
-        title: "Erreur",
-        description: "Erreur lors de la validation de la clé API",
-        variant: "destructive"
+        title: "Erreur de test",
+        description: "Impossible de tester la connexion Flespi",
+        variant: "destructive",
       });
     } finally {
-      setIsValidating(false);
+      setTesting(false);
     }
   };
 
-  const handleSaveKey = () => {
+  const handleSave = () => {
     if (!apiKey.trim()) {
       toast({
-        title: "Erreur",
-        description: "Veuillez saisir une clé API",
-        variant: "destructive"
+        title: "Clé API requise",
+        description: "Veuillez saisir une clé API Flespi",
+        variant: "destructive",
       });
       return;
     }
 
-    if (isValid === false) {
-      toast({
-        title: "Attention",
-        description: "La clé API n'a pas été validée avec succès",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      setFlespiApiKey(apiKey);
-      toast({
-        title: "Succès",
-        description: "Clé API Flespi sauvegardée"
-      });
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la sauvegarde de la clé API",
-        variant: "destructive"
-      });
-    }
+    ApiConfigService.setFlespiApiKey(apiKey.trim());
+    
+    toast({
+      title: "Configuration sauvegardée",
+      description: "La clé API Flespi a été sauvegardée avec succès",
+    });
+    
+    // Test the saved key
+    testConnection(apiKey.trim());
   };
 
-  const handleRemoveKey = () => {
-    removeFlespiApiKey();
+  const handleClear = () => {
+    ApiConfigService.clearFlespiApiKey();
     setApiKey('');
-    setIsValid(null);
+    setConnectionStatus('unknown');
+    
     toast({
-      title: "Succès",
-      description: "Clé API Flespi supprimée"
+      title: "Configuration effacée",
+      description: "La clé API Flespi a été supprimée",
     });
   };
 
   const getStatusBadge = () => {
-    if (isValid === true) {
-      return <Badge variant="secondary" className="text-green-600"><CheckCircle className="w-3 h-3 mr-1" />Valide</Badge>;
+    switch (connectionStatus) {
+      case 'valid':
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Connecté
+          </Badge>
+        );
+      case 'invalid':
+        return (
+          <Badge variant="destructive">
+            <XCircle className="w-3 h-3 mr-1" />
+            Déconnecté
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary">
+            <Key className="w-3 h-3 mr-1" />
+            Non testé
+          </Badge>
+        );
     }
-    if (isValid === false) {
-      return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Invalide</Badge>;
-    }
-    return null;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Configuration Flespi</DialogTitle>
+          <DialogTitle>Configuration API Flespi</DialogTitle>
           <DialogDescription>
-            Configurez votre clé API Flespi pour permettre la création et la gestion des devices.
+            Configurez votre clé API Flespi pour accéder aux données des dispositifs de suivi. 
+            Cette clé est stockée localement sur votre navigateur pour des raisons de sécurité.
           </DialogDescription>
         </DialogHeader>
-
+        
         <div className="space-y-4">
-          <Alert>
-            <AlertDescription>
-              Vous pouvez obtenir votre clé API Flespi depuis votre tableau de bord Flespi dans la section "Tokens".
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-2">
-            <Label htmlFor="apiKey">Clé API Flespi</Label>
-            <div className="relative">
-              <Input
-                id="apiKey"
-                type={showApiKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => {
-                  setApiKey(e.target.value);
-                  setIsValid(null); // Reset validation when key changes
-                }}
-                placeholder="Saisissez votre clé API Flespi"
-                className="pr-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowApiKey(!showApiKey)}
-              >
-                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleValidateKey}
-                disabled={isValidating || !apiKey.trim()}
-              >
-                {isValidating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Valider la clé
-              </Button>
-              {getStatusBadge()}
-            </div>
+          <div className="flex items-center justify-between">
+            <Label>Statut de connexion</Label>
+            {getStatusBadge()}
           </div>
-
-          <div className="flex justify-between space-x-2">
-            <div className="flex space-x-2">
-              {hasFlespiApiKey() && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleRemoveKey}
-                >
-                  Supprimer
-                </Button>
-              )}
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
+          
+          <div className="space-y-2">
+            <Label htmlFor="flespi-api-key">Clé API Flespi</Label>
+            <Input
+              id="flespi-api-key"
+              type="password"
+              placeholder="Saisissez votre clé API Flespi..."
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full"
+            />
+            <p className="text-xs text-muted-foreground">
+              Vous pouvez obtenir votre clé API sur{' '}
+              <a 
+                href="https://flespi.io" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline"
               >
-                Annuler
-              </Button>
-              <Button
-                onClick={handleSaveKey}
-                disabled={!apiKey.trim()}
-              >
-                Sauvegarder
-              </Button>
-            </div>
+                flespi.io
+              </a>
+            </p>
           </div>
         </div>
+
+        <DialogFooter className="flex justify-between">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => testConnection()}
+              disabled={!apiKey.trim() || testing}
+            >
+              {testing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Test...
+                </>
+              ) : (
+                'Tester'
+              )}
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={handleClear}
+              disabled={!apiKey}
+            >
+              Effacer
+            </Button>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSave} disabled={!apiKey.trim()}>
+              Sauvegarder
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
+}

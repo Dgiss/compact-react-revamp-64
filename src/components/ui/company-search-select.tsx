@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,23 @@ interface CompanySearchSelectProps {
   searchFunction?: (searchTerm: string) => Promise<any[]>;
 }
 
+// Debounce hook to prevent excessive API calls
+function useDebounce(value: string, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export function CompanySearchSelect({
   value,
   onValueChange,
@@ -38,38 +56,70 @@ export function CompanySearchSelect({
   const [searchTerm, setSearchTerm] = useState("");
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [companiesCache, setCompaniesCache] = useState<Map<string, any[]>>(new Map());
+  
+  // Debounce search term to prevent excessive API calls
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Search companies when search term changes
+  // Memoized search function with caching
+  const searchCompanies = useCallback(async (term: string) => {
+    // Check cache first
+    if (companiesCache.has(term)) {
+      console.log('Using cached companies for term:', term);
+      return companiesCache.get(term) || [];
+    }
+    
+    setLoading(true);
+    try {
+      console.log('Searching companies for term:', term);
+      const results = await searchFunction(term);
+      
+      // Cache the results
+      setCompaniesCache(prev => new Map(prev.set(term, results)));
+      
+      return results;
+    } catch (error) {
+      console.error("Error searching companies:", error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, [searchFunction, companiesCache]);
+
+  // Search companies when debounced search term changes
   useEffect(() => {
-    const searchCompanies = async () => {
-      setLoading(true);
-      try {
-        const results = await searchFunction(searchTerm);
+    let isMounted = true;
+    
+    const performSearch = async () => {
+      if (!isMounted) return;
+      
+      const results = await searchCompanies(debouncedSearchTerm);
+      
+      if (isMounted) {
         setCompanies(results);
-      } catch (error) {
-        console.error("Error searching companies:", error);
-        setCompanies([]);
-      } finally {
-        setLoading(false);
       }
     };
+    
+    performSearch();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedSearchTerm, searchCompanies]);
 
-    searchCompanies();
-  }, [searchTerm, searchFunction]);
-
-  // Load initial companies
+  // Load initial companies when opened (only if not cached)
   useEffect(() => {
-    if (open && companies.length === 0) {
+    if (open && companies.length === 0 && !companiesCache.has("")) {
       setSearchTerm("");
     }
-  }, [open]);
+  }, [open, companies.length, companiesCache]);
 
   const selectedCompany = useMemo(() => 
     companies.find(company => company.id === value || company.name === value),
     [companies, value]
   );
 
-  const handleSelect = (company) => {
+  const handleSelect = (company: any) => {
     onValueChange(company.id || company.name);
     setOpen(false);
   };

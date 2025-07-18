@@ -24,25 +24,41 @@ export const useCompanyVehicleDevice = () => {
   const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete'
   const [quickStats, setQuickStats] = useState(null);
 
-  // AUTO-LOAD companies on mount
+  // AUTO-LOAD companies on mount with debounce
   useEffect(() => {
-    console.log('useCompanyVehicleDevice: Auto-loading companies...');
+    let isMounted = true;
+    
     const loadInitialCompanies = async () => {
+      if (!isMounted) return;
+      
       try {
+        console.log('useCompanyVehicleDevice: Auto-loading companies...');
         const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
-        console.log('Initial companies loaded:', loadedCompanies.length);
-        setCompanies(loadedCompanies);
-        setCompaniesReady(true);
+        
+        if (isMounted) {
+          console.log('Initial companies loaded:', loadedCompanies.length);
+          setCompanies(loadedCompanies);
+          setCompaniesReady(true);
+        }
       } catch (error) {
-        console.error('Error auto-loading companies:', error);
-        setCompanies([]);
-        setCompaniesReady(false);
+        if (isMounted) {
+          console.error('Error auto-loading companies:', error);
+          setCompanies([]);
+          setCompaniesReady(false);
+        }
       }
     };
-    loadInitialCompanies();
+    
+    // Debounce to prevent multiple simultaneous calls
+    const timeoutId = setTimeout(loadInitialCompanies, 100);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  // localStorage utilities
+  // localStorage utilities with better error handling
   const saveToLocalStorage = (data) => {
     try {
       // CRITICAL FIX: Reduce cache size to prevent QuotaExceededError
@@ -562,51 +578,64 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
-  // Load basic statistics without full data
+  // FIXED: Load basic statistics with proper error handling and fallback
   const loadQuickStats = useCallback(async () => {
     try {
       setLoading(true);
-      const { generateClient } = await import('aws-amplify/api');
-      const client = generateClient();
       
-      // Simple count queries
-      const vehiclesQuery = `query GetVehicleCount {
-        listVehicles(limit: 1) {
-          items { id }
-        }
-      }`;
-      
-      const devicesQuery = `query GetDeviceCount {
-        listDevices(limit: 1) {
-          items { id }
-        }
-      }`;
-      
-      const [vehiclesResult, devicesResult] = await Promise.all([
-        client.graphql({ query: vehiclesQuery }),
-        client.graphql({ query: devicesQuery })
-      ]);
-      
-      setQuickStats({
-        totalVehicles: vehiclesResult.data?.listVehicles?.items?.length || 0,
-        totalDevices: devicesResult.data?.listDevices?.items?.length || 0
-      });
-    } catch (error) {
-      console.error('Error loading quick stats:', error);
-      // Fallback to cached data if available
+      // Use cached data as primary source for quick stats
       const cachedData = loadFromLocalStorage();
-      if (cachedData) {
+      if (cachedData && cachedData.companies && cachedData.vehicles) {
         const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
         const deviceCount = (cachedData.vehicles || []).filter(item => item.type === "device").length;
+        
         setQuickStats({
           totalVehicles: vehicleCount,
           totalDevices: deviceCount
         });
+        console.log('Quick stats loaded from cache:', { totalVehicles: vehicleCount, totalDevices: deviceCount });
+        return;
       }
+      
+      // Fallback to simplified GraphQL queries with better error handling
+      try {
+        const { generateClient } = await import('aws-amplify/api');
+        const { listCompanies } = await import('../graphql/queries');
+        const client = generateClient();
+        
+        // Simple count query that should work with the schema
+        const companiesResult = await client.graphql({
+          query: listCompanies,
+          variables: { limit: 1 }
+        });
+        
+        // Set basic stats
+        setQuickStats({
+          totalVehicles: 0, // Will be updated when data loads
+          totalDevices: 0,  // Will be updated when data loads
+          totalCompanies: companiesResult.data?.listCompanies?.items?.length || 0
+        });
+        
+        console.log('Basic quick stats loaded');
+      } catch (graphqlError) {
+        console.warn('GraphQL quick stats failed, using minimal fallback:', graphqlError);
+        // Use absolute minimal stats
+        setQuickStats({
+          totalVehicles: companies.length > 0 ? 0 : 0,
+          totalDevices: companies.length > 0 ? 0 : 0
+        });
+      }
+    } catch (error) {
+      console.error('Error loading quick stats:', error);
+      // Always provide some stats, even if empty
+      setQuickStats({
+        totalVehicles: 0,
+        totalDevices: 0
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [companies.length]);
 
   // MODIFIED: Initialize only cached data and quick stats on mount
   useEffect(() => {
@@ -622,7 +651,7 @@ export const useCompanyVehicleDevice = () => {
     
     // Load quick stats for dashboard
     loadQuickStats();
-  }, []); // Empty dependency array - run only once on mount
+  }, [loadQuickStats]); // Include loadQuickStats in dependencies
 
   // Reset to show all data
   const resetFilters = useCallback(() => {

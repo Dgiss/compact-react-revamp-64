@@ -52,7 +52,7 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
     const actualVehicles = vehicles.filter(item => item.type === 'vehicle');
     let freeDevices = vehicles.filter(item => item.type === 'device');
     
-    // NEW: Fetch company device associations to update device statuses
+    // NEW: Fetch company device associations to update device statuses with better error handling
     try {
       const { generateClient } = await import('aws-amplify/api');
       const { companyDevicesByCompanyIDAndAssociationDate } = await import('../graphql/mutations');
@@ -63,12 +63,17 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       // For each company, get their device associations
       for (const company of companies) {
         try {
+          // Create clean variables object to prevent DataCloneError
+          const cleanVariables = {
+            companyID: String(company.id || ''),
+            filter: { 
+              isActive: { eq: true } 
+            }
+          };
+          
           const result = await client.graphql({
             query: companyDevicesByCompanyIDAndAssociationDate,
-            variables: {
-              companyID: company.id,
-              filter: { isActive: { eq: true } } // Only active associations
-            }
+            variables: cleanVariables
           });
           
           const companyDevices = result.data?.companyDevicesByCompanyIDAndAssociationDate?.items || [];
@@ -84,9 +89,9 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
                 entreprise: company.name,
                 isReservedForCompany: true,
                 companyReservation: {
-                  companyId: company.id,
-                  companyName: company.name,
-                  associationDate: companyDevice.associationDate
+                  companyId: String(company.id || ''),
+                  companyName: String(company.name || ''),
+                  associationDate: String(companyDevice.associationDate || '')
                 }
               };
               console.log(`Device ${companyDevice.deviceIMEI} marked as reserved for ${company.name}`);
@@ -122,24 +127,31 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
     
     // OPTIMIZED: Save minimal cache data using safe cache utilities
     const lightweightCache = {
-      companies: companies.map(c => ({ id: c.id, name: c.name })), // Only ID and name
+      companies: companies.map(c => ({ 
+        id: String(c.id || ''), 
+        name: String(c.name || ''),
+        siret: String(c.siret || '')
+      })), // Only ID and name, ensure strings
       vehicles: actualVehicles.map(v => ({
-        id: v.id,
-        immatriculation: v.immatriculation,
-        entreprise: v.entreprise,
-        imei: v.imei,
-        type: v.type,
-        isAssociated: v.isAssociated
+        id: String(v.id || ''),
+        immatriculation: String(v.immatriculation || ''),
+        entreprise: String(v.entreprise || ''),
+        imei: v.imei ? String(v.imei) : null,
+        type: String(v.type || 'vehicle'),
+        isAssociated: Boolean(v.isAssociated)
       })),
       devices: [...actualVehicles, ...freeDevices].map(d => ({
-        id: d.id,
-        imei: d.imei,
-        entreprise: d.entreprise,
-        type: d.type,
-        isAssociated: d.isAssociated,
-        isReservedForCompany: d.isReservedForCompany
+        id: String(d.id || ''),
+        imei: d.imei ? String(d.imei) : null,
+        entreprise: String(d.entreprise || ''),
+        type: String(d.type || ''),
+        isAssociated: Boolean(d.isAssociated),
+        isReservedForCompany: Boolean(d.isReservedForCompany)
       })),
-      stats: result.stats
+      stats: {
+        ...result.stats,
+        timestamp: Date.now()
+      }
     };
     
     // Use safe cache utility to handle QuotaExceededError
@@ -230,19 +242,30 @@ export const filterDevicesLocal = (devices, filters) => {
 };
 
 /**
- * Get companies list for dropdowns/selects
+ * Get companies list for dropdowns/selects with debounced loading
  * @returns {Promise<Array>} Array of companies with id and name
  */
 export const fetchCompaniesForSelect = async () => {
+  // Use a simple cache to prevent multiple simultaneous calls
+  if (fetchCompaniesForSelect._loading) {
+    console.log('Companies already loading, waiting...');
+    return fetchCompaniesForSelect._promise || [];
+  }
+  
   console.log('=== FETCHING COMPANIES FOR SELECT ===');
+  fetchCompaniesForSelect._loading = true;
+  
   try {
-    const companies = await CompanyService.fetchCompanies();
+    const promise = CompanyService.fetchCompanies();
+    fetchCompaniesForSelect._promise = promise;
+    
+    const companies = await promise;
     console.log('Raw companies from service:', companies);
     
     const formattedCompanies = companies.map(company => ({
-      id: company.id,
-      name: company.name || company.nom,
-      siret: company.siret
+      id: String(company.id || ''),
+      name: String(company.name || company.nom || ''),
+      siret: String(company.siret || '')
     }));
     
     console.log('Formatted companies for select:', formattedCompanies);
@@ -250,6 +273,9 @@ export const fetchCompaniesForSelect = async () => {
   } catch (error) {
     console.error('Error fetching companies for select:', error);
     throw error;
+  } finally {
+    fetchCompaniesForSelect._loading = false;
+    fetchCompaniesForSelect._promise = null;
   }
 };
 
@@ -416,7 +442,7 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
     
     // Use GraphQL filter to get only vehicles without associated devices
     // In our schema, vehicles have a @hasOne relation with device, so we filter where device is null
-    const variables = {
+    const cleanVariables = {
       filter: {
         ...filter,
         // Filter for vehicles that don't have a device relation
@@ -427,7 +453,7 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
     
     const result = await client.graphql({
       query: listVehicles,
-      variables
+      variables: cleanVariables
     });
     
     const vehicles = result.data?.listVehicles?.items || [];
@@ -466,7 +492,7 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
     
     // Use GraphQL filter to get only devices without vehicle association
     // In our schema, devices have a @belongsTo relation with vehicle, so we filter where vehicle is null
-    const variables = {
+    const cleanVariables = {
       filter: {
         ...filter,
         // Filter for devices that don't have a vehicle relation
@@ -477,7 +503,7 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
     
     const result = await client.graphql({
       query: listDevices,
-      variables
+      variables: cleanVariables
     });
     
     const devices = result.data?.listDevices?.items || [];
@@ -515,14 +541,14 @@ export const fetchVehiclesWithEmptyImei = async (filter = {}) => {
     const client = generateClient();
     
     // Fetch all vehicles and filter client-side for empty IMEI
-    const variables = {
+    const cleanVariables = {
       filter: filter,
       limit: 1000
     };
     
     const result = await client.graphql({
       query: listVehicles,
-      variables
+      variables: cleanVariables
     });
     
     const allVehicles = result.data?.listVehicles?.items || [];
