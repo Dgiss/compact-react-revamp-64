@@ -114,10 +114,35 @@ export const fetchAllVehiclesOptimized = async () => {
           console.log(`NextToken pour page ${pageCount + 1}: ${nextToken ? 'OUI' : 'NON'}`);
           
         } catch (pageError) {
-          console.error(`❌ Erreur page ${pageCount}:`, pageError.message || 'Erreur inconnue');
-          console.error('Détails erreur page:', pageError);
-          console.error('On continue avec les données récupérées...');
-          break; // Arrêter la pagination sur erreur
+          console.error(`❌ Erreur page ${pageCount}:`, pageError?.message || 'Message undefined');
+          console.error('Type erreur:', typeof pageError);
+          console.error('Erreur complète:', pageError);
+          
+          // Extraire les détails de l'erreur GraphQL si disponible
+          if (pageError?.errors) {
+            console.error('Erreurs GraphQL dans catch:', pageError.errors);
+            pageError.errors.forEach((error, i) => {
+              console.error(`GraphQL Error ${i + 1}:`, error.message);
+            });
+          }
+          
+          // Si on a des données partielles, les utiliser quand même
+          if (pageError?.data?.listVehicles?.items) {
+            console.log(`💾 Récupération données partielles page ${pageCount}...`);
+            const partialVehicles = pageError.data.listVehicles.items || [];
+            allVehicles = allVehicles.concat(partialVehicles);
+            nextToken = pageError.data.listVehicles.nextToken;
+            
+            console.log(`✅ Page ${pageCount} (partielle): ${partialVehicles.length} véhicules`);
+            console.log(`Total actuel: ${allVehicles.length} véhicules`);
+            console.log(`NextToken pour continuer: ${nextToken ? 'OUI' : 'NON'}`);
+            
+            // Continuer la pagination avec les données partielles
+            continue;
+          }
+          
+          console.error(`❌ Pas de données récupérables page ${pageCount}, arrêt pagination`);
+          break;
         }
       }
 
