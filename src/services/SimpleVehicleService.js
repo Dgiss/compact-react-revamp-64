@@ -43,6 +43,18 @@ const extractGraphQLErrorMessage = (graphqlError) => {
     
     if (firstError.message) {
       console.log('Extracted error message:', firstError.message);
+      
+      // Handle specific DynamoDB conditional request failed error
+      if (firstError.message.includes('conditional request failed') || 
+          firstError.message.includes('ConditionalCheckFailedException')) {
+        return 'Cette immatriculation existe déjà. Veuillez utiliser une immatriculation différente ou associer le boîtier au véhicule existant.';
+      }
+      
+      // Handle other common DynamoDB errors
+      if (firstError.message.includes('ValidationException')) {
+        return 'Données invalides. Veuillez vérifier les champs obligatoires.';
+      }
+      
       return firstError.message;
     }
   }
@@ -50,12 +62,19 @@ const extractGraphQLErrorMessage = (graphqlError) => {
   // Fallback to top-level message
   if (graphqlError.message) {
     console.log('Using top-level error message:', graphqlError.message);
+    
+    // Handle specific errors in top-level message
+    if (graphqlError.message.includes('conditional request failed') || 
+        graphqlError.message.includes('ConditionalCheckFailedException')) {
+      return 'Cette immatriculation existe déjà. Veuillez utiliser une immatriculation différente ou associer le boîtier au véhicule existant.';
+    }
+    
     return graphqlError.message;
   }
   
   // Last fallback
   console.log('No specific error message found, using generic');
-  return 'GraphQL operation failed';
+  return 'Erreur lors de l\'opération GraphQL';
 };
 
 /**
@@ -84,6 +103,16 @@ const validateVehicleData = (vehicleData, isUpdate = false) => {
 };
 
 /**
+ * Clean and normalize vehicle immatriculation
+ * @param {string} immat - Raw immatriculation
+ * @returns {string} Cleaned immatriculation
+ */
+const cleanImmatriculation = (immat) => {
+  if (!immat) return immat;
+  return immat.trim().toUpperCase();
+};
+
+/**
  * Clean vehicle input data - preserve required fields even if empty
  * @param {Object} vehicleInput - Raw vehicle input
  * @returns {Object} Cleaned vehicle input
@@ -93,6 +122,14 @@ const cleanVehicleInput = (vehicleInput) => {
   console.log('Raw input:', vehicleInput);
   
   const cleaned = { ...vehicleInput };
+  
+  // Clean and normalize immatriculation fields
+  if (cleaned.immat) {
+    cleaned.immat = cleanImmatriculation(cleaned.immat);
+  }
+  if (cleaned.realImmat) {
+    cleaned.realImmat = cleanImmatriculation(cleaned.realImmat);
+  }
   
   // Required fields that must never be removed
   const requiredFields = ['immat', 'realImmat', 'companyVehiclesId'];
@@ -347,21 +384,42 @@ export const createOrUpdateVehicleSimple = async (vehicleData) => {
     if (!immat) {
       throw new Error('Immatriculation is required');
     }
+
+    // Clean the immatriculation
+    const cleanImmat = cleanImmatriculation(immat);
     
     // Check if vehicle exists
-    const vehicleExists = await checkVehicleExists(immat);
+    const vehicleExists = await checkVehicleExists(cleanImmat);
     
     if (vehicleExists) {
       console.log('Vehicle exists, updating...');
-      return await updateVehicleSimple(vehicleData);
+      return await updateVehicleSimple({
+        ...vehicleData,
+        immatriculation: cleanImmat,
+        immat: cleanImmat
+      });
     } else {
       console.log('Vehicle does not exist, creating...');
-      return await createVehicleSimple(vehicleData);
+      return await createVehicleSimple({
+        ...vehicleData,
+        immatriculation: cleanImmat,
+        immat: cleanImmat
+      });
     }
   } catch (error) {
     console.error('=== CREATE OR UPDATE VEHICLE ERROR ===');
     console.error('Error message:', error.message);
     console.error('Full error:', error);
-    throw error; // Re-throw the error to be handled by the calling function
+    
+    // Provide more specific error messages for common issues
+    if (error.message.includes('immatriculation existe déjà')) {
+      throw new Error(`Impossible de créer le véhicule : ${error.message}`);
+    } else if (error.message.includes('required')) {
+      throw new Error(`Validation échouée : ${error.message}`);
+    } else if (error.message.includes('GraphQL')) {
+      throw new Error(`Erreur de base de données : ${error.message}`);
+    } else {
+      throw new Error(`Échec de traitement du véhicule : ${error.message || 'Erreur inconnue'}`);
+    }
   }
 };

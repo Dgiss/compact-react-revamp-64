@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Plus } from "lucide-react";
+import { X, Plus, AlertCircle, CheckCircle } from "lucide-react";
 import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
+import { useVehicleValidation } from "@/hooks/useVehicleValidation";
 import { createDeviceWithVehicleAssociation } from "@/services/DeviceService";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { toast } from "@/components/ui/use-toast";
@@ -50,6 +51,18 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
   const [isCreating, setIsCreating] = useState(false);
   const { loadCompaniesForSelect } = useCompanyVehicleDevice();
 
+  // Vehicle validation
+  const { 
+    isValidating, 
+    validationError, 
+    checkImmatriculation, 
+    validateImmatFormat,
+    clearValidationError 
+  } = useVehicleValidation();
+  
+  const [immatValidationStatus, setImmatValidationStatus] = useState(null); // null, 'valid', 'invalid', 'exists'
+  const [existingVehicle, setExistingVehicle] = useState(null);
+
   // Fetch companies on component mount
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -64,6 +77,40 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
 
     fetchCompanies();
   }, [loadCompaniesForSelect]);
+
+  // Debounced immatriculation validation
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (immatriculation && immatriculation.trim()) {
+        // First validate format
+        const formatValidation = validateImmatFormat(immatriculation);
+        if (!formatValidation.isValid) {
+          setImmatValidationStatus('invalid');
+          return;
+        }
+
+        // Then check if exists
+        try {
+          const result = await checkImmatriculation(immatriculation);
+          if (result.exists) {
+            setImmatValidationStatus('exists');
+            setExistingVehicle(result.vehicle);
+          } else {
+            setImmatValidationStatus('valid');
+            setExistingVehicle(null);
+          }
+        } catch (error) {
+          console.error('Error validating immatriculation:', error);
+          setImmatValidationStatus('invalid');
+        }
+      } else {
+        setImmatValidationStatus(null);
+        setExistingVehicle(null);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [immatriculation, checkImmatriculation, validateImmatFormat]);
 
   const showToast = (severity: 'success' | 'error' | 'warning', summary: string, detail: string) => {
     toast({
@@ -82,6 +129,26 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
       if (!immatriculation) {
         showToast('error', 'Erreur', 'L\'immatriculation est obligatoire');
         return;
+      }
+
+      // Check immatriculation format
+      const formatValidation = validateImmatFormat(immatriculation);
+      if (!formatValidation.isValid) {
+        showToast('error', 'Erreur', formatValidation.error);
+        return;
+      }
+
+      // Warn if vehicle already exists
+      if (immatValidationStatus === 'exists' && existingVehicle) {
+        const confirmMessage = `Un véhicule avec l'immatriculation "${immatriculation}" existe déjà (Entreprise: ${existingVehicle.entreprise || 'Non définie'}). Voulez-vous associer le boîtier à ce véhicule existant ?`;
+        
+        if (!window.confirm(confirmMessage)) {
+          showToast('warning', 'Opération annulée', 'Veuillez modifier l\'immatriculation pour créer un nouveau véhicule');
+          return;
+        }
+
+        // If user confirms, we'll try to associate with existing vehicle
+        // The backend should handle this case
       }
       
       if (!imei) {
@@ -167,7 +234,15 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
       
     } catch (error) {
       console.error('Error in form submission:', error);
-      showToast('error', 'Erreur', `Erreur lors de la création: ${error.message || 'Erreur inconnue'}`);
+      
+      // Enhanced error handling for duplicate immatriculation
+      let errorMessage = error.message || 'Erreur inconnue';
+      
+      if (error.message && error.message.includes('immatriculation existe déjà')) {
+        errorMessage = 'Cette immatriculation est déjà utilisée. Veuillez en choisir une autre ou associer le boîtier au véhicule existant.';
+      }
+      
+      showToast('error', 'Erreur', `Erreur lors de la création: ${errorMessage}`);
     } finally {
       setIsCreating(false);
     }
@@ -207,6 +282,45 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
     label: type
   }));
 
+  // Immatriculation validation indicator
+  const renderImmatValidationIcon = () => {
+    if (isValidating) {
+      return <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>;
+    }
+    
+    switch (immatValidationStatus) {
+      case 'valid':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'exists':
+        return <AlertCircle className="h-4 w-4 text-orange-600" />;
+      case 'invalid':
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getImmatValidationMessage = () => {
+    if (validationError) {
+      return { type: 'error', message: validationError };
+    }
+    
+    switch (immatValidationStatus) {
+      case 'valid':
+        return { type: 'success', message: 'Immatriculation disponible' };
+      case 'exists':
+        return { 
+          type: 'warning', 
+          message: `Véhicule existant${existingVehicle?.entreprise ? ` (${existingVehicle.entreprise})` : ''}. Le boîtier sera associé au véhicule existant.` 
+        };
+      case 'invalid':
+        const formatValidation = validateImmatFormat(immatriculation);
+        return { type: 'error', message: formatValidation.error || 'Format invalide' };
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <DialogHeader className="mb-5">
@@ -234,14 +348,43 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
           <h3 className="font-medium text-gray-900">Informations Véhicule</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Input 
-                placeholder="Immatriculation *"
-                value={immatriculation} 
-                onChange={(e) => setImmatriculation(e.target.value)}
-                required
-              />
+            <div className="relative">
+              <div className="relative">
+                <Input 
+                  placeholder="Immatriculation *"
+                  value={immatriculation} 
+                  onChange={(e) => {
+                    setImmatriculation(e.target.value);
+                    clearValidationError();
+                  }}
+                  required
+                  className={`pr-10 ${
+                    immatValidationStatus === 'valid' ? 'border-green-500' :
+                    immatValidationStatus === 'exists' ? 'border-orange-500' :
+                    immatValidationStatus === 'invalid' ? 'border-red-500' : ''
+                  }`}
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {renderImmatValidationIcon()}
+                </div>
+              </div>
+              
+              {/* Validation message */}
+              {(() => {
+                const validation = getImmatValidationMessage();
+                if (!validation) return null;
+                
+                const textColor = validation.type === 'success' ? 'text-green-600' :
+                                validation.type === 'warning' ? 'text-orange-600' : 'text-red-600';
+                
+                return (
+                  <p className={`text-xs mt-1 ${textColor}`}>
+                    {validation.message}
+                  </p>
+                );
+              })()}
             </div>
+            
             <div>
               <Input 
                 placeholder="Nom Véhicule"
