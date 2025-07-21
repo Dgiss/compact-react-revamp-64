@@ -114,7 +114,10 @@ export const createDeviceSimple = async (deviceData) => {
       
       return createdDevice;
     } catch (error) {
-      console.error('Error creating device:', error);
+      console.error('Error creating device - Full error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error name:', error.name);
+      console.error('Error stack:', error.stack);
       
       // Si l'erreur contient des informations sur un clone d'URL, nettoyer les logs
       if (error.message?.includes('DataCloneError') || error.message?.includes('URL object could not be cloned')) {
