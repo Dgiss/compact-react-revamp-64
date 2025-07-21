@@ -10,37 +10,53 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES ===');
+    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES WITH PAGINATION ===');
     
     try {
-      // Use the exact query structure provided by user
-      const vehiclesResponse = await client.graphql({
-        query: `query ListAllVehicles {
-          listVehicles {
-            items {
-              companyVehiclesId
-              device {
-                cid
-                name
-                sim
-                imei
-                flespi_id
-                device_type_id
-              }
-              immatriculation
-              immat
-              company {
-                name
-              }
-              vehicleDeviceImei
-            }
-            nextToken
-          }
-        }`
-      });
+      let allVehicles = [];
+      let nextToken = null;
+      let pageCount = 0;
 
-      const vehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
-      console.log('Total vehicles fetched:', vehicles.length);
+      // Paginate through ALL vehicles
+      do {
+        pageCount++;
+        console.log(`Fetching vehicles page ${pageCount}${nextToken ? ` (token: ${nextToken.substring(0, 30)}...)` : ''}`);
+        
+        const vehiclesResponse = await client.graphql({
+          query: `query ListAllVehicles($nextToken: String) {
+            listVehicles(nextToken: $nextToken, limit: 1000) {
+              items {
+                companyVehiclesId
+                device {
+                  cid
+                  name
+                  sim
+                  imei
+                  flespi_id
+                  device_type_id
+                }
+                immatriculation
+                immat
+                company {
+                  name
+                }
+                vehicleDeviceImei
+              }
+              nextToken
+            }
+          }`,
+          variables: { nextToken }
+        });
+
+        const pageVehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
+        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles received`);
+        
+        allVehicles = allVehicles.concat(pageVehicles);
+        nextToken = vehiclesResponse.data.listVehicles.nextToken;
+        
+      } while (nextToken);
+
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles ===`);
 
       // Get unassociated devices using the validated query
       const devicesResponse = await client.graphql({
@@ -62,7 +78,7 @@ export const fetchAllVehiclesOptimized = async () => {
       console.log('Unassociated devices found:', unassociatedDevices.length);
 
       // Map vehicles to expected format
-      const mappedVehicles = vehicles.map(vehicle => ({
+      const mappedVehicles = allVehicles.map(vehicle => ({
         id: vehicle.immat || vehicle.immatriculation,
         entreprise: vehicle.company?.name || "Non définie",
         type: "vehicle",
@@ -101,7 +117,7 @@ export const fetchAllVehiclesOptimized = async () => {
 
       // Extract companies from vehicles
       const uniqueCompanies = new Map();
-      vehicles.forEach(vehicle => {
+      allVehicles.forEach(vehicle => {
         if (vehicle.company && vehicle.companyVehiclesId) {
           uniqueCompanies.set(vehicle.companyVehiclesId, {
             id: vehicle.companyVehiclesId,
@@ -111,10 +127,11 @@ export const fetchAllVehiclesOptimized = async () => {
       });
       const companies = Array.from(uniqueCompanies.values());
 
-      console.log('=== OPTIMIZED RESULT SUMMARY ===');
+      console.log('=== COMPLETE DATABASE FETCH RESULT ===');
       console.log('Total vehicles:', mappedVehicles.length);
       console.log('Total unassociated devices:', mappedDevices.length);
       console.log('Total companies:', companies.length);
+      console.log('Total pages processed:', pageCount);
 
       return {
         companies,
