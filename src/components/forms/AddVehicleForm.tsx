@@ -193,12 +193,14 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         deviceCreated: Boolean(deviceCreated)
       };
       
-      console.log('Form data being submitted (all primitives, corrected mapping with realImmat):', formData);
+      console.log('🚗 Step 2: Creating vehicle with device association...');
+      console.log('Vehicle will be created with finalImei:', finalImei);
       
       if (onSave) {
         onSave(formData);
       }
       
+      console.log('✅ Vehicle creation process completed successfully');
       if (onClose) onClose();
       
     } catch (error) {
