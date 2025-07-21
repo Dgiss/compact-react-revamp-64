@@ -9,44 +9,61 @@ import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService
 const client = generateClient();
 
 /**
- * OPTIMIZED: Fetch all vehicles with devices using single GraphQL query
+ * OPTIMIZED: Fetch all vehicles with devices using single GraphQL query with complete pagination
  */
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES WITH SINGLE QUERY ===');
+    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES WITH COMPLETE PAGINATION ===');
     
     try {
-      const response = await client.graphql({
-        query: `query MyQuery {
-          listVehicles {
-            items {
-              companyVehiclesId
-              device {
-                cid
-                name
-                protocolId
-                sim
-                imei
-                flespi_id
-                device_type_id
+      let allVehicles = [];
+      let nextToken = null;
+      let pageCount = 0;
+      
+      // Iterate through all pages using pagination
+      do {
+        pageCount++;
+        console.log(`Fetching vehicles page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
+        
+        const response = await client.graphql({
+          query: `query MyQuery($nextToken: String) {
+            listVehicles(nextToken: $nextToken, limit: 1000) {
+              items {
+                companyVehiclesId
+                device {
+                  cid
+                  name
+                  protocolId
+                  sim
+                  imei
+                  flespi_id
+                  device_type_id
+                }
+                immatriculation
+                immat
+                company {
+                  name
+                }
+                vehicleDeviceImei
               }
-              immatriculation
-              immat
-              company {
-                name
-              }
-              vehicleDeviceImei
+              nextToken
             }
-            nextToken
-          }
-        }`
-      });
+          }`,
+          variables: { nextToken }
+        });
 
-      const vehicles = response.data.listVehicles.items;
-      console.log('Optimized vehicles fetched:', vehicles.length);
+        const pageVehicles = response.data.listVehicles.items;
+        allVehicles = allVehicles.concat(pageVehicles);
+        nextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles fetched, Total so far: ${allVehicles.length}`);
+        
+      } while (nextToken);
+
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles ===`);
 
       // Map vehicles to the expected format using available fields only
-      const mappedVehicles = vehicles.map(vehicle => {
+      const mappedVehicles = allVehicles.map(vehicle => {
         const deviceImei = vehicle.device?.imei || vehicle.vehicleDeviceImei;
         const isAssociated = !!deviceImei;
 
@@ -112,10 +129,11 @@ export const fetchAllVehiclesOptimized = async () => {
           name: company.name
         }));
 
-      console.log('=== OPTIMIZED RESULT SUMMARY ===');
+      console.log('=== OPTIMIZED RESULT SUMMARY (WITH COMPLETE PAGINATION) ===');
       console.log('Total vehicles:', mappedVehicles.length);
       console.log('Total unassociated devices:', unassociatedDevices.length);
       console.log('Total companies extracted:', companies.length);
+      console.log('Pages processed:', pageCount);
 
       return {
         companies,
@@ -123,7 +141,7 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('Error in optimized vehicle fetch:', error);
+      console.error('Error in optimized vehicle fetch with pagination:', error);
       throw new Error(`Failed to fetch vehicles optimized: ${error.message}`);
     }
   });
