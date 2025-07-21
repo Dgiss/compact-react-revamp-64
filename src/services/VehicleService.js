@@ -427,13 +427,17 @@ export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
     console.log('Device IMEI:', deviceImei);
     
     try {
+      const updateInput = {
+        immat: vehicleImmat,
+        vehicleDeviceImei: deviceImei
+      };
+      
+      console.log('Update input:', updateInput);
+      
       const vehicleUpdate = await client.graphql({
         query: mutations.updateVehicle,
         variables: {
-          input: {
-            immat: vehicleImmat,
-            vehicleDeviceImei: deviceImei
-          }
+          input: updateInput
         }
       });
       
@@ -443,9 +447,24 @@ export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
     } catch (error) {
       console.error('Error associating vehicle to device:', error);
       console.error('Error details:', error.message);
+      console.error('Error name:', error.name);
+      console.error('Error stack:', error.stack);
+      
       if (error.errors) {
-        console.error('GraphQL errors:', error.errors);
+        console.error('📋 GraphQL Errors during association (' + error.errors.length + ' errors):');
+        error.errors.forEach((err, index) => {
+          console.error(`🔴 Association Error ${index + 1}:`, err);
+          console.error(`   Message: ${err.message}`);
+          console.error(`   Path: ${JSON.stringify(err.path)}`);
+          console.error(`   Locations: ${JSON.stringify(err.locations)}`);
+          console.error(`   Extensions: ${JSON.stringify(err.extensions)}`);
+        });
       }
+      
+      if (error.data) {
+        console.error('Error data:', error.data);
+      }
+      
       throw error;
     }
   });
