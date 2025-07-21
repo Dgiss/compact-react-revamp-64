@@ -530,7 +530,10 @@ export const useCompanyVehicleDevice = () => {
   // OPTIMIZED: Get vehicles with empty IMEI (no cache needed)
   const getVehiclesWithEmptyImei = useCallback(async () => {
     try {
+      console.log('=== HOOK: GETTING VEHICLES WITH EMPTY IMEI ===');
       const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithEmptyImei();
+      
+      console.log('Hook: Vehicles with empty IMEI received:', vehicles.length);
       
       toast({
         title: "Véhicules sans IMEI",
@@ -539,11 +542,22 @@ export const useCompanyVehicleDevice = () => {
       
       return vehicles;
     } catch (err) {
-      console.error('Error getting vehicles with empty IMEI:', err);
-      setError(err.message);
+      console.error('=== HOOK ERROR: Getting vehicles with empty IMEI ===');
+      console.error('Hook error details:', err);
+      console.error('Hook error message:', err.message);
+      
+      // Provide more specific error handling
+      let errorMessage = 'Erreur lors de la récupération des véhicules sans IMEI';
+      if (err.message && err.message !== 'undefined') {
+        errorMessage += `: ${err.message}`;
+      } else {
+        errorMessage += ': Erreur inconnue, vérifiez la console pour plus de détails';
+      }
+      
+      setError(errorMessage);
       toast({
         title: "Erreur",
-        description: `Erreur lors de la récupération des véhicules sans IMEI: ${err.message}`,
+        description: errorMessage,
         variant: "destructive",
       });
       return [];
