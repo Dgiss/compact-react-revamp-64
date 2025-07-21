@@ -139,32 +139,38 @@ export const filterByCompanyLocal = (devices, company, companies) => {
 };
 
 /**
- * OPTIMIZED: Get vehicles without devices
+ * OPTIMIZED: Get vehicles without devices using working filter
  */
 export const fetchVehiclesWithoutDevices = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING VEHICLES WITHOUT DEVICES ===');
+    console.log('=== FETCHING VEHICLES WITHOUT DEVICES (UPDATED WITH WORKING QUERY) ===');
     
     try {
       const response = await client.graphql({
         query: `query ListVehiclesWithoutDevices {
-          listVehicles(filter: {vehicleDeviceImei: {attributeExists: false}}) {
+          listVehicles(
+            filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+            limit: 10000
+          ) {
             items {
-              immat
-              immatriculation
-              nomVehicule
-              marque
-              modele
-              kilometerage
-              emplacement
-              vehicleDeviceImei
               companyVehiclesId
-              company {
-                id
+              device {
+                cid
                 name
-                siret
+                protocolId
+                sim
+                imei
+                flespi_id
+                device_type_id
               }
+              immatriculation
+              immat
+              company {
+                name
+              }
+              vehicleDeviceImei
             }
+            nextToken
           }
         }`
       });
@@ -175,19 +181,25 @@ export const fetchVehiclesWithoutDevices = async () => {
         entreprise: vehicle.company?.name || "Non définie",
         type: "vehicle",
         immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        nomVehicule: vehicle.nomVehicule || "",
-        imei: "",
+        nomVehicule: vehicle.device?.name || "",
+        imei: "", // Empty by definition since these are vehicles without devices
         typeBoitier: "",
-        marque: vehicle.marque || "",
-        modele: vehicle.modele || "",
-        kilometrage: vehicle.kilometerage?.toString() || "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
         telephone: "",
-        emplacement: vehicle.emplacement || "",
+        emplacement: "",
         deviceData: null,
         isAssociated: false
       }));
       
       console.log('Vehicles without devices found:', vehicles.length);
+      console.log('Sample vehicles:', vehicles.slice(0, 3).map(v => ({
+        immat: v.immatriculation,
+        company: v.entreprise,
+        vehicleDeviceImei: v.vehicleDeviceImei
+      })));
+      
       return vehicles;
     } catch (error) {
       console.error('Error fetching vehicles without devices:', error);
@@ -201,169 +213,66 @@ export const fetchVehiclesWithoutDevices = async () => {
  */
 export const fetchVehiclesWithEmptyImei = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI (PRIMARY METHOD) ===');
+    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI (USING WORKING FILTER) ===');
     
     try {
-      // PRIMARY METHOD: Direct GraphQL query for vehicles with empty IMEI
-      console.log('Trying primary method: Direct query for vehicles with empty vehicleDeviceImei...');
-      
-      let allVehiclesWithEmptyImei = [];
-      let nextToken = null;
-      let totalBatches = 0;
-      
-      do {
-        totalBatches++;
-        console.log(`=== BATCH ${totalBatches} for vehicles with empty IMEI ===`);
-        
-        const response = await client.graphql({
-          query: `query GetVehiclesWithEmptyImei($nextToken: String) {
-            listVehicles(
-              filter: {
-                or: [
-                  { vehicleDeviceImei: { attributeExists: false } },
-                  { vehicleDeviceImei: { eq: "" } },
-                  { vehicleDeviceImei: { eq: null } }
-                ]
-              },
-              limit: 1000,
-              nextToken: $nextToken
-            ) {
-              items {
-                immat
-                immatriculation
-                nomVehicule
-                marque
-                modele
-                kilometerage
-                emplacement
-                vehicleDeviceImei
-                companyVehiclesId
-                company {
-                  id
-                  name
-                  siret
-                }
+      // Use the same working filter as fetchVehiclesWithoutDevices
+      const response = await client.graphql({
+        query: `query GetVehiclesWithEmptyImei {
+          listVehicles(
+            filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+            limit: 10000
+          ) {
+            items {
+              companyVehiclesId
+              device {
+                cid
+                name
+                protocolId
+                sim
+                imei
+                flespi_id
+                device_type_id
               }
-              nextToken
+              immatriculation
+              immat
+              company {
+                name
+              }
+              vehicleDeviceImei
             }
-          }`,
-          variables: { nextToken }
-        });
+            nextToken
+          }
+        }`
+      });
 
-        const vehiclesData = response.data.listVehicles;
-        console.log(`Batch ${totalBatches} - Vehicles with empty IMEI:`, vehiclesData.items.length);
-        
-        if (vehiclesData.items.length > 0) {
-          const mappedVehicles = vehiclesData.items.map(vehicle => ({
-            ...vehicle,
-            id: vehicle.immat || vehicle.immatriculation,
-            entreprise: vehicle.company?.name || "Non définie",
-            type: "vehicle",
-            immatriculation: vehicle.immat || vehicle.immatriculation || "",
-            nomVehicule: vehicle.nomVehicule || "",
-            imei: "", // Empty by definition
-            typeBoitier: "",
-            marque: vehicle.marque || "",
-            modele: vehicle.modele || "",
-            kilometrage: vehicle.kilometerage?.toString() || "",
-            telephone: "",
-            emplacement: vehicle.emplacement || "",
-            deviceData: null,
-            isAssociated: false
-          }));
-          
-          allVehiclesWithEmptyImei = allVehiclesWithEmptyImei.concat(mappedVehicles);
-        }
-        
-        nextToken = vehiclesData.nextToken;
-        console.log(`Batch ${totalBatches} completed. NextToken:`, !!nextToken);
-        
-      } while (nextToken);
+      const vehicles = response.data.listVehicles.items.map(vehicle => ({
+        ...vehicle,
+        id: vehicle.immat || vehicle.immatriculation,
+        entreprise: vehicle.company?.name || "Non définie",
+        type: "vehicle",
+        immatriculation: vehicle.immat || vehicle.immatriculation || "",
+        nomVehicule: vehicle.device?.name || "",
+        imei: "", // Empty by definition
+        typeBoitier: "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: "",
+        emplacement: "",
+        deviceData: null,
+        isAssociated: false
+      }));
       
-      console.log('=== PRIMARY METHOD SUCCESS ===');
-      console.log('Total vehicles with empty IMEI found:', allVehiclesWithEmptyImei.length);
-      console.log('Total batches processed:', totalBatches);
+      console.log('=== WORKING FILTER SUCCESS ===');
+      console.log('Total vehicles with empty IMEI found:', vehicles.length);
       
-      return allVehiclesWithEmptyImei;
+      return vehicles;
       
-    } catch (primaryError) {
-      console.error('=== PRIMARY METHOD FAILED ===');
-      console.error('Primary error details:', primaryError);
-      console.error('Primary error message:', primaryError.message);
-      if (primaryError.errors) {
-        console.error('GraphQL errors:', primaryError.errors);
-      }
-      
-      // FALLBACK METHOD: Load all vehicles and filter client-side
-      console.log('=== SWITCHING TO FALLBACK METHOD ===');
-      console.log('Loading all vehicles and filtering client-side...');
-      
-      try {
-        let allVehicles = [];
-        let nextToken = null;
-        let fallbackBatches = 0;
-        
-        do {
-          fallbackBatches++;
-          console.log(`=== FALLBACK BATCH ${fallbackBatches} ===`);
-          
-          const response = await client.graphql({
-            query: queries.listVehicles,
-            variables: { 
-              limit: 1000,
-              nextToken: nextToken
-            }
-          });
-          
-          const vehiclesData = response.data.listVehicles;
-          console.log(`Fallback batch ${fallbackBatches} - All vehicles:`, vehiclesData.items.length);
-          
-          allVehicles = allVehicles.concat(vehiclesData.items);
-          nextToken = vehiclesData.nextToken;
-          
-        } while (nextToken);
-        
-        console.log('Fallback: Total vehicles loaded:', allVehicles.length);
-        
-        // Filter vehicles with empty IMEI client-side
-        const vehiclesWithEmptyImei = allVehicles.filter(vehicle => {
-          const hasEmptyImei = !vehicle.vehicleDeviceImei || vehicle.vehicleDeviceImei === "" || vehicle.vehicleDeviceImei === null;
-          return hasEmptyImei;
-        });
-        
-        console.log('Fallback: Vehicles with empty IMEI after filtering:', vehiclesWithEmptyImei.length);
-        
-        // Map to expected format
-        const mappedVehicles = vehiclesWithEmptyImei.map(vehicle => ({
-          ...vehicle,
-          id: vehicle.immat || vehicle.immatriculation,
-          entreprise: vehicle.company?.name || "Non définie",
-          type: "vehicle",
-          immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.nomVehicule || "",
-          imei: "", // Empty by definition
-          typeBoitier: "",
-          marque: vehicle.marque || "",
-          modele: vehicle.modele || "",
-          kilometrage: vehicle.kilometerage?.toString() || "",
-          telephone: "",
-          emplacement: vehicle.emplacement || "",
-          deviceData: null,
-          isAssociated: false
-        }));
-        
-        console.log('=== FALLBACK METHOD SUCCESS ===');
-        console.log('Fallback result count:', mappedVehicles.length);
-        
-        return mappedVehicles;
-        
-      } catch (fallbackError) {
-        console.error('=== FALLBACK METHOD ALSO FAILED ===');
-        console.error('Fallback error details:', fallbackError);
-        console.error('Fallback error message:', fallbackError.message);
-        
-        throw new Error(`Échec principal et fallback: Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`);
-      }
+    } catch (error) {
+      console.error('=== ERROR WITH WORKING FILTER ===');
+      console.error('Error details:', error);
+      throw new Error(`Erreur lors de la récupération des véhicules sans IMEI: ${error.message}`);
     }
   });
 };
