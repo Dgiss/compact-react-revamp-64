@@ -427,6 +427,32 @@ export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
     console.log('Device IMEI:', deviceImei);
     
     try {
+      // First, check if the device is already associated to another vehicle
+      const existingVehicleQuery = /* GraphQL */ `
+        query CheckDeviceAssociation($deviceImei: String!) {
+          listVehicles(filter: {vehicleDeviceImei: {eq: $deviceImei}}) {
+            items {
+              immat
+              vehicleDeviceImei
+            }
+          }
+        }
+      `;
+
+      const existingResponse = await client.graphql({
+        query: existingVehicleQuery,
+        variables: {
+          deviceImei: deviceImei
+        }
+      });
+
+      const existingVehicles = existingResponse.data?.listVehicles?.items || [];
+      const otherVehicleWithDevice = existingVehicles.find(v => v.immat !== vehicleImmat);
+
+      if (otherVehicleWithDevice) {
+        throw new Error(`Le boîtier ${deviceImei} est déjà associé au véhicule ${otherVehicleWithDevice.immat}. Un boîtier ne peut être associé qu'à un seul véhicule.`);
+      }
+
       const updateInput = {
         immat: vehicleImmat,
         vehicleDeviceImei: deviceImei
