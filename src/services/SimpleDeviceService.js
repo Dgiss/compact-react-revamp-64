@@ -119,7 +119,19 @@ export const createDeviceSimple = async (deviceData) => {
       console.error('Error name:', error.name);
       console.error('Error stack:', error.stack);
       
-      // Si l'erreur contient des informations sur un clone d'URL, nettoyer les logs
+      // Si l'erreur contient des données partielles (device créé avec erreurs), récupérer le device
+      if (error.data && error.data.createDevice) {
+        console.log('Device created successfully despite errors:', error.data.createDevice);
+        return error.data.createDevice;
+      }
+      
+      // Log détaillé des erreurs GraphQL
+      if (error.errors && Array.isArray(error.errors)) {
+        console.error('GraphQL Errors during device creation:');
+        error.errors.forEach((err, index) => {
+          console.error(`Error ${index + 1}:`, err);
+        });
+      }
       if (error.message?.includes('DataCloneError') || error.message?.includes('URL object could not be cloned')) {
         console.error('Erreur de sérialisation des données. Tentative de récupération...');
         
