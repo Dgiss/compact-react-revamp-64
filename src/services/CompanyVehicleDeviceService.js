@@ -139,43 +139,64 @@ export const filterByCompanyLocal = (devices, company, companies) => {
 };
 
 /**
- * OPTIMIZED: Get vehicles without devices using working filter
+ * OPTIMIZED: Get vehicles without devices using working filter with complete pagination
  */
 export const fetchVehiclesWithoutDevices = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING VEHICLES WITHOUT DEVICES (UPDATED WITH WORKING QUERY) ===');
+    console.log('=== FETCHING VEHICLES WITHOUT DEVICES WITH COMPLETE PAGINATION ===');
     
     try {
-      const response = await client.graphql({
-        query: `query ListVehiclesWithoutDevices {
-          listVehicles(
-            filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
-            limit: 10000
-          ) {
-            items {
-              companyVehiclesId
-              device {
-                cid
-                name
-                protocolId
-                sim
-                imei
-                flespi_id
-                device_type_id
-              }
-              immatriculation
-              immat
-              company {
-                name
-              }
-              vehicleDeviceImei
-            }
-            nextToken
-          }
-        }`
-      });
+      let allVehicles = [];
+      let nextToken = null;
+      let pageCount = 0;
       
-      const vehicles = response.data.listVehicles.items.map(vehicle => ({
+      // Iterate through all pages using pagination
+      do {
+        pageCount++;
+        console.log(`Fetching vehicles without devices - Page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
+        
+        const response = await client.graphql({
+          query: `query ListVehiclesWithoutDevices($nextToken: String) {
+            listVehicles(
+              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+              nextToken: $nextToken
+              limit: 1000
+            ) {
+              items {
+                companyVehiclesId
+                device {
+                  cid
+                  name
+                  protocolId
+                  sim
+                  imei
+                  flespi_id
+                  device_type_id
+                }
+                immatriculation
+                immat
+                company {
+                  name
+                }
+                vehicleDeviceImei
+              }
+              nextToken
+            }
+          }`,
+          variables: { nextToken }
+        });
+        
+        const pageVehicles = response.data.listVehicles.items;
+        allVehicles = allVehicles.concat(pageVehicles);
+        nextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles without devices fetched, Total so far: ${allVehicles.length}`);
+        
+      } while (nextToken);
+      
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles without devices ===`);
+      
+      const vehicles = allVehicles.map(vehicle => ({
         ...vehicle,
         id: vehicle.immat || vehicle.immatriculation,
         entreprise: vehicle.company?.name || "Non définie",
@@ -209,44 +230,64 @@ export const fetchVehiclesWithoutDevices = async () => {
 };
 
 /**
- * OPTIMIZED: Get vehicles with empty IMEI with primary/fallback system
+ * OPTIMIZED: Get vehicles with empty IMEI with primary/fallback system and complete pagination
  */
 export const fetchVehiclesWithEmptyImei = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI (USING WORKING FILTER) ===');
+    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI WITH COMPLETE PAGINATION ===');
     
     try {
-      // Use the same working filter as fetchVehiclesWithoutDevices
-      const response = await client.graphql({
-        query: `query GetVehiclesWithEmptyImei {
-          listVehicles(
-            filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
-            limit: 10000
-          ) {
-            items {
-              companyVehiclesId
-              device {
-                cid
-                name
-                protocolId
-                sim
-                imei
-                flespi_id
-                device_type_id
+      let allVehicles = [];
+      let nextToken = null;
+      let pageCount = 0;
+      
+      // Iterate through all pages using pagination
+      do {
+        pageCount++;
+        console.log(`Fetching vehicles with empty IMEI - Page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
+        
+        const response = await client.graphql({
+          query: `query GetVehiclesWithEmptyImei($nextToken: String) {
+            listVehicles(
+              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+              nextToken: $nextToken
+              limit: 1000
+            ) {
+              items {
+                companyVehiclesId
+                device {
+                  cid
+                  name
+                  protocolId
+                  sim
+                  imei
+                  flespi_id
+                  device_type_id
+                }
+                immatriculation
+                immat
+                company {
+                  name
+                }
+                vehicleDeviceImei
               }
-              immatriculation
-              immat
-              company {
-                name
-              }
-              vehicleDeviceImei
+              nextToken
             }
-            nextToken
-          }
-        }`
-      });
+          }`,
+          variables: { nextToken }
+        });
 
-      const vehicles = response.data.listVehicles.items.map(vehicle => ({
+        const pageVehicles = response.data.listVehicles.items;
+        allVehicles = allVehicles.concat(pageVehicles);
+        nextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles with empty IMEI fetched, Total so far: ${allVehicles.length}`);
+        
+      } while (nextToken);
+
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles with empty IMEI ===`);
+
+      const vehicles = allVehicles.map(vehicle => ({
         ...vehicle,
         id: vehicle.immat || vehicle.immatriculation,
         entreprise: vehicle.company?.name || "Non définie",
@@ -264,7 +305,7 @@ export const fetchVehiclesWithEmptyImei = async () => {
         isAssociated: false
       }));
       
-      console.log('=== WORKING FILTER SUCCESS ===');
+      console.log('=== WORKING FILTER SUCCESS WITH COMPLETE PAGINATION ===');
       console.log('Total vehicles with empty IMEI found:', vehicles.length);
       
       return vehicles;
