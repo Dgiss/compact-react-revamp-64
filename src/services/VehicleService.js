@@ -116,7 +116,6 @@ export const fetchAllVehiclesOptimized = async () => {
         } catch (pageError) {
           console.error(`❌ Erreur page ${pageCount}:`, pageError?.message || 'Message undefined');
           console.error('Type erreur:', typeof pageError);
-          console.error('Erreur complète:', pageError);
           
           // Extraire les détails de l'erreur GraphQL si disponible
           if (pageError?.errors) {
@@ -126,23 +125,23 @@ export const fetchAllVehiclesOptimized = async () => {
             });
           }
           
-          // Si on a des données partielles, les utiliser quand même
+          // RÉCUPÉRER LES DONNÉES PARTIELLES (c'est ça le point clé !)
           if (pageError?.data?.listVehicles?.items) {
-            console.log(`💾 Récupération données partielles page ${pageCount}...`);
+            console.log(`💾 RÉCUPÉRATION données partielles page ${pageCount}...`);
             const partialVehicles = pageError.data.listVehicles.items || [];
             allVehicles = allVehicles.concat(partialVehicles);
             nextToken = pageError.data.listVehicles.nextToken;
             
-            console.log(`✅ Page ${pageCount} (partielle): ${partialVehicles.length} véhicules`);
-            console.log(`Total actuel: ${allVehicles.length} véhicules`);
-            console.log(`NextToken pour continuer: ${nextToken ? 'OUI' : 'NON'}`);
+            console.log(`✅ Page ${pageCount} (avec erreurs mais données récupérées): ${partialVehicles.length} véhicules`);
+            console.log(`📈 NOUVEAU TOTAL: ${allVehicles.length} véhicules`);
+            console.log(`🔄 NextToken pour page ${pageCount + 1}: ${nextToken ? 'OUI - ON CONTINUE' : 'NON - FINI'}`);
             
-            // Continuer la pagination avec les données partielles
-            continue;
+            // CONTINUER la pagination avec les données partielles
+            // N'utilisez PAS break ici !
+          } else {
+            console.error(`❌ Pas de données récupérables page ${pageCount}, arrêt pagination`);
+            break;
           }
-          
-          console.error(`❌ Pas de données récupérables page ${pageCount}, arrêt pagination`);
-          break;
         }
       }
 
