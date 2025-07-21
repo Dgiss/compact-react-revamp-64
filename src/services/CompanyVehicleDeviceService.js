@@ -50,26 +50,80 @@ export const searchCompaniesReal = async (searchTerm) => {
         }));
       }
 
-      // Recherche avec filtres multiples pour améliorer les résultats
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      const upperSearchTerm = searchTerm.toUpperCase();
-      const capitalizedSearchTerm = searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase();
+      console.log(`🔍 Recherche d'entreprise avec le terme: "${searchTerm}"`);
       
-      const response = await client.graphql({
+      // Recherche d'abord avec le terme exact
+      let response = await client.graphql({
         query: queries.listCompanies,
         variables: {
           filter: {
-            or: [
-              { name: { contains: searchTerm } },        // Recherche exacte
-              { name: { contains: lowerSearchTerm } },   // Minuscules
-              { name: { contains: upperSearchTerm } },   // Majuscules
-              { name: { contains: capitalizedSearchTerm } }, // Première lettre majuscule
-              { siret: { contains: searchTerm } }        // Recherche par SIRET aussi
-            ]
+            name: { contains: searchTerm }
           },
-          limit: 20
+          limit: 50
         }
       });
+
+      let companies = response.data.listCompanies.items;
+      console.log(`📋 Première recherche: ${companies.length} entreprises trouvées`);
+
+      // Si aucun résultat avec le terme exact, essayer une recherche plus large
+      if (companies.length === 0) {
+        console.log(`🔄 Aucun résultat trouvé, recherche élargie...`);
+        
+        const searchVariations = [
+          searchTerm.toLowerCase(),
+          searchTerm.toUpperCase(),
+          searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase()
+        ];
+
+        for (const variation of searchVariations) {
+          if (companies.length > 0) break;
+          
+          console.log(`🔍 Essai avec: "${variation}"`);
+          response = await client.graphql({
+            query: queries.listCompanies,
+            variables: {
+              filter: {
+                name: { contains: variation }
+              },
+              limit: 50
+            }
+          });
+          
+          companies = response.data.listCompanies.items;
+          console.log(`📋 Résultats pour "${variation}": ${companies.length} entreprises`);
+        }
+      }
+
+      // Si toujours aucun résultat, chercher dans toutes les entreprises
+      if (companies.length === 0) {
+        console.log(`🔄 Recherche globale dans toutes les entreprises...`);
+        response = await client.graphql({
+          query: queries.listCompanies,
+          variables: { limit: 1000 }
+        });
+        
+        const allCompanies = response.data.listCompanies.items;
+        console.log(`📊 Total d'entreprises dans la base: ${allCompanies.length}`);
+        
+        // Filtrer manuellement avec une recherche plus flexible
+        const searchLower = searchTerm.toLowerCase();
+        companies = allCompanies.filter(company => 
+          company.name && (
+            company.name.toLowerCase().includes(searchLower) ||
+            (company.siret && company.siret.includes(searchTerm))
+          )
+        );
+        
+        console.log(`📋 Recherche manuelle: ${companies.length} entreprises trouvées`);
+        
+        // Log des premières entreprises pour debug
+        if (allCompanies.length > 0) {
+          console.log(`🏢 Exemples d'entreprises en base:`, 
+            allCompanies.slice(0, 5).map(c => c.name)
+          );
+        }
+      }
       
       const companies = response.data.listCompanies.items.map(company => ({
         id: company.id,
