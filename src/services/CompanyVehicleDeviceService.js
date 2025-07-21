@@ -139,97 +139,6 @@ export const filterByCompanyLocal = (devices, company, companies) => {
 };
 
 /**
- * OPTIMIZED: Get vehicles without devices using working filter with complete pagination
- */
-export const fetchVehiclesWithoutDevices = async () => {
-  return await withCredentialRetry(async () => {
-    console.log('=== FETCHING VEHICLES WITHOUT DEVICES WITH COMPLETE PAGINATION ===');
-    
-    try {
-      let allVehicles = [];
-      let nextToken = null;
-      let pageCount = 0;
-      
-      // Iterate through all pages using pagination
-      do {
-        pageCount++;
-        console.log(`Fetching vehicles without devices - Page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
-        
-        const response = await client.graphql({
-          query: `query ListVehiclesWithoutDevices($nextToken: String) {
-            listVehicles(
-              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
-              nextToken: $nextToken
-              limit: 1000
-            ) {
-              items {
-                companyVehiclesId
-                device {
-                  cid
-                  name
-                  protocolId
-                  sim
-                  imei
-                  flespi_id
-                  device_type_id
-                }
-                immatriculation
-                immat
-                company {
-                  name
-                }
-                vehicleDeviceImei
-              }
-              nextToken
-            }
-          }`,
-          variables: { nextToken }
-        });
-        
-        const pageVehicles = response.data.listVehicles.items;
-        allVehicles = allVehicles.concat(pageVehicles);
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles without devices fetched, Total so far: ${allVehicles.length}`);
-        
-      } while (nextToken);
-      
-      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles without devices ===`);
-      
-      const vehicles = allVehicles.map(vehicle => ({
-        ...vehicle,
-        id: vehicle.immat || vehicle.immatriculation,
-        entreprise: vehicle.company?.name || "Non définie",
-        type: "vehicle",
-        immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        nomVehicule: vehicle.device?.name || "",
-        imei: "", // Empty by definition since these are vehicles without devices
-        typeBoitier: "",
-        marque: "",
-        modele: "",
-        kilometrage: "",
-        telephone: "",
-        emplacement: "",
-        deviceData: null,
-        isAssociated: false
-      }));
-      
-      console.log('Vehicles without devices found:', vehicles.length);
-      console.log('Sample vehicles:', vehicles.slice(0, 3).map(v => ({
-        immat: v.immatriculation,
-        company: v.entreprise,
-        vehicleDeviceImei: v.vehicleDeviceImei
-      })));
-      
-      return vehicles;
-    } catch (error) {
-      console.error('Error fetching vehicles without devices:', error);
-      throw error;
-    }
-  });
-};
-
-/**
  * OPTIMIZED: Get vehicles with empty IMEI with primary/fallback system and complete pagination
  */
 export const fetchVehiclesWithEmptyImei = async () => {
@@ -240,6 +149,9 @@ export const fetchVehiclesWithEmptyImei = async () => {
       let allVehicles = [];
       let nextToken = null;
       let pageCount = 0;
+      let totalNullItems = 0;
+      let totalInvalidItems = 0;
+      let totalNullCompanies = 0;
       
       // Iterate through all pages using pagination
       do {
@@ -277,15 +189,45 @@ export const fetchVehiclesWithEmptyImei = async () => {
           variables: { nextToken }
         });
 
-        const pageVehicles = response.data.listVehicles.items;
-        allVehicles = allVehicles.concat(pageVehicles);
+        const rawItems = response.data.listVehicles.items;
+        console.log(`Page ${pageCount}: ${rawItems.length} raw items received`);
+
+        // STEP 1: Filter out null items and validate data
+        const validVehicles = rawItems.filter(vehicle => {
+          if (vehicle === null || vehicle === undefined) {
+            console.warn('Filtered out null/undefined vehicle item');
+            totalNullItems++;
+            return false;
+          }
+          
+          // Filter out vehicles with null company (this is the main issue)
+          if (!vehicle.company) {
+            console.warn('Filtered out vehicle with null company:', vehicle);
+            totalNullCompanies++;
+            return false;
+          }
+          
+          // Validate that vehicle has either immat or immatriculation
+          if (!vehicle.immat && !vehicle.immatriculation) {
+            console.warn('Filtered out vehicle with no immat/immatriculation:', vehicle);
+            totalInvalidItems++;
+            return false;
+          }
+          
+          return true;
+        });
+
+        console.log(`Page ${pageCount}: ${validVehicles.length} valid vehicles after filtering (${totalNullItems} null, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid)`);
+        
+        allVehicles = allVehicles.concat(validVehicles);
         nextToken = response.data.listVehicles.nextToken;
         
-        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles with empty IMEI fetched, Total so far: ${allVehicles.length}`);
+        console.log(`Page ${pageCount}: ${validVehicles.length} vehicles added, Total so far: ${allVehicles.length}`);
         
       } while (nextToken);
 
-      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles with empty IMEI ===`);
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total valid vehicles with empty IMEI ===`);
+      console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid items ===`);
 
       const vehicles = allVehicles.map(vehicle => ({
         ...vehicle,
@@ -307,13 +249,152 @@ export const fetchVehiclesWithEmptyImei = async () => {
       
       console.log('=== WORKING FILTER SUCCESS WITH COMPLETE PAGINATION ===');
       console.log('Total vehicles with empty IMEI found:', vehicles.length);
+      console.log('Total items filtered out:', totalNullItems + totalNullCompanies + totalInvalidItems);
       
       return vehicles;
       
     } catch (error) {
       console.error('=== ERROR WITH WORKING FILTER ===');
       console.error('Error details:', error);
-      throw new Error(`Erreur lors de la récupération des véhicules sans IMEI: ${error.message}`);
+      // STEP 2: Improved error handling - preserve original error details
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+      console.error('Original error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        graphQLErrors: error?.errors
+      });
+      throw new Error(`Erreur lors de la récupération des véhicules sans IMEI: ${errorMessage}`);
+    }
+  });
+};
+
+/**
+ * OPTIMIZED: Get vehicles without devices using working filter with complete pagination
+ */
+export const fetchVehiclesWithoutDevices = async () => {
+  return await withCredentialRetry(async () => {
+    console.log('=== FETCHING VEHICLES WITHOUT DEVICES WITH COMPLETE PAGINATION ===');
+    
+    try {
+      let allVehicles = [];
+      let nextToken = null;
+      let pageCount = 0;
+      let totalNullItems = 0;
+      let totalInvalidItems = 0;
+      let totalNullCompanies = 0;
+      
+      // Iterate through all pages using pagination
+      do {
+        pageCount++;
+        console.log(`Fetching vehicles without devices - Page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
+        
+        const response = await client.graphql({
+          query: `query ListVehiclesWithoutDevices($nextToken: String) {
+            listVehicles(
+              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+              nextToken: $nextToken
+              limit: 1000
+            ) {
+              items {
+                companyVehiclesId
+                device {
+                  cid
+                  name
+                  protocolId
+                  sim
+                  imei
+                  flespi_id
+                  device_type_id
+                }
+                immatriculation
+                immat
+                company {
+                  name
+                }
+                vehicleDeviceImei
+              }
+              nextToken
+            }
+          }`,
+          variables: { nextToken }
+        });
+        
+        const rawItems = response.data.listVehicles.items;
+        console.log(`Page ${pageCount}: ${rawItems.length} raw items received`);
+
+        // STEP 1: Filter out null items and validate data
+        const validVehicles = rawItems.filter(vehicle => {
+          if (vehicle === null || vehicle === undefined) {
+            console.warn('Filtered out null/undefined vehicle item');
+            totalNullItems++;
+            return false;
+          }
+          
+          // Filter out vehicles with null company
+          if (!vehicle.company) {
+            console.warn('Filtered out vehicle with null company:', vehicle);
+            totalNullCompanies++;
+            return false;
+          }
+          
+          // Validate that vehicle has either immat or immatriculation
+          if (!vehicle.immat && !vehicle.immatriculation) {
+            console.warn('Filtered out vehicle with no immat/immatriculation:', vehicle);
+            totalInvalidItems++;
+            return false;
+          }
+          
+          return true;
+        });
+
+        console.log(`Page ${pageCount}: ${validVehicles.length} valid vehicles after filtering (${totalNullItems} null, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid)`);
+        
+        allVehicles = allVehicles.concat(validVehicles);
+        nextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`Page ${pageCount}: ${validVehicles.length} vehicles without devices added, Total so far: ${allVehicles.length}`);
+        
+      } while (nextToken);
+      
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles without devices ===`);
+      console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid items ===`);
+      
+      const vehicles = allVehicles.map(vehicle => ({
+        ...vehicle,
+        id: vehicle.immat || vehicle.immatriculation,
+        entreprise: vehicle.company?.name || "Non définie",
+        type: "vehicle",
+        immatriculation: vehicle.immat || vehicle.immatriculation || "",
+        nomVehicule: vehicle.device?.name || "",
+        imei: "", // Empty by definition since these are vehicles without devices
+        typeBoitier: "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: "",
+        emplacement: "",
+        deviceData: null,
+        isAssociated: false
+      }));
+      
+      console.log('Vehicles without devices found:', vehicles.length);
+      console.log('Sample vehicles:', vehicles.slice(0, 3).map(v => ({
+        immat: v.immatriculation,
+        company: v.entreprise,
+        vehicleDeviceImei: v.vehicleDeviceImei
+      })));
+      
+      return vehicles;
+    } catch (error) {
+      console.error('Error fetching vehicles without devices:', error);
+      // Improved error handling
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+      console.error('Original error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        graphQLErrors: error?.errors
+      });
+      throw new Error(`Erreur lors de la récupération des véhicules sans devices: ${errorMessage}`);
     }
   });
 };
