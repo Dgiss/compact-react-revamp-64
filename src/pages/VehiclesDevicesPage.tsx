@@ -17,7 +17,6 @@ import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehicleService";
 import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
-
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -508,7 +507,7 @@ export default function VehiclesDevicesPage() {
   const handleAssociate = item => {
     console.log('=== HANDLE ASSOCIATE ===');
     console.log('Item to associate:', item);
-    
+
     // Can associate either a device to a vehicle or a vehicle to a device
     if (item.type === "device") {
       console.log('Associating device to vehicle mode');
@@ -603,7 +602,6 @@ export default function VehiclesDevicesPage() {
         </Button>
       </div>
     </div>;
-  
   if (loading) {
     return <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -659,7 +657,6 @@ export default function VehiclesDevicesPage() {
         </Dialog>
       </div>;
   }
-  
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
@@ -700,7 +697,7 @@ export default function VehiclesDevicesPage() {
           <CompanySearchSelect value={searchEntreprise} onValueChange={setSearchEntreprise} placeholder="Rechercher par entreprise..." searchFunction={searchCompaniesReal} disabled={searchVehiclesWithoutImei} />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Filtres spéciaux</label>
+          
           <div className="flex items-center space-x-2">
             <input type="checkbox" id="vehiclesWithoutImei" checked={searchVehiclesWithoutImei} onChange={e => {
             setSearchVehiclesWithoutImei(e.target.checked);
@@ -710,9 +707,7 @@ export default function VehiclesDevicesPage() {
               setSearchEntreprise('');
             }
           }} className="h-4 w-4" />
-            <label htmlFor="vehiclesWithoutImei" className="text-sm">
-              Véhicules sans IMEI
-            </label>
+            
           </div>
         </div>
         <div className="flex items-end gap-2">
@@ -782,10 +777,7 @@ export default function VehiclesDevicesPage() {
           
           <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un Véhicule
-              </Button>
+              
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
@@ -800,10 +792,7 @@ export default function VehiclesDevicesPage() {
           
           <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
             <DialogTrigger asChild>
-              <Button>
-                <Car className="h-4 w-4 mr-2" />
-                Créer Device + Véhicule
-              </Button>
+              
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <AddDeviceWithVehicleForm onClose={() => setShowAddDeviceWithVehicleDialog(false)} onSuccess={devices => {
@@ -820,10 +809,7 @@ export default function VehiclesDevicesPage() {
 
           <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Importer des Boîtiers
-              </Button>
+              
             </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
