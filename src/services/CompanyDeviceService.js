@@ -326,32 +326,72 @@ export const getUnassignedDevices = async () => {
   try {
     console.log('=== GETTING UNASSIGNED DEVICES ===');
     
-    // Get all devices
-    const devicesResponse = await client.graphql({
-      query: queries.listDevices
-    });
+    // Get all devices with error handling
+    console.log('Fetching all devices...');
+    let devicesResponse;
+    try {
+      devicesResponse = await client.graphql({
+        query: queries.listDevices,
+        variables: {
+          limit: 1000 // Get more devices at once
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching devices:', error);
+      if (error.message && error.message.includes('Body must be a string')) {
+        console.error('GraphQL query formatting error - listDevices query may be malformed');
+        throw new Error('Erreur de format GraphQL pour listDevices - veuillez vérifier la requête');
+      }
+      throw error;
+    }
     
     const allDevices = devicesResponse.data?.listDevices?.items || [];
     console.log('Total devices found:', allDevices.length);
     
-    // Get all active company device associations
-    const associationsResponse = await client.graphql({
-      query: queries.listCompanyDevices,
-      variables: {
-        filter: {
-          isActive: { eq: true }
+    // Get all active company device associations with error handling
+    console.log('Fetching company device associations...');
+    let associationsResponse;
+    try {
+      associationsResponse = await client.graphql({
+        query: queries.listCompanyDevices,
+        variables: {
+          filter: {
+            isActive: { eq: true }
+          },
+          limit: 1000
         }
+      });
+    } catch (error) {
+      console.error('Error fetching company device associations:', error);
+      if (error.message && error.message.includes('Body must be a string')) {
+        console.error('GraphQL query formatting error - listCompanyDevices query may be malformed');
+        throw new Error('Erreur de format GraphQL pour listCompanyDevices - veuillez vérifier la requête');
       }
-    });
+      throw error;
+    }
     
     const activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
     const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
     console.log('Company associated devices:', Array.from(companyAssociatedImeis));
     
-    // Get all vehicles to check for vehicleDeviceImei associations
-    const vehiclesResponse = await client.graphql({
-      query: queries.listVehicles
-    });
+    // Get all vehicles to check for vehicleDeviceImei associations with error handling
+    console.log('Fetching all vehicles...');
+    let vehiclesResponse;
+    try {
+      vehiclesResponse = await client.graphql({
+        query: queries.listVehicles,
+        variables: {
+          limit: 1000 // Get more vehicles at once
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      if (error.message && error.message.includes('Body must be a string')) {
+        console.error('GraphQL query formatting error - listVehicles query may be malformed');
+        throw new Error('Erreur de format GraphQL pour listVehicles - veuillez vérifier la requête');
+      }
+      throw error;
+    }
     
     const allVehicles = vehiclesResponse.data?.listVehicles?.items || [];
     const vehicleAssociatedImeis = new Set(

@@ -5051,7 +5051,76 @@ export const listDevices = /* GraphQL */ `
             createdAt
             updatedAt
             __typename
-          }
+  }
+`;
+export const listCompanyDevices = /* GraphQL */ `
+  query ListCompanyDevices(
+    $id: ID
+    $filter: ModelCompanyDeviceFilterInput
+    $limit: Int
+    $nextToken: String
+    $sortDirection: ModelSortDirection
+  ) {
+    listCompanyDevices(
+      id: $id
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+      sortDirection: $sortDirection
+    ) {
+      items {
+        id
+        companyID
+        deviceIMEI
+        associationDate
+        dissociationDate
+        isActive
+        company {
+          id
+          name
+          siret
+          address
+          postalCode
+          city
+          countryCode
+          contact
+          email
+          mobile
+          phone
+          fax
+          creationDate
+          subscriptionDate
+          keyedStart
+          createdAt
+          updatedAt
+          __typename
+        }
+        device {
+          imei
+          protocolId
+          sim
+          messages_ttl
+          device_type_id
+          flespi_id
+          enabled
+          media_ttl
+          name
+          cid
+          media_rotate
+          messages_rotate
+          createdAt
+          updatedAt
+          deviceVehicleImei
+          __typename
+        }
+        createdAt
+        updatedAt
+        __typename
+      }
+      nextToken
+      __typename
+    }
+  }
           device {
             imei
             protocolId
