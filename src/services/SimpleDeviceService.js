@@ -38,7 +38,7 @@ export const checkImeiAvailable = async (imei) => {
  */
 export const createDeviceSimple = async (deviceData) => {
   return await withCredentialRetry(async () => {
-    console.log('=== CREATING DEVICE SIMPLE ===');
+    console.log('=== CREATING DEVICE SIMPLE (NO ASSOCIATION) ===');
     console.log('Device data:', deviceData);
     
     // Validate required fields
@@ -62,7 +62,6 @@ export const createDeviceSimple = async (deviceData) => {
       imei: String(deviceData.imei),
       sim: deviceData.sim ? String(deviceData.sim) : undefined,
       protocolId: deviceData.protocolId ? Number(deviceData.protocolId) : undefined,
-      name: deviceData.name ? String(deviceData.name) : undefined,
       enabled: deviceData.enabled !== undefined ? Boolean(deviceData.enabled) : true
     };
     
@@ -82,7 +81,7 @@ export const createDeviceSimple = async (deviceData) => {
       });
       
       const createdDevice = dbResult.data.createDevice;
-      console.log('Device created in database:', createdDevice);
+      console.log('✅ Device created successfully:', createdDevice.imei);
       
       // Step 3: Create in Flespi (optional, don't fail if it doesn't work)
       try {
@@ -234,3 +233,12 @@ export const associateDeviceToVehicleSimple = async (vehicleImmat, deviceImei) =
     }
   });
 };
+
+// Default export for the service
+const SimpleDeviceService = {
+  checkImeiAvailable,
+  createDeviceSimple,
+  associateDeviceToVehicleSimple
+};
+
+export default SimpleDeviceService;

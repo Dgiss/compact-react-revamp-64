@@ -6,7 +6,7 @@ import { DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
-import { createDeviceSimple, checkImeiAvailable } from "@/services/SimpleDeviceService";
+import SimpleDeviceService from "@/services/SimpleDeviceService";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { toast } from "@/components/ui/use-toast";
 
@@ -123,12 +123,12 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       let deviceCreated = false;
       let finalImei = "";
       
-      // Step 1: Create device FIRST if needed
+      // ÉTAPE 1: Créer le device AVANT le véhicule si nécessaire
       if (imei && !isEditing && shouldCreateDevice) {
         try {
           console.log('🔧 Step 1: Creating/checking device before vehicle creation...');
           
-          const isAvailable = await checkImeiAvailable(imei);
+          const isAvailable = await SimpleDeviceService.checkImeiAvailable(imei);
           if (!isAvailable) {
             console.log('📱 Device already exists, will be associated to vehicle');
             toast({
@@ -141,11 +141,10 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
             console.log('🆕 Creating new device...');
             const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || null : null;
             
-            const createdDevice = await createDeviceSimple({
+            const createdDevice = await SimpleDeviceService.createDeviceSimple({
               imei: imei,
               sim: sim || null,
-              protocolId: protocolIdNumber,
-              name: `Device ${imei}`
+              protocolId: protocolIdNumber
             });
             
             deviceCreated = true;
