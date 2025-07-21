@@ -296,7 +296,7 @@ export const fetchVehiclesWithoutDevices = async () => {
               nextToken: $nextToken
               limit: 1000
             ) {
-              items {
+               items {
                 companyVehiclesId
                 device {
                   cid
@@ -309,9 +309,8 @@ export const fetchVehiclesWithoutDevices = async () => {
                 }
                 immatriculation
                 immat
-                companyVehiclesId
                 vehicleDeviceImei
-              }
+               }
               nextToken
             }
           }`,
