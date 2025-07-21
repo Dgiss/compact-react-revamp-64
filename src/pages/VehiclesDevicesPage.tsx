@@ -50,7 +50,7 @@ export default function VehiclesDevicesPage() {
   // Dialog states
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [associationMode, setAssociationMode] = useState('vehicle-device');
+  const [associationMode, setAssociationMode] = useState<'vehicle-device' | 'company-device'>('vehicle-device');
   const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
