@@ -178,6 +178,9 @@ export const fetchVehiclesWithEmptyImei = async () => {
                 }
                 immatriculation
                 immat
+                company {
+                  name
+                }
                 vehicleDeviceImei
               }
               nextToken
@@ -298,6 +301,9 @@ export const fetchVehiclesWithoutDevices = async () => {
                 }
                 immatriculation
                 immat
+                company {
+                  name
+                }
                 vehicleDeviceImei
               }
               nextToken
