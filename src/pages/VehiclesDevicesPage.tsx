@@ -8,7 +8,7 @@ import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
 import AddDeviceWithVehicleForm from "@/components/forms/AddDeviceWithVehicleForm";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice.jsx";
@@ -17,6 +17,7 @@ import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehicleService";
 import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
+
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -49,7 +50,7 @@ export default function VehiclesDevicesPage() {
   // Dialog states
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
-  const [associationMode, setAssociationMode] = useState<'vehicle-device' | 'company-device'>('vehicle-device');
+  const [associationMode, setAssociationMode] = useState('vehicle-device');
   const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
@@ -66,8 +67,6 @@ export default function VehiclesDevicesPage() {
   // Multi-selection for dissociation
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
-
-  // No longer auto-load data on mount - wait for user action
 
   // OPTIMIZED: Search vehicles with empty IMEI - no cache loading needed
   const searchVehiclesWithEmptyImeiOptimized = async () => {
@@ -575,11 +574,11 @@ export default function VehiclesDevicesPage() {
           </div>
         </Button>
 
-        <Button onClick={() => loadAllData('complete')} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
+        <Button onClick={() => loadAllData('optimized')} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Database className="h-6 w-6 mb-2" />
           <div>
-            <div className="font-medium">Charger tout</div>
-            <div className="text-sm text-muted-foreground">Voir toutes les données</div>
+            <div className="font-medium">Charger tout (Optimisé)</div>
+            <div className="text-sm text-muted-foreground">Nouvelle requête optimisée</div>
           </div>
         </Button>
       </div>
@@ -599,6 +598,7 @@ export default function VehiclesDevicesPage() {
         </Button>
       </div>
     </div>;
+  
   if (loading) {
     return <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -654,6 +654,7 @@ export default function VehiclesDevicesPage() {
         </Dialog>
       </div>;
   }
+  
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
@@ -678,6 +679,7 @@ export default function VehiclesDevicesPage() {
           </Button>
         </div>
       </div>
+      
       {/* Search Bar */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-white rounded-lg shadow">
         <div>

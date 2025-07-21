@@ -8,6 +8,138 @@ import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService
 
 const client = generateClient();
 
+/**
+ * OPTIMIZED: Fetch all vehicles with devices using single GraphQL query
+ */
+export const fetchAllVehiclesOptimized = async () => {
+  return await withCredentialRetry(async () => {
+    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES WITH SINGLE QUERY ===');
+    
+    try {
+      const response = await client.graphql({
+        query: `query OptimizedVehicleQuery {
+          listVehicles(filter: {}) {
+            items {
+              companyVehiclesId
+              device {
+                cid
+                name
+                protocolId
+                sim
+                imei
+                flespi_id
+                device_type_id
+              }
+              immatriculation
+              immat
+              company {
+                name
+              }
+              vehicleDeviceImei
+              nomVehicule
+              marque
+              modele
+              kilometerage
+              emplacement
+              AWN_nom_commercial
+              energie
+              puissanceFiscale
+              couleur
+              dateMiseEnCirculation
+              VIN
+              AWN_VIN
+            }
+          }
+        }`
+      });
+
+      const vehicles = response.data.listVehicles.items;
+      console.log('Optimized vehicles fetched:', vehicles.length);
+
+      // Map vehicles to the expected format
+      const mappedVehicles = vehicles.map(vehicle => {
+        const deviceImei = vehicle.device?.imei || vehicle.vehicleDeviceImei;
+        const isAssociated = !!deviceImei;
+
+        return {
+          ...vehicle,
+          id: vehicle.immat || vehicle.immatriculation,
+          entreprise: vehicle.company?.name || "Non définie",
+          type: "vehicle",
+          immatriculation: vehicle.immat || vehicle.immatriculation || "",
+          nomVehicule: vehicle.nomVehicule || "",
+          imei: deviceImei || "",
+          typeBoitier: vehicle.device?.protocolId?.toString() || "",
+          marque: vehicle.marque || "",
+          modele: vehicle.modele || "",
+          kilometrage: vehicle.kilometerage?.toString() || "",
+          telephone: vehicle.device?.sim || "",
+          emplacement: vehicle.emplacement || "",
+          deviceData: vehicle.device || null,
+          isAssociated,
+          // Additional fields
+          AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
+          energie: vehicle.energie || "",
+          puissanceFiscale: vehicle.puissanceFiscale || "",
+          couleur: vehicle.couleur || "",
+          dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
+          VIN: vehicle.VIN || vehicle.AWN_VIN || ""
+        };
+      });
+
+      // Get all devices to find unassociated ones
+      const allDevices = await fetchAllDevices();
+      
+      // Find devices not associated with any vehicle
+      const associatedDeviceImeis = new Set(
+        mappedVehicles
+          .map(v => v.imei)
+          .filter(Boolean)
+      );
+
+      const unassociatedDevices = allDevices
+        .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
+        .map(device => ({
+          id: device.imei,
+          entreprise: "Boîtier libre",
+          type: "device",
+          immatriculation: "",
+          nomVehicule: "",
+          imei: device.imei,
+          typeBoitier: device.protocolId?.toString() || "",
+          marque: "",
+          modele: "",
+          kilometrage: "",
+          telephone: device.sim || "",
+          emplacement: "",
+          deviceData: device,
+          isAssociated: false
+        }));
+
+      // Extract unique companies from vehicles
+      const companies = [...new Set(mappedVehicles.map(v => v.company).filter(Boolean))]
+        .map(company => ({
+          id: company.id || `company-${company.name}`,
+          name: company.name
+        }));
+
+      console.log('=== OPTIMIZED RESULT SUMMARY ===');
+      console.log('Total vehicles:', mappedVehicles.length);
+      console.log('Total unassociated devices:', unassociatedDevices.length);
+      console.log('Total companies extracted:', companies.length);
+
+      return {
+        companies,
+        vehicles: [...mappedVehicles, ...unassociatedDevices]
+      };
+
+    } catch (error) {
+      console.error('Error in optimized vehicle fetch:', error);
+      throw new Error(`Failed to fetch vehicles optimized: ${error.message}`);
+    }
+  });
+};
+
 export const fetchCompaniesWithVehicles = async () => {
   return await withCredentialRetry(async () => {
     console.log('=== FETCHING COMPANIES WITH VEHICLES ===');

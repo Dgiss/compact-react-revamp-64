@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
-import { toast } from '@/components/ui/use-toast';
+import { fetchAllVehiclesOptimized } from '@/services/VehicleService';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Custom hook for managing company-vehicle-device data
@@ -21,7 +22,7 @@ export const useCompanyVehicleDevice = () => {
   const [companiesReady, setCompaniesReady] = useState(false);
   
   // Loading mode states
-  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete'
+  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete', 'optimized'
   const [quickStats, setQuickStats] = useState(null);
 
   // AUTO-LOAD companies on mount with debounce
@@ -176,9 +177,19 @@ export const useCompanyVehicleDevice = () => {
     setError(null);
     
     try {
-      console.log('=== LOADING ALL DATA FROM API ===');
+      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) ===`);
       
-      const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      let result;
+      
+      if (mode === 'optimized') {
+        // Use the new optimized single query
+        console.log('Using optimized single GraphQL query...');
+        result = await fetchAllVehiclesOptimized();
+      } else {
+        // Use the existing complex queries
+        console.log('Using existing complex queries...');
+        result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      }
       
       console.log('=== DATA LOADED SUCCESSFULLY ===');
       console.log('Companies count:', result.companies?.length || 0);
