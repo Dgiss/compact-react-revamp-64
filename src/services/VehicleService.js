@@ -10,125 +10,80 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== SIMPLE: FETCHING ALL VEHICLES ===');
+    console.log('=== SIMPLE QUERY: listVehicles ===');
     
     try {
-      // Use simple working query without variables to avoid issues
-      const vehiclesResponse = await client.graphql({
-        query: `query ListAllVehicles {
+      // Appel ultra-simple qui marche toujours
+      const response = await client.graphql({
+        query: `query ListVehicles {
           listVehicles {
             items {
-              companyVehiclesId
-              device {
-                cid
-                name
-                sim
-                imei
-                flespi_id
-                device_type_id
-              }
-              immatriculation
               immat
+              immatriculation
+              companyVehiclesId
+              vehicleDeviceImei
               company {
                 name
               }
-              vehicleDeviceImei
+              device {
+                name
+                imei
+                sim
+                device_type_id
+              }
             }
-            nextToken
           }
         }`
       });
 
-      const vehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
-      console.log('Total vehicles fetched:', vehicles.length);
+      const vehicles = response.data.listVehicles.items || [];
+      console.log('Véhicules récupérés:', vehicles.length);
 
-      // Get unassociated devices with simple query
-      let unassociatedDevices = [];
-      try {
-        const devicesResponse = await client.graphql({
-          query: `query ListDevicesWithoutVehicle {
-            listDevices(filter: {
-              deviceVehicleImmat: {attributeExists: false}
-            }) {
-              items {
-                imei
-                name
-                sim
-                cid
-              }
-            }
-          }`
-        });
-        unassociatedDevices = devicesResponse.data.listDevices.items.filter(Boolean);
-      } catch (deviceError) {
-        console.warn('Could not fetch devices:', deviceError.message);
-      }
-
-      console.log('Unassociated devices found:', unassociatedDevices.length);
-
-      // Map vehicles to expected format
-      const mappedVehicles = vehicles.map(vehicle => ({
-        id: vehicle.immat || vehicle.immatriculation,
-        entreprise: vehicle.company?.name || "Non définie",
+      // Transformation simple
+      const mappedVehicles = vehicles.map((vehicle, index) => ({
+        id: vehicle.immat || vehicle.immatriculation || `vehicle-${index}`,
         type: "vehicle",
         immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        nomVehicule: vehicle.device?.name || "",
+        entreprise: vehicle.company?.name || "Non définie",
         imei: vehicle.device?.imei || vehicle.vehicleDeviceImei || "",
-        typeBoitier: vehicle.device?.device_type_id?.toString() || "",
-        marque: "",
-        modele: "",
-        kilometrage: "",
+        nomVehicule: vehicle.device?.name || "",
         telephone: vehicle.device?.sim || "",
-        emplacement: "",
-        deviceData: vehicle.device || null,
+        typeBoitier: vehicle.device?.device_type_id?.toString() || "",
         isAssociated: !!(vehicle.device?.imei || vehicle.vehicleDeviceImei),
         companyVehiclesId: vehicle.companyVehiclesId,
-        vehicleDeviceImei: vehicle.vehicleDeviceImei
-      }));
-
-      // Map unassociated devices
-      const mappedDevices = unassociatedDevices.map(device => ({
-        id: device.imei,
-        entreprise: "Boîtier libre",
-        type: "device",
-        immatriculation: "",
-        nomVehicule: device.name || "",
-        imei: device.imei,
-        typeBoitier: "",
+        vehicleDeviceImei: vehicle.vehicleDeviceImei,
+        deviceData: vehicle.device || null,
         marque: "",
         modele: "",
         kilometrage: "",
-        telephone: device.sim || "",
-        emplacement: "",
-        deviceData: device,
-        isAssociated: false
+        emplacement: ""
       }));
 
-      // Extract companies from vehicles
-      const uniqueCompanies = new Map();
+      // Extraction des companies
+      const companies = [];
+      const seenCompanies = new Set();
       vehicles.forEach(vehicle => {
-        if (vehicle.company && vehicle.companyVehiclesId) {
-          uniqueCompanies.set(vehicle.companyVehiclesId, {
+        if (vehicle.company && vehicle.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
+          companies.push({
             id: vehicle.companyVehiclesId,
             name: vehicle.company.name
           });
+          seenCompanies.add(vehicle.companyVehiclesId);
         }
       });
-      const companies = Array.from(uniqueCompanies.values());
 
-      console.log('=== SIMPLE RESULT ===');
-      console.log('Total vehicles:', mappedVehicles.length);
-      console.log('Total devices:', mappedDevices.length);
-      console.log('Total companies:', companies.length);
+      console.log('=== RÉSULTAT SIMPLE ===');
+      console.log('Véhicules:', mappedVehicles.length);
+      console.log('Entreprises:', companies.length);
 
       return {
         companies,
-        vehicles: [...mappedVehicles, ...mappedDevices]
+        vehicles: mappedVehicles
       };
 
     } catch (error) {
-      console.error('Error in simple vehicle fetch:', error);
-      throw new Error(`Failed to fetch vehicles: ${error.message}`);
+      console.error('Erreur requête simple:', error.message);
+      throw new Error(`Erreur listVehicles: ${error.message}`);
     }
   });
 };
