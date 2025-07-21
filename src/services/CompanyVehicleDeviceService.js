@@ -5,6 +5,46 @@ import { withCredentialRetry } from '@/config/aws-config.js';
 
 const client = generateClient();
 
+// ==================== PERFORMANCE OPTIMIZATIONS ====================
+// Cache pour les entreprises (TTL: 5 minutes)
+let companiesCache = null;
+let companiesCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * OPTIMIZED: Get companies with caching to avoid repeated queries
+ */
+const getCachedCompanies = async () => {
+  const now = Date.now();
+  
+  // Return cached companies if still valid
+  if (companiesCache && (now - companiesCacheTime) < CACHE_TTL) {
+    console.log('📦 Using cached companies');
+    return companiesCache;
+  }
+  
+  console.log('🔄 Fetching fresh companies');
+  const response = await client.graphql({
+    query: `query ListCompaniesOptimized {
+      listCompanies(limit: 1000) {
+        items {
+          id
+          name
+        }
+      }
+    }`
+  });
+  
+  // Create a Map for O(1) lookup instead of O(n) array.find()
+  companiesCache = new Map();
+  response.data.listCompanies.items.forEach(company => {
+    companiesCache.set(company.id, company.name);
+  });
+  
+  companiesCacheTime = now;
+  return companiesCache;
+};
+
 /**
  * Fetch companies for select components
  */
@@ -159,7 +199,7 @@ export const fetchVehiclesWithEmptyImei = async () => {
         console.log(`Fetching vehicles with empty IMEI - Page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
         
         const response = await client.graphql({
-          query: `query GetVehiclesWithEmptyImei($nextToken: String) {
+          query: `query ListVehiclesWithEmptyImeiOptimized($nextToken: String) {
             listVehicles(
               filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
               nextToken: $nextToken
@@ -167,18 +207,8 @@ export const fetchVehiclesWithEmptyImei = async () => {
             ) {
               items {
                 companyVehiclesId
-                device {
-                  cid
-                  name
-                  protocolId
-                  sim
-                  imei
-                  flespi_id
-                  device_type_id
-                }
                 immatriculation
                 immat
-                companyVehiclesId
                 vehicleDeviceImei
               }
               nextToken
@@ -220,33 +250,26 @@ export const fetchVehiclesWithEmptyImei = async () => {
       console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total valid vehicles with empty IMEI ===`);
       console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid items ===`);
 
-      // Fetch all companies to match with vehicles
-      const companiesResponse = await client.graphql({
-        query: queries.listCompanies,
-        variables: { limit: 1000 }
-      });
-      const companies = companiesResponse.data.listCompanies.items;
+      // Get cached companies Map for O(1) lookup
+      const companiesMap = await getCachedCompanies();
       
-      const vehicles = allVehicles.map(vehicle => {
-        const company = companies.find(c => c.id === vehicle.companyVehiclesId);
-        return {
-          ...vehicle,
-          id: vehicle.immat || vehicle.immatriculation,
-          entreprise: company?.name || "Non définie",
-          type: "vehicle",
-          immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.device?.name || "",
-          imei: "", // Empty by definition
-          typeBoitier: "",
-          marque: "",
-          modele: "",
-          kilometrage: "",
-          telephone: "",
-          emplacement: "",
-          deviceData: null,
-          isAssociated: false
-        };
-      });
+      const vehicles = allVehicles.map(vehicle => ({
+        ...vehicle,
+        id: vehicle.immat || vehicle.immatriculation,
+        entreprise: companiesMap.get(vehicle.companyVehiclesId) || "Non définie",
+        type: "vehicle",
+        immatriculation: vehicle.immat || vehicle.immatriculation || "",
+        nomVehicule: "",
+        imei: "", // Empty by definition
+        typeBoitier: "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: "",
+        emplacement: "",
+        deviceData: null,
+        isAssociated: false
+      }));
       
       console.log('=== WORKING FILTER SUCCESS WITH COMPLETE PAGINATION ===');
       console.log('Total vehicles with empty IMEI found:', vehicles.length);
@@ -290,27 +313,18 @@ export const fetchVehiclesWithoutDevices = async () => {
         console.log(`Fetching vehicles without devices - Page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
         
         const response = await client.graphql({
-          query: `query ListVehiclesWithoutDevices($nextToken: String) {
+          query: `query ListVehiclesWithoutDevicesOptimized($nextToken: String) {
             listVehicles(
               filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
               nextToken: $nextToken
               limit: 1000
             ) {
-               items {
+              items {
                 companyVehiclesId
-                device {
-                  cid
-                  name
-                  protocolId
-                  sim
-                  imei
-                  flespi_id
-                  device_type_id
-                }
                 immatriculation
                 immat
                 vehicleDeviceImei
-               }
+              }
               nextToken
             }
           }`,
@@ -350,33 +364,26 @@ export const fetchVehiclesWithoutDevices = async () => {
       console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles without devices ===`);
       console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid items ===`);
       
-      // Fetch all companies to match with vehicles
-      const companiesResponse = await client.graphql({
-        query: queries.listCompanies,
-        variables: { limit: 1000 }
-      });
-      const companies = companiesResponse.data.listCompanies.items;
+      // Get cached companies Map for O(1) lookup
+      const companiesMap = await getCachedCompanies();
       
-      const vehicles = allVehicles.map(vehicle => {
-        const company = companies.find(c => c.id === vehicle.companyVehiclesId);
-        return {
-          ...vehicle,
-          id: vehicle.immat || vehicle.immatriculation,
-          entreprise: company?.name || "Non définie",
-          type: "vehicle",
-          immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.device?.name || "",
-          imei: "", // Empty by definition since these are vehicles without devices
-          typeBoitier: "",
-          marque: "",
-          modele: "",
-          kilometrage: "",
-          telephone: "",
-          emplacement: "",
-          deviceData: null,
-          isAssociated: false
-        };
-      });
+      const vehicles = allVehicles.map(vehicle => ({
+        ...vehicle,
+        id: vehicle.immat || vehicle.immatriculation,
+        entreprise: companiesMap.get(vehicle.companyVehiclesId) || "Non définie",
+        type: "vehicle",
+        immatriculation: vehicle.immat || vehicle.immatriculation || "",
+        nomVehicule: "",
+        imei: "", // Empty by definition since these are vehicles without devices
+        typeBoitier: "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: "",
+        emplacement: "",
+        deviceData: null,
+        isAssociated: false
+      }));
       
       console.log('Vehicles without devices found:', vehicles.length);
       console.log('Sample vehicles:', vehicles.slice(0, 3).map(v => ({
