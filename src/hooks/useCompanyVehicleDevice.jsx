@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
-import { fetchAllVehiclesOptimized } from '@/services/VehicleService.js';
+import * as VehicleService from '@/services/VehicleService.js';
 import { toast } from '@/hooks/use-toast';
 
 /**
@@ -184,7 +184,7 @@ export const useCompanyVehicleDevice = () => {
       if (mode === 'optimized') {
         // Use the new optimized single query
         console.log('Using optimized single GraphQL query...');
-        result = await fetchAllVehiclesOptimized();
+        result = await VehicleService.fetchAllVehiclesOptimized();
       } else {
         // Use the existing complex queries
         console.log('Using existing complex queries...');
