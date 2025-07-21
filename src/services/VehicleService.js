@@ -19,6 +19,8 @@ export const fetchAllVehiclesOptimized = async () => {
       let allVehicles = [];
       let nextToken = null;
       let pageCount = 0;
+      let totalNullItems = 0;
+      let totalInvalidItems = 0;
       
       // Iterate through all pages using pagination
       do {
@@ -52,15 +54,38 @@ export const fetchAllVehiclesOptimized = async () => {
           variables: { nextToken }
         });
 
-        const pageVehicles = response.data.listVehicles.items;
-        allVehicles = allVehicles.concat(pageVehicles);
+        const rawItems = response.data.listVehicles.items;
+        console.log(`Page ${pageCount}: ${rawItems.length} raw items received`);
+
+        // STEP 1: Filter out null items and validate data
+        const validVehicles = rawItems.filter(vehicle => {
+          if (vehicle === null || vehicle === undefined) {
+            console.warn('Filtered out null/undefined vehicle item');
+            totalNullItems++;
+            return false;
+          }
+          
+          // Validate that vehicle has either immat or immatriculation
+          if (!vehicle.immat && !vehicle.immatriculation) {
+            console.warn('Filtered out vehicle with no immat/immatriculation:', vehicle);
+            totalInvalidItems++;
+            return false;
+          }
+          
+          return true;
+        });
+
+        console.log(`Page ${pageCount}: ${validVehicles.length} valid vehicles after filtering (${totalNullItems} null, ${totalInvalidItems} invalid)`);
+        
+        allVehicles = allVehicles.concat(validVehicles);
         nextToken = response.data.listVehicles.nextToken;
         
-        console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles fetched, Total so far: ${allVehicles.length}`);
+        console.log(`Page ${pageCount}: ${validVehicles.length} vehicles added, Total so far: ${allVehicles.length}`);
         
       } while (nextToken);
 
-      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles ===`);
+      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total valid vehicles ===`);
+      console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalInvalidItems} invalid items ===`);
 
       // Map vehicles to the expected format using available fields only
       const mappedVehicles = allVehicles.map(vehicle => {
@@ -130,10 +155,11 @@ export const fetchAllVehiclesOptimized = async () => {
         }));
 
       console.log('=== OPTIMIZED RESULT SUMMARY (WITH COMPLETE PAGINATION) ===');
-      console.log('Total vehicles:', mappedVehicles.length);
+      console.log('Total valid vehicles:', mappedVehicles.length);
       console.log('Total unassociated devices:', unassociatedDevices.length);
       console.log('Total companies extracted:', companies.length);
       console.log('Pages processed:', pageCount);
+      console.log('Total null/invalid items filtered:', totalNullItems + totalInvalidItems);
 
       return {
         companies,
@@ -142,7 +168,14 @@ export const fetchAllVehiclesOptimized = async () => {
 
     } catch (error) {
       console.error('Error in optimized vehicle fetch with pagination:', error);
-      throw new Error(`Failed to fetch vehicles optimized: ${error.message}`);
+      // STEP 2: Improved error handling - preserve original error details
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+      console.error('Original error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        graphQLErrors: error?.errors
+      });
+      throw new Error(`Failed to fetch vehicles optimized: ${errorMessage}`);
     }
   });
 };
