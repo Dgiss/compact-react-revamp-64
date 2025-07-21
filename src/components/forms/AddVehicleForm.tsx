@@ -121,16 +121,24 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       }
       
       let deviceCreated = false;
+      let finalImei = "";
+      
+      // Step 1: Create device FIRST if needed
       if (imei && !isEditing && shouldCreateDevice) {
         try {
+          console.log('🔧 Step 1: Creating/checking device before vehicle creation...');
+          
           const isAvailable = await checkImeiAvailable(imei);
           if (!isAvailable) {
+            console.log('📱 Device already exists, will be associated to vehicle');
             toast({
               title: "IMEI existant",
               description: `L'IMEI ${imei} existe déjà et sera associé`,
             });
             deviceCreated = true;
+            finalImei = imei;
           } else {
+            console.log('🆕 Creating new device...');
             const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || null : null;
             
             const createdDevice = await createDeviceSimple({
@@ -141,14 +149,16 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
             });
             
             deviceCreated = true;
+            finalImei = createdDevice.imei;
             
+            console.log('✅ Device created successfully:', finalImei);
             toast({
               title: "Boîtier créé",
-              description: `Boîtier ${imei} créé avec succès`,
+              description: `Boîtier ${finalImei} créé avec succès`,
             });
           }
         } catch (deviceError) {
-          console.error('Error creating device:', deviceError);
+          console.error('❌ Error creating device:', deviceError);
           
           toast({
             title: "Erreur boîtier",
@@ -172,8 +182,8 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         companyVehiclesId: String(companyId || ""),
         
         emplacement: String(emplacement || ""),
-        imei: String(imei || ""),
-        vehicleDeviceImei: String(imei || ""),
+        imei: String(finalImei || ""),
+        vehicleDeviceImei: String(finalImei || ""),
         typeBoitier: String(typeBoitier || ""),
         sim: String(sim || ""),
         telephone: String(telephone || ""),
