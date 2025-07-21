@@ -178,9 +178,6 @@ export const fetchVehiclesWithEmptyImei = async () => {
                 }
                 immatriculation
                 immat
-                company {
-                  name
-                }
                 vehicleDeviceImei
               }
               nextToken
@@ -197,13 +194,6 @@ export const fetchVehiclesWithEmptyImei = async () => {
           if (vehicle === null || vehicle === undefined) {
             console.warn('Filtered out null/undefined vehicle item');
             totalNullItems++;
-            return false;
-          }
-          
-          // Filter out vehicles with null company (this is the main issue)
-          if (!vehicle.company) {
-            console.warn('Filtered out vehicle with null company:', vehicle);
-            totalNullCompanies++;
             return false;
           }
           
@@ -308,9 +298,6 @@ export const fetchVehiclesWithoutDevices = async () => {
                 }
                 immatriculation
                 immat
-                company {
-                  name
-                }
                 vehicleDeviceImei
               }
               nextToken
@@ -327,13 +314,6 @@ export const fetchVehiclesWithoutDevices = async () => {
           if (vehicle === null || vehicle === undefined) {
             console.warn('Filtered out null/undefined vehicle item');
             totalNullItems++;
-            return false;
-          }
-          
-          // Filter out vehicles with null company
-          if (!vehicle.company) {
-            console.warn('Filtered out vehicle with null company:', vehicle);
-            totalNullCompanies++;
             return false;
           }
           
