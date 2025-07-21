@@ -484,7 +484,175 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
  */
 export const fetchVehiclesWithoutDevices = async (filter = {}) => {
   try {
-    console.log('=== FETCHING VEHICLES WITHOUT DEVICES WITH PAGINATION ===');
+    console.log('=== ÉTAPE 1: DIAGNOSTIC DÉTAILLÉ - FETCH VEHICLES WITHOUT DEVICES ===');
+    console.log('Filtre initial:', filter);
+    
+    const { generateClient } = await import('aws-amplify/api');
+    const client = generateClient();
+    
+    let allVehicles = [];
+    let nextToken = null;
+    let batchCount = 0;
+    let totalProcessed = 0;
+    
+    // ÉTAPE 2: Test avec filtre simplifié
+    const simplifiedFilter = {
+      or: [
+        { vehicleDeviceImei: { eq: null } },
+        { vehicleDeviceImei: { eq: "" } },
+        { vehicleDeviceImei: { attributeExists: false } }
+      ],
+      ...filter
+    };
+    
+    console.log('Filtre GraphQL utilisé:', JSON.stringify(simplifiedFilter, null, 2));
+    
+    do {
+      batchCount++;
+      console.log(`🔄 BATCH ${batchCount} - Début de récupération`);
+      console.log(`NextToken: ${nextToken ? nextToken.substring(0, 50) + '...' : 'null'}`);
+      
+      const startTime = Date.now();
+      
+      try {
+        const result = await client.graphql({
+          query: `query FetchVehiclesWithoutDevicesPaginated($filter: ModelVehicleFilterInput, $limit: Int, $nextToken: String) {
+            listVehicles(
+              filter: $filter
+              limit: $limit
+              nextToken: $nextToken
+            ) {
+              items {
+                companyVehiclesId
+                device {
+                  cid
+                  name
+                  protocolId
+                  sim
+                  imei
+                  flespi_id
+                  device_type_id
+                }
+                immatriculation
+                immat
+                company {
+                  name
+                }
+                vehicleDeviceImei
+                year
+                fuelType
+                nomVehicule
+                marque
+                modele
+                createdAt
+                updatedAt
+              }
+              nextToken
+            }
+          }`,
+          variables: {
+            filter: simplifiedFilter,
+            limit: 1000,
+            nextToken: nextToken
+          }
+        });
+        
+        const batchVehicles = result.data?.listVehicles?.items || [];
+        const newNextToken = result.data?.listVehicles?.nextToken;
+        
+        const endTime = Date.now();
+        console.log(`✅ BATCH ${batchCount} - Terminé en ${endTime - startTime}ms`);
+        console.log(`- Véhicules récupérés: ${batchVehicles.length}`);
+        console.log(`- Nouveau nextToken: ${newNextToken ? 'OUI' : 'NON'}`);
+        
+        // Log des détails des premiers véhicules pour diagnostic
+        if (batchVehicles.length > 0) {
+          console.log('Exemples de véhicules récupérés:');
+          batchVehicles.slice(0, 3).forEach((vehicle, index) => {
+            console.log(`  ${index + 1}. Immat: ${vehicle.immat || vehicle.immatriculation}, Company: ${vehicle.company?.name}, DeviceImei: ${vehicle.vehicleDeviceImei || 'null'}`);
+          });
+        }
+        
+        // Filtrage côté client pour plus de sécurité
+        const filteredVehicles = batchVehicles.filter(vehicle => {
+          const hasNoDevice = !vehicle.vehicleDeviceImei || 
+                             vehicle.vehicleDeviceImei === '' || 
+                             vehicle.vehicleDeviceImei === null;
+          return hasNoDevice;
+        });
+        
+        console.log(`- Véhicules sans device après filtrage client: ${filteredVehicles.length}`);
+        
+        allVehicles = allVehicles.concat(filteredVehicles);
+        totalProcessed += batchVehicles.length;
+        nextToken = newNextToken;
+        
+        console.log(`📊 PROGRESSION - Total traité: ${totalProcessed}, Total sans device: ${allVehicles.length}`);
+        
+        // Sécurité pour éviter les boucles infinies
+        if (batchCount > 50) {
+          console.warn('⚠️ SÉCURITÉ: Plus de 50 batches, arrêt forcé');
+          break;
+        }
+        
+      } catch (batchError) {
+        console.error(`❌ ERREUR BATCH ${batchCount}:`, batchError);
+        console.error('Détails de l\'erreur:', {
+          message: batchError.message,
+          graphQLErrors: batchError.errors,
+          networkError: batchError.networkError
+        });
+        throw batchError;
+      }
+      
+    } while (nextToken);
+    
+    console.log(`🎯 RÉSULTAT FINAL:`);
+    console.log(`- Nombre total de batches: ${batchCount}`);
+    console.log(`- Véhicules totaux traités: ${totalProcessed}`);
+    console.log(`- Véhicules sans device trouvés: ${allVehicles.length}`);
+    
+    // Transform to match our data structure
+    const transformedVehicles = allVehicles.map(vehicle => ({
+      ...vehicle,
+      type: 'vehicle',
+      isAssociated: false,
+      entreprise: vehicle.company?.name || 'Entreprise inconnue',
+      immatriculation: vehicle.immat || vehicle.immatriculation,
+      imei: null,
+      telephone: null,
+      nomVehicule: vehicle.nomVehicule || vehicle.device?.name || "",
+      deviceData: null,
+      vehicleDeviceImei: null // Make sure it's clearly null to show empty state
+    }));
+    
+    console.log(`✅ TRANSFORMATION TERMINÉE - ${transformedVehicles.length} véhicules prêts`);
+    
+    return transformedVehicles;
+    
+  } catch (error) {
+    console.error('💥 ERREUR GLOBALE dans fetchVehiclesWithoutDevices:', error);
+    console.error('Stack trace:', error.stack);
+    
+    // ÉTAPE 3: Fallback robuste - récupérer tous les véhicules et filtrer côté client
+    console.log('🔄 ACTIVATION DU FALLBACK - Récupération de tous les véhicules');
+    
+    try {
+      return await fetchVehiclesWithoutDevicesFallback();
+    } catch (fallbackError) {
+      console.error('💥 ÉCHEC DU FALLBACK:', fallbackError);
+      throw new Error(`Échec principal et fallback: ${error.message} | Fallback: ${fallbackError.message}`);
+    }
+  }
+};
+
+/**
+ * ÉTAPE 3: Fallback robuste - Récupère tous les véhicules et filtre côté client
+ * @returns {Promise<Array>} Array of vehicles without devices
+ */
+export const fetchVehiclesWithoutDevicesFallback = async () => {
+  try {
+    console.log('=== FALLBACK: RÉCUPÉRATION DE TOUS LES VÉHICULES ===');
     
     const { generateClient } = await import('aws-amplify/api');
     const client = generateClient();
@@ -495,44 +663,32 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
     
     do {
       batchCount++;
-      console.log(`Fetching batch ${batchCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
+      console.log(`FALLBACK BATCH ${batchCount}`);
       
       const result = await client.graphql({
-        query: `query VehiclesWithoutDevicesPaginated($filter: ModelVehicleFilterInput, $limit: Int, $nextToken: String) {
+        query: `query FetchAllVehiclesFallback($limit: Int, $nextToken: String) {
           listVehicles(
-            filter: $filter
             limit: $limit
             nextToken: $nextToken
           ) {
             items {
               companyVehiclesId
-              device {
-                cid
-                name
-                protocolId
-                sim
-                imei
-                flespi_id
-                device_type_id
-              }
               immatriculation
               immat
               company {
                 name
               }
               vehicleDeviceImei
+              nomVehicule
+              marque
+              modele
+              year
+              fuelType
             }
             nextToken
           }
         }`,
         variables: {
-          filter: {
-            or: [
-              { vehicleDeviceImei: { attributeExists: false } },
-              { vehicleDeviceImei: { eq: "" } }
-            ],
-            ...filter
-          },
           limit: 1000,
           nextToken: nextToken
         }
@@ -542,14 +698,26 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
       allVehicles = allVehicles.concat(batchVehicles);
       nextToken = result.data?.listVehicles?.nextToken;
       
-      console.log(`Batch ${batchCount}: ${batchVehicles.length} vehicles, total so far: ${allVehicles.length}`);
+      console.log(`FALLBACK BATCH ${batchCount}: ${batchVehicles.length} véhicules, total: ${allVehicles.length}`);
+      
+      if (batchCount > 50) break; // Sécurité
       
     } while (nextToken);
     
-    console.log(`✅ PAGINATION COMPLETED: Found ${allVehicles.length} vehicles without devices in ${batchCount} batches`);
+    console.log(`FALLBACK: ${allVehicles.length} véhicules totaux récupérés`);
+    
+    // Filtrage côté client
+    const vehiclesWithoutDevice = allVehicles.filter(vehicle => {
+      const hasNoDevice = !vehicle.vehicleDeviceImei || 
+                         vehicle.vehicleDeviceImei === '' || 
+                         vehicle.vehicleDeviceImei === null;
+      return hasNoDevice;
+    });
+    
+    console.log(`FALLBACK: ${vehiclesWithoutDevice.length} véhicules sans device trouvés`);
     
     // Transform to match our data structure
-    return allVehicles.map(vehicle => ({
+    return vehiclesWithoutDevice.map(vehicle => ({
       ...vehicle,
       type: 'vehicle',
       isAssociated: false,
@@ -557,14 +725,14 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
       immatriculation: vehicle.immat || vehicle.immatriculation,
       imei: null,
       telephone: null,
-      nomVehicule: vehicle.device?.name || "",
+      nomVehicule: vehicle.nomVehicule || "",
       deviceData: null,
-      vehicleDeviceImei: null // Make sure it's clearly null to show empty state
+      vehicleDeviceImei: null
     }));
     
-  } catch (error) {
-    console.error('Error fetching vehicles without devices:', error);
-    throw error;
+  } catch (fallbackError) {
+    console.error('ERREUR FALLBACK:', fallbackError);
+    throw fallbackError;
   }
 };
 
