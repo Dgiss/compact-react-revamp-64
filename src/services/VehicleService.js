@@ -10,13 +10,13 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== SIMPLE QUERY: listVehicles ===');
+    console.log('=== SIMPLE QUERY: listVehicles AVEC LIMITE ===');
     
     try {
-      // Appel ultra-simple qui marche toujours
+      // Appel simple avec limite élevée
       const response = await client.graphql({
         query: `query ListVehicles {
-          listVehicles {
+          listVehicles(limit: 10000) {
             items {
               immat
               immatriculation
@@ -32,12 +32,21 @@ export const fetchAllVehiclesOptimized = async () => {
                 device_type_id
               }
             }
+            nextToken
           }
         }`
       });
 
       const vehicles = response.data.listVehicles.items || [];
+      const hasMore = response.data.listVehicles.nextToken;
+      
       console.log('Véhicules récupérés:', vehicles.length);
+      if (hasMore) {
+        console.log('⚠️ Il y a plus de véhicules disponibles (nextToken présent)');
+        console.log('Pour récupérer TOUS les véhicules, il faut la pagination');
+      } else {
+        console.log('✅ Tous les véhicules récupérés');
+      }
 
       // Transformation simple
       const mappedVehicles = vehicles.map((vehicle, index) => ({
@@ -72,9 +81,10 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       });
 
-      console.log('=== RÉSULTAT SIMPLE ===');
+      console.log('=== RÉSULTAT AVEC LIMITE 10000 ===');
       console.log('Véhicules:', mappedVehicles.length);
       console.log('Entreprises:', companies.length);
+      console.log('NextToken présent:', !!hasMore);
 
       return {
         companies,
@@ -82,7 +92,7 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('Erreur requête simple:', error.message);
+      console.error('Erreur requête avec limite:', error.message);
       throw new Error(`Erreur listVehicles: ${error.message}`);
     }
   });
