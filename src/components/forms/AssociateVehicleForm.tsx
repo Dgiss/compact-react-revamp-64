@@ -65,7 +65,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   // SIMPLIFIED: Load vehicles when company is selected (for device to vehicle association)
   useEffect(() => {
     if (selectedCompany && isDeviceToVehicle) {
-      console.log('=== LOADING VEHICLES FOR ASSOCIATION ===');
+      console.log('=== LOADING VEHICLES FOR DEVICE-TO-VEHICLE ASSOCIATION ===');
       console.log('Company:', selectedCompany);
       loadVehiclesForCompany(selectedCompany);
     } else {
@@ -74,11 +74,11 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   }, [selectedCompany, isDeviceToVehicle]);
   
   // Load devices when component loads (for vehicle to device association)
-  // For vehicle association, we don't need to wait for company selection - load all free devices
+  // For vehicle-device association, we load ALL free devices (not tied to companies)
   useEffect(() => {
     if (isVehicleToDevice) {
-      console.log('Loading free devices for vehicle association...');
-      loadDevicesForCompany('all'); // Load all free devices
+      console.log('Loading all free devices for vehicle-device association...');
+      loadFreeDevicesForVehicleAssociation();
     }
   }, [isVehicleToDevice]);
 
@@ -121,23 +121,26 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   };
   
-  const loadDevicesForCompany = async (companyName) => {
-    console.log('Loading devices for company (vehicle-device association):', companyName);
+  // Load free devices for vehicle-device association (completely free devices)
+  const loadFreeDevicesForVehicleAssociation = async () => {
+    console.log('Loading completely free devices for vehicle-device association');
     setLoadingDevices(true);
     
     try {
-      // For vehicle-device association, load ALL free devices (not just for specific company)
+      // For vehicle-device association, get devices that are:
+      // 1. Not associated with any company (no active CompanyDevice)
+      // 2. Not associated with any vehicle (vehicleDeviceImei not used)
       const freeDevices = await CompanyDeviceService.getUnassignedDevices();
-      console.log('Free devices found for vehicle association:', freeDevices.length);
+      console.log('Completely free devices for vehicle association:', freeDevices.length);
       console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, type: d.typeBoitier })));
       setCompanyDevices(freeDevices);
       
     } catch (error) {
-      console.error('Error loading devices:', error);
+      console.error('Error loading free devices for vehicle association:', error);
       setCompanyDevices([]);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les boîtiers",
+        description: "Impossible de charger les boîtiers libres",
         variant: "destructive",
       });
     } finally {
@@ -178,10 +181,10 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     };
   });
 
-  // Generate device options (for vehicle to device association)
+  // Generate device options (for vehicle to device association - only completely free devices)
   const deviceOptions = companyDevices.map(device => ({
     value: device.imei,
-    label: `${device.imei}${device.typeBoitier ? ` (Protocol: ${device.typeBoitier})` : ''}`,
+    label: `${device.imei}${device.typeBoitier ? ` (Protocol: ${device.typeBoitier})` : ''} - Libre`,
     disabled: false
   }));
 
@@ -361,10 +364,18 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
           {isCompanyDeviceMode 
             ? "Réserver un boîtier pour une entreprise"
             : isDeviceToVehicle 
-            ? `Associer le boîtier ${device?.imei}` 
-            : `Associer un boîtier au véhicule ${device?.immatriculation || device?.immat}`
+            ? `Associer le boîtier ${device?.imei} à un véhicule` 
+            : `Associer un boîtier libre au véhicule ${device?.immatriculation || device?.immat}`
           }
         </h2>
+        <div className="text-sm text-gray-600">
+          {isCompanyDeviceMode 
+            ? "Association Boîtier ↔ Entreprise (via CompanyDevice)"
+            : isDeviceToVehicle
+            ? "Association Boîtier ↔ Véhicule (via vehicleDeviceImei)"
+            : "Association Véhicule ↔ Boîtier (via vehicleDeviceImei)"
+          }
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -430,19 +441,19 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
                 loadingDevices 
                   ? "Chargement des boîtiers libres..." 
                   : companyDevices.length === 0
-                    ? "Aucun boîtier libre disponible"
+                    ? "Aucun boîtier complètement libre disponible"
                     : "Sélectionner un boîtier libre..."
               }
               disabled={loadingDevices}
             />
             {companyDevices.length > 0 && (
               <p className="text-sm text-green-600 mt-1">
-                ✓ {companyDevices.length} boîtier(s) libre(s) disponible(s)
+                ✓ {companyDevices.length} boîtier(s) complètement libre(s) disponible(s)
               </p>
             )}
             {companyDevices.length === 0 && !loadingDevices && (
               <p className="text-sm text-orange-600 mt-1">
-                ⚠️ Aucun boîtier libre disponible pour l'association
+                ⚠️ Aucun boîtier complètement libre disponible. Les boîtiers doivent être libres (ni assignés à une entreprise, ni à un véhicule).
               </p>
             )}
           </div>
