@@ -63,7 +63,7 @@ export const fetchAllVehiclesOptimized = async () => {
       console.log(`NextToken pour suite: ${nextToken ? 'OUI' : 'NON'}`);
 
       // Pages suivantes seulement si nextToken existe
-      while (nextToken && pageCount < 20) { // Limite à 20 pages pour debug
+      while (nextToken && pageCount < 100) { // Augmenté à 100 pages pour vos 19000 véhicules
         pageCount++;
         console.log(`📄 Page ${pageCount} avec nextToken...`);
         
@@ -94,7 +94,15 @@ export const fetchAllVehiclesOptimized = async () => {
 
           if (response.errors) {
             console.error(`⚠️ Erreurs GraphQL page ${pageCount}:`, response.errors);
-            break; // Arrêter sur erreur
+            response.errors.forEach((error, i) => {
+              console.error(`Erreur GraphQL ${i + 1}:`, error.message);
+            });
+            // CONTINUER malgré les erreurs GraphQL si on a des données
+            if (!response.data?.listVehicles?.items) {
+              console.error(`❌ Pas de données page ${pageCount}, arrêt`);
+              break;
+            }
+            console.log(`⚠️ Données partielles page ${pageCount}, on continue`);
           }
 
           const pageVehicles = response.data?.listVehicles?.items || [];
@@ -103,10 +111,12 @@ export const fetchAllVehiclesOptimized = async () => {
           
           console.log(`✅ Page ${pageCount}: ${pageVehicles.length} véhicules`);
           console.log(`Total actuel: ${allVehicles.length} véhicules`);
+          console.log(`NextToken pour page ${pageCount + 1}: ${nextToken ? 'OUI' : 'NON'}`);
           
         } catch (pageError) {
-          console.error(`❌ Erreur page ${pageCount}:`, pageError.message);
+          console.error(`❌ Erreur page ${pageCount}:`, pageError.message || 'Erreur inconnue');
           console.error('Détails erreur page:', pageError);
+          console.error('On continue avec les données récupérées...');
           break; // Arrêter la pagination sur erreur
         }
       }
