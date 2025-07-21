@@ -9,127 +9,55 @@ import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService
 const client = generateClient();
 
 /**
- * OPTIMIZED: Fetch all vehicles with devices using single GraphQL query with complete pagination
+ * Fetch all vehicles (restored original functionality)
  */
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES WITH COMPLETE PAGINATION ===');
-    
     try {
-      let allVehicles = [];
-      let nextToken = null;
-      let pageCount = 0;
-      let totalNullItems = 0;
-      let totalInvalidItems = 0;
-      
-      // Iterate through all pages using pagination
-      do {
-        pageCount++;
-        console.log(`Fetching vehicles page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
-        
-        const response = await client.graphql({
-          query: `query MyQuery($nextToken: String) {
-            listVehicles(nextToken: $nextToken, limit: 1000) {
-              items {
-                companyVehiclesId
-                device {
-                  cid
-                  name
-                  protocolId
-                  sim
-                  imei
-                  flespi_id
-                  device_type_id
-                }
-                immatriculation
-                immat
-                company {
-                  name
-                }
-                vehicleDeviceImei
-              }
-              nextToken
-            }
-          }`,
-          variables: { nextToken }
+      const [vehiclesResponse, devicesResponse, companiesResponse] = await Promise.all([
+        client.graphql({
+          query: queries.listVehicles,
+          variables: { limit: 10000 }
+        }),
+        client.graphql({
+          query: queries.listDevices,
+          variables: { limit: 10000 }
+        }),
+        client.graphql({
+          query: queries.listCompanies,
+          variables: { limit: 1000 }
+        })
+      ]);
+
+      const vehicles = vehiclesResponse.data.listVehicles.items || [];
+      const devices = devicesResponse.data.listDevices.items || [];
+      const companies = companiesResponse.data.listCompanies.items || [];
+
+      // Map vehicles with their associated devices
+      const mappedVehicles = vehicles
+        .filter(vehicle => vehicle != null)
+        .map(vehicle => {
+          const company = companies.find(c => c.id === vehicle.companyVehiclesId);
+          const associatedDevice = devices.find(device => device.imei === vehicle.vehicleDeviceImei);
+          
+          return {
+            ...vehicle,
+            id: vehicle.immat || vehicle.immatriculation,
+            entreprise: company ? company.name : "Non définie",
+            type: "vehicle",
+            immatriculation: vehicle.immat || vehicle.immatriculation || "",
+            nomVehicule: vehicle.nom || "",
+            imei: vehicle.vehicleDeviceImei || "",
+            typeBoitier: associatedDevice?.protocolId?.toString() || "",
+            telephone: associatedDevice?.sim || "",
+            deviceData: associatedDevice,
+            isAssociated: !!vehicle.vehicleDeviceImei
+          };
         });
 
-        const rawItems = response.data.listVehicles.items;
-        console.log(`Page ${pageCount}: ${rawItems.length} raw items received`);
-
-        // STEP 1: Filter out null items and validate data
-        const validVehicles = rawItems.filter(vehicle => {
-          if (vehicle === null || vehicle === undefined) {
-            console.warn('Filtered out null/undefined vehicle item');
-            totalNullItems++;
-            return false;
-          }
-          
-          // Validate that vehicle has either immat or immatriculation
-          if (!vehicle.immat && !vehicle.immatriculation) {
-            console.warn('Filtered out vehicle with no immat/immatriculation:', vehicle);
-            totalInvalidItems++;
-            return false;
-          }
-          
-          return true;
-        });
-
-        console.log(`Page ${pageCount}: ${validVehicles.length} valid vehicles after filtering (${totalNullItems} null, ${totalInvalidItems} invalid)`);
-        
-        allVehicles = allVehicles.concat(validVehicles);
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Page ${pageCount}: ${validVehicles.length} vehicles added, Total so far: ${allVehicles.length}`);
-        
-      } while (nextToken);
-
-      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total valid vehicles ===`);
-      console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalInvalidItems} invalid items ===`);
-
-      // Map vehicles to the expected format using available fields only
-      const mappedVehicles = allVehicles.map(vehicle => {
-        const deviceImei = vehicle.device?.imei || vehicle.vehicleDeviceImei;
-        const isAssociated = !!deviceImei;
-
-        return {
-          ...vehicle,
-          id: vehicle.immat || vehicle.immatriculation,
-          entreprise: vehicle.company?.name || "Non définie",
-          type: "vehicle",
-          immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.device?.name || "", // Use device name as fallback
-          imei: deviceImei || "",
-          typeBoitier: vehicle.device?.protocolId?.toString() || "",
-          marque: "", // Not available in schema, set empty
-          modele: "", // Not available in schema, set empty
-          kilometrage: "", // Not available in schema, set empty
-          telephone: vehicle.device?.sim || "",
-          emplacement: "", // Not available in schema, set empty
-          deviceData: vehicle.device || null,
-          isAssociated,
-          // Additional fields - set to empty since not in schema
-          AWN_nom_commercial: "",
-          energie: "",
-          puissanceFiscale: "",
-          couleur: "",
-          dateMiseEnCirculation: "",
-          VIN: ""
-        };
-      });
-
-      // Get all devices to find unassociated ones
-      const allDevices = await fetchAllDevices();
-      
-      // Find devices not associated with any vehicle
-      const associatedDeviceImeis = new Set(
-        mappedVehicles
-          .map(v => v.imei)
-          .filter(Boolean)
-      );
-
-      const unassociatedDevices = allDevices
-        .filter(device => device.imei && !associatedDeviceImeis.has(device.imei))
+      // Map unassociated devices
+      const unassociatedDevices = devices
+        .filter(device => device != null && !device.vehicle)
         .map(device => ({
           id: device.imei,
           entreprise: "Boîtier libre",
@@ -138,44 +66,18 @@ export const fetchAllVehiclesOptimized = async () => {
           nomVehicule: "",
           imei: device.imei,
           typeBoitier: device.protocolId?.toString() || "",
-          marque: "",
-          modele: "",
-          kilometrage: "",
           telephone: device.sim || "",
-          emplacement: "",
           deviceData: device,
           isAssociated: false
         }));
-
-      // Extract unique companies from vehicles
-      const companies = [...new Set(mappedVehicles.map(v => v.company).filter(Boolean))]
-        .map(company => ({
-          id: company.id || `company-${company.name}`,
-          name: company.name
-        }));
-
-      console.log('=== OPTIMIZED RESULT SUMMARY (WITH COMPLETE PAGINATION) ===');
-      console.log('Total valid vehicles:', mappedVehicles.length);
-      console.log('Total unassociated devices:', unassociatedDevices.length);
-      console.log('Total companies extracted:', companies.length);
-      console.log('Pages processed:', pageCount);
-      console.log('Total null/invalid items filtered:', totalNullItems + totalInvalidItems);
 
       return {
         companies,
         vehicles: [...mappedVehicles, ...unassociatedDevices]
       };
-
     } catch (error) {
-      console.error('Error in optimized vehicle fetch with pagination:', error);
-      // STEP 2: Improved error handling - preserve original error details
-      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
-      console.error('Original error details:', {
-        message: error?.message,
-        stack: error?.stack,
-        graphQLErrors: error?.errors
-      });
-      throw new Error(`Failed to fetch vehicles optimized: ${errorMessage}`);
+      console.error('Error fetching all vehicles:', error);
+      throw error;
     }
   });
 };
