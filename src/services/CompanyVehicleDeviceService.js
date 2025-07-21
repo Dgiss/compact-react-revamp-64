@@ -178,9 +178,7 @@ export const fetchVehiclesWithEmptyImei = async () => {
                 }
                 immatriculation
                 immat
-                company {
-                  name
-                }
+                companyVehiclesId
                 vehicleDeviceImei
               }
               nextToken
@@ -222,23 +220,33 @@ export const fetchVehiclesWithEmptyImei = async () => {
       console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total valid vehicles with empty IMEI ===`);
       console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid items ===`);
 
-      const vehicles = allVehicles.map(vehicle => ({
-        ...vehicle,
-        id: vehicle.immat || vehicle.immatriculation,
-        entreprise: vehicle.company?.name || "Non définie",
-        type: "vehicle",
-        immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        nomVehicule: vehicle.device?.name || "",
-        imei: "", // Empty by definition
-        typeBoitier: "",
-        marque: "",
-        modele: "",
-        kilometrage: "",
-        telephone: "",
-        emplacement: "",
-        deviceData: null,
-        isAssociated: false
-      }));
+      // Fetch all companies to match with vehicles
+      const companiesResponse = await client.graphql({
+        query: queries.listCompanies,
+        variables: { limit: 1000 }
+      });
+      const companies = companiesResponse.data.listCompanies.items;
+      
+      const vehicles = allVehicles.map(vehicle => {
+        const company = companies.find(c => c.id === vehicle.companyVehiclesId);
+        return {
+          ...vehicle,
+          id: vehicle.immat || vehicle.immatriculation,
+          entreprise: company?.name || "Non définie",
+          type: "vehicle",
+          immatriculation: vehicle.immat || vehicle.immatriculation || "",
+          nomVehicule: vehicle.device?.name || "",
+          imei: "", // Empty by definition
+          typeBoitier: "",
+          marque: "",
+          modele: "",
+          kilometrage: "",
+          telephone: "",
+          emplacement: "",
+          deviceData: null,
+          isAssociated: false
+        };
+      });
       
       console.log('=== WORKING FILTER SUCCESS WITH COMPLETE PAGINATION ===');
       console.log('Total vehicles with empty IMEI found:', vehicles.length);
@@ -301,9 +309,7 @@ export const fetchVehiclesWithoutDevices = async () => {
                 }
                 immatriculation
                 immat
-                company {
-                  name
-                }
+                companyVehiclesId
                 vehicleDeviceImei
               }
               nextToken
@@ -345,23 +351,33 @@ export const fetchVehiclesWithoutDevices = async () => {
       console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles without devices ===`);
       console.log(`=== FILTERED OUT: ${totalNullItems} null items, ${totalNullCompanies} null companies, ${totalInvalidItems} invalid items ===`);
       
-      const vehicles = allVehicles.map(vehicle => ({
-        ...vehicle,
-        id: vehicle.immat || vehicle.immatriculation,
-        entreprise: vehicle.company?.name || "Non définie",
-        type: "vehicle",
-        immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        nomVehicule: vehicle.device?.name || "",
-        imei: "", // Empty by definition since these are vehicles without devices
-        typeBoitier: "",
-        marque: "",
-        modele: "",
-        kilometrage: "",
-        telephone: "",
-        emplacement: "",
-        deviceData: null,
-        isAssociated: false
-      }));
+      // Fetch all companies to match with vehicles
+      const companiesResponse = await client.graphql({
+        query: queries.listCompanies,
+        variables: { limit: 1000 }
+      });
+      const companies = companiesResponse.data.listCompanies.items;
+      
+      const vehicles = allVehicles.map(vehicle => {
+        const company = companies.find(c => c.id === vehicle.companyVehiclesId);
+        return {
+          ...vehicle,
+          id: vehicle.immat || vehicle.immatriculation,
+          entreprise: company?.name || "Non définie",
+          type: "vehicle",
+          immatriculation: vehicle.immat || vehicle.immatriculation || "",
+          nomVehicule: vehicle.device?.name || "",
+          imei: "", // Empty by definition since these are vehicles without devices
+          typeBoitier: "",
+          marque: "",
+          modele: "",
+          kilometrage: "",
+          telephone: "",
+          emplacement: "",
+          deviceData: null,
+          isAssociated: false
+        };
+      });
       
       console.log('Vehicles without devices found:', vehicles.length);
       console.log('Sample vehicles:', vehicles.slice(0, 3).map(v => ({
