@@ -48,6 +48,18 @@ export const fetchAllVehiclesOptimized = async () => {
           variables: { nextToken }
         });
 
+        // Check for GraphQL errors
+        if (vehiclesResponse.errors && vehiclesResponse.errors.length > 0) {
+          console.error('=== GRAPHQL ERRORS IN VEHICLES FETCH ===');
+          vehiclesResponse.errors.forEach((error, index) => {
+            console.error(`GraphQL Error ${index + 1}:`, error);
+            console.error('Error message:', error.message);
+            console.error('Error locations:', error.locations);
+            console.error('Error path:', error.path);
+          });
+          throw new Error(`GraphQL Error: ${vehiclesResponse.errors[0].message}`);
+        }
+
         const pageVehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
         console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles received`);
         
@@ -58,23 +70,38 @@ export const fetchAllVehiclesOptimized = async () => {
 
       console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles ===`);
 
-      // Get unassociated devices using the validated query
-      const devicesResponse = await client.graphql({
-        query: `query ListDevicesWithoutVehicle {
-          listDevices(filter: {
-            deviceVehicleImmat: {attributeExists: false}
-          }) {
-            items {
-              imei
-              name
-              sim
-              cid
+      // Get unassociated devices - simplified query to avoid errors
+      let unassociatedDevices = [];
+      try {
+        const devicesResponse = await client.graphql({
+          query: `query ListDevicesWithoutVehicle {
+            listDevices(filter: {
+              deviceVehicleImmat: {attributeExists: false}
+            }) {
+              items {
+                imei
+                name
+                sim
+                cid
+              }
             }
-          }
-        }`
-      });
+          }`
+        });
 
-      const unassociatedDevices = devicesResponse.data.listDevices.items.filter(Boolean);
+        if (devicesResponse.errors && devicesResponse.errors.length > 0) {
+          console.error('=== GRAPHQL ERRORS IN DEVICES FETCH ===');
+          devicesResponse.errors.forEach((error, index) => {
+            console.error(`Device GraphQL Error ${index + 1}:`, error);
+          });
+          // Continue without devices if there's an error
+          console.warn('Continuing without unassociated devices due to GraphQL error');
+        } else {
+          unassociatedDevices = devicesResponse.data.listDevices.items.filter(Boolean);
+        }
+      } catch (deviceError) {
+        console.error('Error fetching devices, continuing without them:', deviceError);
+      }
+
       console.log('Unassociated devices found:', unassociatedDevices.length);
 
       // Map vehicles to expected format
@@ -139,9 +166,24 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('Error in optimized vehicle fetch:', error);
-      console.error('GraphQL errors:', error.errors);
-      throw new Error(`Failed to fetch vehicles optimized: ${error.message}`);
+      console.error('=== DETAILED ERROR IN OPTIMIZED VEHICLE FETCH ===');
+      console.error('Error object:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      if (error.errors) {
+        console.error('GraphQL errors:', error.errors);
+        error.errors.forEach((gqlError, index) => {
+          console.error(`GraphQL Error ${index + 1}:`, {
+            message: gqlError.message,
+            locations: gqlError.locations,
+            path: gqlError.path,
+            extensions: gqlError.extensions
+          });
+        });
+      }
+      
+      throw new Error(`Failed to fetch vehicles optimized: ${error.message || 'Unknown GraphQL error'}`);
     }
   });
 };
