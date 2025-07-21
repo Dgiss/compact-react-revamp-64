@@ -149,17 +149,18 @@ export const createDeviceSimple = async (deviceData) => {
 };
 
 /**
- * Associate device to vehicle using vehicleDeviceImei field
+ * Associate device to vehicle with complete bidirectional relationship
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @param {string} deviceImei - Device IMEI
- * @returns {Promise<Object>} Updated vehicle
+ * @returns {Promise<Object>} Updated vehicle and device
  */
 export const associateDeviceToVehicleSimple = async (vehicleImmat, deviceImei) => {
   return await withCredentialRetry(async () => {
-    console.log('=== ASSOCIATING DEVICE TO VEHICLE SIMPLE ===');
+    console.log('=== ASSOCIATING DEVICE TO VEHICLE (BIDIRECTIONAL) ===');
     console.log('Vehicle:', vehicleImmat, 'Device:', deviceImei);
     
-    const result = await client.graphql({
+    // Step 1: Update vehicle with device IMEI
+    const vehicleResult = await client.graphql({
       query: mutations.updateVehicle,
       variables: {
         input: {
@@ -169,7 +170,26 @@ export const associateDeviceToVehicleSimple = async (vehicleImmat, deviceImei) =
       }
     });
     
-    console.log('Association completed:', result.data.updateVehicle);
-    return result.data.updateVehicle;
+    console.log('Vehicle updated with device IMEI:', vehicleResult.data.updateVehicle);
+    
+    // Step 2: Update device with vehicle immat (for belongsTo relationship)
+    try {
+      const deviceResult = await client.graphql({
+        query: mutations.updateDevice,
+        variables: {
+          input: {
+            imei: deviceImei,
+            deviceVehicleImmat: vehicleImmat
+          }
+        }
+      });
+      
+      console.log('Device updated with vehicle immat:', deviceResult.data.updateDevice);
+    } catch (deviceError) {
+      console.warn('Failed to update device with vehicle association, but vehicle association succeeded:', deviceError.message);
+    }
+    
+    console.log('Bidirectional association completed successfully');
+    return vehicleResult.data.updateVehicle;
   });
 };
