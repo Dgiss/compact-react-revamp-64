@@ -10,43 +10,38 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES - DEBUGGING MODE ===');
+    console.log('=== OPTIMIZED: FETCHING ALL VEHICLES - COMPLETE DATABASE ===');
     
     try {
-      // Test with minimal fields first to identify the issue
-      console.log('Testing basic vehicle query...');
-      
-      const testResponse = await client.graphql({
-        query: `query TestBasicVehicles {
-          listVehicles(limit: 10) {
-            items {
-              immat
-              immatriculation
-            }
-            nextToken
-          }
-        }`
-      });
-
-      console.log('Basic test successful:', testResponse.data.listVehicles.items.length, 'vehicles');
-
-      // Now try the full query
       let allVehicles = [];
       let nextToken = null;
       let pageCount = 0;
+      const startTime = Date.now();
 
+      // AGGRESSIVE PAGINATION to get EVERYTHING
       do {
         pageCount++;
-        console.log(`Fetching vehicles page ${pageCount}${nextToken ? ` (has token)` : ''}`);
+        console.log(`🔄 Fetching vehicles page ${pageCount} (Total so far: ${allVehicles.length})${nextToken ? ` (has token)` : ''}`);
         
         try {
           const vehiclesResponse = await client.graphql({
             query: `query ListAllVehicles($nextToken: String) {
-              listVehicles(nextToken: $nextToken, limit: 100) {
+              listVehicles(nextToken: $nextToken, limit: 1000) {
                 items {
                   companyVehiclesId
+                  device {
+                    cid
+                    name
+                    sim
+                    imei
+                    flespi_id
+                    device_type_id
+                  }
                   immatriculation
                   immat
+                  company {
+                    name
+                  }
                   vehicleDeviceImei
                 }
                 nextToken
@@ -55,110 +50,163 @@ export const fetchAllVehiclesOptimized = async () => {
             variables: { nextToken }
           });
 
-          // Enhanced error checking
+          // Enhanced error checking but continue with partial data
           if (vehiclesResponse.errors && vehiclesResponse.errors.length > 0) {
-            console.error('=== GRAPHQL ERRORS DETECTED ===');
+            console.warn(`⚠️ GraphQL warnings on page ${pageCount}:`);
             vehiclesResponse.errors.forEach((error, index) => {
-              console.error(`Error ${index + 1}:`, {
-                message: error.message,
-                locations: error.locations,
-                path: error.path,
-                extensions: error.extensions
-              });
+              console.warn(`Warning ${index + 1}:`, error.message);
             });
             
-            // If we have partial data, continue; otherwise throw
+            // Only throw if we have no data at all
             if (!vehiclesResponse.data || !vehiclesResponse.data.listVehicles) {
-              throw new Error(`GraphQL Error: ${vehiclesResponse.errors[0].message}`);
+              throw new Error(`Critical GraphQL Error: ${vehiclesResponse.errors[0].message}`);
             }
           }
 
           const pageVehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
-          console.log(`Page ${pageCount}: ${pageVehicles.length} vehicles received`);
+          console.log(`📊 Page ${pageCount}: ${pageVehicles.length} vehicles received`);
           
           allVehicles = allVehicles.concat(pageVehicles);
           nextToken = vehiclesResponse.data.listVehicles.nextToken;
           
+          // Progress indicator
+          if (pageCount % 5 === 0) {
+            const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`🚀 Progress: ${pageCount} pages, ${allVehicles.length} vehicles total (${elapsedTime}s)`);
+          }
+          
         } catch (pageError) {
-          console.error(`Error on page ${pageCount}:`, pageError);
+          console.error(`❌ Error on page ${pageCount}:`, pageError.message);
           if (pageError.errors) {
             pageError.errors.forEach((error, index) => {
               console.error(`Page ${pageCount} GraphQL Error ${index + 1}:`, error.message);
             });
           }
-          break; // Stop pagination on error
+          // Continue with what we have instead of failing completely
+          console.warn(`⚠️ Continuing with ${allVehicles.length} vehicles collected so far`);
+          break;
         }
         
-      } while (nextToken && pageCount < 50); // Safety limit
+      } while (nextToken && pageCount < 200); // Increased safety limit to 200 pages
 
-      console.log(`=== PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles ===`);
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`🎉 PAGINATION COMPLETE: ${pageCount} pages, ${allVehicles.length} total vehicles in ${totalTime}s`);
 
-      // Skip devices for now to isolate the issue
-      console.log('Skipping devices query to focus on vehicles issue');
+      // Get unassociated devices with better error handling
+      let unassociatedDevices = [];
+      try {
+        console.log('🔍 Fetching unassociated devices...');
+        const devicesResponse = await client.graphql({
+          query: `query ListDevicesWithoutVehicle {
+            listDevices(filter: {
+              deviceVehicleImmat: {attributeExists: false}
+            }) {
+              items {
+                imei
+                name
+                sim
+                cid
+                device_type_id
+              }
+            }
+          }`
+        });
 
-      // Map vehicles to expected format with minimal data
+        if (devicesResponse.errors && devicesResponse.errors.length > 0) {
+          console.warn('⚠️ Warnings in devices fetch, continuing with partial data');
+          devicesResponse.errors.forEach((error, index) => {
+            console.warn(`Device Warning ${index + 1}:`, error.message);
+          });
+        }
+        
+        if (devicesResponse.data && devicesResponse.data.listDevices) {
+          unassociatedDevices = devicesResponse.data.listDevices.items.filter(Boolean);
+        }
+      } catch (deviceError) {
+        console.warn('⚠️ Error fetching devices, continuing without them:', deviceError.message);
+      }
+
+      console.log(`📱 Unassociated devices found: ${unassociatedDevices.length}`);
+
+      // Map vehicles to expected format
       const mappedVehicles = allVehicles.map(vehicle => ({
         id: vehicle.immat || vehicle.immatriculation || `vehicle-${Math.random()}`,
-        entreprise: "Non définie",
+        entreprise: vehicle.company?.name || "Non définie",
         type: "vehicle",
         immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        nomVehicule: "",
-        imei: vehicle.vehicleDeviceImei || "",
-        typeBoitier: "",
+        nomVehicule: vehicle.device?.name || "",
+        imei: vehicle.device?.imei || vehicle.vehicleDeviceImei || "",
+        typeBoitier: vehicle.device?.device_type_id?.toString() || "",
         marque: "",
         modele: "",
         kilometrage: "",
-        telephone: "",
+        telephone: vehicle.device?.sim || "",
         emplacement: "",
-        deviceData: null,
-        isAssociated: !!vehicle.vehicleDeviceImei,
+        deviceData: vehicle.device || null,
+        isAssociated: !!(vehicle.device?.imei || vehicle.vehicleDeviceImei),
         companyVehiclesId: vehicle.companyVehiclesId,
         vehicleDeviceImei: vehicle.vehicleDeviceImei
       }));
 
-      // Minimal companies for now
-      const companies = [{
-        id: "test-company",
-        name: "Entreprise Test"
-      }];
+      // Map unassociated devices
+      const mappedDevices = unassociatedDevices.map(device => ({
+        id: device.imei,
+        entreprise: "Boîtier libre",
+        type: "device",
+        immatriculation: "",
+        nomVehicule: device.name || "",
+        imei: device.imei,
+        typeBoitier: device.device_type_id?.toString() || "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: device.sim || "",
+        emplacement: "",
+        deviceData: device,
+        isAssociated: false
+      }));
 
-      console.log('=== SIMPLIFIED RESULT ===');
-      console.log('Total vehicles:', mappedVehicles.length);
-      console.log('Sample vehicle:', mappedVehicles[0]);
+      // Extract companies from vehicles
+      const uniqueCompanies = new Map();
+      allVehicles.forEach(vehicle => {
+        if (vehicle.company && vehicle.companyVehiclesId) {
+          uniqueCompanies.set(vehicle.companyVehiclesId, {
+            id: vehicle.companyVehiclesId,
+            name: vehicle.company.name
+          });
+        }
+      });
+      const companies = Array.from(uniqueCompanies.values());
+
+      console.log('🎯 === COMPLETE DATABASE FETCH RESULT ===');
+      console.log(`🚗 Total vehicles: ${mappedVehicles.length}`);
+      console.log(`📱 Total unassociated devices: ${mappedDevices.length}`);
+      console.log(`🏢 Total companies: ${companies.length}`);
+      console.log(`📄 Total pages processed: ${pageCount}`);
+      console.log(`⏱️ Total time: ${totalTime}s`);
+      console.log(`📊 Total items: ${mappedVehicles.length + mappedDevices.length}`);
 
       return {
         companies,
-        vehicles: mappedVehicles
+        vehicles: [...mappedVehicles, ...mappedDevices]
       };
 
     } catch (error) {
-      console.error('=== COMPREHENSIVE ERROR ANALYSIS ===');
-      console.error('Error type:', typeof error);
-      console.error('Error constructor:', error.constructor.name);
+      console.error('❌ === COMPREHENSIVE ERROR ANALYSIS ===');
       console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Full error object:', error);
+      console.error('Full error:', error);
       
       if (error.errors) {
-        console.error('GraphQL errors array:', error.errors);
         error.errors.forEach((gqlError, index) => {
-          console.error(`GraphQL Error ${index + 1} details:`, {
+          console.error(`GraphQL Error ${index + 1}:`, {
             message: gqlError.message,
             locations: gqlError.locations,
-            path: gqlError.path,
-            extensions: gqlError.extensions
+            path: gqlError.path
           });
         });
       }
       
-      if (error.data) {
-        console.error('Partial data received:', error.data);
-      }
-      
-      const errorMessage = error.message || 'Unknown error occurred';
-      console.error('Final error message:', errorMessage);
-      
-      throw new Error(`Failed to fetch vehicles: ${errorMessage}`);
+      throw new Error(`Failed to fetch vehicles: ${error.message || 'Unknown error'}`);
     }
   });
 };
