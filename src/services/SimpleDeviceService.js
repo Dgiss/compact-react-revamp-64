@@ -127,9 +127,14 @@ export const createDeviceSimple = async (deviceData) => {
       
       // Log détaillé des erreurs GraphQL
       if (error.errors && Array.isArray(error.errors)) {
-        console.error('GraphQL Errors during device creation:');
+        console.error(`📋 GraphQL Errors during device creation (${error.errors.length} errors):`);
         error.errors.forEach((err, index) => {
-          console.error(`Error ${index + 1}:`, err);
+          console.error(`🔴 Error ${index + 1}:`, {
+            message: err.message,
+            path: err.path,
+            locations: err.locations,
+            extensions: err.extensions
+          });
         });
       }
       if (error.message?.includes('DataCloneError') || error.message?.includes('URL object could not be cloned')) {
@@ -214,9 +219,14 @@ export const associateDeviceToVehicleSimple = async (vehicleImmat, deviceImei) =
       console.error('Association error name:', associationError.name);
       
       if (associationError.errors && Array.isArray(associationError.errors)) {
-        console.error('GraphQL Errors during association:');
+        console.error(`📋 GraphQL Errors during association (${associationError.errors.length} errors):`);
         associationError.errors.forEach((err, index) => {
-          console.error(`Association Error ${index + 1}:`, err);
+          console.error(`🔴 Association Error ${index + 1}:`, {
+            message: err.message,
+            path: err.path,
+            locations: err.locations,
+            extensions: err.extensions
+          });
         });
       }
       
