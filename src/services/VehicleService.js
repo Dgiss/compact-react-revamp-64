@@ -8,15 +8,12 @@ import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService
 
 const client = generateClient();
 
-/**
- * OPTIMIZED: Fetch all vehicles using single GraphQL query - simplified for performance
- */
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
     console.log('=== OPTIMIZED: FETCHING ALL VEHICLES ===');
     
     try {
-      // Single query to get all vehicles with devices and companies
+      // Use the exact working query structure provided by user
       const vehiclesResponse = await client.graphql({
         query: `query ListAllVehicles {
           listVehicles {
@@ -37,6 +34,7 @@ export const fetchAllVehiclesOptimized = async () => {
               }
               vehicleDeviceImei
             }
+            nextToken
           }
         }`
       });
@@ -44,7 +42,7 @@ export const fetchAllVehiclesOptimized = async () => {
       const vehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
       console.log('Total vehicles fetched:', vehicles.length);
 
-      // Get all devices for unassociated ones
+      // Get unassociated devices using the exact working query
       const devicesResponse = await client.graphql({
         query: `query ListDevicesWithoutVehicle {
           listDevices(filter: {
@@ -55,9 +53,6 @@ export const fetchAllVehiclesOptimized = async () => {
               name
               sim
               cid
-              protocolId
-              flespi_id
-              device_type_id
             }
           }
         }`
@@ -67,34 +62,24 @@ export const fetchAllVehiclesOptimized = async () => {
       console.log('Unassociated devices found:', unassociatedDevices.length);
 
       // Map vehicles to expected format
-      const mappedVehicles = vehicles.map(vehicle => {
-        const deviceImei = vehicle.device?.imei || vehicle.vehicleDeviceImei;
-        const isAssociated = !!deviceImei;
-
-        return {
-          ...vehicle,
-          id: vehicle.immat || vehicle.immatriculation,
-          entreprise: vehicle.company?.name || "Non définie",
-          type: "vehicle",
-          immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.device?.name || "",
-          imei: deviceImei || "",
-          typeBoitier: vehicle.device?.protocolId?.toString() || "",
-          marque: "",
-          modele: "",
-          kilometrage: "",
-          telephone: vehicle.device?.sim || "",
-          emplacement: "",
-          deviceData: vehicle.device || null,
-          isAssociated,
-          AWN_nom_commercial: "",
-          energie: "",
-          puissanceFiscale: "",
-          couleur: "",
-          dateMiseEnCirculation: "",
-          VIN: ""
-        };
-      });
+      const mappedVehicles = vehicles.map(vehicle => ({
+        id: vehicle.immat || vehicle.immatriculation,
+        entreprise: vehicle.company?.name || "Non définie",
+        type: "vehicle",
+        immatriculation: vehicle.immat || vehicle.immatriculation || "",
+        nomVehicule: vehicle.device?.name || "",
+        imei: vehicle.device?.imei || vehicle.vehicleDeviceImei || "",
+        typeBoitier: vehicle.device?.device_type_id?.toString() || "",
+        marque: "",
+        modele: "",
+        kilometrage: "",
+        telephone: vehicle.device?.sim || "",
+        emplacement: "",
+        deviceData: vehicle.device || null,
+        isAssociated: !!(vehicle.device?.imei || vehicle.vehicleDeviceImei),
+        companyVehiclesId: vehicle.companyVehiclesId,
+        vehicleDeviceImei: vehicle.vehicleDeviceImei
+      }));
 
       // Map unassociated devices
       const mappedDevices = unassociatedDevices.map(device => ({
@@ -104,7 +89,7 @@ export const fetchAllVehiclesOptimized = async () => {
         immatriculation: "",
         nomVehicule: device.name || "",
         imei: device.imei,
-        typeBoitier: device.protocolId?.toString() || "",
+        typeBoitier: device.device_type_id?.toString() || "",
         marque: "",
         modele: "",
         kilometrage: "",
@@ -114,12 +99,17 @@ export const fetchAllVehiclesOptimized = async () => {
         isAssociated: false
       }));
 
-      // Extract companies
-      const companies = [...new Set(mappedVehicles.map(v => v.company).filter(Boolean))]
-        .map(company => ({
-          id: company.id || `company-${company.name}`,
-          name: company.name
-        }));
+      // Extract companies from vehicles
+      const uniqueCompanies = new Map();
+      vehicles.forEach(vehicle => {
+        if (vehicle.company && vehicle.companyVehiclesId) {
+          uniqueCompanies.set(vehicle.companyVehiclesId, {
+            id: vehicle.companyVehiclesId,
+            name: vehicle.company.name
+          });
+        }
+      });
+      const companies = Array.from(uniqueCompanies.values());
 
       console.log('=== OPTIMIZED RESULT SUMMARY ===');
       console.log('Total vehicles:', mappedVehicles.length);
@@ -133,6 +123,7 @@ export const fetchAllVehiclesOptimized = async () => {
 
     } catch (error) {
       console.error('Error in optimized vehicle fetch:', error);
+      console.error('GraphQL errors:', error.errors);
       throw new Error(`Failed to fetch vehicles optimized: ${error.message}`);
     }
   });
