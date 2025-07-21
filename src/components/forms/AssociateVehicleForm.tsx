@@ -73,12 +73,14 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   }, [selectedCompany, isDeviceToVehicle]);
   
-  // Load devices when company is selected (for vehicle to device association)
+  // Load devices when component loads (for vehicle to device association)
+  // For vehicle association, we don't need to wait for company selection - load all free devices
   useEffect(() => {
-    if (selectedCompany && isVehicleToDevice) {
-      loadDevicesForCompany(selectedCompany);
+    if (isVehicleToDevice) {
+      console.log('Loading free devices for vehicle association...');
+      loadDevicesForCompany('all'); // Load all free devices
     }
-  }, [selectedCompany, isVehicleToDevice]);
+  }, [isVehicleToDevice]);
 
   // Load free devices for company-device association mode
   useEffect(() => {
@@ -124,7 +126,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     setLoadingDevices(true);
     
     try {
-      // Use the updated function that checks both company and vehicle associations
+      // For vehicle-device association, load ALL free devices (not just for specific company)
       const freeDevices = await CompanyDeviceService.getUnassignedDevices();
       console.log('Free devices found for vehicle association:', freeDevices.length);
       console.log('Device details:', freeDevices.map(d => ({ imei: d.imei, type: d.typeBoitier })));
@@ -184,7 +186,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   }));
 
   const handleSubmit = async () => {
-    if (!selectedCompany && !isCompanyDeviceMode) {
+    // Only require company for device-to-vehicle and company-device modes
+    if ((isDeviceToVehicle || isCompanyDeviceMode) && !selectedCompany) {
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner une entreprise",
@@ -365,21 +368,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       </div>
 
       <div className="space-y-4">
-        {/* Company selection - show for all modes except direct device-vehicle */}
-        {!isDeviceToVehicle || isCompanyDeviceMode ? (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Entreprise *
-            </label>
-            <CompanySearchSelect
-              value={selectedCompany}
-              onValueChange={setSelectedCompany}
-              placeholder="Sélectionner une entreprise..."
-              searchFunction={searchCompaniesReal}
-              disabled={false}
-            />
-          </div>
-        ) : (
+        {/* Company selection - only show for device-vehicle and company-device modes */}
+        {(isDeviceToVehicle || isCompanyDeviceMode) && (
           <div>
             <label className="block text-sm font-medium mb-2">
               Entreprise *
@@ -430,26 +420,29 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         {isVehicleToDevice && (
           <div>
             <label className="block text-sm font-medium mb-2">
-              Boîtier *
+              Boîtier libre disponible *
             </label>
             <SearchableSelect
               value={selectedDeviceImei}
               onValueChange={setSelectedDeviceImei}
               options={deviceOptions}
               placeholder={
-                !selectedCompany 
-                  ? "Sélectionner d'abord une entreprise" 
-                  : loadingDevices 
-                    ? "Chargement des boîtiers..." 
-                    : companyDevices.length === 0
-                      ? "Aucun boîtier disponible"
-                      : "Sélectionner un boîtier..."
+                loadingDevices 
+                  ? "Chargement des boîtiers libres..." 
+                  : companyDevices.length === 0
+                    ? "Aucun boîtier libre disponible"
+                    : "Sélectionner un boîtier libre..."
               }
-              disabled={!selectedCompany || loadingDevices}
+              disabled={loadingDevices}
             />
             {companyDevices.length > 0 && (
               <p className="text-sm text-green-600 mt-1">
-                ✓ {companyDevices.length} boîtier(s) disponible(s)
+                ✓ {companyDevices.length} boîtier(s) libre(s) disponible(s)
+              </p>
+            )}
+            {companyDevices.length === 0 && !loadingDevices && (
+              <p className="text-sm text-orange-600 mt-1">
+                ⚠️ Aucun boîtier libre disponible pour l'association
               </p>
             )}
           </div>
@@ -486,7 +479,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
             onClick={handleSubmit}
             disabled={
               isSubmitting || 
-              (!isCompanyDeviceMode && !selectedCompany) || 
+              (isDeviceToVehicle && !selectedCompany) ||
               (isCompanyDeviceMode && (!selectedCompany || !device?.imei)) ||
               (isDeviceToVehicle && !selectedVehicle) ||
               (isVehicleToDevice && !selectedDeviceImei)

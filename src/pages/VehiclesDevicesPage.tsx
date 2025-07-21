@@ -506,10 +506,15 @@ export default function VehiclesDevicesPage() {
     setShowEditVehicleDialog(true);
   };
   const handleAssociate = item => {
+    console.log('=== HANDLE ASSOCIATE ===');
+    console.log('Item to associate:', item);
+    
     // Can associate either a device to a vehicle or a vehicle to a device
     if (item.type === "device") {
+      console.log('Associating device to vehicle mode');
       setSelectedDevice(item);
     } else {
+      console.log('Associating vehicle to device mode');
       // For vehicle, create a device-like object for the form
       setSelectedDevice({
         ...item,
@@ -831,13 +836,16 @@ export default function VehiclesDevicesPage() {
       </div>
       
       <EnhancedDataTable columns={allColumns} data={filteredData.length > 0 ? filteredData : combinedData} onEdit={handleEdit} renderActions={item => <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+            {/* Edit button - shown for all vehicles */}
+            {item.type === "vehicle" && <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} title="Modifier ce véhicule">
               <Edit className="h-4 w-4" />
-            </Button>
-            <DeleteConfirmationDialog title="Supprimer le véhicule" description={`Êtes-vous sûr de vouloir supprimer ce véhicule ? Cette action est irréversible.`} onConfirm={() => deleteVehicleDataLocal(item)} />
+            </Button>}
+            
+            {/* Delete button - shown for all vehicles */}
+            {item.type === "vehicle" && <DeleteConfirmationDialog title="Supprimer le véhicule" description={`Êtes-vous sûr de vouloir supprimer le véhicule "${item.immatriculation || item.immat}" ? Cette action est irréversible.`} onConfirm={() => deleteVehicleDataLocal(item)} />}
             
             {/* Association button for free devices (device-vehicle association) */}
-            {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre" && <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)} title="Associer ce boîtier à un véhicule" disabled={!isCacheReady}>
+            {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre" && <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)} title="Associer ce boîtier à un véhicule">
                 <Link className="h-4 w-4" />
               </Button>}
             
@@ -850,13 +858,13 @@ export default function VehiclesDevicesPage() {
                 <Building className="h-4 w-4" />
               </Button>}
             
-            {/* Association button for vehicles without device */}
-            {item.type === "vehicle" && (!item.imei || !item.isAssociated) && <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)} title="Associer un boîtier à ce véhicule" disabled={!isCacheReady}>
+            {/* Association button for vehicles without device - IMPROVED for vehicles without IMEI */}
+            {item.type === "vehicle" && (!item.imei || item.imei === "" || !item.vehicleDeviceImei || item.vehicleDeviceImei === "" || !item.isAssociated) && <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)} title="Associer un boîtier à ce véhicule">
                 <Link className="h-4 w-4" />
               </Button>}
             
             {/* Dissociation button for associated vehicles */}
-            {item.type === "vehicle" && item.imei && item.isAssociated && !isSelectMode && <Button variant="ghost" size="icon" onClick={() => dissociateDevice(item.immatriculation || item.immat)} title="Dissocier le boîtier de ce véhicule" className="text-orange-600 hover:text-orange-700">
+            {item.type === "vehicle" && (item.imei || item.vehicleDeviceImei) && item.isAssociated && !isSelectMode && <Button variant="ghost" size="icon" onClick={() => dissociateDevice(item.immatriculation || item.immat)} title="Dissocier le boîtier de ce véhicule" className="text-orange-600 hover:text-orange-700">
                 <Link className="h-4 w-4" />
               </Button>}
           </div>} loading={loading} enablePagination={true} defaultItemsPerPage={50} />
