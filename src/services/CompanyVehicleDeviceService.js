@@ -31,20 +31,43 @@ export const fetchCompaniesForSelect = async () => {
 };
 
 /**
- * Search companies with a real-time backend query
+ * Search companies with a real-time backend query - Case insensitive search
  */
 export const searchCompaniesReal = async (searchTerm) => {
   return await withCredentialRetry(async () => {
     try {
+      // Si pas de terme de recherche, retourner les premières entreprises
+      if (!searchTerm || searchTerm.trim() === '') {
+        const response = await client.graphql({
+          query: queries.listCompanies,
+          variables: { limit: 10 }
+        });
+        
+        return response.data.listCompanies.items.map(company => ({
+          id: company.id,
+          name: company.name,
+          siret: company.siret
+        }));
+      }
+
+      // Recherche avec filtres multiples pour améliorer les résultats
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const upperSearchTerm = searchTerm.toUpperCase();
+      const capitalizedSearchTerm = searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase();
+      
       const response = await client.graphql({
         query: queries.listCompanies,
         variables: {
           filter: {
-            name: {
-              contains: searchTerm
-            }
+            or: [
+              { name: { contains: searchTerm } },        // Recherche exacte
+              { name: { contains: lowerSearchTerm } },   // Minuscules
+              { name: { contains: upperSearchTerm } },   // Majuscules
+              { name: { contains: capitalizedSearchTerm } }, // Première lettre majuscule
+              { siret: { contains: searchTerm } }        // Recherche par SIRET aussi
+            ]
           },
-          limit: 5
+          limit: 20
         }
       });
       
@@ -54,6 +77,7 @@ export const searchCompaniesReal = async (searchTerm) => {
         siret: company.siret
       }));
       
+      console.log(`Recherche "${searchTerm}": ${companies.length} entreprises trouvées`);
       return companies;
     } catch (error) {
       console.error('Error searching companies:', error);
