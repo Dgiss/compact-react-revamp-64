@@ -9,12 +9,12 @@ import { safeGetCache, safeSetCache, removeCache } from '@/utils/cache-utils';
  */
 
 /**
- * Get all companies with their associated vehicles and devices
+ * CORRECTED: Get all companies with their associated vehicles and devices using direct vehicle pagination
  * @returns {Promise<{companies: Array, vehicles: Array, devices: Array, stats: Object}>}
  */
 export const fetchCompaniesWithVehiclesAndDevices = async () => {
   try {
-    console.log('=== FETCHING COMPANIES WITH VEHICLES AND DEVICES ===');
+    console.log('=== FETCHING COMPANIES WITH VEHICLES AND DEVICES (CORRECTED PAGINATION) ===');
     
     // OPTIMIZED: Check for cached data first using safe cache utilities
     const cachedData = safeGetCache('vehicle_cache', 300000); // 5 minutes
@@ -22,17 +22,89 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       return cachedData;
     }
     
-    // Try to use real service first, fallback to mock data if GraphQL fails
-    let companies, vehicles;
+    // SOLUTION 1: Récupérer TOUTES les companies ET TOUS les véhicules séparément avec pagination complète
+    let companies, allVehicles;
     
     try {
-      const result = await VehicleService.fetchCompaniesWithVehicles();
-      companies = result.companies;
-      vehicles = result.vehicles;
-      console.log('GraphQL data loaded successfully:', {
-        companiesCount: companies.length,
-        vehiclesCount: vehicles.length
-      });
+      console.log('=== ÉTAPE 1: RÉCUPÉRATION DES COMPANIES ===');
+      companies = await CompanyService.fetchCompanies();
+      console.log(`Companies récupérées: ${companies.length}`);
+      
+      console.log('=== ÉTAPE 2: RÉCUPÉRATION DE TOUS LES VÉHICULES AVEC PAGINATION COMPLÈTE ===');
+      const { generateClient } = await import('aws-amplify/api');
+      const client = generateClient();
+      
+      allVehicles = [];
+      let nextToken = null;
+      let batchCount = 0;
+      
+      do {
+        batchCount++;
+        console.log(`🔄 VÉHICULES BATCH ${batchCount} - NextToken: ${nextToken ? 'OUI' : 'NON'}`);
+        
+        const startTime = Date.now();
+        
+        const result = await client.graphql({
+          query: `query ListAllVehiclesPaginated($limit: Int, $nextToken: String) {
+            listVehicles(
+              limit: $limit
+              nextToken: $nextToken
+            ) {
+              items {
+                immat
+                immatriculation
+                nomVehicule
+                marque
+                modele
+                companyVehiclesId
+                vehicleDeviceImei
+                company {
+                  id
+                  name
+                  siret
+                }
+                device {
+                  imei
+                  protocolId
+                  sim
+                  name
+                  cid
+                  flespi_id
+                  device_type_id
+                }
+                createdAt
+                updatedAt
+              }
+              nextToken
+            }
+          }`,
+          variables: {
+            limit: 1000,
+            nextToken: nextToken
+          }
+        });
+        
+        const batchVehicles = result.data?.listVehicles?.items || [];
+        const newNextToken = result.data?.listVehicles?.nextToken;
+        
+        const endTime = Date.now();
+        console.log(`✅ VÉHICULES BATCH ${batchCount} - ${batchVehicles.length} véhicules en ${endTime - startTime}ms`);
+        
+        allVehicles = allVehicles.concat(batchVehicles);
+        nextToken = newNextToken;
+        
+        console.log(`📊 TOTAL VÉHICULES: ${allVehicles.length}`);
+        
+        // Sécurité pour éviter les boucles infinies
+        if (batchCount > 100) {
+          console.warn('⚠️ SÉCURITÉ: Plus de 100 batches, arrêt forcé');
+          break;
+        }
+        
+      } while (nextToken);
+      
+      console.log(`🎯 VÉHICULES FINAUX: ${allVehicles.length} véhicules récupérés en ${batchCount} batches`);
+      
     } catch (graphqlError) {
       console.warn('GraphQL service failed, using mock data:', graphqlError.message);
       console.error('Full GraphQL error:', graphqlError);
@@ -41,24 +113,88 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       const { fetchMockCompaniesWithVehicles } = await import('./MockDataService');
       const mockResult = await fetchMockCompaniesWithVehicles();
       companies = mockResult.companies;
-      vehicles = mockResult.vehicles;
+      allVehicles = mockResult.vehicles;
       console.log('Mock data loaded as fallback:', {
         companiesCount: companies.length,
-        vehiclesCount: vehicles.length
+        vehiclesCount: allVehicles.length
       });
     }
     
-    // Separate vehicles from free devices
-    const actualVehicles = vehicles.filter(item => item.type === 'vehicle');
-    let freeDevices = vehicles.filter(item => item.type === 'device');
+    console.log('=== ÉTAPE 3: TRAITEMENT ET TRANSFORMATION DES DONNÉES ===');
+    
+    // Transform vehicles to our data structure
+    const actualVehicles = allVehicles.map(vehicle => ({
+      ...vehicle,
+      type: 'vehicle',
+      isAssociated: Boolean(vehicle.vehicleDeviceImei && vehicle.device),
+      entreprise: vehicle.company?.name || 'Entreprise inconnue',
+      immatriculation: vehicle.immat || vehicle.immatriculation,
+      imei: vehicle.vehicleDeviceImei || null,
+      telephone: vehicle.device?.sim || null,
+      nomVehicule: vehicle.nomVehicule || vehicle.device?.name || "",
+      deviceData: vehicle.device || null,
+      typeBoitier: vehicle.device?.protocolId || null
+    }));
+    
+    console.log(`Véhicules transformés: ${actualVehicles.length}`);
+    
+    // ÉTAPE 4: Récupération des devices libres (non associés à des véhicules)
+    console.log('=== ÉTAPE 4: RÉCUPÉRATION DES DEVICES LIBRES ===');
+    let freeDevices = [];
+    
+    try {
+      const devicesResult = await client.graphql({
+        query: `query ListFreeDevices($filter: ModelDeviceFilterInput, $limit: Int) {
+          listDevices(
+            filter: $filter
+            limit: $limit
+          ) {
+            items {
+              imei
+              protocolId
+              sim
+              name
+              cid
+              flespi_id
+              device_type_id
+              deviceVehicleImmat
+              createdAt
+              updatedAt
+            }
+          }
+        }`,
+        variables: {
+          filter: {
+            deviceVehicleImmat: { attributeExists: false }
+          },
+          limit: 1000
+        }
+      });
+      
+      const rawFreeDevices = devicesResult.data?.listDevices?.items || [];
+      
+      freeDevices = rawFreeDevices.map(device => ({
+        ...device,
+        type: 'device',
+        isAssociated: false,
+        entreprise: 'Boîtier libre',
+        immatriculation: null,
+        nomVehicule: null,
+        telephone: device.sim || null,
+        typeBoitier: device.protocolId || null,
+        deviceData: device
+      }));
+      
+      console.log(`Devices libres récupérés: ${freeDevices.length}`);
+      
+    } catch (error) {
+      console.warn('Error fetching free devices:', error);
+    }
     
     // NEW: Fetch company device associations to update device statuses with better error handling
     try {
-      const { generateClient } = await import('aws-amplify/api');
+      console.log('=== ÉTAPE 5: RÉCUPÉRATION DES ASSOCIATIONS COMPANY-DEVICE ===');
       const { companyDevicesByCompanyIDAndAssociationDate } = await import('../graphql/mutations');
-      const client = generateClient();
-      
-      console.log('=== FETCHING COMPANY DEVICE ASSOCIATIONS ===');
       
       // For each company, get their device associations
       for (const company of companies) {
@@ -113,8 +249,17 @@ export const fetchCompaniesWithVehiclesAndDevices = async () => {
       freeDevices: freeDevices.filter(d => !d.isReservedForCompany).length,
       reservedDevices: freeDevices.filter(d => d.isReservedForCompany).length,
       associatedDevices: actualVehicles.filter(v => v.imei).length,
-      companiesWithVehicles: companies.filter(c => c.vehicles?.items?.length > 0).length
+      companiesWithVehicles: companies.filter(c => 
+        actualVehicles.some(v => v.companyVehiclesId === c.id)
+      ).length
     };
+    
+    console.log('=== STATISTIQUES FINALES ===');
+    console.log('Total véhicules:', stats.totalVehicles);
+    console.log('Total devices:', stats.totalDevices);
+    console.log('Devices libres:', stats.freeDevices);
+    console.log('Devices réservés:', stats.reservedDevices);
+    console.log('Véhicules avec device:', stats.associatedDevices);
     
     const result = {
       companies,
