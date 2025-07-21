@@ -10,46 +10,59 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== SIMPLE QUERY: listVehicles AVEC LIMITE ===');
+    console.log('=== PAGINATION COMPLÈTE POUR 19000 VÉHICULES ===');
     
     try {
-      // Appel simple avec limite élevée
-      const response = await client.graphql({
-        query: `query ListVehicles {
-          listVehicles(limit: 10000) {
-            items {
-              immat
-              immatriculation
-              companyVehiclesId
-              vehicleDeviceImei
-              company {
-                name
-              }
-              device {
-                name
-                imei
-                sim
-                device_type_id
-              }
-            }
-            nextToken
-          }
-        }`
-      });
-
-      const vehicles = response.data.listVehicles.items || [];
-      const hasMore = response.data.listVehicles.nextToken;
+      let allVehicles = [];
+      let nextToken = null;
+      let pageCount = 0;
       
-      console.log('Véhicules récupérés:', vehicles.length);
-      if (hasMore) {
-        console.log('⚠️ Il y a plus de véhicules disponibles (nextToken présent)');
-        console.log('Pour récupérer TOUS les véhicules, il faut la pagination');
-      } else {
-        console.log('✅ Tous les véhicules récupérés');
-      }
+      // Pagination jusqu'à récupérer TOUS les véhicules
+      do {
+        pageCount++;
+        console.log(`📄 Page ${pageCount} - Total: ${allVehicles.length} véhicules`);
+        
+        const response = await client.graphql({
+          query: `query ListVehicles($nextToken: String) {
+            listVehicles(limit: 1000, nextToken: $nextToken) {
+              items {
+                immat
+                immatriculation
+                companyVehiclesId
+                vehicleDeviceImei
+                company {
+                  name
+                }
+                device {
+                  name
+                  imei
+                  sim
+                  device_type_id
+                }
+              }
+              nextToken
+            }
+          }`,
+          variables: { nextToken }
+        });
+
+        const pageVehicles = response.data.listVehicles.items || [];
+        console.log(`✅ Page ${pageCount}: ${pageVehicles.length} véhicules récupérés`);
+        
+        allVehicles = allVehicles.concat(pageVehicles);
+        nextToken = response.data.listVehicles.nextToken;
+        
+        // Progression tous les 5 pages
+        if (pageCount % 5 === 0) {
+          console.log(`🚀 Progression: ${allVehicles.length} véhicules sur ~19000`);
+        }
+        
+      } while (nextToken);
+
+      console.log(`🎉 TERMINÉ: ${pageCount} pages, ${allVehicles.length} véhicules au total`);
 
       // Transformation simple
-      const mappedVehicles = vehicles.map((vehicle, index) => ({
+      const mappedVehicles = allVehicles.map((vehicle, index) => ({
         id: vehicle.immat || vehicle.immatriculation || `vehicle-${index}`,
         type: "vehicle",
         immatriculation: vehicle.immat || vehicle.immatriculation || "",
@@ -71,7 +84,7 @@ export const fetchAllVehiclesOptimized = async () => {
       // Extraction des companies
       const companies = [];
       const seenCompanies = new Set();
-      vehicles.forEach(vehicle => {
+      allVehicles.forEach(vehicle => {
         if (vehicle.company && vehicle.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
           companies.push({
             id: vehicle.companyVehiclesId,
@@ -81,10 +94,10 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       });
 
-      console.log('=== RÉSULTAT AVEC LIMITE 10000 ===');
-      console.log('Véhicules:', mappedVehicles.length);
-      console.log('Entreprises:', companies.length);
-      console.log('NextToken présent:', !!hasMore);
+      console.log('=== RÉSULTAT COMPLET ===');
+      console.log(`🚗 Véhicules: ${mappedVehicles.length} / ~19000`);
+      console.log(`🏢 Entreprises: ${companies.length}`);
+      console.log(`📄 Pages traitées: ${pageCount}`);
 
       return {
         companies,
@@ -92,8 +105,8 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('Erreur requête avec limite:', error.message);
-      throw new Error(`Erreur listVehicles: ${error.message}`);
+      console.error('❌ Erreur pagination:', error.message);
+      throw new Error(`Erreur pagination véhicules: ${error.message}`);
     }
   });
 };
