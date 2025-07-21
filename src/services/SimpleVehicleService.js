@@ -376,7 +376,7 @@ export const updateVehicleSimple = async (vehicleData) => {
  * @returns {Promise<Object>} Created or updated vehicle
  */
 export const createOrUpdateVehicleSimple = async (vehicleData) => {
-  console.log('=== CREATE OR UPDATE VEHICLE SIMPLE (ENHANCED ERROR HANDLING) ===');
+  console.log('=== CREATE OR UPDATE VEHICLE SIMPLE (AVEC DEVICE) ===');
   console.log('Vehicle data:', vehicleData);
   
   try {
@@ -400,11 +400,24 @@ export const createOrUpdateVehicleSimple = async (vehicleData) => {
       });
     } else {
       console.log('Vehicle does not exist, creating...');
-      return await createVehicleSimple({
-        ...vehicleData,
-        immatriculation: cleanImmat,
-        immat: cleanImmat
-      });
+      
+      // Check if we need to create a device with this vehicle
+      if (vehicleData.imei && vehicleData.deviceCreated) {
+        console.log('Creating vehicle with device association...');
+        return await createVehicleSimple({
+          ...vehicleData,
+          immatriculation: cleanImmat,
+          immat: cleanImmat,
+          vehicleDeviceImei: vehicleData.imei || vehicleData.vehicleDeviceImei
+        });
+      } else {
+        console.log('Creating vehicle without device...');
+        return await createVehicleSimple({
+          ...vehicleData,
+          immatriculation: cleanImmat,
+          immat: cleanImmat
+        });
+      }
     }
   } catch (error) {
     console.error('=== CREATE OR UPDATE VEHICLE ERROR ===');
