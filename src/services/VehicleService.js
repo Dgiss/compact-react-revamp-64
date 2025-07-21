@@ -13,7 +13,7 @@ export const fetchAllVehiclesOptimized = async () => {
     console.log('=== OPTIMIZED: FETCHING ALL VEHICLES ===');
     
     try {
-      // Use the exact working query structure provided by user
+      // Use the exact query structure provided by user
       const vehiclesResponse = await client.graphql({
         query: `query ListAllVehicles {
           listVehicles {
@@ -42,7 +42,7 @@ export const fetchAllVehiclesOptimized = async () => {
       const vehicles = vehiclesResponse.data.listVehicles.items.filter(Boolean);
       console.log('Total vehicles fetched:', vehicles.length);
 
-      // Get unassociated devices using the exact working query
+      // Get unassociated devices using the validated query
       const devicesResponse = await client.graphql({
         query: `query ListDevicesWithoutVehicle {
           listDevices(filter: {
