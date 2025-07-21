@@ -125,14 +125,14 @@ export const searchCompaniesReal = async (searchTerm) => {
         }
       }
       
-      const companies = response.data.listCompanies.items.map(company => ({
+      const finalCompanies = companies.map(company => ({
         id: company.id,
         name: company.name,
         siret: company.siret
       }));
       
-      console.log(`Recherche "${searchTerm}": ${companies.length} entreprises trouvées`);
-      return companies;
+      console.log(`Recherche "${searchTerm}": ${finalCompanies.length} entreprises trouvées`);
+      return finalCompanies;
     } catch (error) {
       console.error('Error searching companies:', error);
       throw error;
