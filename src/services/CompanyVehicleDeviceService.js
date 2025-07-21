@@ -432,89 +432,6 @@ export const getDeviceStatusLocal = (devices, imei) => {
  * @param {Object} filter - Optional filter criteria
  * @returns {Promise<Array>} Array of vehicles without devices
  */
-export const fetchVehiclesWithoutDevices = async (filter = {}) => {
-  try {
-    console.log('=== FETCHING VEHICLES WITHOUT DEVICES (OPTIMIZED) ===');
-    
-    const { generateClient } = await import('aws-amplify/api');
-    const client = generateClient();
-    
-    // Use the working GraphQL filter that successfully finds vehicles without devices
-    const cleanVariables = {
-      filter: {
-        or: [
-          { vehicleDeviceImei: { attributeExists: false } },
-          { vehicleDeviceImei: { eq: "" } }
-        ],
-        ...filter
-      },
-      limit: 10000
-    };
-    
-    const result = await client.graphql({
-      query: `query VehiclesWithoutDevices {
-        listVehicles(
-          filter: {
-            or: [
-              { vehicleDeviceImei: { attributeExists: false } },
-              { vehicleDeviceImei: { eq: "" } }
-            ]
-          }
-          limit: 10000
-        ) {
-          items {
-            companyVehiclesId
-            device {
-              cid
-              name
-              protocolId
-              sim
-              imei
-              flespi_id
-              device_type_id
-            }
-            immatriculation
-            immat
-            company {
-              name
-            }
-            vehicleDeviceImei
-          }
-          nextToken
-        }
-      }`,
-      variables: cleanVariables
-    });
-    
-    const vehicles = result.data?.listVehicles?.items || [];
-    
-    console.log(`Found ${vehicles.length} vehicles without devices`);
-    
-    // Transform to match our data structure
-    return vehicles.map(vehicle => ({
-      ...vehicle,
-      type: 'vehicle',
-      isAssociated: false,
-      entreprise: vehicle.company?.name || 'Entreprise inconnue',
-      immatriculation: vehicle.immat || vehicle.immatriculation,
-      imei: null,
-      telephone: null,
-      nomVehicule: vehicle.device?.name || "",
-      deviceData: null,
-      vehicleDeviceImei: null // Make sure it's clearly null to show empty state
-    }));
-    
-  } catch (error) {
-    console.error('Error fetching vehicles without devices:', error);
-    throw error;
-  }
-};
-
-/**
- * OPTIMIZED: Fetch devices without vehicles directly from GraphQL
- * @param {Object} filter - Optional filter criteria
- * @returns {Promise<Array>} Array of devices without vehicles
- */
 export const fetchDevicesWithoutVehicles = async (filter = {}) => {
   try {
     console.log('=== FETCHING DEVICES WITHOUT VEHICLES (OPTIMIZED) ===');
@@ -556,6 +473,97 @@ export const fetchDevicesWithoutVehicles = async (filter = {}) => {
     
   } catch (error) {
     console.error('Error fetching devices without vehicles:', error);
+    throw error;
+  }
+};
+
+/**
+ * OPTIMIZED: Fetch vehicles without devices with proper pagination
+ * @param {Object} filter - Optional filter criteria
+ * @returns {Promise<Array>} Array of vehicles without devices
+ */
+export const fetchVehiclesWithoutDevices = async (filter = {}) => {
+  try {
+    console.log('=== FETCHING VEHICLES WITHOUT DEVICES WITH PAGINATION ===');
+    
+    const { generateClient } = await import('aws-amplify/api');
+    const client = generateClient();
+    
+    let allVehicles = [];
+    let nextToken = null;
+    let batchCount = 0;
+    
+    do {
+      batchCount++;
+      console.log(`Fetching batch ${batchCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
+      
+      const result = await client.graphql({
+        query: `query VehiclesWithoutDevicesPaginated($filter: ModelVehicleFilterInput, $limit: Int, $nextToken: String) {
+          listVehicles(
+            filter: $filter
+            limit: $limit
+            nextToken: $nextToken
+          ) {
+            items {
+              companyVehiclesId
+              device {
+                cid
+                name
+                protocolId
+                sim
+                imei
+                flespi_id
+                device_type_id
+              }
+              immatriculation
+              immat
+              company {
+                name
+              }
+              vehicleDeviceImei
+            }
+            nextToken
+          }
+        }`,
+        variables: {
+          filter: {
+            or: [
+              { vehicleDeviceImei: { attributeExists: false } },
+              { vehicleDeviceImei: { eq: "" } }
+            ],
+            ...filter
+          },
+          limit: 1000,
+          nextToken: nextToken
+        }
+      });
+      
+      const batchVehicles = result.data?.listVehicles?.items || [];
+      allVehicles = allVehicles.concat(batchVehicles);
+      nextToken = result.data?.listVehicles?.nextToken;
+      
+      console.log(`Batch ${batchCount}: ${batchVehicles.length} vehicles, total so far: ${allVehicles.length}`);
+      
+    } while (nextToken);
+    
+    console.log(`✅ PAGINATION COMPLETED: Found ${allVehicles.length} vehicles without devices in ${batchCount} batches`);
+    
+    // Transform to match our data structure
+    return allVehicles.map(vehicle => ({
+      ...vehicle,
+      type: 'vehicle',
+      isAssociated: false,
+      entreprise: vehicle.company?.name || 'Entreprise inconnue',
+      immatriculation: vehicle.immat || vehicle.immatriculation,
+      imei: null,
+      telephone: null,
+      nomVehicule: vehicle.device?.name || "",
+      deviceData: null,
+      vehicleDeviceImei: null // Make sure it's clearly null to show empty state
+    }));
+    
+  } catch (error) {
+    console.error('Error fetching vehicles without devices:', error);
     throw error;
   }
 };
