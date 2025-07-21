@@ -434,8 +434,20 @@ export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
       
       console.log('Update input:', updateInput);
       
+      // Use a simple update mutation that only returns basic fields
+      const simpleUpdateVehicle = /* GraphQL */ `
+        mutation UpdateVehicle($input: UpdateVehicleInput!) {
+          updateVehicle(input: $input) {
+            immat
+            vehicleDeviceImei
+            updatedAt
+            __typename
+          }
+        }
+      `;
+
       const vehicleUpdate = await client.graphql({
-        query: mutations.updateVehicle,
+        query: simpleUpdateVehicle,
         variables: {
           input: updateInput
         }
