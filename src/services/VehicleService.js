@@ -10,106 +10,157 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== DÉMARRAGE PAGINATION POUR 19000 VÉHICULES ===');
+    console.log('=== PAGINATION SIMPLE ET ROBUSTE ===');
     
     try {
       let allVehicles = [];
       let nextToken = null;
       let pageCount = 0;
-      const startTime = Date.now();
       
-      // Pagination FORCÉE jusqu'à récupérer TOUS les véhicules
-      do {
-        pageCount++;
-        console.log(`📄 DÉBUT Page ${pageCount} - Actuellement: ${allVehicles.length} véhicules`);
-        console.log(`📄 NextToken pour cette page: ${nextToken ? 'PRÉSENT' : 'NULL'}`);
-        
-        const response = await client.graphql({
-          query: `query ListVehiclesPaginated($nextToken: String) {
-            listVehicles(limit: 1000, nextToken: $nextToken) {
-              items {
-                immat
-                immatriculation
-                companyVehiclesId
-                vehicleDeviceImei
-                company {
-                  name
-                }
-                device {
-                  name
-                  imei
-                  sim
-                  device_type_id
-                }
+      // Première page sans nextToken
+      console.log('🚀 Démarrage première page...');
+      
+      const firstResponse = await client.graphql({
+        query: `query FirstPage {
+          listVehicles(limit: 1000) {
+            items {
+              immat
+              immatriculation
+              companyVehiclesId
+              vehicleDeviceImei
+              company {
+                name
               }
-              nextToken
+              device {
+                name
+                imei
+                sim
+                device_type_id
+              }
             }
-          }`,
-          variables: nextToken ? { nextToken } : {}
-        });
+            nextToken
+          }
+        }`
+      });
 
-        const pageVehicles = response.data.listVehicles.items || [];
-        const newNextToken = response.data.listVehicles.nextToken;
+      console.log('✅ Première page réussie');
+      console.log('Réponse reçue:', !!firstResponse.data);
+      console.log('ListVehicles:', !!firstResponse.data?.listVehicles);
+      console.log('Items:', firstResponse.data?.listVehicles?.items?.length || 0);
+      console.log('NextToken:', !!firstResponse.data?.listVehicles?.nextToken);
+
+      if (firstResponse.errors) {
+        console.error('⚠️ Erreurs GraphQL première page:', firstResponse.errors);
+      }
+
+      const firstPageVehicles = firstResponse.data?.listVehicles?.items || [];
+      allVehicles = allVehicles.concat(firstPageVehicles);
+      nextToken = firstResponse.data?.listVehicles?.nextToken;
+      pageCount = 1;
+
+      console.log(`✅ Page 1: ${firstPageVehicles.length} véhicules`);
+      console.log(`Total actuel: ${allVehicles.length} véhicules`);
+      console.log(`NextToken pour suite: ${nextToken ? 'OUI' : 'NON'}`);
+
+      // Pages suivantes seulement si nextToken existe
+      while (nextToken && pageCount < 20) { // Limite à 20 pages pour debug
+        pageCount++;
+        console.log(`📄 Page ${pageCount} avec nextToken...`);
         
-        console.log(`✅ Page ${pageCount} RÉCUPÉRÉE: ${pageVehicles.length} véhicules`);
-        console.log(`📄 NextToken REÇU: ${newNextToken ? 'PRÉSENT - CONTINUE' : 'NULL - FINI'}`);
-        
-        allVehicles = allVehicles.concat(pageVehicles);
-        nextToken = newNextToken;
-        
-        // Progression détaillée
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        console.log(`🚀 TOTAL ACTUEL: ${allVehicles.length} véhicules en ${elapsed}s`);
-        
-        // Sécurité pour éviter boucle infinie
-        if (pageCount >= 50) {
-          console.log(`⚠️ ARRÊT SÉCURITÉ: 50 pages atteintes`);
-          break;
+        try {
+          const response = await client.graphql({
+            query: `query NextPage($nextToken: String!) {
+              listVehicles(limit: 1000, nextToken: $nextToken) {
+                items {
+                  immat
+                  immatriculation
+                  companyVehiclesId
+                  vehicleDeviceImei
+                  company {
+                    name
+                  }
+                  device {
+                    name
+                    imei
+                    sim
+                    device_type_id
+                  }
+                }
+                nextToken
+              }
+            }`,
+            variables: { nextToken }
+          });
+
+          if (response.errors) {
+            console.error(`⚠️ Erreurs GraphQL page ${pageCount}:`, response.errors);
+            break; // Arrêter sur erreur
+          }
+
+          const pageVehicles = response.data?.listVehicles?.items || [];
+          allVehicles = allVehicles.concat(pageVehicles);
+          nextToken = response.data?.listVehicles?.nextToken;
+          
+          console.log(`✅ Page ${pageCount}: ${pageVehicles.length} véhicules`);
+          console.log(`Total actuel: ${allVehicles.length} véhicules`);
+          
+        } catch (pageError) {
+          console.error(`❌ Erreur page ${pageCount}:`, pageError.message);
+          console.error('Détails erreur page:', pageError);
+          break; // Arrêter la pagination sur erreur
         }
-        
-      } while (nextToken);
+      }
 
-      const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`🎉 PAGINATION TERMINÉE: ${pageCount} pages, ${allVehicles.length} véhicules en ${totalTime}s`);
+      console.log(`🎉 Pagination terminée: ${pageCount} pages, ${allVehicles.length} véhicules total`);
 
-      // Transformation simple
-      const mappedVehicles = allVehicles.map((vehicle, index) => ({
-        id: vehicle.immat || vehicle.immatriculation || `vehicle-${index}`,
-        type: "vehicle",
-        immatriculation: vehicle.immat || vehicle.immatriculation || "",
-        entreprise: vehicle.company?.name || "Non définie",
-        imei: vehicle.device?.imei || vehicle.vehicleDeviceImei || "",
-        nomVehicule: vehicle.device?.name || "",
-        telephone: vehicle.device?.sim || "",
-        typeBoitier: vehicle.device?.device_type_id?.toString() || "",
-        isAssociated: !!(vehicle.device?.imei || vehicle.vehicleDeviceImei),
-        companyVehiclesId: vehicle.companyVehiclesId,
-        vehicleDeviceImei: vehicle.vehicleDeviceImei,
-        deviceData: vehicle.device || null,
-        marque: "",
-        modele: "",
-        kilometrage: "",
-        emplacement: ""
-      }));
+      // Transformation simple et sûre
+      const mappedVehicles = allVehicles.map((vehicle, index) => {
+        try {
+          return {
+            id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
+            type: "vehicle",
+            immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
+            entreprise: vehicle?.company?.name || "Non définie",
+            imei: vehicle?.device?.imei || vehicle?.vehicleDeviceImei || "",
+            nomVehicule: vehicle?.device?.name || "",
+            telephone: vehicle?.device?.sim || "",
+            typeBoitier: vehicle?.device?.device_type_id?.toString() || "",
+            isAssociated: !!(vehicle?.device?.imei || vehicle?.vehicleDeviceImei),
+            companyVehiclesId: vehicle?.companyVehiclesId,
+            vehicleDeviceImei: vehicle?.vehicleDeviceImei,
+            deviceData: vehicle?.device || null,
+            marque: "",
+            modele: "",
+            kilometrage: "",
+            emplacement: ""
+          };
+        } catch (mapError) {
+          console.error(`Erreur mapping véhicule ${index}:`, mapError);
+          return null;
+        }
+      }).filter(Boolean);
 
-      // Extraction des companies
+      // Companies extraction sécurisée
       const companies = [];
       const seenCompanies = new Set();
-      allVehicles.forEach(vehicle => {
-        if (vehicle.company && vehicle.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
-          companies.push({
-            id: vehicle.companyVehiclesId,
-            name: vehicle.company.name
-          });
-          seenCompanies.add(vehicle.companyVehiclesId);
+      
+      allVehicles.forEach((vehicle, index) => {
+        try {
+          if (vehicle?.company && vehicle?.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
+            companies.push({
+              id: vehicle.companyVehiclesId,
+              name: vehicle.company.name
+            });
+            seenCompanies.add(vehicle.companyVehiclesId);
+          }
+        } catch (companyError) {
+          console.warn(`Erreur extraction company véhicule ${index}:`, companyError);
         }
       });
 
-      console.log('=== RÉSULTAT FINAL PAGINATION ===');
-      console.log(`🚗 Véhicules: ${mappedVehicles.length} (objectif: ~19000)`);
+      console.log('=== RÉSULTAT FINAL SÉCURISÉ ===');
+      console.log(`🚗 Véhicules mappés: ${mappedVehicles.length}`);
       console.log(`🏢 Entreprises: ${companies.length}`);
-      console.log(`📄 Pages traitées: ${pageCount}`);
-      console.log(`⏱️ Temps total: ${totalTime}s`);
 
       return {
         companies,
@@ -117,9 +168,16 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('❌ Erreur pagination complète:', error.message);
-      console.error('❌ Stack:', error.stack);
-      throw new Error(`Erreur pagination véhicules: ${error.message}`);
+      console.error('❌ ERREUR DÉTAILLÉE:', {
+        message: error?.message || 'Message non défini',
+        stack: error?.stack || 'Stack non définie',
+        name: error?.name || 'Nom non défini',
+        errors: error?.errors || 'Pas d\'erreurs GraphQL',
+        type: typeof error,
+        fullError: error
+      });
+      
+      throw new Error(`Erreur pagination: ${error?.message || 'Erreur inconnue'}`);
     }
   });
 };
