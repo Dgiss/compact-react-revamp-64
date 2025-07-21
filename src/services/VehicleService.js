@@ -10,20 +10,22 @@ const client = generateClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== PAGINATION COMPLÈTE POUR 19000 VÉHICULES ===');
+    console.log('=== DÉMARRAGE PAGINATION POUR 19000 VÉHICULES ===');
     
     try {
       let allVehicles = [];
       let nextToken = null;
       let pageCount = 0;
+      const startTime = Date.now();
       
-      // Pagination jusqu'à récupérer TOUS les véhicules
+      // Pagination FORCÉE jusqu'à récupérer TOUS les véhicules
       do {
         pageCount++;
-        console.log(`📄 Page ${pageCount} - Total: ${allVehicles.length} véhicules`);
+        console.log(`📄 DÉBUT Page ${pageCount} - Actuellement: ${allVehicles.length} véhicules`);
+        console.log(`📄 NextToken pour cette page: ${nextToken ? 'PRÉSENT' : 'NULL'}`);
         
         const response = await client.graphql({
-          query: `query ListVehicles($nextToken: String) {
+          query: `query ListVehiclesPaginated($nextToken: String) {
             listVehicles(limit: 1000, nextToken: $nextToken) {
               items {
                 immat
@@ -43,23 +45,32 @@ export const fetchAllVehiclesOptimized = async () => {
               nextToken
             }
           }`,
-          variables: { nextToken }
+          variables: nextToken ? { nextToken } : {}
         });
 
         const pageVehicles = response.data.listVehicles.items || [];
-        console.log(`✅ Page ${pageCount}: ${pageVehicles.length} véhicules récupérés`);
+        const newNextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`✅ Page ${pageCount} RÉCUPÉRÉE: ${pageVehicles.length} véhicules`);
+        console.log(`📄 NextToken REÇU: ${newNextToken ? 'PRÉSENT - CONTINUE' : 'NULL - FINI'}`);
         
         allVehicles = allVehicles.concat(pageVehicles);
-        nextToken = response.data.listVehicles.nextToken;
+        nextToken = newNextToken;
         
-        // Progression tous les 5 pages
-        if (pageCount % 5 === 0) {
-          console.log(`🚀 Progression: ${allVehicles.length} véhicules sur ~19000`);
+        // Progression détaillée
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        console.log(`🚀 TOTAL ACTUEL: ${allVehicles.length} véhicules en ${elapsed}s`);
+        
+        // Sécurité pour éviter boucle infinie
+        if (pageCount >= 50) {
+          console.log(`⚠️ ARRÊT SÉCURITÉ: 50 pages atteintes`);
+          break;
         }
         
       } while (nextToken);
 
-      console.log(`🎉 TERMINÉ: ${pageCount} pages, ${allVehicles.length} véhicules au total`);
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`🎉 PAGINATION TERMINÉE: ${pageCount} pages, ${allVehicles.length} véhicules en ${totalTime}s`);
 
       // Transformation simple
       const mappedVehicles = allVehicles.map((vehicle, index) => ({
@@ -94,10 +105,11 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       });
 
-      console.log('=== RÉSULTAT COMPLET ===');
-      console.log(`🚗 Véhicules: ${mappedVehicles.length} / ~19000`);
+      console.log('=== RÉSULTAT FINAL PAGINATION ===');
+      console.log(`🚗 Véhicules: ${mappedVehicles.length} (objectif: ~19000)`);
       console.log(`🏢 Entreprises: ${companies.length}`);
       console.log(`📄 Pages traitées: ${pageCount}`);
+      console.log(`⏱️ Temps total: ${totalTime}s`);
 
       return {
         companies,
@@ -105,7 +117,8 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('❌ Erreur pagination:', error.message);
+      console.error('❌ Erreur pagination complète:', error.message);
+      console.error('❌ Stack:', error.stack);
       throw new Error(`Erreur pagination véhicules: ${error.message}`);
     }
   });
