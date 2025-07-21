@@ -699,14 +699,7 @@ export default function VehiclesDevicesPage() {
         <div>
           
           <div className="flex items-center space-x-2">
-            <input type="checkbox" id="vehiclesWithoutImei" checked={searchVehiclesWithoutImei} onChange={e => {
-            setSearchVehiclesWithoutImei(e.target.checked);
-            if (e.target.checked) {
-              setSearchImei('');
-              setSearchImmat('');
-              setSearchEntreprise('');
-            }
-          }} className="h-4 w-4" />
+            
             
           </div>
         </div>
