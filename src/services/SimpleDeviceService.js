@@ -171,37 +171,56 @@ export const associateDeviceToVehicleSimple = async (vehicleImmat, deviceImei) =
     console.log('=== ASSOCIATING DEVICE TO VEHICLE (BIDIRECTIONAL) ===');
     console.log('Vehicle:', vehicleImmat, 'Device:', deviceImei);
     
-    // Step 1: Update vehicle with device IMEI
-    const vehicleResult = await client.graphql({
-      query: mutations.updateVehicle,
-      variables: {
-        input: {
-          immat: vehicleImmat,
-          vehicleDeviceImei: deviceImei
-        }
-      }
-    });
-    
-    console.log('Vehicle updated with device IMEI:', vehicleResult.data.updateVehicle);
-    
-    // Step 2: Update device with vehicle immat (for belongsTo relationship)
     try {
-      const deviceResult = await client.graphql({
-        query: mutations.updateDevice,
+      // Step 1: Update vehicle with device IMEI
+      console.log('Step 1: Updating vehicle with device IMEI...');
+      const vehicleResult = await client.graphql({
+        query: mutations.updateVehicle,
         variables: {
           input: {
-            imei: deviceImei,
-            deviceVehicleImmat: vehicleImmat
+            immat: vehicleImmat,
+            vehicleDeviceImei: deviceImei
           }
         }
       });
       
-      console.log('Device updated with vehicle immat:', deviceResult.data.updateDevice);
-    } catch (deviceError) {
-      console.warn('Failed to update device with vehicle association, but vehicle association succeeded:', deviceError.message);
+      console.log('✅ Vehicle updated with device IMEI:', vehicleResult.data.updateVehicle);
+      
+      // Step 2: Update device with vehicle immat (for belongsTo relationship)
+      console.log('Step 2: Updating device with vehicle immat...');
+      try {
+        const deviceResult = await client.graphql({
+          query: mutations.updateDevice,
+          variables: {
+            input: {
+              imei: deviceImei,
+              deviceVehicleImmat: vehicleImmat
+            }
+          }
+        });
+        
+        console.log('✅ Device updated with vehicle immat:', deviceResult.data.updateDevice);
+      } catch (deviceError) {
+        console.warn('⚠️ Failed to update device with vehicle association, but vehicle association succeeded:', deviceError);
+        console.warn('Device error details:', deviceError.message);
+      }
+      
+      console.log('🎉 Bidirectional association completed successfully');
+      return vehicleResult.data.updateVehicle;
+      
+    } catch (associationError) {
+      console.error('❌ Error during association process:', associationError);
+      console.error('Association error message:', associationError.message);
+      console.error('Association error name:', associationError.name);
+      
+      if (associationError.errors && Array.isArray(associationError.errors)) {
+        console.error('GraphQL Errors during association:');
+        associationError.errors.forEach((err, index) => {
+          console.error(`Association Error ${index + 1}:`, err);
+        });
+      }
+      
+      throw associationError;
     }
-    
-    console.log('Bidirectional association completed successfully');
-    return vehicleResult.data.updateVehicle;
   });
 };
