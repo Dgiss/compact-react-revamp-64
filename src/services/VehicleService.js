@@ -28,9 +28,6 @@ export const fetchAllVehiclesOptimized = async () => {
               immatriculation
               companyVehiclesId
               vehicleDeviceImei
-              company {
-                name
-              }
               device {
                 name
                 imei
@@ -76,9 +73,6 @@ export const fetchAllVehiclesOptimized = async () => {
                   immatriculation
                   companyVehiclesId
                   vehicleDeviceImei
-                  company {
-                    name
-                  }
                   device {
                     name
                     imei
