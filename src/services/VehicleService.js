@@ -17,8 +17,8 @@ export const fetchAllVehiclesOptimized = async () => {
     
     try {
       const response = await client.graphql({
-        query: `query OptimizedVehicleQuery {
-          listVehicles(filter: {}) {
+        query: `query MyQuery {
+          listVehicles {
             items {
               companyVehiclesId
               device {
@@ -36,19 +36,8 @@ export const fetchAllVehiclesOptimized = async () => {
                 name
               }
               vehicleDeviceImei
-              nomVehicule
-              marque
-              modele
-              kilometerage
-              emplacement
-              AWN_nom_commercial
-              energie
-              puissanceFiscale
-              couleur
-              dateMiseEnCirculation
-              VIN
-              AWN_VIN
             }
+            nextToken
           }
         }`
       });
@@ -56,7 +45,7 @@ export const fetchAllVehiclesOptimized = async () => {
       const vehicles = response.data.listVehicles.items;
       console.log('Optimized vehicles fetched:', vehicles.length);
 
-      // Map vehicles to the expected format
+      // Map vehicles to the expected format using available fields only
       const mappedVehicles = vehicles.map(vehicle => {
         const deviceImei = vehicle.device?.imei || vehicle.vehicleDeviceImei;
         const isAssociated = !!deviceImei;
@@ -67,23 +56,23 @@ export const fetchAllVehiclesOptimized = async () => {
           entreprise: vehicle.company?.name || "Non définie",
           type: "vehicle",
           immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.nomVehicule || "",
+          nomVehicule: vehicle.device?.name || "", // Use device name as fallback
           imei: deviceImei || "",
           typeBoitier: vehicle.device?.protocolId?.toString() || "",
-          marque: vehicle.marque || "",
-          modele: vehicle.modele || "",
-          kilometrage: vehicle.kilometerage?.toString() || "",
+          marque: "", // Not available in schema, set empty
+          modele: "", // Not available in schema, set empty
+          kilometrage: "", // Not available in schema, set empty
           telephone: vehicle.device?.sim || "",
-          emplacement: vehicle.emplacement || "",
+          emplacement: "", // Not available in schema, set empty
           deviceData: vehicle.device || null,
           isAssociated,
-          // Additional fields
-          AWN_nom_commercial: vehicle.AWN_nom_commercial || "",
-          energie: vehicle.energie || "",
-          puissanceFiscale: vehicle.puissanceFiscale || "",
-          couleur: vehicle.couleur || "",
-          dateMiseEnCirculation: vehicle.dateMiseEnCirculation || "",
-          VIN: vehicle.VIN || vehicle.AWN_VIN || ""
+          // Additional fields - set to empty since not in schema
+          AWN_nom_commercial: "",
+          energie: "",
+          puissanceFiscale: "",
+          couleur: "",
+          dateMiseEnCirculation: "",
+          VIN: ""
         };
       });
 
