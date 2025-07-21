@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
-import { fetchAllVehiclesOptimized } from '@/services/VehicleService';
+import { fetchAllVehiclesOptimized } from '@/services/VehicleService.js';
 import { toast } from '@/hooks/use-toast';
 
 /**
