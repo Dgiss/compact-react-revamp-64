@@ -137,97 +137,84 @@ export const checkDeviceExists = async (imei) => {
 };
 
 /**
- * Create device with immediate vehicle association - CORRECTED ORDER
- * @param {Object} data - Complete data for device and vehicle creation
- * @returns {Promise<Object>} Creation results
+ * OBSOLÈTE: Cette fonction a été remplacée par la logique optimisée
+ * La nouvelle approche consiste à créer le device en premier, puis le véhicule avec l'IMEI
+ * @deprecated Utiliser SimpleDeviceService.createDeviceSimple + SimpleVehicleService.createVehicleSimple avec vehicleDeviceImei
  */
 export const createDeviceWithVehicleAssociation = async (data) => {
-  return await withCredentialRetry(async () => {
-    console.log('=== CREATING DEVICE WITH VEHICLE ASSOCIATION (CORRECTED ORDER) ===');
-    console.log('Input data:', data);
-
-    try {
-      // Step 1: Validate IMEI availability
-      const imeiList = data.imeiList || [data.imei];
-      const validImeis = [];
-      const errors = [];
-
-      for (const imei of imeiList) {
-        if (!imei?.trim()) continue;
+  console.log('⚠️ ATTENTION: Fonction obsolète appelée. Utilisation de la nouvelle logique optimisée...');
+  
+  try {
+    // Nouvelle logique optimisée : device d'abord, puis véhicule avec IMEI
+    const { createDeviceSimple } = await import('./SimpleDeviceService.js');
+    const { createVehicleSimple } = await import('./SimpleVehicleService.js');
+    
+    const imeiList = data.imeiList || [data.imei];
+    const validImeis = [];
+    const errors = [];
+    
+    // Vérifier et créer les devices d'abord
+    for (const imei of imeiList) {
+      if (!imei?.trim()) continue;
+      
+      try {
+        // Créer le device
+        const device = await createDeviceSimple({
+          imei: imei.trim(),
+          sim: data.sim,
+          protocolId: data.protocolId,
+          constructor: data.constructor
+        });
         
-        const isAvailable = await checkImeiAvailable(imei.trim());
-        if (isAvailable) {
-          validImeis.push(imei.trim());
-        } else {
-          errors.push(`${imei} (déjà existant)`);
-        }
+        validImeis.push(imei.trim());
+        console.log('✅ Device créé:', device.imei);
+      } catch (deviceError) {
+        console.error(`❌ Erreur création device ${imei}:`, deviceError);
+        errors.push(`${imei} (${deviceError.message})`);
       }
-
-      if (validImeis.length === 0) {
-        throw new Error('Aucun IMEI disponible');
-      }
-
-      // Step 2: Create vehicle FIRST (this was the problem - devices were created before vehicles)
-      const { createVehicleSimple } = await import('./SimpleVehicleService.js');
-      
-      const createdVehicle = await createVehicleSimple({
-        immatriculation: data.immatriculation,
-        categorie: data.categorie,
-        marque: data.brand,
-        modele: data.modele,
-        companyVehiclesId: data.companyVehiclesId,
-        nomVehicule: data.nomVehicule,
-        emplacement: data.emplacement,
-        kilometrage: data.kilometrage
-      });
-      
-      console.log('Vehicle created successfully:', createdVehicle.immat);
-
-      // Step 3: Create devices AFTER vehicle exists
-      const successfulDevices = [];
-      
-      for (const imei of validImeis) {
-        try {
-          const device = await createDeviceSimple({
-            imei: imei,
-            sim: data.sim,
-            protocolId: data.protocolId,
-            constructor: data.constructor
-          });
-          
-          console.log('Device created successfully:', device.imei);
-          
-          // Step 4: Associate device to vehicle
-          await associateDeviceToVehicleSimple(data.immatriculation, imei);
-          console.log('Device associated to vehicle successfully');
-          
-          successfulDevices.push({
-            imei: device.imei,
-            sim: device.sim || '',
-            deviceVehicleImmat: data.immatriculation,
-            id: device.imei,
-            vehicle: { company: { name: data.company?.name || '' } }
-          });
-        } catch (deviceError) {
-          console.error(`Error creating/associating device ${imei}:`, deviceError);
-          errors.push(`${imei} (${deviceError.message})`);
-        }
-      }
-
-      return {
-        success: successfulDevices.length > 0,
-        successCount: successfulDevices.length,
-        errorCount: errors.length,
-        devices: successfulDevices,
-        errors: errors,
-        vehicle: createdVehicle
-      };
-
-    } catch (error) {
-      console.error('Error in createDeviceWithVehicleAssociation:', error);
-      throw error;
     }
-  });
+    
+    if (validImeis.length === 0) {
+      throw new Error('Aucun device n\'a pu être créé');
+    }
+    
+    // Créer le véhicule avec le premier IMEI valide
+    const primaryImei = validImeis[0];
+    const createdVehicle = await createVehicleSimple({
+      immatriculation: data.immatriculation,
+      categorie: data.categorie,
+      marque: data.brand,
+      modele: data.modele,
+      companyVehiclesId: data.companyVehiclesId,
+      nomVehicule: data.nomVehicule,
+      emplacement: data.emplacement,
+      kilometrage: data.kilometrage,
+      vehicleDeviceImei: primaryImei // Association directe
+    });
+    
+    console.log('✅ Véhicule créé avec device associé:', createdVehicle.immat, '→', primaryImei);
+    
+    const successfulDevices = validImeis.map(imei => ({
+      imei: imei,
+      sim: data.sim || '',
+      deviceVehicleImmat: data.immatriculation,
+      id: imei,
+      vehicle: { company: { name: data.company?.name || '' } }
+    }));
+    
+    return {
+      success: successfulDevices.length > 0,
+      successCount: successfulDevices.length,
+      errorCount: errors.length,
+      devices: successfulDevices,
+      errors: errors,
+      vehicle: createdVehicle
+    };
+    
+  } catch (error) {
+    console.error('Error in createDeviceWithVehicleAssociation (nouvelle logique):', error);
+    throw error;
+  }
 };
 
 // Helper function to determine device type/name from protocolId
