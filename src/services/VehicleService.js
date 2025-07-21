@@ -28,14 +28,13 @@ export const fetchAllVehiclesOptimized = async () => {
         console.log(`Fetching vehicles page ${pageCount}${nextToken ? ` (nextToken: ${nextToken.substring(0, 50)}...)` : ''}`);
         
         const response = await client.graphql({
-          query: `query MyQuery($nextToken: String) {
+          query: `query ListAllVehicles($nextToken: String) {
             listVehicles(nextToken: $nextToken, limit: 1000) {
               items {
                 companyVehiclesId
                 device {
                   cid
                   name
-                  protocolId
                   sim
                   imei
                   flespi_id

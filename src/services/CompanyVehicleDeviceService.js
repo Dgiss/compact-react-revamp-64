@@ -401,22 +401,27 @@ export const fetchVehiclesWithoutDevices = async () => {
 };
 
 /**
- * OPTIMIZED: Get devices without vehicles
+ * OPTIMIZED: Get devices without vehicles - FIXED with correct GraphQL query
  */
 export const fetchDevicesWithoutVehicles = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING DEVICES WITHOUT VEHICLES ===');
+    console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
     
     try {
       const response = await client.graphql({
-        query: `query ListDevicesWithoutVehicles {
-          listDevices(filter: {vehicle: {attributeExists: false}}) {
+        query: `query ListDevicesWithoutVehicle {
+          listDevices(filter: {
+            deviceVehicleImmat: {attributeExists: false}
+          }) {
             items {
-              cid
-              name
-              protocolId
-              sim
+              vehicle {
+                immat
+              }
               imei
+              name
+              sim
+              cid
+              protocolId
               flespi_id
               device_type_id
             }
@@ -429,7 +434,7 @@ export const fetchDevicesWithoutVehicles = async () => {
         entreprise: "Boîtier libre",
         type: "device",
         immatriculation: "",
-        nomVehicule: "",
+        nomVehicule: device.name || "",
         imei: device.imei,
         typeBoitier: device.protocolId?.toString() || "",
         marque: "",
