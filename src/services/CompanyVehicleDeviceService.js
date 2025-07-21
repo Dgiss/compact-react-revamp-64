@@ -401,7 +401,7 @@ export const fetchVehiclesWithoutDevices = async () => {
 };
 
 /**
- * OPTIMIZED: Get devices without vehicles - FIXED with correct GraphQL query
+ * OPTIMIZED: Get devices without vehicles - uses simplified GraphQL query
  */
 export const fetchDevicesWithoutVehicles = async () => {
   return await withCredentialRetry(async () => {
@@ -414,9 +414,6 @@ export const fetchDevicesWithoutVehicles = async () => {
             deviceVehicleImmat: {attributeExists: false}
           }) {
             items {
-              vehicle {
-                immat
-              }
               imei
               name
               sim
