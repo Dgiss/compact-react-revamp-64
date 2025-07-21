@@ -170,32 +170,34 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - ON-DEMAND with mode control
-  const loadAllData = useCallback(async (mode = 'complete') => {
+  // Load all data - OPTIMIZED for performance
+  const loadAllData = useCallback(async (mode = 'optimized') => {
     setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) ===`);
+      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - OPTIMIZED ===`);
       
+      const startTime = Date.now();
       let result;
       
-      if (mode === 'optimized') {
-        // Use the new optimized single query
-        console.log('Using optimized single GraphQL query...');
+      if (mode === 'optimized' || mode === 'complete') {
+        // Always use the optimized single query for best performance
+        console.log('Using optimized single GraphQL query for maximum performance...');
         result = await VehicleService.fetchAllVehiclesOptimized();
       } else {
-        // Use the existing complex queries
-        console.log('Using existing complex queries...');
+        // Fallback to complex queries only if needed
+        console.log('Using fallback complex queries...');
         result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
       }
       
-      console.log('=== DATA LOADED SUCCESSFULLY ===');
+      const loadTime = Date.now() - startTime;
+      console.log(`=== DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
       console.log('Companies count:', result.companies?.length || 0);
       console.log('Combined data count:', result.vehicles?.length || 0);
       
-      // Update state
+      // Update state efficiently
       setCompanies(result.companies || []);
       setDevices(result.vehicles || []);
       
@@ -203,25 +205,29 @@ export const useCompanyVehicleDevice = () => {
       setAllDataCache(result);
       setIsCacheReady(true);
       
-      // Save to localStorage
-      saveToLocalStorage(result);
+      // Save to localStorage in background
+      setTimeout(() => saveToLocalStorage(result), 0);
       
-      // Update free devices
-      const freeDevicesCount = (result.vehicles || []).filter(item => 
-        item.type === "device" && !item.isAssociated
-      ).length;
-      setFreeDevices(freeDevicesCount);
-      
-      // Update stats
-      const vehicleCount = (result.vehicles || []).filter(item => item.type === "vehicle").length;
-      const associatedDeviceCount = (result.vehicles || []).filter(item => 
+      // Calculate stats efficiently
+      const vehicles = result.vehicles || [];
+      const vehicleCount = vehicles.filter(item => item.type === "vehicle").length;
+      const associatedDeviceCount = vehicles.filter(item => 
         item.type === "device" && item.isAssociated
       ).length;
+      const freeDevicesCount = vehicles.filter(item => 
+        item.type === "device" && !item.isAssociated
+      ).length;
       
+      setFreeDevices(freeDevicesCount);
       setStats({
         vehicleCount,
         associatedDeviceCount,
         freeDeviceCount: freeDevicesCount
+      });
+      
+      toast({
+        title: "Données chargées",
+        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
       });
       
     } catch (err) {
@@ -234,6 +240,12 @@ export const useCompanyVehicleDevice = () => {
       setIsCacheReady(false);
       setFreeDevices(0);
       setStats({});
+      
+      toast({
+        title: "Erreur",
+        description: `Erreur lors du chargement: ${err.message}`,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
