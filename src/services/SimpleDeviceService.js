@@ -75,43 +75,73 @@ export const createDeviceSimple = async (deviceData) => {
     
     console.log('Creating device in database:', deviceInput);
     
-    const dbResult = await client.graphql({
-      query: mutations.createDevice,
-      variables: { input: deviceInput }
-    });
-    
-    const createdDevice = dbResult.data.createDevice;
-    console.log('Device created in database:', createdDevice);
-    
-    // Step 3: Create in Flespi (optional, don't fail if it doesn't work)
     try {
-      if (hasFlespiApiKey()) {
-        const flespiId = await addDeviceToFlespi({
-          imei: deviceData.imei,
-          constructor: deviceData.constructor || deviceData.imei
-        });
-        
-        if (flespiId) {
-          // Update device with Flespi ID
-          await client.graphql({
-            query: mutations.updateDevice,
-            variables: {
-              input: {
-                imei: deviceData.imei,
-                flespiDeviceId: Number(flespiId)
-              }
-            }
+      const dbResult = await client.graphql({
+        query: mutations.createDevice,
+        variables: { input: deviceInput }
+      });
+      
+      const createdDevice = dbResult.data.createDevice;
+      console.log('Device created in database:', createdDevice);
+      
+      // Step 3: Create in Flespi (optional, don't fail if it doesn't work)
+      try {
+        if (hasFlespiApiKey()) {
+          const flespiId = await addDeviceToFlespi({
+            imei: deviceData.imei,
+            constructor: deviceData.constructor || deviceData.imei
           });
-          console.log('Device updated with Flespi ID:', flespiId);
+          
+          if (flespiId) {
+            // Update device with Flespi ID
+            await client.graphql({
+              query: mutations.updateDevice,
+              variables: {
+                input: {
+                  imei: deviceData.imei,
+                  flespiDeviceId: Number(flespiId)
+                }
+              }
+            });
+            console.log('Device updated with Flespi ID:', flespiId);
+          }
+        } else {
+          console.warn('Flespi API key not configured, skipping Flespi creation');
         }
-      } else {
-        console.warn('Flespi API key not configured, skipping Flespi creation');
+      } catch (flespiError) {
+        console.warn('Flespi creation failed but continuing:', flespiError.message);
       }
-    } catch (flespiError) {
-      console.warn('Flespi creation failed but continuing:', flespiError.message);
+      
+      return createdDevice;
+    } catch (error) {
+      console.error('Error creating device:', error);
+      
+      // Si l'erreur contient des informations sur un clone d'URL, nettoyer les logs
+      if (error.message?.includes('DataCloneError') || error.message?.includes('URL object could not be cloned')) {
+        console.error('Erreur de sérialisation des données. Tentative de récupération...');
+        
+        // Essayer de créer avec des données plus simples
+        const simpleInput = {
+          imei: String(deviceData.imei),
+          enabled: true
+        };
+        
+        try {
+          const retryResult = await client.graphql({
+            query: mutations.createDevice,
+            variables: { input: simpleInput }
+          });
+          
+          console.log('Device created with simple data:', retryResult.data.createDevice);
+          return retryResult.data.createDevice;
+        } catch (retryError) {
+          console.error('Retry failed:', retryError);
+          throw new Error(`Impossible de créer le dispositif: ${retryError.message}`);
+        }
+      }
+      
+      throw error;
     }
-    
-    return createdDevice;
   });
 };
 
