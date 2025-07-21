@@ -437,22 +437,52 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
     console.log('=== FETCHING VEHICLES WITHOUT DEVICES (OPTIMIZED) ===');
     
     const { generateClient } = await import('aws-amplify/api');
-    const { listVehicles } = await import('../graphql/queries');
     const client = generateClient();
     
-    // Use GraphQL filter to get only vehicles without associated devices
-    // In our schema, vehicles have a @hasOne relation with device, so we filter where device is null
+    // Use the working GraphQL filter that successfully finds vehicles without devices
     const cleanVariables = {
       filter: {
-        ...filter,
-        // Filter for vehicles that don't have a device relation
-        vehicleDeviceImei: { attributeExists: false }
+        or: [
+          { vehicleDeviceImei: { attributeExists: false } },
+          { vehicleDeviceImei: { eq: "" } }
+        ],
+        ...filter
       },
-      limit: 1000
+      limit: 10000
     };
     
     const result = await client.graphql({
-      query: listVehicles,
+      query: `query VehiclesWithoutDevices {
+        listVehicles(
+          filter: {
+            or: [
+              { vehicleDeviceImei: { attributeExists: false } },
+              { vehicleDeviceImei: { eq: "" } }
+            ]
+          }
+          limit: 10000
+        ) {
+          items {
+            companyVehiclesId
+            device {
+              cid
+              name
+              protocolId
+              sim
+              imei
+              flespi_id
+              device_type_id
+            }
+            immatriculation
+            immat
+            company {
+              name
+            }
+            vehicleDeviceImei
+          }
+          nextToken
+        }
+      }`,
       variables: cleanVariables
     });
     
@@ -466,9 +496,12 @@ export const fetchVehiclesWithoutDevices = async (filter = {}) => {
       type: 'vehicle',
       isAssociated: false,
       entreprise: vehicle.company?.name || 'Entreprise inconnue',
-      immatriculation: vehicle.immat,
+      immatriculation: vehicle.immat || vehicle.immatriculation,
       imei: null,
-      telephone: null
+      telephone: null,
+      nomVehicule: vehicle.device?.name || "",
+      deviceData: null,
+      vehicleDeviceImei: null // Make sure it's clearly null to show empty state
     }));
     
   } catch (error) {
