@@ -394,13 +394,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
               onValueChange={setSelectedCompany}
               placeholder="Sélectionner une entreprise..."
               searchFunction={searchCompaniesReal}
-              disabled={!companiesReady}
+              disabled={false}
             />
-            {!companiesReady && (
-              <p className="text-sm text-gray-500 mt-1">
-                Chargement des entreprises en cours...
-              </p>
-            )}
           </div>
         )}
 
