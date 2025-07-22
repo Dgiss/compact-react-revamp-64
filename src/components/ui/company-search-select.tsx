@@ -82,7 +82,7 @@ export function CompanySearchSelect({
     } finally {
       setLoading(false);
     }
-  }, [searchFunction, companiesCache]);
+  }, [searchFunction]);
 
   // Search companies when debounced search term changes
   useEffect(() => {

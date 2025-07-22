@@ -40,7 +40,7 @@ export const searchCompaniesReal = async (searchTerm) => {
       if (!searchTerm || searchTerm.trim() === '') {
         const response = await client.graphql({
           query: queries.listCompanies,
-          variables: { limit: 10 }
+          variables: { limit: 20 }
         });
         
         return response.data.listCompanies.items.map(company => ({
@@ -49,8 +49,6 @@ export const searchCompaniesReal = async (searchTerm) => {
           siret: company.siret
         }));
       }
-
-      console.log(`🔍 Recherche d'entreprise avec le terme: "${searchTerm}"`);
       
       // Recherche d'abord avec le terme exact
       let response = await client.graphql({
@@ -64,12 +62,9 @@ export const searchCompaniesReal = async (searchTerm) => {
       });
 
       let companies = response.data.listCompanies.items;
-      console.log(`📋 Première recherche: ${companies.length} entreprises trouvées`);
 
       // Si aucun résultat avec le terme exact, essayer une recherche plus large
       if (companies.length === 0) {
-        console.log(`🔄 Aucun résultat trouvé, recherche élargie...`);
-        
         const searchVariations = [
           searchTerm.toLowerCase(),
           searchTerm.toUpperCase(),
@@ -79,7 +74,6 @@ export const searchCompaniesReal = async (searchTerm) => {
         for (const variation of searchVariations) {
           if (companies.length > 0) break;
           
-          console.log(`🔍 Essai avec: "${variation}"`);
           response = await client.graphql({
             query: queries.listCompanies,
             variables: {
@@ -91,13 +85,11 @@ export const searchCompaniesReal = async (searchTerm) => {
           });
           
           companies = response.data.listCompanies.items;
-          console.log(`📋 Résultats pour "${variation}": ${companies.length} entreprises`);
         }
       }
 
       // Si toujours aucun résultat, chercher dans toutes les entreprises
       if (companies.length === 0) {
-        console.log(`🔄 Recherche globale dans toutes les entreprises...`);
         response = await client.graphql({
           query: queries.listCompanies,
           variables: { limit: 1000 }
