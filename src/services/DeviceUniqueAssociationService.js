@@ -161,14 +161,16 @@ export const getFreeDevices = async () => {
     const response = await client.graphql({
       query: queries.listDevices,
       variables: {
-        filter: {
-          vehicle: { attributeExists: false }
-        },
         limit: 1000
       }
     });
     
-    return response.data?.listDevices?.items || [];
+    const allDevices = response.data?.listDevices?.items || [];
+    
+    // Filter devices that don't have a vehicle association
+    const freeDevices = allDevices.filter(device => !device.vehicle);
+    
+    return freeDevices;
   } catch (error) {
     throw error;
   }

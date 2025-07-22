@@ -486,25 +486,20 @@ export const fetchDevicesWithoutVehicles = async () => {
     console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
     
     try {
+      // Get all devices and filter out those with vehicles on the client side
       const response = await client.graphql({
-        query: `query ListDevicesWithoutVehicle {
-          listDevices(filter: {
-            vehicle: {attributeExists: false}
-          }) {
-            items {
-              imei
-              name
-              sim
-              cid
-              protocolId
-              flespi_id
-              device_type_id
-            }
-          }
-        }`
+        query: queries.listDevices,
+        variables: {
+          limit: 1000
+        }
       });
       
-      const devices = response.data.listDevices.items.map(device => ({
+      const allDevices = response.data?.listDevices?.items || [];
+      
+      // Filter devices that don't have a vehicle association
+      const devicesWithoutVehicles = allDevices.filter(device => !device.vehicle);
+      
+      const devices = devicesWithoutVehicles.map(device => ({
         id: device.imei,
         entreprise: "Boîtier libre",
         type: "device",
@@ -551,18 +546,15 @@ export const fetchUnassociatedItemsStats = async () => {
       
       const vehiclesWithoutDevicesCount = vehiclesWithoutDevicesResponse.data.listVehicles.items.length;
       
-      // Fetch devices without vehicles
-      const devicesWithoutVehiclesResponse = await client.graphql({
-        query: `query ListDevicesWithoutVehiclesCount {
-          listDevices(filter: {vehicle: {attributeExists: false}}) {
-            items {
-              imei
-            }
-          }
-        }`
+      // Fetch devices without vehicles - using all devices and filtering client side
+      const allDevicesResponse = await client.graphql({
+        query: queries.listDevices,
+        variables: { limit: 1000 }
       });
       
-      const devicesWithoutVehiclesCount = devicesWithoutVehiclesResponse.data.listDevices.items.length;
+      const devicesWithoutVehicles = allDevicesResponse.data.listDevices.items.filter(device => !device.vehicle);
+      
+      const devicesWithoutVehiclesCount = devicesWithoutVehicles.length;
       
       // Fetch total vehicles
       const totalVehiclesResponse = await client.graphql({
