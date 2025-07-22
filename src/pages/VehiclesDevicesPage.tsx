@@ -11,6 +11,7 @@ import AddDeviceWithVehicleForm from "@/components/forms/AddDeviceWithVehicleFor
 import { toast } from "@/hooks/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
+import { MultiDeviceSelectionTable } from "@/components/tables/MultiDeviceSelectionTable";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice.jsx";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
@@ -57,6 +58,7 @@ export default function VehiclesDevicesPage() {
   const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
   const [showAddDeviceWithVehicleDialog, setShowAddDeviceWithVehicleDialog] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [showMultiDeviceDialog, setShowMultiDeviceDialog] = useState(false);
 
   // Search states
   const [searchImei, setSearchImei] = useState('');
@@ -776,6 +778,10 @@ export default function VehiclesDevicesPage() {
             <Search className="h-4 w-4 mr-2" />
             Recherche Multiple d'IMEI
           </Button>
+          <Button variant="outline" size="default" onClick={() => setShowMultiDeviceDialog(true)}>
+            <Smartphone className="h-4 w-4 mr-2" />
+            Gestion Multiple Devices
+          </Button>
           
           
           
@@ -904,6 +910,26 @@ export default function VehiclesDevicesPage() {
             </DialogTitle>
           </DialogHeader>
           {selectedItem && <AddVehicleForm initialData={selectedItem} onClose={() => setShowEditVehicleDialog(false)} onSave={handleSaveEdit} isEditing={true} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showMultiDeviceDialog} onOpenChange={setShowMultiDeviceDialog}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Gestion Multiple des Devices</DialogTitle>
+          </DialogHeader>
+          <MultiDeviceSelectionTable 
+            devices={combinedData.filter(item => item.type === "device")}
+            onDevicesUpdate={async () => {
+              await loadAllData();
+              setShowMultiDeviceDialog(false);
+              toast({
+                title: "Mise à jour",
+                description: "Les données ont été actualisées"
+              });
+            }}
+            onClose={() => setShowMultiDeviceDialog(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>;

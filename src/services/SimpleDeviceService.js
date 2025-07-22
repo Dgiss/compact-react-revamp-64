@@ -234,11 +234,42 @@ export const associateDeviceToVehicleSimple = async (vehicleImmat, deviceImei) =
   });
 };
 
+/**
+ * Delete a device from the system
+ * @param {Object} deviceData - Device data containing at least the IMEI
+ * @returns {Promise<boolean>} - Success status
+ */
+export const deleteDevice = async (deviceData) => {
+  return await withCredentialRetry(async () => {
+    console.log('🗑️ Deleting device:', deviceData.imei);
+    
+    try {
+      // Delete device from database
+      await client.graphql({
+        query: mutations.deleteDevice,
+        variables: {
+          input: {
+            imei: deviceData.imei
+          }
+        }
+      });
+      
+      console.log('✅ Device deleted successfully:', deviceData.imei);
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Error deleting device:', error);
+      throw error;
+    }
+  });
+};
+
 // Default export for the service
 const SimpleDeviceService = {
   checkImeiAvailable,
   createDeviceSimple,
-  associateDeviceToVehicleSimple
+  associateDeviceToVehicleSimple,
+  deleteDevice
 };
 
 export default SimpleDeviceService;
