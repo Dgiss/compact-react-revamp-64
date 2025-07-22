@@ -48,7 +48,7 @@ export const useVehicleValidation = () => {
         return { exists: false };
       }
       
-      console.error('Error checking immatriculation:', error);
+      
       setValidationError('Erreur lors de la vérification de l\'immatriculation');
       return { exists: false };
     } finally {

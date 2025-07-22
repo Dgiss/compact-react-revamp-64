@@ -35,7 +35,7 @@ export const LoginForm: React.FC = () => {
   const handleSessionRecovery = async () => {
     setIsRecovering(true);
     try {
-      console.log('Tentative de récupération de session...');
+      
       await forceLogout();
       toast({
         title: "Session nettoyée",
@@ -57,7 +57,7 @@ export const LoginForm: React.FC = () => {
     setIsLoading(true);
     
     try {
-      console.log('LoginForm: Tentative de connexion pour:', data.username);
+      
       const result = await signInUser(data.username, data.password);
       
       if (result.success) {
@@ -73,7 +73,7 @@ export const LoginForm: React.FC = () => {
           description: "Bienvenue dans Geoloc Systems",
         });
         
-        console.log('LoginForm: Redirection vers /entreprises');
+        
         navigate('/entreprises');
       } else {
         console.error('LoginForm: Échec de connexion:', result.error);

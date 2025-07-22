@@ -15,9 +15,6 @@ export const useVehicleAssociation = () => {
     setAssociationError(null);
 
     try {
-      console.log('=== STARTING VEHICLE-DEVICE ASSOCIATION ===');
-      console.log('Device IMEI:', deviceImei);
-      console.log('Vehicle Immat:', vehicleImmat);
 
       // Validate inputs
       if (!deviceImei || !vehicleImmat) {
@@ -33,13 +30,13 @@ export const useVehicleAssociation = () => {
           description: `Boîtier ${deviceImei} associé au véhicule ${vehicleImmat}`,
         });
         
-        console.log('Association completed successfully');
+        
         return { success: true, data: result.vehicleUpdate };
       } else {
         throw new Error('Association failed');
       }
     } catch (error) {
-      console.error('Association error:', error);
+      
       setAssociationError(error.message);
       
       toast({
