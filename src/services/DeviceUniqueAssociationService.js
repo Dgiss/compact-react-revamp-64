@@ -27,10 +27,12 @@ export const checkDeviceVehicleUniqueness = async (deviceImei, excludeVehicleImm
     }
     
     // Check if device has a vehicle association
-    const associatedVehicleImmat = device.deviceVehicleImmat;
-    if (!associatedVehicleImmat) {
+    const associatedVehicle = device.vehicle;
+    if (!associatedVehicle) {
       return { isAssociated: false };
     }
+    
+    const associatedVehicleImmat = associatedVehicle.immat;
     
     // If excluding a specific vehicle (for updates), check if it's different
     if (excludeVehicleImmat && associatedVehicleImmat === excludeVehicleImmat) {
@@ -80,20 +82,20 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
       await dissociateDeviceFromVehicle(deviceImei);
     }
     
-    // Proceed with association
+    // Proceed with association by updating the vehicle's vehicleDeviceImei field
     const updateResult = await client.graphql({
-      query: mutations.updateDevice,
+      query: mutations.updateVehicle,
       variables: {
         input: {
-          imei: deviceImei,
-          deviceVehicleImmat: vehicleImmat
+          immat: vehicleImmat,
+          vehicleDeviceImei: deviceImei
         }
       }
     });
     
     return { 
       success: true, 
-      deviceUpdate: updateResult.data?.updateDevice,
+      vehicleUpdate: updateResult.data?.updateVehicle,
       message: `Boîtier ${deviceImei} associé avec succès au véhicule ${vehicleImmat}`
     };
     
@@ -111,19 +113,35 @@ export const dissociateDeviceFromVehicle = async (deviceImei) => {
   await waitForAmplifyConfig();
   
   try {
-    const updateResult = await client.graphql({
-      query: mutations.updateDevice,
+    // Find the vehicle associated with this device first
+    const vehiclesResponse = await client.graphql({
+      query: queries.listVehicles,
       variables: {
-        input: {
-          imei: deviceImei,
-          deviceVehicleImmat: null
+        filter: {
+          vehicleDeviceImei: { eq: deviceImei }
         }
       }
     });
     
+    const associatedVehicles = vehiclesResponse.data?.listVehicles?.items || [];
+    
+    // Dissociate from all vehicles (should be only one due to uniqueness)
+    const updatePromises = associatedVehicles.map(vehicle => 
+      client.graphql({
+        query: mutations.updateVehicle,
+        variables: {
+          input: {
+            immat: vehicle.immat,
+            vehicleDeviceImei: null
+          }
+        }
+      })
+    );
+    
+    await Promise.all(updatePromises);
+    
     return { 
       success: true, 
-      deviceUpdate: updateResult.data?.updateDevice,
       message: `Boîtier ${deviceImei} dissocié avec succès`
     };
     
@@ -144,7 +162,7 @@ export const getFreeDevices = async () => {
       query: queries.listDevices,
       variables: {
         filter: {
-          deviceVehicleImmat: { attributeExists: false }
+          vehicle: { attributeExists: false }
         },
         limit: 1000
       }

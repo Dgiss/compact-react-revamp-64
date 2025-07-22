@@ -5011,7 +5011,6 @@ export const listDevices = /* GraphQL */ `
         }
         createdAt
         updatedAt
-        deviceVehicleImmat
         __typename
       }
       nextToken
@@ -5076,7 +5075,6 @@ export const listCompanyDevices = /* GraphQL */ `
           messages_rotate
           createdAt
           updatedAt
-          deviceVehicleImei
           __typename
         }
         createdAt

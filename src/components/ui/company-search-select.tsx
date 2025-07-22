@@ -65,13 +65,11 @@ export function CompanySearchSelect({
   const searchCompanies = useCallback(async (term: string) => {
     // Check cache first
     if (companiesCache.has(term)) {
-      console.log('Using cached companies for term:', term);
       return companiesCache.get(term) || [];
     }
     
     setLoading(true);
     try {
-      console.log('Searching companies for term:', term);
       const results = await searchFunction(term);
       
       // Cache the results

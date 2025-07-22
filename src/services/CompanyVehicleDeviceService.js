@@ -489,7 +489,7 @@ export const fetchDevicesWithoutVehicles = async () => {
       const response = await client.graphql({
         query: `query ListDevicesWithoutVehicle {
           listDevices(filter: {
-            deviceVehicleImmat: {attributeExists: false}
+            vehicle: {attributeExists: false}
           }) {
             items {
               imei
