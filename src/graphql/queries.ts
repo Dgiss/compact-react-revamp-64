@@ -4980,57 +4980,6 @@ export const listDevices = /* GraphQL */ `
         sim
         vehicle {
           immat
-          # year
-          # fuelType
-          # consumption
-          # maxSpeed
-          # seatCount
-          # icon
-          # picture {
-          #   bucket
-          #   region
-          #   key
-          #   __typename
-          # }
-          # kilometerage
-          # kilometerPrice
-          # kilometerageStart
-          # kilometerageDay
-          # kilometerageLastUpdate
-          # timeRunning
-          # counterValue
-          # co2
-          # lastModificationDate
-          # rollingTimeStart
-          # rollingTimeDay
-          # locations
-          # installationPrecautions
-          # code
-          # vehicleCategory {
-          #   id
-          #   category
-          #   description
-          #   createdAt
-          #   updatedAt
-          #   __typename
-          # }
-          # brand {
-          #   brandName
-          #   createdAt
-          #   updatedAt
-          #   __typename
-          # }
-          # modele {
-          #   id
-          #   modele
-          #   createdAt
-          #   updatedAt
-          #   vehicleBrandModelsBrandName
-          #   __typename
-          # }
-          # gefcoSend
-          # tankCapacity
-          # canMileage
           companyVehiclesId
           company {
             id
@@ -5051,6 +5000,23 @@ export const listDevices = /* GraphQL */ `
             createdAt
             updatedAt
             __typename
+          }
+          createdAt
+          updatedAt
+          vehicleVehicleCategoryId
+          vehicleBrandBrandName
+          vehicleModeleId
+          vehicleDeviceImei
+          __typename
+        }
+        createdAt
+        updatedAt
+        deviceVehicleImmat
+        __typename
+      }
+      nextToken
+      __typename
+    }
   }
 `;
 export const listCompanyDevices = /* GraphQL */ `
@@ -5115,40 +5081,6 @@ export const listCompanyDevices = /* GraphQL */ `
         }
         createdAt
         updatedAt
-        __typename
-      }
-      nextToken
-      __typename
-    }
-  }
-          device {
-            imei
-            protocolId
-            sim
-            createdAt
-            updatedAt
-            deviceVehicleImmat
-            __typename
-          }
-          alerts {
-            nextToken
-            __typename
-          }
-          tags {
-            nextToken
-            __typename
-          }
-          createdAt
-          updatedAt
-          vehicleVehicleCategoryId
-          vehicleBrandBrandName
-          vehicleModeleId
-          vehicleDeviceImei
-          __typename
-        }
-        # createdAt
-        # updatedAt
-        deviceVehicleImmat
         __typename
       }
       nextToken

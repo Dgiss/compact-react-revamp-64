@@ -12,38 +12,28 @@ const client = generateClient();
  * @returns {Promise<Object>} Device object
  */
 const ensureDeviceExists = async (deviceImei) => {
-  console.log('=== ENSURING DEVICE EXISTS ===');
-  console.log('Device IMEI to check:', deviceImei);
-  
   try {
     // Try to get the device first
-    console.log('Checking if device exists...');
     const deviceResponse = await client.graphql({
       query: queries.getDevice,
       variables: { imei: deviceImei }
     });
     
     if (deviceResponse.data?.getDevice) {
-      console.log('✅ Device already exists:', deviceResponse.data.getDevice);
       return deviceResponse.data.getDevice;
     }
-    console.log('❌ Device not found in database');
   } catch (error) {
-    console.log('❌ Error checking device existence:', error.message);
+    // Device doesn't exist, continue to create it
   }
   
   // Device doesn't exist, create it with minimal data
-  console.log('🔨 Creating new device with IMEI:', deviceImei);
   try {
     const newDevice = await createDevice({
       imei: deviceImei,
       enabled: true
     });
     
-    console.log('✅ Device created successfully:', newDevice);
-    
     // Wait a bit for consistency
-    console.log('⏳ Waiting 500ms for database consistency...');
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Verify the device was created
@@ -53,14 +43,11 @@ const ensureDeviceExists = async (deviceImei) => {
     });
     
     if (verifyResponse.data?.getDevice) {
-      console.log('✅ Device verified in database:', verifyResponse.data.getDevice);
       return verifyResponse.data.getDevice;
     } else {
-      console.log('⚠️ Device not found after creation - consistency issue');
       return newDevice;
     }
   } catch (createError) {
-    console.error('❌ Error creating device:', createError);
     throw createError;
   }
 };
@@ -73,10 +60,6 @@ const ensureDeviceExists = async (deviceImei) => {
  */
 export const associateDeviceToCompany = async (deviceImei, companyId) => {
   await waitForAmplifyConfig();
-  
-  console.log('=== ASSOCIATING DEVICE TO COMPANY ===');
-  console.log('Device IMEI:', deviceImei);
-  console.log('Company ID:', companyId);
   
   try {
     // Ensure the device exists before creating the association
@@ -96,15 +79,8 @@ export const associateDeviceToCompany = async (deviceImei, companyId) => {
       }
     });
     
-    console.log('Company device association successful:', companyDeviceCreate.data?.createCompanyDevice);
-    
     return { success: true, companyDevice: companyDeviceCreate.data?.createCompanyDevice };
   } catch (error) {
-    console.error('Error associating device to company:', error);
-    console.error('Error details:', error.message);
-    if (error.errors) {
-      console.error('GraphQL errors:', error.errors);
-    }
     throw error;
   }
 };
@@ -117,10 +93,6 @@ export const associateDeviceToCompany = async (deviceImei, companyId) => {
  */
 export const dissociateDeviceFromCompany = async (deviceImei, companyId = null) => {
   await waitForAmplifyConfig();
-  
-  console.log('=== DISSOCIATING DEVICE FROM COMPANY ===');
-  console.log('Device IMEI:', deviceImei);
-  console.log('Company ID:', companyId);
   
   try {
     // Find active association if companyId not provided
@@ -162,15 +134,8 @@ export const dissociateDeviceFromCompany = async (deviceImei, companyId = null) 
       }
     });
     
-    console.log('Company device dissociation successful:', companyDeviceUpdate.data?.updateCompanyDevice);
-    
     return { success: true, companyDevice: companyDeviceUpdate.data?.updateCompanyDevice };
   } catch (error) {
-    console.error('Error dissociating device from company:', error);
-    console.error('Error details:', error.message);
-    if (error.errors) {
-      console.error('GraphQL errors:', error.errors);
-    }
     throw error;
   }
 };
@@ -197,7 +162,6 @@ export const getActiveCompanyDeviceAssociation = async (deviceImei) => {
     const associations = response.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
     return associations.length > 0 ? associations[0] : null;
   } catch (error) {
-    console.error('Error getting active company device association:', error);
     throw error;
   }
 };
@@ -224,7 +188,6 @@ export const getDevicesByCompany = async (companyId, activeOnly = true) => {
     
     return response.data?.companyDevicesByCompanyIDAndAssociationDate?.items || [];
   } catch (error) {
-    console.error('Error getting devices by company:', error);
     throw error;
   }
 };
@@ -247,7 +210,6 @@ export const getCompanyDeviceHistory = async (deviceImei) => {
     
     return response.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
   } catch (error) {
-    console.error('Error getting company device history:', error);
     throw error;
   }
 };
@@ -262,11 +224,6 @@ export const getCompanyDeviceHistory = async (deviceImei) => {
 export const transferDeviceBetweenCompanies = async (deviceImei, fromCompanyId, toCompanyId) => {
   await waitForAmplifyConfig();
   
-  console.log('=== TRANSFERRING DEVICE BETWEEN COMPANIES ===');
-  console.log('Device IMEI:', deviceImei);
-  console.log('From Company:', fromCompanyId);
-  console.log('To Company:', toCompanyId);
-  
   try {
     // Dissociate from current company
     await dissociateDeviceFromCompany(deviceImei, fromCompanyId);
@@ -274,11 +231,8 @@ export const transferDeviceBetweenCompanies = async (deviceImei, fromCompanyId, 
     // Associate with new company
     const association = await associateDeviceToCompany(deviceImei, toCompanyId);
     
-    console.log('Device transfer successful');
-    
     return { success: true, newAssociation: association.companyDevice };
   } catch (error) {
-    console.error('Error transferring device between companies:', error);
     throw error;
   }
 };
@@ -311,7 +265,6 @@ export const getDeviceStatusInfo = async (deviceImei) => {
       status: determineDeviceStatus(companyAssociation, device?.deviceVehicleImmat)
     };
   } catch (error) {
-    console.error('Error getting device status info:', error);
     throw error;
   }
 };
@@ -324,74 +277,37 @@ export const getUnassignedDevices = async () => {
   await waitForAmplifyConfig();
   
   try {
-    console.log('=== GETTING UNASSIGNED DEVICES ===');
-    
-    // Get all devices with error handling
-    console.log('Fetching all devices...');
-    let devicesResponse;
-    try {
-      devicesResponse = await client.graphql({
-        query: queries.listDevices,
-        variables: {
-          limit: 1000 // Get more devices at once
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching devices:', error);
-      if (error.message && error.message.includes('Body must be a string')) {
-        console.error('GraphQL query formatting error - listDevices query may be malformed');
-        throw new Error('Erreur de format GraphQL pour listDevices - veuillez vérifier la requête');
+    // Get all devices
+    const devicesResponse = await client.graphql({
+      query: queries.listDevices,
+      variables: {
+        limit: 1000
       }
-      throw error;
-    }
+    });
     
     const allDevices = devicesResponse.data?.listDevices?.items || [];
-    console.log('Total devices found:', allDevices.length);
     
-    // Get all active company device associations with error handling
-    console.log('Fetching company device associations...');
-    let associationsResponse;
-    try {
-      associationsResponse = await client.graphql({
-        query: queries.listCompanyDevices,
-        variables: {
-          filter: {
-            isActive: { eq: true }
-          },
-          limit: 1000
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching company device associations:', error);
-      if (error.message && error.message.includes('Body must be a string')) {
-        console.error('GraphQL query formatting error - listCompanyDevices query may be malformed');
-        throw new Error('Erreur de format GraphQL pour listCompanyDevices - veuillez vérifier la requête');
+    // Get all active company device associations
+    const associationsResponse = await client.graphql({
+      query: queries.listCompanyDevices,
+      variables: {
+        filter: {
+          isActive: { eq: true }
+        },
+        limit: 1000
       }
-      throw error;
-    }
+    });
     
     const activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
     const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
-    console.log('Company associated devices:', Array.from(companyAssociatedImeis));
     
-    // Get all vehicles to check for vehicleDeviceImei associations with error handling
-    console.log('Fetching all vehicles...');
-    let vehiclesResponse;
-    try {
-      vehiclesResponse = await client.graphql({
-        query: queries.listVehicles,
-        variables: {
-          limit: 1000 // Get more vehicles at once
-        }
-      });
-    } catch (error) {
-      console.error('Error fetching vehicles:', error);
-      if (error.message && error.message.includes('Body must be a string')) {
-        console.error('GraphQL query formatting error - listVehicles query may be malformed');
-        throw new Error('Erreur de format GraphQL pour listVehicles - veuillez vérifier la requête');
+    // Get all vehicles to check for vehicle associations
+    const vehiclesResponse = await client.graphql({
+      query: queries.listVehicles,
+      variables: {
+        limit: 1000
       }
-      throw error;
-    }
+    });
     
     const allVehicles = vehiclesResponse.data?.listVehicles?.items || [];
     const vehicleAssociatedImeis = new Set(
@@ -399,22 +315,14 @@ export const getUnassignedDevices = async () => {
         .map(v => v.vehicleDeviceImei)
         .filter(Boolean)
     );
-    console.log('Vehicle associated devices:', Array.from(vehicleAssociatedImeis));
     
     // Filter out devices that are associated with companies OR vehicles
     const unassignedDevices = allDevices.filter(device => 
       !companyAssociatedImeis.has(device.imei) && !vehicleAssociatedImeis.has(device.imei)
     );
     
-    console.log('Total devices:', allDevices.length);
-    console.log('Company associated:', companyAssociatedImeis.size);
-    console.log('Vehicle associated:', vehicleAssociatedImeis.size);
-    console.log('Unassigned devices found:', unassignedDevices.length);
-    console.log('Unassigned device IMEIs:', unassignedDevices.map(d => d.imei));
-    
     return unassignedDevices;
   } catch (error) {
-    console.error('Error getting unassigned devices:', error);
     throw error;
   }
 };

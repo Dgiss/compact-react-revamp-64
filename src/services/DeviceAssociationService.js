@@ -1,6 +1,7 @@
 import { generateClient } from 'aws-amplify/api';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { associateDeviceToVehicleUnique } from './DeviceUniqueAssociationService.js';
 
 const client = generateClient();
 
@@ -13,22 +14,9 @@ const client = generateClient();
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   await waitForAmplifyConfig();
   
-  
   try {
-    // CRITICAL FIX: Use the CORRECT GraphQL relation - update Device to link to Vehicle
-    // The schema shows: Vehicle @hasOne Device and Device @belongsTo Vehicle
-    const deviceUpdate = await client.graphql({
-      query: mutations.updateDevice,
-      variables: {
-        input: {
-          imei: deviceImei,
-          deviceVehicleImmat: vehicleImmat // Fixed GraphQL field name
-        }
-      }
-    });
-    
-    
-    return { success: true, deviceUpdate: deviceUpdate.data?.updateDevice };
+    // Use unique association service that validates one device per vehicle
+    return await associateDeviceToVehicleUnique(deviceImei, vehicleImmat, false);
   } catch (error) {
     throw error;
   }

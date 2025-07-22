@@ -17,6 +17,7 @@ import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehicleService";
 import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
+import { useDataRefresh } from "@/hooks/useDataRefresh";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -66,6 +67,17 @@ export default function VehiclesDevicesPage() {
   // Multi-selection for dissociation
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
+
+  // Track current filters for refresh after association
+  const [currentFilters, setCurrentFilters] = useState({});
+
+  // Data refresh hook
+  const { refreshAfterAssociation, refreshAfterDissociation, refreshAfterDeletion } = useDataRefresh(
+    loadAllData, 
+    setFilteredData, 
+    searchDevices, 
+    currentFilters
+  );
 
   // OPTIMIZED: Search vehicles with empty IMEI - no cache loading needed
   const searchVehiclesWithEmptyImeiOptimized = async () => {
@@ -188,6 +200,14 @@ export default function VehiclesDevicesPage() {
         immatriculation: r.immatriculation
       })));
       setFilteredData(results || []);
+      
+      // Store current filters for refresh after operations
+      setCurrentFilters({
+        imei: searchImei,
+        immatriculation: searchImmat,
+        entreprise: searchEntreprise
+      });
+      
       if (!results || results.length === 0) {
         toast({
           title: "Aucun résultat",
@@ -218,6 +238,7 @@ export default function VehiclesDevicesPage() {
     setSearchEntreprise('');
     setSearchVehiclesWithoutImei(false);
     setFilteredData([]);
+    setCurrentFilters({});
     resetFilters();
   };
 
@@ -267,11 +288,7 @@ export default function VehiclesDevicesPage() {
   const deleteVehicleDataLocal = async item => {
     try {
       await deleteVehicleData(item);
-      toast({
-        title: "Succès",
-        description: "Véhicule supprimé avec succès"
-      });
-      await loadAllData();
+      await refreshAfterDeletion("Véhicule supprimé avec succès");
     } catch (err) {
       console.error('Error deleting vehicle:', err);
       toast({
@@ -285,14 +302,8 @@ export default function VehiclesDevicesPage() {
   // Dissociate device from vehicle
   const dissociateDevice = async vehicleImmat => {
     try {
-      console.log('=== DISSOCIATING DEVICE FROM VEHICLE ===');
-      console.log('Vehicle immat:', vehicleImmat);
       await dissociateVehicleFromDevice(vehicleImmat);
-      toast({
-        title: "Succès",
-        description: "Boîtier dissocié avec succès"
-      });
-      await loadAllData();
+      await refreshAfterDissociation("Boîtier dissocié avec succès");
     } catch (err) {
       console.error('Error dissociating device:', err);
       toast({
@@ -344,7 +355,7 @@ export default function VehiclesDevicesPage() {
       }
       setSelectedVehicles([]);
       setIsSelectMode(false);
-      await loadAllData();
+      await refreshAfterDissociation(`${results.length} véhicule(s) dissocié(s) avec succès`);
     } catch (err) {
       console.error('Error bulk dissociating:', err);
       toast({
@@ -855,14 +866,15 @@ export default function VehiclesDevicesPage() {
             <SheetTitle>Associer un Véhicule</SheetTitle>
           </SheetHeader>
           <AssociateVehicleForm device={selectedDevice} mode={associationMode} onClose={() => setShowAssociateSheet(false)} onSuccess={async () => {
-          toast({
-            title: associationMode === 'company-device' ? "Boîtier réservé" : "Boîtier associé",
-            description: associationMode === 'company-device' ? "Le boîtier a été réservé pour l'entreprise avec succès" : "Le boîtier a été associé au véhicule avec succès"
-          });
+          const successMessage = associationMode === 'company-device' 
+            ? "Le boîtier a été réservé pour l'entreprise avec succès" 
+            : "Le boîtier a été associé au véhicule avec succès";
+          
           setShowAssociateSheet(false);
           setAssociationMode('vehicle-device');
-          // Refresh data to show the new association
-          await loadAllData();
+          
+          // Use refresh hook to automatically update table
+          await refreshAfterAssociation(successMessage);
         }} />
         </SheetContent>
       </Sheet>
