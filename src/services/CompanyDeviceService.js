@@ -328,6 +328,16 @@ export const getUnassignedDevices = async () => {
 };
 
 /**
+ * Reserve a device for a company (alias for associateDeviceToCompany)
+ * @param {string} deviceImei - Device IMEI
+ * @param {string} companyId - Company ID
+ * @returns {Promise<Object>} Association result
+ */
+export const reserveDeviceForCompany = async (deviceImei, companyId) => {
+  return await associateDeviceToCompany(deviceImei, companyId);
+};
+
+/**
  * Determine device status based on associations
  * @param {Object|null} companyAssociation - Company association object
  * @param {string|null} vehicleImmat - Vehicle immatriculation

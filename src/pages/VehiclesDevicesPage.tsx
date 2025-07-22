@@ -13,6 +13,7 @@ import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearc
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice.jsx";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
+import { DevicesBulkAssociation } from "@/components/tables/DevicesBulkAssociation";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehicleService";
 import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
@@ -67,6 +68,9 @@ export default function VehiclesDevicesPage() {
   // Multi-selection for dissociation
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
+  
+  // Bulk association state
+  const [showBulkAssociation, setShowBulkAssociation] = useState(false);
 
   // Track current filters for refresh after association
   const [currentFilters, setCurrentFilters] = useState({});
@@ -573,11 +577,14 @@ export default function VehiclesDevicesPage() {
           </div>
         </Button>
 
-        <Button onClick={() => searchDevicesWithoutVehiclesOptimized()} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
+        <Button onClick={() => {
+          searchDevicesWithoutVehiclesOptimized();
+          setShowBulkAssociation(true);
+        }} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Smartphone className="h-6 w-6 mb-2" />
           <div>
             <div className="font-medium">Dispositifs libres</div>
-            <div className="text-sm text-muted-foreground">Voir les dispositifs non associés</div>
+            <div className="text-sm text-muted-foreground">Voir et associer en masse</div>
           </div>
         </Button>
 
@@ -825,6 +832,23 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
       
+      {/* Show bulk association interface when enabled */}
+      {showBulkAssociation && filteredData.length > 0 && (
+        <div className="mb-6">
+          <DevicesBulkAssociation 
+            devices={filteredData.filter(item => item.type === "device" && !item.isAssociated)}
+            onAssociationComplete={() => {
+              setShowBulkAssociation(false);
+              searchDevicesWithoutVehiclesOptimized();
+              toast({
+                title: "Actualisation",
+                description: "Liste des boîtiers mise à jour"
+              });
+            }}
+          />
+        </div>
+      )}
+
       <EnhancedDataTable columns={allColumns} data={filteredData.length > 0 ? filteredData : combinedData} onEdit={handleEdit} renderActions={item => <div className="flex gap-1">
             {/* Edit button - shown for all vehicles */}
             {item.type === "vehicle" && <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} title="Modifier ce véhicule">
