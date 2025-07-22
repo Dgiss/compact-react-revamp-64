@@ -832,17 +832,16 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
       
-      {/* Show bulk association interface when enabled */}
-      {showBulkAssociation && filteredData.length > 0 && (
+      {/* Interface d'association en masse pour boîtiers sans IMEI */}
+      {filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && (
         <div className="mb-6">
           <DevicesBulkAssociation 
-            devices={filteredData.filter(item => item.type === "device" && !item.isAssociated)}
+            devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))}
             onAssociationComplete={() => {
-              setShowBulkAssociation(false);
               searchDevicesWithoutVehiclesOptimized();
               toast({
-                title: "Actualisation",
-                description: "Liste des boîtiers mise à jour"
+                title: "Mise à jour",
+                description: "Liste des boîtiers actualisée"
               });
             }}
           />
