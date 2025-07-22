@@ -105,12 +105,17 @@ export function CompanySearchSelect({
     };
   }, [debouncedSearchTerm, searchCompanies]);
 
-  // Load initial companies when opened (only if not cached)
+  // Load initial companies when opened
   useEffect(() => {
-    if (open && companies.length === 0 && !companiesCache.has("")) {
-      setSearchTerm("");
+    if (open && companies.length === 0) {
+      // Force initial search
+      const performInitialSearch = async () => {
+        const results = await searchCompanies("");
+        setCompanies(results);
+      };
+      performInitialSearch();
     }
-  }, [open, companies.length, companiesCache]);
+  }, [open, searchCompanies]);
 
   const selectedCompany = useMemo(() => 
     companies.find(company => company.id === value || company.name === value),
