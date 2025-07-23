@@ -120,7 +120,7 @@ export const fetchAllVehiclesOptimized = async () => {
       
       allVehicles.forEach((vehicle) => {
         try {
-          if (vehicle?.company && vehicle?.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
+          if (vehicle?.company?.name && vehicle?.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
             companies.push({
               id: vehicle.companyVehiclesId,
               name: vehicle.company.name
