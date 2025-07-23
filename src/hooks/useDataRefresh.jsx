@@ -14,24 +14,28 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
         description: message,
       });
       
-      // Wait a moment for backend consistency
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Immediately refresh data for better user experience
+      console.log('Refreshing data after association...');
       
-      // Refresh data
+      // Refresh data based on current state
       if (currentFilters && Object.keys(currentFilters).length > 0) {
         // If there are active filters, refresh search results
+        console.log('Refreshing with current filters:', currentFilters);
         const refreshedResults = await searchDevices(currentFilters);
         setDevices(refreshedResults);
       } else {
         // Otherwise, reload all data
+        console.log('Reloading all data...');
         await loadAllData();
       }
+      
+      console.log('Data refresh completed successfully');
       
     } catch (error) {
       console.error('Error refreshing data:', error);
       toast({
         title: "Attention",
-        description: "Données mises à jour, mais la liste pourrait ne pas être à jour. Veuillez actualiser manuellement.",
+        description: "Association réussie, mais la liste pourrait ne pas être à jour. Veuillez actualiser manuellement.",
         variant: "destructive"
       });
     }

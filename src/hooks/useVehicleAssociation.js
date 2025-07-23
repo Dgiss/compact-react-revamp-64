@@ -30,8 +30,10 @@ export const useVehicleAssociation = () => {
           description: `Boîtier ${deviceImei} associé au véhicule ${vehicleImmat}`,
         });
         
+        // Force a small delay to ensure backend consistency before refresh
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        return { success: true, data: result.vehicleUpdate };
+        return { success: true, data: result.vehicleUpdate, needsRefresh: true };
       } else {
         throw new Error('Association failed');
       }
