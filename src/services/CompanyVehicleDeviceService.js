@@ -192,8 +192,12 @@ export const filterBySimLocal = (devices, sim) => {
  * Filter by Vehicle locally (client-side)
  */
 export const filterByVehicleLocal = (devices, vehicle) => {
-  if (!vehicle) return devices;
-  return devices.filter(device => device.immatriculation && device.immatriculation.toLowerCase().includes(vehicle.toLowerCase()));
+  if (!vehicle || vehicle.trim() === '') return devices;
+  const searchTerm = vehicle.toLowerCase().trim();
+  return devices.filter(device => 
+    device.immatriculation && 
+    device.immatriculation.toLowerCase().includes(searchTerm)
+  );
 };
 
 /**
