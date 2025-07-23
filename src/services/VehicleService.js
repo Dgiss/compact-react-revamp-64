@@ -15,7 +15,7 @@ export const fetchAllVehiclesOptimized = async () => {
       let nextToken = null;
       let pageCount = 0;
       
-      const firstResponse = await client.graphql({
+       const firstResponse = await client.graphql({
         query: `query FirstPage {
           listVehicles(limit: 1000) {
             items {
@@ -23,6 +23,10 @@ export const fetchAllVehiclesOptimized = async () => {
               immatriculation
               companyVehiclesId
               vehicleDeviceImei
+              company {
+                id
+                name
+              }
               device {
                 name
                 imei
@@ -44,7 +48,7 @@ export const fetchAllVehiclesOptimized = async () => {
         pageCount++;
         
         try {
-          const response = await client.graphql({
+           const response = await client.graphql({
             query: `query NextPage($nextToken: String!) {
               listVehicles(limit: 1000, nextToken: $nextToken) {
                 items {
@@ -52,6 +56,10 @@ export const fetchAllVehiclesOptimized = async () => {
                   immatriculation
                   companyVehiclesId
                   vehicleDeviceImei
+                  company {
+                    id
+                    name
+                  }
                   device {
                     name
                     imei
