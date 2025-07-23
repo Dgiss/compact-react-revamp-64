@@ -350,8 +350,18 @@ export const dissociateVehicleFromDevice = async (vehicleImmat) => {
         }
       });
       
-      return { success: true, vehicleUpdate: vehicleUpdate.data?.updateVehicle };
+      // Check if the update was successful even with potential non-critical errors
+      if (vehicleUpdate.data?.updateVehicle) {
+        console.log('Dissociation successful for vehicle:', vehicleImmat);
+        if (vehicleUpdate.errors && vehicleUpdate.errors.length > 0) {
+          console.warn('Non-critical errors during dissociation:', vehicleUpdate.errors);
+        }
+        return { success: true, vehicleUpdate: vehicleUpdate.data.updateVehicle };
+      } else {
+        throw new Error('Failed to dissociate vehicle from device');
+      }
     } catch (error) {
+      console.error('Error dissociating device:', error);
       throw error;
     }
   });
