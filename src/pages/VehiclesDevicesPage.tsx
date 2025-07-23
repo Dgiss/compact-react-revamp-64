@@ -68,7 +68,7 @@ export default function VehiclesDevicesPage() {
   // Multi-selection for dissociation
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
-  
+
   // Bulk association state
   const [showBulkAssociation, setShowBulkAssociation] = useState(false);
 
@@ -76,12 +76,11 @@ export default function VehiclesDevicesPage() {
   const [currentFilters, setCurrentFilters] = useState({});
 
   // Data refresh hook
-  const { refreshAfterAssociation, refreshAfterDissociation, refreshAfterDeletion } = useDataRefresh(
-    loadAllData, 
-    setFilteredData, 
-    searchDevices, 
-    currentFilters
-  );
+  const {
+    refreshAfterAssociation,
+    refreshAfterDissociation,
+    refreshAfterDeletion
+  } = useDataRefresh(loadAllData, setFilteredData, searchDevices, currentFilters);
 
   // OPTIMIZED: Search vehicles with empty IMEI - no cache loading needed
   const searchVehiclesWithEmptyImeiOptimized = async () => {
@@ -204,14 +203,13 @@ export default function VehiclesDevicesPage() {
         immatriculation: r.immatriculation
       })));
       setFilteredData(results || []);
-      
+
       // Store current filters for refresh after operations
       setCurrentFilters({
         imei: searchImei,
         immatriculation: searchImmat,
         entreprise: searchEntreprise
       });
-      
       if (!results || results.length === 0) {
         toast({
           title: "Aucun résultat",
@@ -578,9 +576,9 @@ export default function VehiclesDevicesPage() {
         </Button>
 
         <Button onClick={() => {
-          searchDevicesWithoutVehiclesOptimized();
-          setShowBulkAssociation(true);
-        }} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
+        searchDevicesWithoutVehiclesOptimized();
+        setShowBulkAssociation(true);
+      }} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Smartphone className="h-6 w-6 mb-2" />
           <div>
             <div className="font-medium">Dispositifs libres</div>
@@ -779,10 +777,7 @@ export default function VehiclesDevicesPage() {
           {!isSelectMode && <Button variant="outline" onClick={toggleSelectMode} disabled={!isCacheReady}>
               Sélection multiple
             </Button>}
-          <Button variant="outline" size="default" onClick={() => setShowMultipleImeiDialog(true)}>
-            <Search className="h-4 w-4 mr-2" />
-            Recherche Multiple d'IMEI
-          </Button>
+          
           
           
           
@@ -833,20 +828,15 @@ export default function VehiclesDevicesPage() {
       </div>
       
       {/* Interface d'association en masse pour boîtiers sans IMEI */}
-      {filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && (
-        <div className="mb-6">
-          <DevicesBulkAssociation 
-            devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))}
-            onAssociationComplete={() => {
-              searchDevicesWithoutVehiclesOptimized();
-              toast({
-                title: "Mise à jour",
-                description: "Liste des boîtiers actualisée"
-              });
-            }}
-          />
-        </div>
-      )}
+      {filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && <div className="mb-6">
+          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))} onAssociationComplete={() => {
+        searchDevicesWithoutVehiclesOptimized();
+        toast({
+          title: "Mise à jour",
+          description: "Liste des boîtiers actualisée"
+        });
+      }} />
+        </div>}
 
       <EnhancedDataTable columns={allColumns} data={filteredData.length > 0 ? filteredData : combinedData} onEdit={handleEdit} renderActions={item => <div className="flex gap-1">
             {/* Edit button - shown for all vehicles */}
@@ -858,9 +848,7 @@ export default function VehiclesDevicesPage() {
             {item.type === "vehicle" && <DeleteConfirmationDialog title="Supprimer le véhicule" description={`Êtes-vous sûr de vouloir supprimer le véhicule "${item.immatriculation || item.immat}" ? Cette action est irréversible.`} onConfirm={() => deleteVehicleDataLocal(item)} />}
             
             {/* Association button for free devices (device-vehicle association) */}
-            {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre" && <Button variant="ghost" size="icon" onClick={() => handleAssociate(item)} title="Associer ce boîtier à un véhicule">
-                <Link className="h-4 w-4" />
-              </Button>}
+            {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre"}
             
             {/* Reserve button for free devices (company-device association) */}
             {item.type === "device" && !item.isAssociated && item.entreprise === "Boîtier libre" && <Button variant="ghost" size="icon" onClick={() => {
@@ -889,13 +877,10 @@ export default function VehiclesDevicesPage() {
             <SheetTitle>Associer un Véhicule</SheetTitle>
           </SheetHeader>
           <AssociateVehicleForm device={selectedDevice} mode={associationMode} onClose={() => setShowAssociateSheet(false)} onSuccess={async () => {
-          const successMessage = associationMode === 'company-device' 
-            ? "Le boîtier a été réservé pour l'entreprise avec succès" 
-            : "Le boîtier a été associé au véhicule avec succès";
-          
+          const successMessage = associationMode === 'company-device' ? "Le boîtier a été réservé pour l'entreprise avec succès" : "Le boîtier a été associé au véhicule avec succès";
           setShowAssociateSheet(false);
           setAssociationMode('vehicle-device');
-          
+
           // Use refresh hook to automatically update table
           await refreshAfterAssociation(successMessage);
         }} />
