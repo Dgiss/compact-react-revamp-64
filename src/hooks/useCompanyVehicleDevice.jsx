@@ -539,11 +539,11 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
-  // OPTIMIZED: Get vehicles with empty IMEI (no cache needed)
-  const getVehiclesWithEmptyImei = useCallback(async () => {
+  // OPTIMIZED: Get vehicles with empty IMEI with progressive loading
+  const getVehiclesWithEmptyImei = useCallback(async (onProgressUpdate = null) => {
     try {
       console.log('=== HOOK: GETTING VEHICLES WITH EMPTY IMEI ===');
-      const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithEmptyImei();
+      const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithEmptyImei(onProgressUpdate);
       
       console.log('Hook: Vehicles with empty IMEI received:', vehicles.length);
       

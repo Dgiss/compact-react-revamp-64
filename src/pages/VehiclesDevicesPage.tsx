@@ -82,13 +82,21 @@ export default function VehiclesDevicesPage() {
     refreshAfterDeletion
   } = useDataRefresh(loadAllData, setFilteredData, searchDevices, currentFilters);
 
-  // OPTIMIZED: Search vehicles with empty IMEI - no cache loading needed
+  // OPTIMIZED: Search vehicles with empty IMEI with progressive display
   const searchVehiclesWithEmptyImeiOptimized = async () => {
     try {
       console.log('=== OPTIMIZED SEARCH: VEHICLES WITH EMPTY IMEI ===');
-      const vehiclesWithEmptyImei = await getVehiclesWithEmptyImei();
-      setFilteredData(vehiclesWithEmptyImei);
+      setFilteredData([]); // Clear previous results
       setLoadingMode('search');
+      
+      // Progress callback to update results as they come in
+      const onProgressUpdate = (progressResults) => {
+        console.log(`Progress update: ${progressResults.length} vehicles so far`);
+        setFilteredData([...progressResults]); // Update the display
+      };
+      
+      const vehiclesWithEmptyImei = await getVehiclesWithEmptyImei(onProgressUpdate);
+      setFilteredData(vehiclesWithEmptyImei); // Final update
     } catch (error) {
       console.error('Error searching vehicles with empty IMEI:', error);
     }

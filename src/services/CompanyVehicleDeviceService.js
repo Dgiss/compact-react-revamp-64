@@ -211,9 +211,9 @@ export const filterByCompanyLocal = (devices, company, companies) => {
 /**
  * OPTIMIZED: Get vehicles with empty IMEI with primary/fallback system and complete pagination
  */
-export const fetchVehiclesWithEmptyImei = async () => {
+export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI WITH COMPLETE PAGINATION ===');
+    console.log('=== FETCHING VEHICLES WITH EMPTY IMEI WITH PROGRESSIVE DISPLAY ===');
     
     try {
       let allVehicles = [];
@@ -284,6 +284,43 @@ export const fetchVehiclesWithEmptyImei = async () => {
         nextToken = response.data.listVehicles.nextToken;
         
         console.log(`Page ${pageCount}: ${validVehicles.length} vehicles added, Total so far: ${allVehicles.length}`);
+        
+        // Call progress callback after each page with current results
+        if (onProgressUpdate && allVehicles.length > 0) {
+          // Fetch companies for mapping (simplified version for performance)
+          try {
+            const companiesResponse = await client.graphql({
+              query: queries.listCompanies,
+              variables: { limit: 1000 }
+            });
+            const companies = companiesResponse.data.listCompanies.items;
+            
+            const progressVehicles = allVehicles.map(vehicle => {
+              const company = companies.find(c => c.id === vehicle.companyVehiclesId);
+              return {
+                ...vehicle,
+                id: vehicle.immat || vehicle.immatriculation,
+                entreprise: company?.name || "Non définie",
+                type: "vehicle",
+                immatriculation: vehicle.immat || vehicle.immatriculation || "",
+                nomVehicule: vehicle.device?.name || "",
+                imei: "", // Empty by definition
+                typeBoitier: "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                telephone: "",
+                emplacement: "",
+                deviceData: null,
+                isAssociated: false
+              };
+            });
+            
+            onProgressUpdate([...progressVehicles]); // Send copy of current results
+          } catch (companyError) {
+            console.warn('Error fetching companies for progress update:', companyError);
+          }
+        }
         
       } while (nextToken);
 
