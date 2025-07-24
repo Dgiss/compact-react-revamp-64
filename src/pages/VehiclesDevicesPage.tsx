@@ -382,14 +382,28 @@ export default function VehiclesDevicesPage() {
 
   // Toggle select mode
   const toggleSelectMode = () => {
-    setIsSelectMode(!isSelectMode);
+    const newSelectMode = !isSelectMode;
+    setIsSelectMode(newSelectMode);
     setSelectedVehicles([]);
+    
+    // If turning on vehicle select mode, turn off device select mode
+    if (newSelectMode && isDeviceSelectMode) {
+      setIsDeviceSelectMode(false);
+      setSelectedDevices([]);
+    }
   };
 
   // Toggle device select mode
   const toggleDeviceSelectMode = () => {
-    setIsDeviceSelectMode(!isDeviceSelectMode);
+    const newDeviceSelectMode = !isDeviceSelectMode;
+    setIsDeviceSelectMode(newDeviceSelectMode);
     setSelectedDevices([]);
+    
+    // If turning on device select mode, turn off vehicle select mode
+    if (newDeviceSelectMode && isSelectMode) {
+      setIsSelectMode(false);
+      setSelectedVehicles([]);
+    }
   };
 
   // Get available devices for selection (only unassociated devices)
@@ -892,12 +906,12 @@ export default function VehiclesDevicesPage() {
         </div>
         {/* Action buttons */}
         <div className="flex gap-2">
-          {!isDeviceSelectMode && <Button variant={isSelectMode ? "default" : "outline"} onClick={toggleSelectMode}>
-              {isSelectMode ? "Arrêter sélection" : "Sélection multiple véhicules"}
-            </Button>}
-          {!isSelectMode && <Button variant={isDeviceSelectMode ? "default" : "outline"} onClick={toggleDeviceSelectMode}>
-              {isDeviceSelectMode ? "Arrêter sélection" : "Sélection multiple boîtiers"}
-            </Button>}
+          <Button variant={isSelectMode ? "default" : "outline"} onClick={toggleSelectMode}>
+            {isSelectMode ? "Arrêter sélection" : "Sélection multiple véhicules"}
+          </Button>
+          <Button variant={isDeviceSelectMode ? "default" : "outline"} onClick={toggleDeviceSelectMode}>
+            {isDeviceSelectMode ? "Arrêter sélection" : "Sélection multiple boîtiers"}
+          </Button>
           
           
           
