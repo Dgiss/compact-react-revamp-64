@@ -477,27 +477,15 @@ export default function VehiclesDevicesPage() {
         console.log(`🎯 Checkbox render for ${row.imei}:`, { isSelected, selectedDevices });
         return (
           <div className="flex items-center justify-center">
-            <label className="inline-flex items-center">
-              <input 
-                type="checkbox" 
-                checked={isSelected}
-                onChange={e => {
-                  console.log(`📝 Checkbox clicked for ${row.imei}:`, e.target.checked);
-                  handleDeviceSelect(row.imei, e.target.checked);
-                }} 
-                className="w-4 h-4 text-blue-600 bg-white border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 checked:bg-blue-600 checked:border-blue-600"
-                style={{
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  backgroundColor: isSelected ? '#2563eb' : 'white',
-                  borderColor: isSelected ? '#2563eb' : '#d1d5db',
-                  backgroundImage: isSelected ? `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z'/%3e%3c/svg%3e")` : 'none',
-                  backgroundSize: '100% 100%',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                }}
-              />
-            </label>
+            <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={e => {
+                console.log(`📝 Checkbox clicked for ${row.imei}:`, e.target.checked);
+                handleDeviceSelect(row.imei, e.target.checked);
+              }} 
+              className="h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
           </div>
         );
       }
