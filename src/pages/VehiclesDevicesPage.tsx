@@ -69,6 +69,10 @@ export default function VehiclesDevicesPage() {
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
 
+  // Multi-selection for devices association
+  const [selectedDevices, setSelectedDevices] = useState([]);
+  const [isDeviceSelectMode, setIsDeviceSelectMode] = useState(false);
+
   // Bulk association state
   const [showBulkAssociation, setShowBulkAssociation] = useState(false);
 
@@ -382,6 +386,32 @@ export default function VehiclesDevicesPage() {
     setSelectedVehicles([]);
   };
 
+  // Toggle device select mode
+  const toggleDeviceSelectMode = () => {
+    setIsDeviceSelectMode(!isDeviceSelectMode);
+    setSelectedDevices([]);
+  };
+
+  // Handle device selection
+  const handleDeviceSelect = (imei, isSelected) => {
+    if (isSelected) {
+      setSelectedDevices(prev => [...prev, imei]);
+    } else {
+      setSelectedDevices(prev => prev.filter(id => id !== imei));
+    }
+  };
+
+  // Handle bulk association of selected devices
+  const handleBulkAssociateDevices = () => {
+    const devicesData = selectedDevices.map(imei => 
+      filteredData.find(item => item.imei === imei) || 
+      combinedData.find(item => item.imei === imei)
+    ).filter(Boolean);
+    
+    setShowBulkAssociation(true);
+    setFilteredData(devicesData);
+  };
+
   // Handle vehicle selection
   const handleVehicleSelect = (immat, isSelected) => {
     if (isSelected) {
@@ -401,6 +431,18 @@ export default function VehiclesDevicesPage() {
       // Only show checkbox for vehicles with associated devices
       if (row.type === "vehicle" && row.imei && row.isAssociated) {
         return <input type="checkbox" checked={selectedVehicles.includes(row.immatriculation || row.immat)} onChange={e => handleVehicleSelect(row.immatriculation || row.immat, e.target.checked)} className="h-4 w-4" />;
+      }
+      return null;
+    }
+  }] : []), ...(isDeviceSelectMode ? [{
+    id: "deviceSelect",
+    label: "Sélection Boîtiers",
+    sortable: false,
+    visible: true,
+    renderCell: (value, row) => {
+      // Only show checkbox for devices (not associated or free devices)
+      if (row.type === "device" && row.imei) {
+        return <input type="checkbox" checked={selectedDevices.includes(row.imei)} onChange={e => handleDeviceSelect(row.imei, e.target.checked)} className="h-4 w-4" />;
       }
       return null;
     }
@@ -779,11 +821,27 @@ export default function VehiclesDevicesPage() {
                 Annuler
               </Button>
             </div>}
+            
+          {/* Multi-select controls for devices */}
+          {isDeviceSelectMode && <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm text-green-600">
+                {selectedDevices.length} boîtier(s) sélectionné(s)
+              </span>
+              {selectedDevices.length > 0 && <Button size="sm" variant="default" onClick={handleBulkAssociateDevices}>
+                  Associer la sélection
+                </Button>}
+              <Button size="sm" variant="outline" onClick={toggleDeviceSelectMode}>
+                Annuler
+              </Button>
+            </div>}
         </div>
         {/* Action buttons */}
         <div className="flex gap-2">
-          {!isSelectMode && <Button variant="outline" onClick={toggleSelectMode} disabled={!isCacheReady}>
-              Sélection multiple
+          {!isSelectMode && !isDeviceSelectMode && <Button variant="outline" onClick={toggleSelectMode} disabled={!isCacheReady}>
+              Sélection multiple véhicules
+            </Button>}
+          {!isSelectMode && !isDeviceSelectMode && <Button variant="outline" onClick={toggleDeviceSelectMode} disabled={!isCacheReady}>
+              Sélection multiple boîtiers
             </Button>}
           
           
