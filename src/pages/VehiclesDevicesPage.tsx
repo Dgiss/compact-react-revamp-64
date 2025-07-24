@@ -866,10 +866,10 @@ export default function VehiclesDevicesPage() {
         </div>
         {/* Action buttons */}
         <div className="flex gap-2">
-          {!isSelectMode && !isDeviceSelectMode && <Button variant="outline" onClick={toggleSelectMode} disabled={!isCacheReady}>
+          {!isSelectMode && !isDeviceSelectMode && <Button variant="outline" onClick={toggleSelectMode}>
               Sélection multiple véhicules
             </Button>}
-          {!isSelectMode && !isDeviceSelectMode && <Button variant="outline" onClick={toggleDeviceSelectMode} disabled={!isCacheReady}>
+          {!isSelectMode && !isDeviceSelectMode && <Button variant="outline" onClick={toggleDeviceSelectMode}>
               Sélection multiple boîtiers
             </Button>}
           
