@@ -861,8 +861,8 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-4">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-bold">Véhicules & Boîtiers</h1>
           <p className="text-sm text-gray-600 mt-1">
             {combinedData.filter(item => item.type === "vehicle").length} véhicules • {" "}
@@ -871,12 +871,12 @@ export default function VehiclesDevicesPage() {
           </p>
           
           {/* Multi-select controls */}
-          {isSelectMode && <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm text-blue-600">
-                {selectedVehicles.length} véhicule(s) sélectionné(s)
+          {isSelectMode && <div className="flex items-center gap-2 mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm text-blue-700 font-medium">
+                Mode sélection véhicules: {selectedVehicles.length} véhicule(s) sélectionné(s)
               </span>
               {selectedVehicles.length > 0 && <Button size="sm" variant="destructive" onClick={bulkDissociateSelected}>
-                  Dissocier la sélection
+                  Dissocier la sélection ({selectedVehicles.length})
                 </Button>}
               <Button size="sm" variant="outline" onClick={toggleSelectMode}>
                 Annuler
@@ -884,9 +884,9 @@ export default function VehiclesDevicesPage() {
             </div>}
             
           {/* Multi-select controls for devices */}
-          {isDeviceSelectMode && <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm text-green-600">
-                {selectedDevices.length} boîtier(s) sélectionné(s) / {getAvailableDevices().length} disponible(s)
+          {isDeviceSelectMode && <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
+              <span className="text-sm text-green-700 font-medium">
+                Mode sélection boîtiers: {selectedDevices.length} boîtier(s) sélectionné(s) / {getAvailableDevices().length} disponible(s)
               </span>
               <div className="flex gap-2">
                 <Button size="sm" variant="ghost" onClick={selectAllDevices} disabled={getAvailableDevices().length === 0}>
@@ -904,17 +904,23 @@ export default function VehiclesDevicesPage() {
               </Button>
             </div>}
         </div>
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          <Button variant={isSelectMode ? "default" : "outline"} onClick={toggleSelectMode}>
-            {isSelectMode ? "Arrêter sélection" : "Sélection multiple véhicules"}
+        
+        {/* Action buttons - Always visible and prominent */}
+        <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:gap-2 lg:min-w-[200px]">
+          <Button 
+            variant={isSelectMode ? "default" : "outline"} 
+            onClick={toggleSelectMode}
+            className={isSelectMode ? "bg-blue-600 text-white" : "border-blue-600 text-blue-600 hover:bg-blue-50"}
+          >
+            {isSelectMode ? "✓ Mode sélection véhicules" : "Sélectionner véhicules"}
           </Button>
-          <Button variant={isDeviceSelectMode ? "default" : "outline"} onClick={toggleDeviceSelectMode}>
-            {isDeviceSelectMode ? "Arrêter sélection" : "Sélection multiple boîtiers"}
+          <Button 
+            variant={isDeviceSelectMode ? "default" : "outline"} 
+            onClick={toggleDeviceSelectMode}
+            className={isDeviceSelectMode ? "bg-green-600 text-white" : "border-green-600 text-green-600 hover:bg-green-50"}
+          >
+            {isDeviceSelectMode ? "✓ Mode sélection boîtiers" : "Sélectionner boîtiers"}
           </Button>
-          
-          
-          
           
           <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
             <DialogTrigger asChild>
