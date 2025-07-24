@@ -405,7 +405,10 @@ export default function VehiclesDevicesPage() {
   // Handle device selection
   const handleDeviceSelect = (imei, isSelected) => {
     if (isSelected) {
-      setSelectedDevices(prev => [...prev, imei]);
+      // Prevent duplicates by checking if not already selected
+      setSelectedDevices(prev => 
+        prev.includes(imei) ? prev : [...prev, imei]
+      );
     } else {
       setSelectedDevices(prev => prev.filter(id => id !== imei));
     }
@@ -469,7 +472,8 @@ export default function VehiclesDevicesPage() {
             type="checkbox" 
             checked={isSelected}
             onChange={e => handleDeviceSelect(row.imei, e.target.checked)} 
-            className="h-4 w-4 accent-blue-600"
+            className="h-4 w-4 accent-blue-600 cursor-pointer"
+            style={{ accentColor: '#2563eb' }}
           />
         );
       }
