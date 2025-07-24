@@ -973,7 +973,15 @@ export default function VehiclesDevicesPage() {
       }} />
         </div>}
 
-      <EnhancedDataTable columns={allColumns} data={filteredData.length > 0 ? filteredData : combinedData} onEdit={handleEdit} renderActions={item => <div className="flex gap-1">
+      <EnhancedDataTable 
+        columns={allColumns} 
+        data={filteredData.length > 0 ? filteredData : combinedData} 
+        onEdit={handleEdit} 
+        selectedVehicles={selectedVehicles}
+        selectedDevices={selectedDevices}
+        isSelectMode={isSelectMode}
+        isDeviceSelectMode={isDeviceSelectMode}
+        renderActions={item => <div className="flex gap-1">
             {/* Edit button - shown for all vehicles */}
             {item.type === "vehicle" && <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} title="Modifier ce véhicule">
               <Edit className="h-4 w-4" />

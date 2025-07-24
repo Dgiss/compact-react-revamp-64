@@ -40,6 +40,10 @@ interface EnhancedDataTableProps {
   loading?: boolean;
   enablePagination?: boolean;
   defaultItemsPerPage?: number;
+  selectedVehicles?: string[];
+  selectedDevices?: string[];
+  isSelectMode?: boolean;
+  isDeviceSelectMode?: boolean;
 }
 
 export function EnhancedDataTable({ 
@@ -51,7 +55,11 @@ export function EnhancedDataTable({
   renderActions,
   loading = false,
   enablePagination = false,
-  defaultItemsPerPage = 50
+  defaultItemsPerPage = 50,
+  selectedVehicles = [],
+  selectedDevices = [],
+  isSelectMode = false,
+  isDeviceSelectMode = false
 }: EnhancedDataTableProps) {
   const [columns, setColumns] = useState<Column[]>(
     initialColumns.map(col => ({ ...col, visible: col.visible !== undefined ? col.visible : true }))
@@ -149,6 +157,17 @@ export function EnhancedDataTable({
 
   // Determine if the item is a device (for association button)
   const isDevice = (item: any) => item.type === 'device';
+
+  // Determine if a row is selected
+  const isRowSelected = (row: any) => {
+    if (row.type === 'vehicle' && isSelectMode) {
+      return selectedVehicles.includes(row.immatriculation || row.immat);
+    }
+    if (row.type === 'device' && isDeviceSelectMode) {
+      return selectedDevices.includes(row.imei);
+    }
+    return false;
+  };
 
   // Fonction pour rendre le contenu d'une cellule
   const renderCellContent = (column: Column, row: any) => {
@@ -274,8 +293,13 @@ export function EnhancedDataTable({
                 </TableCell>
               </TableRow>
             ) : hasVisibleColumns ? (
-              displayData.map((row, index) => (
-                <TableRow key={index}>
+              displayData.map((row, index) => {
+                const selected = isRowSelected(row);
+                return (
+                <TableRow 
+                  key={index}
+                  className={selected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
+                >
                   {visibleColumns.map((column) => (
                     <TableCell key={column.id}>
                       {renderCellContent(column, row)}
@@ -307,7 +331,8 @@ export function EnhancedDataTable({
                     </TableCell>
                   )}
                 </TableRow>
-              ))
+                );
+              })
             ) : null}
           </TableBody>
         </Table>
