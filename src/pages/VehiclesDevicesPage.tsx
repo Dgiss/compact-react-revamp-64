@@ -405,7 +405,10 @@ export default function VehiclesDevicesPage() {
   // Handle device selection
   const handleDeviceSelect = (imei, isSelected) => {
     if (isSelected) {
-      setSelectedDevices(prev => [...prev, imei]);
+      // Prevent duplicates
+      setSelectedDevices(prev => 
+        prev.includes(imei) ? prev : [...prev, imei]
+      );
     } else {
       setSelectedDevices(prev => prev.filter(id => id !== imei));
     }
@@ -436,7 +439,10 @@ export default function VehiclesDevicesPage() {
   // Handle vehicle selection
   const handleVehicleSelect = (immat, isSelected) => {
     if (isSelected) {
-      setSelectedVehicles(prev => [...prev, immat]);
+      // Prevent duplicates
+      setSelectedVehicles(prev => 
+        prev.includes(immat) ? prev : [...prev, immat]
+      );
     } else {
       setSelectedVehicles(prev => prev.filter(id => id !== immat));
     }
@@ -451,7 +457,17 @@ export default function VehiclesDevicesPage() {
     renderCell: (value, row) => {
       // Only show checkbox for vehicles with associated devices
       if (row.type === "vehicle" && row.imei && row.isAssociated) {
-        return <input type="checkbox" checked={selectedVehicles.includes(row.immatriculation || row.immat)} onChange={e => handleVehicleSelect(row.immatriculation || row.immat, e.target.checked)} className="h-4 w-4" />;
+        const isSelected = selectedVehicles.includes(row.immatriculation || row.immat);
+        return (
+          <div className="flex justify-center">
+            <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={e => handleVehicleSelect(row.immatriculation || row.immat, e.target.checked)} 
+              className="h-4 w-4 accent-blue-600 cursor-pointer"
+            />
+          </div>
+        );
       }
       return null;
     }
@@ -465,12 +481,14 @@ export default function VehiclesDevicesPage() {
       if (row.type === "device" && row.imei && !row.isAssociated) {
         const isSelected = selectedDevices.includes(row.imei);
         return (
-          <input 
-            type="checkbox" 
-            checked={isSelected}
-            onChange={e => handleDeviceSelect(row.imei, e.target.checked)} 
-            className="h-4 w-4 accent-blue-600"
-          />
+          <div className="flex justify-center">
+            <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={e => handleDeviceSelect(row.imei, e.target.checked)} 
+              className="h-4 w-4 accent-green-600 cursor-pointer"
+            />
+          </div>
         );
       }
       return null;
