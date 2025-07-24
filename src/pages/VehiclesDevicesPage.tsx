@@ -441,12 +441,26 @@ export default function VehiclesDevicesPage() {
 
   // Handle bulk association of selected devices
   const handleBulkAssociateDevices = () => {
+    if (selectedDevices.length === 0) {
+      toast({
+        title: "Attention",
+        description: "Veuillez sélectionner au moins un boîtier",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const devicesData = selectedDevices.map(imei => 
       filteredData.find(item => item.imei === imei) || 
       combinedData.find(item => item.imei === imei)
     ).filter(Boolean);
     
+    console.log('=== BULK ASSOCIATION: SELECTED DEVICES ===');
+    console.log('Selected IMEIs:', selectedDevices);
+    console.log('Devices data for association:', devicesData);
+    
     setShowBulkAssociation(true);
+    // Stocker les données des devices sélectionnés pour l'association
     setFilteredData(devicesData);
   };
 
@@ -968,8 +982,28 @@ export default function VehiclesDevicesPage() {
         </div>
       </div>
       
+      {/* Interface d'association en masse pour boîtiers sélectionnés */}
+      {showBulkAssociation && filteredData.length > 0 && <div className="mb-6">
+          <DevicesBulkAssociation 
+            devices={filteredData.filter(device => device.type === "device")} 
+            onAssociationComplete={() => {
+              // Fermer l'interface d'association
+              setShowBulkAssociation(false);
+              // Réinitialiser les sélections
+              setSelectedDevices([]);
+              setIsDeviceSelectMode(false);
+              // Rafraîchir les données
+              loadAllData();
+              toast({
+                title: "Association réussie",
+                description: "Boîtiers associés avec succès"
+              });
+            }} 
+          />
+        </div>}
+
       {/* Interface d'association en masse pour boîtiers sans IMEI */}
-      {filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && <div className="mb-6">
+      {!showBulkAssociation && filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && <div className="mb-6">
           <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))} onAssociationComplete={() => {
         searchDevicesWithoutVehiclesOptimized();
         toast({
