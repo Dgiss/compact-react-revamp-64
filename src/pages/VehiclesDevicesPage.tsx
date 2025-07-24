@@ -392,6 +392,16 @@ export default function VehiclesDevicesPage() {
     setSelectedDevices([]);
   };
 
+  // Get available devices for selection (only unassociated devices)
+  const getAvailableDevices = () => {
+    const currentData = filteredData.length > 0 ? filteredData : combinedData;
+    return currentData.filter(item => 
+      item.type === "device" && 
+      item.imei && 
+      !item.isAssociated
+    );
+  };
+
   // Handle device selection
   const handleDeviceSelect = (imei, isSelected) => {
     if (isSelected) {
@@ -399,6 +409,17 @@ export default function VehiclesDevicesPage() {
     } else {
       setSelectedDevices(prev => prev.filter(id => id !== imei));
     }
+  };
+
+  // Select all available devices
+  const selectAllDevices = () => {
+    const availableDevices = getAvailableDevices();
+    setSelectedDevices(availableDevices.map(device => device.imei));
+  };
+
+  // Deselect all devices
+  const deselectAllDevices = () => {
+    setSelectedDevices([]);
   };
 
   // Handle bulk association of selected devices
@@ -440,8 +461,8 @@ export default function VehiclesDevicesPage() {
     sortable: false,
     visible: true,
     renderCell: (value, row) => {
-      // Only show checkbox for devices (not associated or free devices)
-      if (row.type === "device" && row.imei) {
+      // Only show checkbox for unassociated devices (available for association)
+      if (row.type === "device" && row.imei && !row.isAssociated) {
         return <input type="checkbox" checked={selectedDevices.includes(row.imei)} onChange={e => handleDeviceSelect(row.imei, e.target.checked)} className="h-4 w-4" />;
       }
       return null;
@@ -825,11 +846,19 @@ export default function VehiclesDevicesPage() {
           {/* Multi-select controls for devices */}
           {isDeviceSelectMode && <div className="flex items-center gap-2 mt-2">
               <span className="text-sm text-green-600">
-                {selectedDevices.length} boîtier(s) sélectionné(s)
+                {selectedDevices.length} boîtier(s) sélectionné(s) / {getAvailableDevices().length} disponible(s)
               </span>
-              {selectedDevices.length > 0 && <Button size="sm" variant="default" onClick={handleBulkAssociateDevices}>
-                  Associer la sélection
-                </Button>}
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" onClick={selectAllDevices} disabled={getAvailableDevices().length === 0}>
+                  Tout sélectionner
+                </Button>
+                {selectedDevices.length > 0 && <Button size="sm" variant="ghost" onClick={deselectAllDevices}>
+                    Tout désélectionner
+                  </Button>}
+                {selectedDevices.length > 0 && <Button size="sm" variant="default" onClick={handleBulkAssociateDevices}>
+                    Associer la sélection ({selectedDevices.length})
+                  </Button>}
+              </div>
               <Button size="sm" variant="outline" onClick={toggleDeviceSelectMode}>
                 Annuler
               </Button>
