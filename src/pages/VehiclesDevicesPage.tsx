@@ -404,20 +404,10 @@ export default function VehiclesDevicesPage() {
 
   // Handle device selection
   const handleDeviceSelect = (imei, isSelected) => {
-    console.log('🔍 Selection Debug:', { imei, isSelected, currentSelected: selectedDevices });
     if (isSelected) {
-      // Prevent duplicates by checking if not already selected
-      setSelectedDevices(prev => {
-        const newSelection = prev.includes(imei) ? prev : [...prev, imei];
-        console.log('✅ Adding device:', { imei, newSelection });
-        return newSelection;
-      });
+      setSelectedDevices(prev => [...prev, imei]);
     } else {
-      setSelectedDevices(prev => {
-        const newSelection = prev.filter(id => id !== imei);
-        console.log('❌ Removing device:', { imei, newSelection });
-        return newSelection;
-      });
+      setSelectedDevices(prev => prev.filter(id => id !== imei));
     }
   };
 
@@ -474,19 +464,13 @@ export default function VehiclesDevicesPage() {
       // Only show checkbox for unassociated devices (available for association)
       if (row.type === "device" && row.imei && !row.isAssociated) {
         const isSelected = selectedDevices.includes(row.imei);
-        console.log(`🎯 Checkbox render for ${row.imei}:`, { isSelected, selectedDevices });
         return (
-          <div className="flex items-center justify-center">
-            <input 
-              type="checkbox" 
-              checked={isSelected}
-              onChange={e => {
-                console.log(`📝 Checkbox clicked for ${row.imei}:`, e.target.checked);
-                handleDeviceSelect(row.imei, e.target.checked);
-              }} 
-              className="h-4 w-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-            />
-          </div>
+          <input 
+            type="checkbox" 
+            checked={isSelected}
+            onChange={e => handleDeviceSelect(row.imei, e.target.checked)} 
+            className="h-4 w-4 accent-blue-600"
+          />
         );
       }
       return null;
