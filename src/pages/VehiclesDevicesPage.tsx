@@ -463,7 +463,15 @@ export default function VehiclesDevicesPage() {
     renderCell: (value, row) => {
       // Only show checkbox for unassociated devices (available for association)
       if (row.type === "device" && row.imei && !row.isAssociated) {
-        return <input type="checkbox" checked={selectedDevices.includes(row.imei)} onChange={e => handleDeviceSelect(row.imei, e.target.checked)} className="h-4 w-4" />;
+        const isSelected = selectedDevices.includes(row.imei);
+        return (
+          <input 
+            type="checkbox" 
+            checked={isSelected}
+            onChange={e => handleDeviceSelect(row.imei, e.target.checked)} 
+            className="h-4 w-4 accent-blue-600"
+          />
+        );
       }
       return null;
     }
