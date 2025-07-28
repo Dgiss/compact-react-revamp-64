@@ -709,16 +709,6 @@ export default function VehiclesDevicesPage() {
         <p className="text-muted-foreground">Choisissez une action pour commencer</p>
       </div>
 
-      {quickStats && <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-primary">{quickStats.totalVehicles}</div>
-            <div className="text-sm text-muted-foreground">Véhicules</div>
-          </div>
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="text-2xl font-bold text-primary">{quickStats.totalDevices}</div>
-            <div className="text-sm text-muted-foreground">Dispositifs</div>
-          </div>
-        </div>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
         <Button onClick={() => searchVehiclesWithEmptyImeiOptimized()} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
