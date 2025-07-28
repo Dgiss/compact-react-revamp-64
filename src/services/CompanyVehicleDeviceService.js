@@ -307,7 +307,7 @@ export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
                 entreprise: company?.name || "Non définie",
                 type: "vehicle",
                 immatriculation: vehicle.immat || vehicle.immatriculation || "",
-                nomVehicule: vehicle.device?.name || "",
+                nomVehicule: vehicle.nomVehicule || "",
                 imei: "", // Empty by definition
                 typeBoitier: "",
                 marque: "",
@@ -346,7 +346,7 @@ export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
           entreprise: company?.name || "Non définie",
           type: "vehicle",
           immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.device?.name || "",
+          nomVehicule: vehicle.nomVehicule || "",
           imei: "", // Empty by definition
           typeBoitier: "",
           marque: "",
@@ -476,7 +476,7 @@ export const fetchVehiclesWithoutDevices = async () => {
           entreprise: company?.name || "Non définie",
           type: "vehicle",
           immatriculation: vehicle.immat || vehicle.immatriculation || "",
-          nomVehicule: vehicle.device?.name || "",
+          nomVehicule: vehicle.nomVehicule || "",
           imei: "", // Empty by definition since these are vehicles without devices
           typeBoitier: "",
           marque: "",

@@ -21,6 +21,7 @@ export const fetchAllVehiclesOptimized = async () => {
             items {
               immat
               immatriculation
+              nomVehicule
               companyVehiclesId
               vehicleDeviceImei
               company {
@@ -53,6 +54,7 @@ export const fetchAllVehiclesOptimized = async () => {
                 items {
                   immat
                   immatriculation
+                  nomVehicule
                   companyVehiclesId
                   vehicleDeviceImei
                   company {
@@ -98,7 +100,7 @@ export const fetchAllVehiclesOptimized = async () => {
             immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
             entreprise: vehicle?.company?.name || "Non définie",
             imei: vehicle?.device?.imei || vehicle?.vehicleDeviceImei || "",
-            nomVehicule: vehicle?.device?.name || "",
+            nomVehicule: vehicle?.nomVehicule || "",
             telephone: vehicle?.device?.sim || "",
             typeBoitier: vehicle?.device?.device_type_id?.toString() || "",
             isAssociated: !!(vehicle?.device?.imei || vehicle?.vehicleDeviceImei),
