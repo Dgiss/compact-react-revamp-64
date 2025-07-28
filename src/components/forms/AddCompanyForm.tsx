@@ -121,13 +121,6 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
               required
             />
           </div>
-          <div className="md:col-span-1">
-            <Input 
-              placeholder="SIRET"
-              value={siren}
-              onChange={(e) => setSiren(e.target.value)}
-            />
-          </div>
           <div className="md:col-span-2">
             <Input 
               placeholder="Adresse"
@@ -211,13 +204,6 @@ export default function AddCompanyForm({ onClose, onSuccess }: AddCompanyFormPro
                 placeholder="Nom"
                 value={lastname}
                 onChange={(e) => setLastname(e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-1">
-              <Input 
-                placeholder="Mobile utilisateur"
-                value={userMobile}
-                onChange={(e) => setUserMobile(e.target.value)}
               />
             </div>
             <div className="relative md:col-span-1">
