@@ -280,14 +280,24 @@ export default function VehiclesDevicesPage() {
       const {
         createOrUpdateVehicleSimple
       } = await import('../services/SimpleVehicleService.js');
-      await createOrUpdateVehicleSimple(mappedData);
-      toast({
-        title: "Succès",
-        description: "Véhicule traité avec succès"
-      });
-
-      // Reload data
-      await loadAllData();
+      const updatedVehicle = await createOrUpdateVehicleSimple(mappedData);
+      
+      // Optimized: Update local state instead of reloading all data
+      if (updatedVehicle) {
+        console.log('Optimized update: updating local state with modified vehicle');
+        await refreshAfterAssociation("Véhicule traité avec succès", {
+          ...updatedVehicle,
+          type: "vehicle",
+          isAssociated: !!updatedVehicle.vehicleDeviceImei
+        });
+      } else {
+        // Fallback toast and reload only if update failed
+        toast({
+          title: "Succès",
+          description: "Véhicule traité avec succès"
+        });
+        await loadAllData();
+      }
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
       toast({

@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
  */
 export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFilters) => {
   
-  const refreshAfterAssociation = useCallback(async (message = "Association réussie") => {
+  const refreshAfterAssociation = useCallback(async (message = "Association réussie", updatedItem = null) => {
     try {
       // Show success message
       toast({
@@ -14,22 +14,37 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
         description: message,
       });
       
-      // Immediately refresh data for better user experience
-      console.log('Refreshing data after association...');
+      // Optimized refresh: update only modified item instead of reloading all data
+      console.log('Optimized refresh after association...');
       
-      // Refresh data based on current state
-      if (currentFilters && Object.keys(currentFilters).length > 0) {
-        // If there are active filters, refresh search results
-        console.log('Refreshing with current filters:', currentFilters);
-        const refreshedResults = await searchDevices(currentFilters);
-        setDevices(refreshedResults);
+      if (updatedItem) {
+        // Update only the specific item in local state
+        console.log('Updating specific item in local state:', updatedItem);
+        setDevices(prevDevices => {
+          const updatedDevices = [...prevDevices];
+          const index = updatedDevices.findIndex(item => 
+            item.imei === updatedItem.imei || item.immat === updatedItem.immat
+          );
+          if (index !== -1) {
+            updatedDevices[index] = { ...updatedDevices[index], ...updatedItem };
+          }
+          return updatedDevices;
+        });
+        console.log('Local state updated successfully - avoiding full data reload');
       } else {
-        // Otherwise, reload all data
-        console.log('Reloading all data...');
-        await loadAllData();
+        // Fallback: refresh data based on current state (only when necessary)
+        if (currentFilters && Object.keys(currentFilters).length > 0) {
+          console.log('Refreshing with current filters:', currentFilters);
+          const refreshedResults = await searchDevices(currentFilters);
+          setDevices(refreshedResults);
+        } else {
+          // Last resort: reload all data (avoid this when possible)
+          console.log('Fallback: reloading all data...');
+          await loadAllData();
+        }
       }
       
-      console.log('Data refresh completed successfully');
+      console.log('Optimized refresh completed successfully');
       
     } catch (error) {
       console.error('Error refreshing data:', error);
