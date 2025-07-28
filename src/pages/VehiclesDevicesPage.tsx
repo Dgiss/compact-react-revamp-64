@@ -315,14 +315,28 @@ export default function VehiclesDevicesPage() {
 
   // Dissociate device from vehicle
   const dissociateDevice = async vehicleImmat => {
+    console.log('=== STARTING DISSOCIATION ===');
+    console.log('Vehicle immat to dissociate:', vehicleImmat);
+    
     try {
-      await dissociateVehicleFromDevice(vehicleImmat);
+      console.log('Calling dissociateVehicleFromDevice...');
+      const result = await dissociateVehicleFromDevice(vehicleImmat);
+      console.log('Dissociation result:', result);
+      
       await refreshAfterDissociation("Boîtier dissocié avec succès");
+      console.log('Dissociation completed successfully');
     } catch (err) {
-      console.error('Error dissociating device:', err);
+      console.error('=== DISSOCIATION ERROR ===');
+      console.error('Error type:', err.constructor.name);
+      console.error('Error message:', err.message);
+      console.error('Full error:', err);
+      if (err.errors) {
+        console.error('GraphQL errors:', err.errors);
+      }
+      
       toast({
         title: "Erreur",
-        description: "Erreur lors de la dissociation",
+        description: `Erreur lors de la dissociation: ${err.message}`,
         variant: "destructive"
       });
     }
