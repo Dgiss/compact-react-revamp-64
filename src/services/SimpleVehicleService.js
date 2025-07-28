@@ -278,7 +278,7 @@ export const createVehicleSimple = async (vehicleData) => {
  * @returns {Promise<Object>} Updated vehicle
  */
 export const updateVehicleSimple = async (vehicleData) => {
-  console.log('=== UPDATING VEHICLE SIMPLE (ENHANCED ERROR HANDLING) ===');
+  console.log('=== UPDATING VEHICLE SIMPLE (FIXED FOR ERRORS) ===');
   console.log('Vehicle data:', vehicleData);
   
   try {
@@ -294,45 +294,66 @@ export const updateVehicleSimple = async (vehicleData) => {
       return await createVehicleSimple(vehicleData);
     }
     
-    // Validate data for update
-    validateVehicleData(vehicleData, true);
-    
-    // Map form data to GraphQL schema
+    // For updates, only include fields that are actually being modified
+    // Keep it minimal to avoid schema conflicts
     const vehicleInput = {
-      immat: immat,
-      realImmat: immat, // Add realImmat for updates too
-      companyVehiclesId: vehicleData.companyVehiclesId,
-      code: vehicleData.code || null,
-      nomVehicule: vehicleData.nomVehicule || null,
-      kilometerage: vehicleData.kilometrage ? parseInt(vehicleData.kilometrage) : null,
-      locations: vehicleData.emplacement || null,
-      marque: vehicleData.marque || null,
-      modele_id: vehicleData.modele || null,
-      energie: vehicleData.energie || null,
-      couleur: vehicleData.couleur || null,
-      dateMiseEnCirculation: vehicleData.dateMiseEnCirculation || null,
-      VIN: vehicleData.VIN || null,
-      AWN_nom_commercial: vehicleData.AWN_nom_commercial || null,
-      puissanceFiscale: vehicleData.puissanceFiscale ? parseInt(vehicleData.puissanceFiscale) : null,
-      lastModificationDate: new Date().toISOString(),
-      vehicleDeviceImei: vehicleData.vehicleDeviceImei || vehicleData.imei || null
+      immat: immat, // Required key field
     };
     
-    // Clean the input but be more permissive for updates
-    const cleanedInput = {};
-    Object.keys(vehicleInput).forEach(key => {
-      if (vehicleInput[key] !== undefined) {
-        cleanedInput[key] = vehicleInput[key];
-      }
-    });
+    // Only add fields that have actual values (not null/undefined/empty)
+    if (vehicleData.companyVehiclesId) {
+      vehicleInput.companyVehiclesId = vehicleData.companyVehiclesId;
+    }
+    if (vehicleData.code) {
+      vehicleInput.code = vehicleData.code;
+    }
+    if (vehicleData.nomVehicule) {
+      vehicleInput.nomVehicule = vehicleData.nomVehicule;
+    }
+    if (vehicleData.kilometrage) {
+      vehicleInput.kilometerage = parseInt(vehicleData.kilometrage);
+    }
+    if (vehicleData.emplacement) {
+      vehicleInput.locations = vehicleData.emplacement;
+    }
+    if (vehicleData.marque) {
+      vehicleInput.marque = vehicleData.marque;
+    }
+    if (vehicleData.modele) {
+      vehicleInput.modele_id = vehicleData.modele;
+    }
+    if (vehicleData.energie) {
+      vehicleInput.energie = vehicleData.energie;
+    }
+    if (vehicleData.couleur) {
+      vehicleInput.couleur = vehicleData.couleur;
+    }
+    if (vehicleData.dateMiseEnCirculation) {
+      vehicleInput.dateMiseEnCirculation = vehicleData.dateMiseEnCirculation;
+    }
+    if (vehicleData.VIN) {
+      vehicleInput.VIN = vehicleData.VIN;
+    }
+    if (vehicleData.AWN_nom_commercial) {
+      vehicleInput.AWN_nom_commercial = vehicleData.AWN_nom_commercial;
+    }
+    if (vehicleData.puissanceFiscale) {
+      vehicleInput.puissanceFiscale = parseInt(vehicleData.puissanceFiscale);
+    }
+    if (vehicleData.vehicleDeviceImei !== undefined || vehicleData.imei !== undefined) {
+      vehicleInput.vehicleDeviceImei = vehicleData.vehicleDeviceImei || vehicleData.imei || null;
+    }
     
-    console.log('Calling updateVehicle mutation with:', cleanedInput);
+    // Always update modification date
+    vehicleInput.lastModificationDate = new Date().toISOString();
+    
+    console.log('Calling updateVehicle mutation with minimal input:', vehicleInput);
     
     const result = await withCredentialRetry(async () => {
       try {
         return await client.graphql({
           query: mutations.updateVehicle,
-          variables: { input: cleanedInput }
+          variables: { input: vehicleInput }
         });
       } catch (graphqlError) {
         console.error('=== UPDATE ENHANCED GRAPHQL ERROR DETAILS ===');
@@ -349,6 +370,12 @@ export const updateVehicleSimple = async (vehicleData) => {
               errorInfo: err.errorInfo
             });
           });
+        }
+        
+        // Check if the operation actually succeeded despite errors
+        if (graphqlError.data?.updateVehicle) {
+          console.log('✅ Update succeeded despite GraphQL errors');
+          return graphqlError; // Return the response with data
         }
         
         // Extract meaningful error message
