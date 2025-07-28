@@ -1,6 +1,7 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
+import * as simpleMutations from '../graphql/mutations-simple';
 import { withCredentialRetry } from '@/config/aws-config.js';
 
 const client = generateClient();
@@ -220,7 +221,7 @@ export const createVehicleSimple = async (vehicleData) => {
     const result = await withCredentialRetry(async () => {
       try {
         return await client.graphql({
-          query: mutations.createVehicle,
+          query: simpleMutations.createVehicleSimple,
           variables: { input: cleanedInput }
         });
       } catch (graphqlError) {
@@ -352,7 +353,7 @@ export const updateVehicleSimple = async (vehicleData) => {
     const result = await withCredentialRetry(async () => {
       try {
         return await client.graphql({
-          query: mutations.updateVehicle,
+          query: simpleMutations.updateVehicleSimple,
           variables: { input: vehicleInput }
         });
       } catch (graphqlError) {
