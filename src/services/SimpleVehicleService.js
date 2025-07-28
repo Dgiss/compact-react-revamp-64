@@ -361,14 +361,21 @@ export const updateVehicleSimple = async (vehicleData) => {
         console.error('Error data:', graphqlError.data);
         console.error('Error errors array:', graphqlError.errors);
         
+        // Log detailed error information
         if (graphqlError.errors && graphqlError.errors.length > 0) {
+          console.error('🔍 DETAILED GRAPHQL ERRORS:');
           graphqlError.errors.forEach((err, index) => {
-            console.error(`Update GraphQL Error ${index + 1}:`, {
+            console.error(`❌ Update GraphQL Error ${index + 1}:`, {
               message: err.message,
               path: err.path,
               errorType: err.errorType,
-              errorInfo: err.errorInfo
+              errorInfo: err.errorInfo,
+              locations: err.locations,
+              extensions: err.extensions
             });
+            
+            // Log the raw error message for debugging
+            console.error(`Raw error message ${index + 1}:`, err.message);
           });
         }
         
