@@ -92,12 +92,13 @@ export default function VehiclesDevicesPage() {
       console.log('=== OPTIMIZED SEARCH: VEHICLES WITH EMPTY IMEI ===');
       setFilteredData([]); // Clear previous results
       setLoadingMode('search');
-
+      
       // Progress callback to update results as they come in
-      const onProgressUpdate = progressResults => {
+      const onProgressUpdate = (progressResults) => {
         console.log(`Progress update: ${progressResults.length} vehicles so far`);
         setFilteredData([...progressResults]); // Update the display
       };
+      
       const vehiclesWithEmptyImei = await getVehiclesWithEmptyImei(onProgressUpdate);
       setFilteredData(vehiclesWithEmptyImei); // Final update
     } catch (error) {
@@ -279,14 +280,29 @@ export default function VehiclesDevicesPage() {
       const {
         createOrUpdateVehicleSimple
       } = await import('../services/SimpleVehicleService.js');
-      await createOrUpdateVehicleSimple(mappedData);
-      toast({
-        title: "Succès",
-        description: "Véhicule traité avec succès"
-      });
-
-      // Reload data
-      await loadAllData();
+      const updatedVehicle = await createOrUpdateVehicleSimple(mappedData);
+      
+      console.log('✅ Vehicle update result:', updatedVehicle);
+      console.log('✅ Vehicle update result type:', typeof updatedVehicle);
+      console.log('✅ Vehicle update result truthy:', !!updatedVehicle);
+      
+      // Optimized: Update local state instead of reloading all data
+      if (updatedVehicle) {
+        console.log('✅ Using optimized update: updating local state with modified vehicle');
+        await refreshAfterAssociation("Véhicule traité avec succès", {
+          ...updatedVehicle,
+          type: "vehicle",
+          isAssociated: !!updatedVehicle.vehicleDeviceImei
+        });
+      } else {
+        console.log('❌ No updated vehicle returned, falling back to full reload');
+        // Fallback toast and reload only if update failed
+        toast({
+          title: "Succès",
+          description: "Véhicule traité avec succès"
+        });
+        await loadAllData();
+      }
     } catch (err) {
       console.error('Error updating/creating vehicle:', err);
       toast({
@@ -316,10 +332,12 @@ export default function VehiclesDevicesPage() {
   const dissociateDevice = async vehicleImmat => {
     console.log('=== STARTING DISSOCIATION ===');
     console.log('Vehicle immat to dissociate:', vehicleImmat);
+    
     try {
       console.log('Calling dissociateVehicleFromDevice...');
       const result = await dissociateVehicleFromDevice(vehicleImmat);
       console.log('Dissociation result:', result);
+      
       await refreshAfterDissociation("Boîtier dissocié avec succès");
       console.log('Dissociation completed successfully');
     } catch (err) {
@@ -330,6 +348,7 @@ export default function VehiclesDevicesPage() {
       if (err.errors) {
         console.error('GraphQL errors:', err.errors);
       }
+      
       toast({
         title: "Erreur",
         description: `Erreur lors de la dissociation: ${err.message}`,
@@ -395,7 +414,7 @@ export default function VehiclesDevicesPage() {
     const newSelectMode = !isSelectMode;
     setIsSelectMode(newSelectMode);
     setSelectedVehicles([]);
-
+    
     // If turning on vehicle select mode, turn off device select mode
     if (newSelectMode && isDeviceSelectMode) {
       setIsDeviceSelectMode(false);
@@ -408,7 +427,7 @@ export default function VehiclesDevicesPage() {
     const newDeviceSelectMode = !isDeviceSelectMode;
     setIsDeviceSelectMode(newDeviceSelectMode);
     setSelectedDevices([]);
-
+    
     // If turning on device select mode, turn off vehicle select mode
     if (newDeviceSelectMode && isSelectMode) {
       setIsSelectMode(false);
@@ -419,14 +438,20 @@ export default function VehiclesDevicesPage() {
   // Get available devices for selection (only unassociated devices)
   const getAvailableDevices = () => {
     const currentData = filteredData.length > 0 ? filteredData : combinedData;
-    return currentData.filter(item => item.type === "device" && item.imei && !item.isAssociated);
+    return currentData.filter(item => 
+      item.type === "device" && 
+      item.imei && 
+      !item.isAssociated
+    );
   };
 
   // Handle device selection
   const handleDeviceSelect = (imei, isSelected) => {
     if (isSelected) {
       // Prevent duplicates
-      setSelectedDevices(prev => prev.includes(imei) ? prev : [...prev, imei]);
+      setSelectedDevices(prev => 
+        prev.includes(imei) ? prev : [...prev, imei]
+      );
     } else {
       setSelectedDevices(prev => prev.filter(id => id !== imei));
     }
@@ -453,10 +478,16 @@ export default function VehiclesDevicesPage() {
       });
       return;
     }
-    const devicesData = selectedDevices.map(imei => filteredData.find(item => item.imei === imei) || combinedData.find(item => item.imei === imei)).filter(Boolean);
+
+    const devicesData = selectedDevices.map(imei => 
+      filteredData.find(item => item.imei === imei) || 
+      combinedData.find(item => item.imei === imei)
+    ).filter(Boolean);
+    
     console.log('=== BULK ASSOCIATION: SELECTED DEVICES ===');
     console.log('Selected IMEIs:', selectedDevices);
     console.log('Devices data for association:', devicesData);
+    
     setShowBulkAssociation(true);
     // Stocker les données des devices sélectionnés pour l'association
     setFilteredData(devicesData);
@@ -466,7 +497,9 @@ export default function VehiclesDevicesPage() {
   const handleVehicleSelect = (immat, isSelected) => {
     if (isSelected) {
       // Prevent duplicates
-      setSelectedVehicles(prev => prev.includes(immat) ? prev : [...prev, immat]);
+      setSelectedVehicles(prev => 
+        prev.includes(immat) ? prev : [...prev, immat]
+      );
     } else {
       setSelectedVehicles(prev => prev.filter(id => id !== immat));
     }
@@ -482,9 +515,16 @@ export default function VehiclesDevicesPage() {
       // Only show checkbox for vehicles with associated devices
       if (row.type === "vehicle" && row.imei && row.isAssociated) {
         const isSelected = selectedVehicles.includes(row.immatriculation || row.immat);
-        return <div className="flex justify-center">
-            <input type="checkbox" checked={isSelected} onChange={e => handleVehicleSelect(row.immatriculation || row.immat, e.target.checked)} className="h-4 w-4 accent-blue-600 cursor-pointer" />
-          </div>;
+        return (
+          <div className="flex justify-center">
+            <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={e => handleVehicleSelect(row.immatriculation || row.immat, e.target.checked)} 
+              className="h-4 w-4 accent-blue-600 cursor-pointer"
+            />
+          </div>
+        );
       }
       return null;
     }
@@ -497,9 +537,16 @@ export default function VehiclesDevicesPage() {
       // Only show checkbox for unassociated devices (available for association)
       if (row.type === "device" && row.imei && !row.isAssociated) {
         const isSelected = selectedDevices.includes(row.imei);
-        return <div className="flex justify-center">
-            <input type="checkbox" checked={isSelected} onChange={e => handleDeviceSelect(row.imei, e.target.checked)} className="h-4 w-4 accent-green-600 cursor-pointer" />
-          </div>;
+        return (
+          <div className="flex justify-center">
+            <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={e => handleDeviceSelect(row.imei, e.target.checked)} 
+              className="h-4 w-4 accent-green-600 cursor-pointer"
+            />
+          </div>
+        );
       }
       return null;
     }
@@ -677,8 +724,8 @@ export default function VehiclesDevicesPage() {
         <Button onClick={() => searchVehiclesWithEmptyImeiOptimized()} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Car className="h-6 w-6 mb-2" />
           <div>
-            
-            
+            <div className="font-medium">Véhicules sans IMEI</div>
+            <div className="text-sm text-muted-foreground">Voir les véhicules avec IMEI vide</div>
           </div>
         </Button>
 
@@ -903,10 +950,18 @@ export default function VehiclesDevicesPage() {
         
         {/* Action buttons - Always visible and prominent */}
         <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:gap-2 lg:min-w-[200px]">
-          <Button variant={isSelectMode ? "default" : "outline"} onClick={toggleSelectMode} className={isSelectMode ? "bg-blue-600 text-white" : "border-blue-600 text-blue-600 hover:bg-blue-50"}>
+          <Button 
+            variant={isSelectMode ? "default" : "outline"} 
+            onClick={toggleSelectMode}
+            className={isSelectMode ? "bg-blue-600 text-white" : "border-blue-600 text-blue-600 hover:bg-blue-50"}
+          >
             {isSelectMode ? "✓ Mode sélection véhicules" : "Sélectionner véhicules"}
           </Button>
-          <Button variant={isDeviceSelectMode ? "default" : "outline"} onClick={toggleDeviceSelectMode} className={isDeviceSelectMode ? "bg-green-600 text-white" : "border-green-600 text-green-600 hover:bg-green-50"}>
+          <Button 
+            variant={isDeviceSelectMode ? "default" : "outline"} 
+            onClick={toggleDeviceSelectMode}
+            className={isDeviceSelectMode ? "bg-green-600 text-white" : "border-green-600 text-green-600 hover:bg-green-50"}
+          >
             {isDeviceSelectMode ? "✓ Mode sélection boîtiers" : "Sélectionner boîtiers"}
           </Button>
           
@@ -958,19 +1013,22 @@ export default function VehiclesDevicesPage() {
       
       {/* Interface d'association en masse pour boîtiers sélectionnés */}
       {showBulkAssociation && filteredData.length > 0 && <div className="mb-6">
-          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device")} onAssociationComplete={() => {
-        // Fermer l'interface d'association
-        setShowBulkAssociation(false);
-        // Réinitialiser les sélections
-        setSelectedDevices([]);
-        setIsDeviceSelectMode(false);
-        // Rafraîchir les données
-        loadAllData();
-        toast({
-          title: "Association réussie",
-          description: "Boîtiers associés avec succès"
-        });
-      }} />
+          <DevicesBulkAssociation 
+            devices={filteredData.filter(device => device.type === "device")} 
+            onAssociationComplete={() => {
+              // Fermer l'interface d'association
+              setShowBulkAssociation(false);
+              // Réinitialiser les sélections
+              setSelectedDevices([]);
+              setIsDeviceSelectMode(false);
+              // Rafraîchir les données
+              loadAllData();
+              toast({
+                title: "Association réussie",
+                description: "Boîtiers associés avec succès"
+              });
+            }} 
+          />
         </div>}
 
       {/* Interface d'association en masse pour boîtiers sans IMEI */}
@@ -984,7 +1042,15 @@ export default function VehiclesDevicesPage() {
       }} />
         </div>}
 
-      <EnhancedDataTable columns={allColumns} data={filteredData.length > 0 ? filteredData : combinedData} onEdit={handleEdit} selectedVehicles={selectedVehicles} selectedDevices={selectedDevices} isSelectMode={isSelectMode} isDeviceSelectMode={isDeviceSelectMode} renderActions={item => <div className="flex gap-1">
+      <EnhancedDataTable 
+        columns={allColumns} 
+        data={filteredData.length > 0 ? filteredData : combinedData} 
+        onEdit={handleEdit} 
+        selectedVehicles={selectedVehicles}
+        selectedDevices={selectedDevices}
+        isSelectMode={isSelectMode}
+        isDeviceSelectMode={isDeviceSelectMode}
+        renderActions={item => <div className="flex gap-1">
             {/* Edit button - shown for all vehicles */}
             {item.type === "vehicle" && <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} title="Modifier ce véhicule">
               <Edit className="h-4 w-4" />
