@@ -345,6 +345,9 @@ export const associateVehicleToDevice = async (vehicleImmat, deviceImei) => {
 
 export const dissociateVehicleFromDevice = async (vehicleImmat) => {
   return await withCredentialRetry(async () => {
+    console.log('=== DISSOCIATING VEHICLE FROM DEVICE ===');
+    console.log('Vehicle immat:', vehicleImmat);
+    
     try {
       const vehicleUpdate = await client.graphql({
         query: mutations.updateVehicle,
@@ -356,18 +359,40 @@ export const dissociateVehicleFromDevice = async (vehicleImmat) => {
         }
       });
       
+      console.log('GraphQL response received:', {
+        hasData: !!vehicleUpdate.data,
+        hasUpdateVehicle: !!vehicleUpdate.data?.updateVehicle,
+        hasErrors: !!vehicleUpdate.errors,
+        errorCount: vehicleUpdate.errors?.length || 0
+      });
+      
       // Check if the update was successful even with potential non-critical errors
       if (vehicleUpdate.data?.updateVehicle) {
-        console.log('Dissociation successful for vehicle:', vehicleImmat);
+        console.log('✅ Dissociation successful for vehicle:', vehicleImmat);
         if (vehicleUpdate.errors && vehicleUpdate.errors.length > 0) {
-          console.warn('Non-critical errors during dissociation:', vehicleUpdate.errors);
+          console.warn('⚠️ Non-critical errors during dissociation:', vehicleUpdate.errors);
+          // Log each error for debugging
+          vehicleUpdate.errors.forEach((err, index) => {
+            console.warn(`Error ${index + 1}:`, err);
+          });
         }
         return { success: true, vehicleUpdate: vehicleUpdate.data.updateVehicle };
       } else {
-        throw new Error('Failed to dissociate vehicle from device');
+        console.error('❌ No data returned from updateVehicle');
+        if (vehicleUpdate.errors) {
+          console.error('GraphQL errors:', vehicleUpdate.errors);
+        }
+        throw new Error('Failed to dissociate vehicle from device - no data returned');
       }
     } catch (error) {
-      console.error('Error dissociating device:', error);
+      console.error('❌ Exception during dissociation:', error);
+      
+      // Handle GraphQL response with errors but potential data
+      if (error.data?.updateVehicle) {
+        console.log('🔄 Operation may have succeeded despite errors');
+        return { success: true, vehicleUpdate: error.data.updateVehicle };
+      }
+      
       throw error;
     }
   });
