@@ -579,9 +579,12 @@ export default function VehiclesDevicesPage() {
         </div>
   }, {
     id: "nomVehicule",
-    label: "Nom Véhicule",
+    label: "Nom Véhicule", 
     sortable: true,
-    visible: true
+    visible: true,
+    renderCell: (value, row) => <span className={!value ? "text-gray-400 italic" : "text-gray-900"}>
+        {value || "Nom non défini"}
+      </span>
   }, {
     id: "imei",
     label: "IMEI",
