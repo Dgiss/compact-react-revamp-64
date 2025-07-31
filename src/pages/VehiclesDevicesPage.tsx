@@ -217,6 +217,7 @@ export default function VehiclesDevicesPage() {
       setFilteredData(results || []);
 
       // Store current filters for refresh after operations
+      setFilteredData(results || []);
       setCurrentFilters({
         imei: searchImei,
         immatriculation: searchImmat,
