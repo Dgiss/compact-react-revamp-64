@@ -1,7 +1,7 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
 
 const client = generateClient();
 
@@ -12,9 +12,14 @@ const client = generateClient();
  * @returns {Promise<{isAssociated: boolean, vehicle?: Object}>}
  */
 export const checkDeviceVehicleUniqueness = async (deviceImei, excludeVehicleImmat = null) => {
-  await waitForAmplifyConfig();
-  
   try {
+    // Ensure Amplify is properly configured with retry
+    await withCredentialRetry(async () => {
+      await waitForAmplifyConfig();
+      return true;
+    });
+    
+    console.log(`🔍 Checking uniqueness for device ${deviceImei} (exclude: ${excludeVehicleImmat})`);
     // Get device and check its vehicle association
     const deviceResponse = await client.graphql({
       query: queries.getDevice,
@@ -64,9 +69,14 @@ export const checkDeviceVehicleUniqueness = async (deviceImei, excludeVehicleImm
  * @returns {Promise<Object>} Association result
  */
 export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, forceAssociation = false) => {
-  await waitForAmplifyConfig();
-  
   try {
+    // Ensure Amplify is properly configured with retry
+    await withCredentialRetry(async () => {
+      await waitForAmplifyConfig();
+      return true;
+    });
+    
+    console.log(`🔄 Associating device ${deviceImei} to vehicle ${vehicleImmat}`);
     // Check if device is already associated
     const uniquenessCheck = await checkDeviceVehicleUniqueness(deviceImei, vehicleImmat);
     
@@ -121,9 +131,14 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
  * @returns {Promise<Object>} Dissociation result
  */
 export const dissociateDeviceFromVehicle = async (deviceImei) => {
-  await waitForAmplifyConfig();
-  
   try {
+    // Ensure Amplify is properly configured with retry
+    await withCredentialRetry(async () => {
+      await waitForAmplifyConfig();
+      return true;
+    });
+    
+    console.log(`🔄 Dissociating device ${deviceImei}`);
     // Find the vehicle associated with this device first
     const vehiclesResponse = await client.graphql({
       query: queries.listVehicles,
@@ -166,9 +181,12 @@ export const dissociateDeviceFromVehicle = async (deviceImei) => {
  * @returns {Promise<Array>} Array of free devices
  */
 export const getFreeDevices = async () => {
-  await waitForAmplifyConfig();
-  
   try {
+    // Ensure Amplify is properly configured with retry
+    await withCredentialRetry(async () => {
+      await waitForAmplifyConfig();
+      return true;
+    });
     const response = await client.graphql({
       query: queries.listDevices,
       variables: {

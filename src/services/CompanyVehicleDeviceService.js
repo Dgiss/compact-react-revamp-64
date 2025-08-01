@@ -235,7 +235,7 @@ export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
         const response = await client.graphql({
           query: `query GetVehiclesWithEmptyImei($nextToken: String) {
             listVehicles(
-              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: null}}, {vehicleDeviceImei: {eq: ""}}]}
               nextToken: $nextToken
               limit: 1000
             ) {
@@ -403,7 +403,7 @@ export const fetchVehiclesWithoutDevices = async () => {
         const response = await client.graphql({
           query: `query ListVehiclesWithoutDevices($nextToken: String) {
             listVehicles(
-              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: ""}}]}
+              filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: null}}, {vehicleDeviceImei: {eq: ""}}]}
               nextToken: $nextToken
               limit: 1000
             ) {
@@ -569,7 +569,7 @@ export const fetchUnassociatedItemsStats = async () => {
       // Fetch vehicles without devices
       const vehiclesWithoutDevicesResponse = await client.graphql({
         query: `query ListVehiclesWithoutDevicesCount {
-          listVehicles(filter: {vehicleDeviceImei: {attributeExists: false}}) {
+          listVehicles(filter: {or: [{vehicleDeviceImei: {attributeExists: false}}, {vehicleDeviceImei: {eq: null}}, {vehicleDeviceImei: {eq: ""}}]}) {
             items {
               immat
             }
