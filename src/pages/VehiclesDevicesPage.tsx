@@ -869,10 +869,9 @@ export default function VehiclesDevicesPage() {
       {/* Affichage conditionnel des tableaux */}
       {(() => {
         const currentData = filteredData.length > 0 ? filteredData : combinedData;
-        const hasDevices = currentData.some(item => item.type === "device" && !item.isAssociated);
         
-        // Affiche DevicesBulkAssociation pour les boîtiers libres uniquement
-        if (hasDevices && (showBulkAssociation || currentData.some(device => device.type === "device" && (!device.imei || device.imei === "")))) {
+        // Affiche DevicesBulkAssociation UNIQUEMENT quand showBulkAssociation est true (sélection multiple explicite)
+        if (showBulkAssociation && currentData.length > 0) {
           return (
             <div className="mb-6">
               <DevicesBulkAssociation 
@@ -881,13 +880,7 @@ export default function VehiclesDevicesPage() {
                   setShowBulkAssociation(false);
                   setSelectedDevices([]);
                   setIsDeviceSelectMode(false);
-                  if (loadingMode === 'search') {
-                    // Garde les résultats de recherche
-                    searchDevicesWithoutVehiclesOptimized();
-                  } else {
-                    // Recharge tout
-                    loadAllData();
-                  }
+                  loadAllData();
                   toast({
                     title: "Association réussie",
                     description: "Boîtiers associés avec succès"
@@ -898,7 +891,7 @@ export default function VehiclesDevicesPage() {
           );
         }
         
-        // Affiche EnhancedDataTable pour tous les autres cas
+        // Affiche EnhancedDataTable pour tous les autres cas (y compris véhicules sans IMEI)
         if (currentData.length > 0) {
           return (
             <EnhancedDataTable
