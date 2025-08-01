@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building, X } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -552,7 +552,7 @@ export default function VehiclesDevicesPage() {
         </div>
   }, {
     id: "entreprise",
-    label: "Entreprise",
+    label: "Entreprise actuelle",
     sortable: true,
     visible: true,
     renderCell: (value, row) => <div className="flex flex-col">
@@ -573,12 +573,12 @@ export default function VehiclesDevicesPage() {
       </span>
   }, {
     id: "typeBoitier",
-    label: "Type de boitier",
+    label: "Protocol",
     sortable: true,
     visible: true,
     renderCell: (value, row) => <div className="flex flex-col">
           <span className="font-medium">
-            {value ? `Protocol: ${value}` : "Aucun protocole"}
+            {value || "Aucun protocole"}
           </span>
           {row.deviceData && <span className="text-xs text-gray-500">
               {row.isAssociated ? "Associé" : "Disponible"}
@@ -656,6 +656,111 @@ export default function VehiclesDevicesPage() {
     sortable: true,
     visible: true
   }];
+
+  // Define columns specifically for vehicles without devices view
+  const vehicleWithoutDeviceColumns = [{
+    id: "immatriculation",
+    label: "Immatriculation",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <div className="flex items-center gap-2">
+          <Car className="h-4 w-4 text-blue-500" />
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {value || "Pas d'immatriculation"}
+            </span>
+            {row.nomVehicule && <span className="text-xs text-gray-500">{row.nomVehicule}</span>}
+          </div>
+        </div>
+  }, {
+    id: "imei",
+    label: "IMEI",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className="text-gray-400 italic">
+          Non assigné
+        </span>
+  }, {
+    id: "typeBoitier",
+    label: "Protocol",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className="text-gray-400 italic">
+          Aucun protocole
+        </span>
+  }, {
+    id: "sim",
+    label: "SIM",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className="text-gray-400 italic">
+          Pas de SIM
+        </span>
+  }, {
+    id: "entreprise",
+    label: "Entreprise actuelle",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className="text-blue-600 font-medium">
+          {value || "Entreprise non définie"}
+        </span>
+  }, {
+    id: "actions",
+    label: "Actions",
+    sortable: false,
+    visible: true,
+    renderCell: (value, row) => <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAssociate(row)}>
+            <Link className="h-4 w-4 mr-1" />
+            Associer
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => handleDelete(row)}>
+            <X className="h-4 w-4 mr-1" />
+            Supprimer
+          </Button>
+        </div>
+  }];
+
+  // Function to determine which columns to use based on current view
+  const getColumnsForCurrentView = () => {
+    // Check if we're showing vehicles without devices (filteredData contains vehicles with no IMEI)
+    const hasVehiclesWithoutDevices = filteredData.length > 0 && 
+      filteredData.some(item => item.type === "vehicle" && (!item.imei || item.imei === ""));
+    
+    if (hasVehiclesWithoutDevices && filteredData.every(item => item.type === "vehicle")) {
+      return vehicleWithoutDeviceColumns;
+    }
+    
+    return allColumns;
+  };
+
+  // Handle delete function
+  const handleDelete = async (item) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le véhicule "${item.immatriculation || item.immat}" ?`)) {
+      return;
+    }
+    
+    try {
+      await deleteVehicleData(item);
+      toast({
+        title: "Succès",
+        description: "Véhicule supprimé avec succès"
+      });
+      // Refresh the current view
+      if (loadingMode === 'search') {
+        searchVehiclesWithoutDevicesOptimized();
+      } else {
+        loadAllData();
+      }
+    } catch (error) {
+      console.error('Error deleting vehicle:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du véhicule",
+        variant: "destructive"
+      });
+    }
+  };
   const handleEdit = item => {
     setSelectedItem(item);
     setShowEditVehicleDialog(true);
@@ -795,7 +900,7 @@ export default function VehiclesDevicesPage() {
           <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
           <Button variant="outline" onClick={searchVehiclesWithoutDevicesOptimized} className="w-full bg-blue-50 border-blue-300 hover:bg-blue-100" disabled={loading}>
             <Car className="h-4 w-4 mr-2" />
-            Véhicules sans IMEI
+            Véhicules sans boîtier
           </Button>
         </div>
         
@@ -866,7 +971,7 @@ export default function VehiclesDevicesPage() {
       console.log('loadingMode:', loadingMode);
       console.log('loading:', loading);
       console.log('Should show table:', dataToShow.length > 0);
-      return dataToShow.length > 0 ? <EnhancedDataTable columns={allColumns} data={dataToShow} onEdit={handleEdit} onAssociate={handleAssociate} onDissociate={dissociateDevice} loading={loading} enablePagination={true} selectedVehicles={selectedVehicles} selectedDevices={selectedDevices} isSelectMode={isSelectMode} isDeviceSelectMode={isDeviceSelectMode} /> : <div className="text-center py-8 text-muted-foreground">
+      return dataToShow.length > 0 ? <EnhancedDataTable columns={getColumnsForCurrentView()} data={dataToShow} onEdit={handleEdit} onAssociate={handleAssociate} onDissociate={dissociateDevice} loading={loading} enablePagination={true} selectedVehicles={selectedVehicles} selectedDevices={selectedDevices} isSelectMode={isSelectMode} isDeviceSelectMode={isDeviceSelectMode} /> : <div className="text-center py-8 text-muted-foreground">
             Aucune donnée à afficher. Chargement en cours...
           </div>;
     })()}
