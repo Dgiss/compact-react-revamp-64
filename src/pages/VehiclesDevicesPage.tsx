@@ -866,49 +866,58 @@ export default function VehiclesDevicesPage() {
         
       </div>
       
-      {/* Interface d'association en masse pour boîtiers sélectionnés */}
-      {showBulkAssociation && filteredData.length > 0 && <div className="mb-6">
-          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device")} onAssociationComplete={() => {
-        // Fermer l'interface d'association
-        setShowBulkAssociation(false);
-        // Réinitialiser les sélections
-        setSelectedDevices([]);
-        setIsDeviceSelectMode(false);
-        // Rafraîchir les données
-        loadAllData();
-        toast({
-          title: "Association réussie",
-          description: "Boîtiers associés avec succès"
-        });
-      }} />
-        </div>}
-
-      {/* Interface d'association en masse pour boîtiers sans IMEI */}
-      {!showBulkAssociation && filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && <div className="mb-6">
-          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))} onAssociationComplete={() => {
-        searchDevicesWithoutVehiclesOptimized();
-        toast({
-          title: "Mise à jour",
-          description: "Liste des boîtiers actualisée"
-        });
-      }} />
-        </div>}
-
-      {/* Table pour les vues spécialisées */}
-      {filteredData.length > 0 && loadingMode === 'search' && (
-        <EnhancedDataTable
-          columns={allColumns}
-          data={filteredData}
-          onEdit={handleEdit}
-          onAssociate={handleAssociate}
-          loading={loading}
-          enablePagination={false}
-          selectedVehicles={selectedVehicles}
-          selectedDevices={selectedDevices}
-          isSelectMode={isSelectMode}
-          isDeviceSelectMode={isDeviceSelectMode}
-        />
-      )}
+      {/* Affichage conditionnel des tableaux */}
+      {(() => {
+        const currentData = filteredData.length > 0 ? filteredData : combinedData;
+        const hasDevices = currentData.some(item => item.type === "device" && !item.isAssociated);
+        
+        // Affiche DevicesBulkAssociation pour les boîtiers libres uniquement
+        if (hasDevices && (showBulkAssociation || currentData.some(device => device.type === "device" && (!device.imei || device.imei === "")))) {
+          return (
+            <div className="mb-6">
+              <DevicesBulkAssociation 
+                devices={currentData.filter(device => device.type === "device" && !device.isAssociated)} 
+                onAssociationComplete={() => {
+                  setShowBulkAssociation(false);
+                  setSelectedDevices([]);
+                  setIsDeviceSelectMode(false);
+                  if (loadingMode === 'search') {
+                    // Garde les résultats de recherche
+                    searchDevicesWithoutVehiclesOptimized();
+                  } else {
+                    // Recharge tout
+                    loadAllData();
+                  }
+                  toast({
+                    title: "Association réussie",
+                    description: "Boîtiers associés avec succès"
+                  });
+                }} 
+              />
+            </div>
+          );
+        }
+        
+        // Affiche EnhancedDataTable pour tous les autres cas
+        if (currentData.length > 0) {
+          return (
+            <EnhancedDataTable
+              columns={allColumns}
+              data={currentData}
+              onEdit={handleEdit}
+              onAssociate={handleAssociate}
+              loading={loading}
+              enablePagination={true}
+              selectedVehicles={selectedVehicles}
+              selectedDevices={selectedDevices}
+              isSelectMode={isSelectMode}
+              isDeviceSelectMode={isDeviceSelectMode}
+            />
+          );
+        }
+        
+        return null;
+      })()}
 
       {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
