@@ -247,9 +247,7 @@ export const useCompanyVehicleDevice = () => {
         variant: "destructive"
       });
     } finally {
-      // CRITICAL FIX: Force loading state reset to prevent UI freeze
       setLoading(false);
-      console.log('Loading state forced to false');
     }
   }, []);
 
