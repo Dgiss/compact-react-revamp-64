@@ -104,16 +104,29 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
       }
     });
     
+    // Check for GraphQL errors
+    if (updateResult.errors && updateResult.errors.length > 0) {
+      console.error('GraphQL errors:', updateResult.errors);
+      const errorMessages = updateResult.errors.map(err => err.message).join(', ');
+      throw new Error(`Erreur GraphQL lors de l'association: ${errorMessages}`);
+    }
+    
     // Return only serializable data to avoid DataCloneError
     const vehicleData = updateResult.data?.updateVehicle;
+    if (!vehicleData) {
+      throw new Error('Aucune donnée retournée après la mise à jour du véhicule');
+    }
+    
     const cleanVehicleData = {
-      immat: vehicleData?.immat || vehicleImmat,
-      vehicleDeviceImei: vehicleData?.vehicleDeviceImei || deviceImei,
-      immatriculation: vehicleData?.immatriculation || vehicleImmat,
-      nomVehicule: vehicleData?.nomVehicule,
+      immat: vehicleData.immat || vehicleImmat,
+      vehicleDeviceImei: vehicleData.vehicleDeviceImei || deviceImei,
+      immatriculation: vehicleData.immatriculation || vehicleImmat,
+      nomVehicule: vehicleData.nomVehicule,
       isAssociated: true,
       type: 'vehicle'
     };
+    
+    console.log('Association successful:', cleanVehicleData);
     
     return { 
       success: true, 
