@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
+import { EnhancedPagination } from "@/components/ui/enhanced-pagination";
 import { toast } from "@/hooks/use-toast";
-import { Wifi, Building, Check, Trash2 } from "lucide-react";
+import { Wifi, Building, Check, Trash2, Search } from "lucide-react";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { deleteDevice } from "@/services/SimpleDeviceService";
 
@@ -17,6 +19,9 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState("");
   const [isAssociating, setIsAssociating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
 
   // Toggle individual device selection
   const toggleDeviceSelection = (deviceImei: string) => {
@@ -31,10 +36,10 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
 
   // Toggle all devices selection
   const toggleAllDevices = () => {
-    if (selectedDevices.length === devices.length) {
+    if (selectedDevices.length === filteredDevices.length) {
       setSelectedDevices([]);
     } else {
-      setSelectedDevices(devices.map(device => device.imei));
+      setSelectedDevices(filteredDevices.map(device => device.imei));
     }
   };
 
@@ -170,15 +175,35 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
     }
   };
 
-  const allSelected = selectedDevices.length === devices.length;
-  const someSelected = selectedDevices.length > 0 && selectedDevices.length < devices.length;
+  // Filter devices based on search term
+  const filteredDevices = useMemo(() => {
+    if (!searchTerm) return devices;
+    return devices.filter(device => 
+      device.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.typeBoitier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.telephone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.entreprise?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [devices, searchTerm]);
+
+  // Paginate filtered devices
+  const paginatedDevices = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredDevices.slice(startIndex, endIndex);
+  }, [filteredDevices, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredDevices.length / itemsPerPage);
+
+  const allSelected = selectedDevices.length === filteredDevices.length;
+  const someSelected = selectedDevices.length > 0 && selectedDevices.length < filteredDevices.length;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Wifi className="h-5 w-5 text-green-600" />
-          Boîtiers sans IMEI ({devices.length})
+          Boîtiers sans IMEI ({filteredDevices.length} / {devices.length})
         </h3>
         
         <div className="flex items-center gap-4">
@@ -213,6 +238,20 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
         </div>
       </div>
 
+      <div className="flex items-center gap-2 mb-4">
+        <Search className="h-4 w-4 text-gray-500" />
+        <Input
+          type="text"
+          placeholder="Rechercher par IMEI, protocole, SIM ou entreprise..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1); // Reset to first page when searching
+          }}
+          className="max-w-md"
+        />
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -230,7 +269,7 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
             </TableRow>
           </TableHeader>
           <TableBody>
-            {devices.map((device) => (
+            {paginatedDevices.map((device) => (
               <TableRow key={device.imei}>
                 <TableCell>
                   <Checkbox
@@ -257,6 +296,20 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <EnhancedPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredDevices.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(newItemsPerPage) => {
+            setItemsPerPage(newItemsPerPage);
+            setCurrentPage(1);
+          }}
+        />
+      )}
 
       {selectedDevices.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
