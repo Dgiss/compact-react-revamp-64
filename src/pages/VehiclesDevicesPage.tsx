@@ -527,6 +527,14 @@ export default function VehiclesDevicesPage() {
       return null;
     }
   }] : []), {
+    id: "imei",
+    label: "IMEI",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className={!value ? "text-gray-400 italic" : "text-gray-900"}>
+          {value || "Non assigné"}
+        </span>
+  }, {
     id: "immatriculation",
     label: "Immatriculation",
     sortable: true,
@@ -562,16 +570,8 @@ export default function VehiclesDevicesPage() {
         {value || "Nom non défini"}
       </span>
   }, {
-    id: "imei",
-    label: "IMEI",
-    sortable: true,
-    visible: true,
-    renderCell: (value, row) => <span className={!value ? "text-gray-400 italic" : "text-gray-900"}>
-          {value || "Non assigné"}
-        </span>
-  }, {
     id: "typeBoitier",
-    label: "Protocol ID",
+    label: "Type de boitier",
     sortable: true,
     visible: true,
     renderCell: (value, row) => <div className="flex flex-col">
@@ -591,24 +591,27 @@ export default function VehiclesDevicesPage() {
     id: "marque",
     label: "Marque",
     sortable: true,
-    visible: false
+    visible: true
   }, {
     id: "modele",
     label: "Modèle",
     sortable: true,
-    visible: false
+    visible: true
   }, {
-    id: "kilometrage",
-    label: "Kilométrage",
-    sortable: true,
-    visible: false
-  }, {
-    id: "telephone",
+    id: "sim",
     label: "SIM",
     sortable: true,
     visible: true,
+    renderCell: (value, row) => <span className={row.telephone ? "text-gray-900" : "text-gray-400"}>
+          {row.telephone || "Pas de SIM"}
+        </span>
+  }, {
+    id: "telephone",
+    label: "Téléphone",
+    sortable: true,
+    visible: true,
     renderCell: value => <span className={value ? "text-gray-900" : "text-gray-400"}>
-          {value || "Pas de SIM"}
+          {value || "Pas de téléphone"}
         </span>
   }, {
     id: "statut",
@@ -645,6 +648,11 @@ export default function VehiclesDevicesPage() {
             {status}
           </span>;
     }
+  }, {
+    id: "kilometrage",
+    label: "Kilométrage",
+    sortable: true,
+    visible: true
   }];
   const handleEdit = item => {
     setSelectedItem(item);
