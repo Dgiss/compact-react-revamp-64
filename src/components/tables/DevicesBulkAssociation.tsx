@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { toast } from "@/hooks/use-toast";
-import { Wifi, Building, Check, Trash2 } from "lucide-react";
+import { Wifi, Building, Check, Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { deleteDevice } from "@/services/SimpleDeviceService";
 
@@ -17,6 +18,30 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [selectedCompany, setSelectedCompany] = useState("");
   const [isAssociating, setIsAssociating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
+
+  // Filter devices based on search term
+  const filteredDevices = useMemo(() => {
+    if (!searchTerm) return devices;
+    
+    return devices.filter(device => 
+      device.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.typeBoitier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.telephone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      device.entreprise?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [devices, searchTerm]);
+
+  // Paginate filtered devices
+  const paginatedDevices = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredDevices.slice(startIndex, endIndex);
+  }, [filteredDevices, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredDevices.length / itemsPerPage);
 
   // Toggle individual device selection
   const toggleDeviceSelection = (deviceImei: string) => {
@@ -178,7 +203,7 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Wifi className="h-5 w-5 text-green-600" />
-          Boîtiers sans IMEI ({devices.length})
+          Boîtiers sans IMEI ({filteredDevices.length} sur {devices.length})
         </h3>
         
         <div className="flex items-center gap-4">
@@ -213,6 +238,20 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
         </div>
       </div>
 
+      {/* Search bar */}
+      <div className="flex items-center gap-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher par IMEI, protocole, SIM ou entreprise..."
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1); // Reset to first page when searching
+          }}
+          className="max-w-md"
+        />
+      </div>
+
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -230,7 +269,7 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
             </TableRow>
           </TableHeader>
           <TableBody>
-            {devices.map((device) => (
+            {paginatedDevices.map((device) => (
               <TableRow key={device.imei}>
                 <TableCell>
                   <Checkbox
@@ -257,6 +296,37 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} sur {totalPages} ({filteredDevices.length} résultats)
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Précédent
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1"
+            >
+              Suivant
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {selectedDevices.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
