@@ -374,20 +374,12 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
         )}
 
         {isVehicle && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
               <Input 
                 placeholder="Kilométrage"
                 value={kilometrage} 
                 onChange={(e) => setKilometrage(e.target.value)}
-              />
-            </div>
-            <div>
-              <Input 
-                placeholder="IMEI (optionnel)"
-                value={imei} 
-                onChange={(e) => setImei(e.target.value)}
-                readOnly={isEditing}
               />
             </div>
           </div>

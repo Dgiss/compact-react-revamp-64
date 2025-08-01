@@ -760,7 +760,10 @@ export default function VehiclesDevicesPage() {
         <InitialView />
         
         {/* Dialogs for initial view */}
-        <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
+        <Dialog open={showAddVehicleDialog} onOpenChange={(open) => {
+          console.log('Dialog state changing:', open);
+          setShowAddVehicleDialog(open);
+        }}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Ajouter un Véhicule</DialogTitle>
@@ -785,7 +788,10 @@ export default function VehiclesDevicesPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
+        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={(open) => {
+          console.log('Device+Vehicle Dialog state changing:', open);
+          setShowAddDeviceWithVehicleDialog(open);
+        }}>
           <DialogContent className="max-w-2xl">
             <AddDeviceWithVehicleForm onClose={() => {
               setShowAddDeviceWithVehicleDialog(false);
