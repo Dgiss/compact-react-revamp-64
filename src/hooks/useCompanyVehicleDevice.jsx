@@ -459,15 +459,8 @@ export const useCompanyVehicleDevice = () => {
     }
     
     try {
-      // Search in both vehicles and devices by immatriculation
-      const vehicleResults = allDataCache.vehicles?.filter(v => 
-        v.immatriculation && v.immatriculation.toLowerCase().includes(vehicle.toLowerCase())
-      ) || [];
-      
-      const deviceResults = CompanyVehicleDeviceService.filterByVehicleLocal(allDataCache.devices, vehicle);
-      
-      // Combine results
-      const results = [...vehicleResults, ...deviceResults];
+      // Use the existing filterByVehicleLocal function which already handles the unified format
+      const results = CompanyVehicleDeviceService.filterByVehicleLocal(allDataCache.vehicles, vehicle);
       
       toast({
         title: "Recherche par véhicule",
