@@ -338,7 +338,7 @@ export function EnhancedDataTable({
         </Table>
       </div>
 
-      {enablePagination && (
+      {enablePagination && totalPages > 1 && (
         <EnhancedPagination
           currentPage={currentPage}
           totalPages={totalPages}
