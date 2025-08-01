@@ -785,23 +785,20 @@ export default function VehiclesDevicesPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={(open) => {
-          setShowAddDeviceWithVehicleDialog(open);
-          if (!open) {
-            // Force refresh when dialog closes
-            setTimeout(() => setShowAddDeviceWithVehicleDialog(false), 100);
-          }
-        }}>
+        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
           <DialogContent className="max-w-2xl">
-            <AddDeviceWithVehicleForm onClose={() => setShowAddDeviceWithVehicleDialog(false)} onSuccess={devices => {
-            setShowAddDeviceWithVehicleDialog(false);
-            setFilteredData(devices);
-            setLoadingMode('search');
-            toast({
-              title: "Succès",
-              description: "Device et véhicule créés et associés avec succès"
-            });
-          }} />
+            <AddDeviceWithVehicleForm onClose={() => {
+              setShowAddDeviceWithVehicleDialog(false);
+              loadQuickStats();
+            }} onSuccess={devices => {
+              setShowAddDeviceWithVehicleDialog(false);
+              setFilteredData(devices);
+              setLoadingMode('search');
+              toast({
+                title: "Succès",
+                description: "Device et véhicule créés et associés avec succès"
+              });
+            }} />
           </DialogContent>
         </Dialog>
       </div>;
