@@ -896,17 +896,6 @@ export default function VehiclesDevicesPage() {
       }} />
         </div>}
 
-      {/* Interface d'association en masse pour boîtiers sans IMEI */}
-      {!showBulkAssociation && filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && <div className="mb-6">
-          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))} onAssociationComplete={() => {
-        searchDevicesWithoutVehiclesOptimized();
-        toast({
-          title: "Mise à jour",
-          description: "Liste des boîtiers actualisée"
-        });
-      }} />
-        </div>}
-
       {/* Table pour les vues spécialisées */}
       {(() => {
       const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
