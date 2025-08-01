@@ -926,7 +926,22 @@ export default function VehiclesDevicesPage() {
         </div>
         
         {/* Action buttons - Always visible and prominent */}
-        
+        <div className="flex flex-wrap gap-2">
+          <Button variant="default" onClick={() => setShowAddVehicleDialog(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Ajouter Véhicule
+          </Button>
+          
+          <Button variant="default" onClick={() => setShowImportDevicesDialog(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Importer Boîtiers
+          </Button>
+          
+          <Button variant="default" onClick={() => setShowAddDeviceWithVehicleDialog(true)}>
+            <Link className="w-4 h-4 mr-2" />
+            Device + Véhicule
+          </Button>
+        </div>
       </div>
       
       {/* Interface d'association en masse pour boîtiers sélectionnés */}
