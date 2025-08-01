@@ -841,7 +841,7 @@ export default function VehiclesDevicesPage() {
   }
 
   // Show initial view when no specific mode is active
-  if (loadingMode === 'initial') {
+  if (loadingMode === 'initial' || !loadingMode) {
     return <div className="space-y-6">
         <InitialView />
       </div>;
