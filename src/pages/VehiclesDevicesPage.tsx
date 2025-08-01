@@ -859,80 +859,11 @@ export default function VehiclesDevicesPage() {
             </div>}
             
           {/* Multi-select controls for devices */}
-          {isDeviceSelectMode && <div className="flex items-center gap-2 mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
-              <span className="text-sm text-green-700 font-medium">
-                Mode sélection boîtiers: {selectedDevices.length} boîtier(s) sélectionné(s) / {getAvailableDevices().length} disponible(s)
-              </span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="ghost" onClick={selectAllDevices} disabled={getAvailableDevices().length === 0}>
-                  Tout sélectionner
-                </Button>
-                {selectedDevices.length > 0 && <Button size="sm" variant="ghost" onClick={deselectAllDevices}>
-                    Tout désélectionner
-                  </Button>}
-                {selectedDevices.length > 0 && <Button size="sm" variant="default" onClick={handleBulkAssociateDevices}>
-                    Associer la sélection ({selectedDevices.length})
-                  </Button>}
-              </div>
-              <Button size="sm" variant="outline" onClick={toggleDeviceSelectMode}>
-                Annuler
-              </Button>
-            </div>}
+          {isDeviceSelectMode}
         </div>
         
         {/* Action buttons - Always visible and prominent */}
-        <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:gap-2 lg:min-w-[200px]">
-          <Button variant={isSelectMode ? "default" : "outline"} onClick={toggleSelectMode} className={isSelectMode ? "bg-blue-600 text-white" : "border-blue-600 text-blue-600 hover:bg-blue-50"}>
-            {isSelectMode ? "✓ Mode sélection véhicules" : "Sélectionner véhicules"}
-          </Button>
-          <Button variant={isDeviceSelectMode ? "default" : "outline"} onClick={toggleDeviceSelectMode} className={isDeviceSelectMode ? "bg-green-600 text-white" : "border-green-600 text-green-600 hover:bg-green-50"}>
-            {isDeviceSelectMode ? "✓ Mode sélection boîtiers" : "Sélectionner boîtiers"}
-          </Button>
-          
-          <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
-            <DialogTrigger asChild>
-              
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Ajouter un Véhicule</DialogTitle>
-              </DialogHeader>
-              <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} onSave={async data => {
-              await updateVehicleData(data);
-              setShowAddVehicleDialog(false);
-            }} />
-            </DialogContent>
-          </Dialog>
-          
-          <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
-            <DialogTrigger asChild>
-              
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <AddDeviceWithVehicleForm onClose={() => setShowAddDeviceWithVehicleDialog(false)} onSuccess={devices => {
-              setShowAddDeviceWithVehicleDialog(false);
-              setFilteredData(devices);
-              setLoadingMode('search');
-              toast({
-                title: "Succès",
-                description: "Device et véhicule créés et associés avec succès"
-              });
-            }} />
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
-            <DialogTrigger asChild>
-              
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Importer des Boîtiers</DialogTitle>
-              </DialogHeader>
-              <ImportDevicesForm onClose={() => setShowImportDevicesDialog(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
+        
       </div>
       
       {/* Interface d'association en masse pour boîtiers sélectionnés */}
