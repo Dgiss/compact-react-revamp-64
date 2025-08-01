@@ -709,21 +709,15 @@ export default function VehiclesDevicesPage() {
     label: "Actions",
     sortable: false,
     visible: true,
-    renderCell: (value, row) => <div className="flex gap-1 justify-end">
-          <button 
-            onClick={() => handleAssociate(row)}
-            className="p-1 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-800 transition-colors"
-            title="Associer un boîtier"
-          >
-            <Link className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={() => handleDelete(row)}
-            className="p-1 hover:bg-red-50 rounded text-red-600 hover:text-red-800 transition-colors"
-            title="Supprimer le véhicule"
-          >
-            <X className="h-4 w-4" />
-          </button>
+    renderCell: (value, row) => <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleAssociate(row)}>
+            <Link className="h-4 w-4 mr-1" />
+            Associer
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => handleDelete(row)}>
+            <X className="h-4 w-4 mr-1" />
+            Supprimer
+          </Button>
         </div>
   }];
 
