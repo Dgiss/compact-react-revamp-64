@@ -1043,6 +1043,7 @@ export default function VehiclesDevicesPage() {
         selectedDevices={selectedDevices}
         isSelectMode={isSelectMode}
         isDeviceSelectMode={isDeviceSelectMode}
+        enablePagination={false}
         renderActions={item => <div className="flex gap-1">
             {/* Edit button - shown for all vehicles */}
             {item.type === "vehicle" && <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} title="Modifier ce véhicule">
@@ -1073,7 +1074,7 @@ export default function VehiclesDevicesPage() {
             {item.type === "vehicle" && (item.imei || item.vehicleDeviceImei) && item.isAssociated && !isSelectMode && <Button variant="ghost" size="icon" onClick={() => dissociateDevice(item.immatriculation || item.immat)} title="Dissocier le boîtier de ce véhicule" className="text-orange-600 hover:text-orange-700">
                 <Link className="h-4 w-4" />
               </Button>}
-          </div>} loading={loading} enablePagination={true} defaultItemsPerPage={50} />
+          </div>} loading={loading} />
 
       {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
