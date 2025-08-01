@@ -866,57 +866,62 @@ export default function VehiclesDevicesPage() {
         
       </div>
       
-      {/* Affichage conditionnel des tableaux */}
+      {/* Interface d'association en masse pour boîtiers sélectionnés */}
+      {showBulkAssociation && filteredData.length > 0 && <div className="mb-6">
+          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device")} onAssociationComplete={() => {
+        // Fermer l'interface d'association
+        setShowBulkAssociation(false);
+        // Réinitialiser les sélections
+        setSelectedDevices([]);
+        setIsDeviceSelectMode(false);
+        // Rafraîchir les données
+        loadAllData();
+        toast({
+          title: "Association réussie",
+          description: "Boîtiers associés avec succès"
+        });
+      }} />
+        </div>}
+
+      {/* Interface d'association en masse pour boîtiers sans IMEI */}
+      {!showBulkAssociation && filteredData.some(device => device.type === "device" && (!device.imei || device.imei === "")) && <div className="mb-6">
+          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device" && (!device.imei || device.imei === ""))} onAssociationComplete={() => {
+        searchDevicesWithoutVehiclesOptimized();
+        toast({
+          title: "Mise à jour",
+          description: "Liste des boîtiers actualisée"
+        });
+      }} />
+        </div>}
+
+      {/* Table pour les vues spécialisées */}
       {(() => {
-        const currentData = filteredData.length > 0 ? filteredData : combinedData;
-        const hasDevices = currentData.some(item => item.type === "device" && !item.isAssociated);
-        
-        // Affiche DevicesBulkAssociation pour les boîtiers libres uniquement
-        if (hasDevices && (showBulkAssociation || currentData.some(device => device.type === "device" && (!device.imei || device.imei === "")))) {
-          return (
-            <div className="mb-6">
-              <DevicesBulkAssociation 
-                devices={currentData.filter(device => device.type === "device" && !device.isAssociated)} 
-                onAssociationComplete={() => {
-                  setShowBulkAssociation(false);
-                  setSelectedDevices([]);
-                  setIsDeviceSelectMode(false);
-                  if (loadingMode === 'search') {
-                    // Garde les résultats de recherche
-                    searchDevicesWithoutVehiclesOptimized();
-                  } else {
-                    // Recharge tout
-                    loadAllData();
-                  }
-                  toast({
-                    title: "Association réussie",
-                    description: "Boîtiers associés avec succès"
-                  });
-                }} 
-              />
-            </div>
-          );
-        }
-        
-        // Affiche EnhancedDataTable pour tous les autres cas
-        if (currentData.length > 0) {
-          return (
-            <EnhancedDataTable
-              columns={allColumns}
-              data={currentData}
-              onEdit={handleEdit}
-              onAssociate={handleAssociate}
-              loading={loading}
-              enablePagination={true}
-              selectedVehicles={selectedVehicles}
-              selectedDevices={selectedDevices}
-              isSelectMode={isSelectMode}
-              isDeviceSelectMode={isDeviceSelectMode}
-            />
-          );
-        }
-        
-        return null;
+        const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
+        console.log('=== TABLE DISPLAY DEBUG ===');
+        console.log('filteredData.length:', filteredData.length);
+        console.log('combinedData.length:', combinedData.length);
+        console.log('dataToShow.length:', dataToShow.length);
+        console.log('loadingMode:', loadingMode);
+        console.log('loading:', loading);
+        console.log('Should show table:', dataToShow.length > 0);
+        return dataToShow.length > 0 ? (
+          <EnhancedDataTable
+            columns={allColumns}
+            data={dataToShow}
+            onEdit={handleEdit}
+            onAssociate={handleAssociate}
+            loading={loading}
+            enablePagination={true}
+            selectedVehicles={selectedVehicles}
+            selectedDevices={selectedDevices}
+            isSelectMode={isSelectMode}
+            isDeviceSelectMode={isDeviceSelectMode}
+          />
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucune donnée à afficher. Chargement en cours...
+          </div>
+        );
       })()}
 
       {/* Keep existing dialogs and sheets */}
