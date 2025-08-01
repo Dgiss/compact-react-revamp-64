@@ -8,6 +8,7 @@ import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { toast } from "@/components/ui/use-toast";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
+import { useVehicleAssociation } from "@/hooks/useVehicleAssociation";
 import * as VehicleService from "@/services/VehicleService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 
@@ -26,8 +27,10 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   const [companyDevices, setCompanyDevices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingDevices, setLoadingDevices] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAllVehicles, setShowAllVehicles] = useState(false);
+
+  // Use the vehicle association hook for better error handling
+  const { isAssociating, performAssociation } = useVehicleAssociation();
 
   const {
     companies,
@@ -223,27 +226,15 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         return;
       }
 
-      setIsSubmitting(true);
-
+      // Use the hook for better error handling
       try {
-        await VehicleService.associateVehicleToDevice(selectedVehicle, device.imei);
-        
-        toast({
-          title: "Succès",
-          description: "Boîtier associé au véhicule avec succès",
-        });
-        
-        onSuccess();
-        onClose();
+        const result = await performAssociation(device.imei, selectedVehicle);
+        if (result.success) {
+          onSuccess();
+          onClose();
+        }
       } catch (error) {
         console.error('Error associating device to vehicle:', error);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de l'association",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
       }
     } else if (isVehicleToDevice) {
       // Vehicle to device association
@@ -265,28 +256,16 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         return;
       }
 
-      setIsSubmitting(true);
-
+      // Use the hook for better error handling for vehicle-to-device too
       try {
         const vehicleImmat = device.vehicleImmat || device.immatriculation || device.immat;
-        await VehicleService.associateVehicleToDevice(vehicleImmat, selectedDeviceImei);
-        
-        toast({
-          title: "Succès",
-          description: "Véhicule associé au boîtier avec succès",
-        });
-        
-        onSuccess();
-        onClose();
+        const result = await performAssociation(selectedDeviceImei, vehicleImmat);
+        if (result.success) {
+          onSuccess();
+          onClose();
+        }
       } catch (error) {
         console.error('Error associating vehicle to device:', error);
-        toast({
-          title: "Erreur",
-          description: "Erreur lors de l'association",
-          variant: "destructive",
-        });
-      } finally {
-        setIsSubmitting(false);
       }
     } else if (isCompanyDeviceMode) {
       // Company-device association - use device IMEI from props
@@ -310,8 +289,7 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         return;
       }
 
-      setIsSubmitting(true);
-
+      // Company-device mode still uses the direct service call since no hook for this yet
       try {
         console.log('Associating device to company:', { deviceImei, selectedCompany });
         await CompanyDeviceService.associateDeviceToCompany(deviceImei, selectedCompany);
@@ -355,8 +333,6 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
           description: errorMessage,
           variant: "destructive",
         });
-      } finally {
-        setIsSubmitting(false);
       }
     }
   };
@@ -488,14 +464,14 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
           <Button
             onClick={handleSubmit}
             disabled={
-              isSubmitting || 
+              isAssociating || 
               (isDeviceToVehicle && !selectedCompany) ||
               (isCompanyDeviceMode && (!selectedCompany || !device?.imei)) ||
               (isDeviceToVehicle && !selectedVehicle) ||
               (isVehicleToDevice && !selectedDeviceImei)
             }
           >
-            {isSubmitting 
+            {isAssociating 
               ? (isCompanyDeviceMode ? "Réservation..." : "Association...") 
               : (isCompanyDeviceMode ? "Réserver" : "Associer")
             }
