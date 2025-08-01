@@ -710,36 +710,26 @@ export default function VehiclesDevicesPage() {
     sortable: false,
     visible: true,
     renderCell: (value, row) => <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => handleAssociate(row)}>
-            <Link className="h-4 w-4 mr-1" />
-            Associer
-          </Button>
-          <Button size="sm" variant="destructive" onClick={() => handleDelete(row)}>
-            <X className="h-4 w-4 mr-1" />
-            Supprimer
-          </Button>
+          
+          
         </div>
   }];
 
   // Function to determine which columns to use based on current view
   const getColumnsForCurrentView = () => {
     // Check if we're showing vehicles without devices (filteredData contains vehicles with no IMEI)
-    const hasVehiclesWithoutDevices = filteredData.length > 0 && 
-      filteredData.some(item => item.type === "vehicle" && (!item.imei || item.imei === ""));
-    
+    const hasVehiclesWithoutDevices = filteredData.length > 0 && filteredData.some(item => item.type === "vehicle" && (!item.imei || item.imei === ""));
     if (hasVehiclesWithoutDevices && filteredData.every(item => item.type === "vehicle")) {
       return vehicleWithoutDeviceColumns;
     }
-    
     return allColumns;
   };
 
   // Handle delete function
-  const handleDelete = async (item) => {
+  const handleDelete = async item => {
     if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le véhicule "${item.immatriculation || item.immat}" ?`)) {
       return;
     }
-    
     try {
       await deleteVehicleData(item);
       toast({
@@ -1025,10 +1015,10 @@ export default function VehiclesDevicesPage() {
       </Dialog>
 
       {/* Dialogs - Available in all views */}
-      <Dialog open={showAddVehicleDialog} onOpenChange={(open) => {
-        console.log('Dialog state changing:', open);
-        setShowAddVehicleDialog(open);
-      }}>
+      <Dialog open={showAddVehicleDialog} onOpenChange={open => {
+      console.log('Dialog state changing:', open);
+      setShowAddVehicleDialog(open);
+    }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Ajouter un Véhicule</DialogTitle>
@@ -1059,10 +1049,10 @@ export default function VehiclesDevicesPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={(open) => {
-        console.log('Device+Vehicle Dialog state changing:', open);
-        setShowAddDeviceWithVehicleDialog(open);
-      }}>
+      <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={open => {
+      console.log('Device+Vehicle Dialog state changing:', open);
+      setShowAddDeviceWithVehicleDialog(open);
+    }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Créer Device + Véhicule + Association</DialogTitle>
@@ -1071,17 +1061,17 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           <AddDeviceWithVehicleForm onClose={() => {
-            setShowAddDeviceWithVehicleDialog(false);
-            loadQuickStats();
-          }} onSuccess={devices => {
-            setShowAddDeviceWithVehicleDialog(false);
-            setFilteredData(devices);
-            setLoadingMode('search');
-            toast({
-              title: "Succès",
-              description: "Device et véhicule créés et associés avec succès"
-            });
-          }} />
+          setShowAddDeviceWithVehicleDialog(false);
+          loadQuickStats();
+        }} onSuccess={devices => {
+          setShowAddDeviceWithVehicleDialog(false);
+          setFilteredData(devices);
+          setLoadingMode('search');
+          toast({
+            title: "Succès",
+            description: "Device et véhicule créés et associés avec succès"
+          });
+        }} />
         </DialogContent>
       </Dialog>
     </div>;
