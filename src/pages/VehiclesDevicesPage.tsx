@@ -894,7 +894,21 @@ export default function VehiclesDevicesPage() {
       }} />
         </div>}
 
-      {/* EnhancedDataTable désactivé pour cette page */}
+      {/* Table pour les vues spécialisées */}
+      {filteredData.length > 0 && loadingMode === 'search' && (
+        <EnhancedDataTable
+          columns={allColumns}
+          data={filteredData}
+          onEdit={handleEdit}
+          onAssociate={handleAssociate}
+          loading={loading}
+          enablePagination={false}
+          selectedVehicles={selectedVehicles}
+          selectedDevices={selectedDevices}
+          isSelectMode={isSelectMode}
+          isDeviceSelectMode={isDeviceSelectMode}
+        />
+      )}
 
       {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
