@@ -895,7 +895,7 @@ export default function VehiclesDevicesPage() {
         </div>}
 
       {/* Table pour les vues spécialisées */}
-      {filteredData.length > 0 && loadingMode === 'search' && (
+      {filteredData.length > 0 && (
         <EnhancedDataTable
           columns={allColumns}
           data={filteredData}
