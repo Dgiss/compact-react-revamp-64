@@ -785,7 +785,13 @@ export default function VehiclesDevicesPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
+        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={(open) => {
+          setShowAddDeviceWithVehicleDialog(open);
+          if (!open) {
+            // Force refresh when dialog closes
+            setTimeout(() => setShowAddDeviceWithVehicleDialog(false), 100);
+          }
+        }}>
           <DialogContent className="max-w-2xl">
             <AddDeviceWithVehicleForm onClose={() => setShowAddDeviceWithVehicleDialog(false)} onSuccess={devices => {
             setShowAddDeviceWithVehicleDialog(false);

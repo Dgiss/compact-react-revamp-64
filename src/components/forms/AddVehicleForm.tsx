@@ -345,32 +345,33 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
             />
           </div>
           <div>
-            <SearchableSelect 
-              options={emplacementOptions}
-              value={emplacement}
-              onValueChange={setEmplacement}
+            <Input 
               placeholder="Emplacement"
+              value={emplacement}
+              onChange={(e) => setEmplacement(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <SearchableSelect 
-              options={boitierTypeOptions}
-              value={typeBoitier}
-              onValueChange={setTypeBoitier}
-              placeholder="Type de boîtier"
-            />
+        {isVehicle && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <SearchableSelect 
+                options={boitierTypeOptions}
+                value={typeBoitier}
+                onValueChange={setTypeBoitier}
+                placeholder="Type de boîtier"
+              />
+            </div>
+            <div>
+              <Input 
+                placeholder="Téléphone"
+                value={telephone} 
+                onChange={(e) => setTelephone(e.target.value)}
+              />
+            </div>
           </div>
-          <div>
-            <Input 
-              placeholder="Téléphone"
-              value={telephone} 
-              onChange={(e) => setTelephone(e.target.value)}
-            />
-          </div>
-        </div>
+        )}
 
         {isVehicle && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -437,11 +437,10 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
               />
             </div>
             <div>
-              <SearchableSelect 
-                options={emplacementOptions}
-                value={emplacement}
-                onValueChange={setEmplacement}
+              <Input 
                 placeholder="Emplacement"
+                value={emplacement}
+                onChange={(e) => setEmplacement(e.target.value)}
               />
             </div>
           </div>
