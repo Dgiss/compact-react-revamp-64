@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Button } from "@/components/ui/button";
 import { Edit, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import AddCompanyForm from "@/components/forms/AddCompanyForm";
 import { CompanyUsersList } from "@/components/CompanyUsersList";
@@ -212,10 +212,12 @@ export default function EntreprisesPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
-              <DialogTitle>Ajouter une entreprise</DialogTitle>
-              <DialogDescription>
-                Créez une nouvelle entreprise en remplissant les informations ci-dessous.
-              </DialogDescription>
+              <DialogHeader>
+                <DialogTitle>Ajouter une entreprise</DialogTitle>
+                <DialogDescription>
+                  Créez une nouvelle entreprise en remplissant les informations ci-dessous.
+                </DialogDescription>
+              </DialogHeader>
               <AddCompanyForm onClose={() => setIsDialogOpen(false)} onSuccess={handleAddSuccess} />
             </DialogContent>
           </Dialog>
@@ -227,10 +229,12 @@ export default function EntreprisesPage() {
       {/* Edit Company Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogTitle>Modifier l'entreprise</DialogTitle>
-          <DialogDescription>
-            Modifiez les informations de l'entreprise sélectionnée.
-          </DialogDescription>
+          <DialogHeader>
+            <DialogTitle>Modifier l'entreprise</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations de l'entreprise sélectionnée.
+            </DialogDescription>
+          </DialogHeader>
           {selectedItem && <EditCompanyForm company={selectedItem} onClose={() => setEditDialogOpen(false)} onSuccess={handleEditSuccess} />}
         </DialogContent>
       </Dialog>

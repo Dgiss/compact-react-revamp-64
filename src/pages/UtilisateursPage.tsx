@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { SearchForm } from "@/components/forms/SearchForm";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
 import EditUserForm from "@/components/forms/EditUserForm";
@@ -156,6 +156,12 @@ export default function UtilisateursPage() {
       {/* Dialog pour éditer un utilisateur */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifier l'utilisateur</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations de l'utilisateur sélectionné.
+            </DialogDescription>
+          </DialogHeader>
           {selectedUser && (
             <EditUserForm
               user={selectedUser}
