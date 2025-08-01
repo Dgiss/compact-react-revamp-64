@@ -972,6 +972,9 @@ export default function VehiclesDevicesPage() {
             <DialogTitle>
               {selectedItem?.type === "vehicle" ? "Modifier le véhicule" : "Modifier le boîtier"}
             </DialogTitle>
+            <DialogDescription>
+              {selectedItem?.type === "vehicle" ? "Modifiez les informations du véhicule sélectionné." : "Modifiez les informations du boîtier sélectionné."}
+            </DialogDescription>
           </DialogHeader>
           {selectedItem && <AddVehicleForm initialData={selectedItem} onClose={() => setShowEditVehicleDialog(false)} onSave={handleSaveEdit} isEditing={true} />}
         </DialogContent>
