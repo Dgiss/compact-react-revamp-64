@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import AddVehicleForm from "@/components/forms/AddVehicleForm";
 import ImportDevicesForm from "@/components/forms/ImportDevicesForm";
 import AssociateVehicleForm from "@/components/forms/AssociateVehicleForm";
@@ -767,6 +767,9 @@ export default function VehiclesDevicesPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Ajouter un Véhicule</DialogTitle>
+              <DialogDescription>
+                Créez un nouveau véhicule sans boîtier associé.
+              </DialogDescription>
             </DialogHeader>
             <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} onSave={async data => {
             await updateVehicleData(data);
@@ -780,6 +783,9 @@ export default function VehiclesDevicesPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Importer des Boîtiers</DialogTitle>
+              <DialogDescription>
+                Importez des boîtiers depuis un fichier Excel ou CSV.
+              </DialogDescription>
             </DialogHeader>
             <ImportDevicesForm onClose={() => {
             setShowImportDevicesDialog(false);
@@ -793,6 +799,12 @@ export default function VehiclesDevicesPage() {
           setShowAddDeviceWithVehicleDialog(open);
         }}>
           <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Créer Device + Véhicule + Association</DialogTitle>
+              <DialogDescription>
+                Créez un nouveau boîtier et un véhicule, puis associez-les automatiquement.
+              </DialogDescription>
+            </DialogHeader>
             <AddDeviceWithVehicleForm onClose={() => {
               setShowAddDeviceWithVehicleDialog(false);
               loadQuickStats();
