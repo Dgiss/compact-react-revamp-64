@@ -851,7 +851,7 @@ export default function VehiclesDevicesPage() {
   console.log('Should render add buttons in table view');
   
   return <div className="space-y-6">
-      <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
+      <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">Véhicules & Dispositifs</h1>
           <Button variant="ghost" size="sm" onClick={() => setLoadingMode('initial')}>
@@ -859,16 +859,16 @@ export default function VehiclesDevicesPage() {
             Retour
           </Button>
         </div>
-        <div className="flex flex-wrap gap-2 z-10 relative">
-          <Button onClick={() => setShowAddVehicleDialog(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <div className="flex gap-2">
+          <Button onClick={() => setShowAddVehicleDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter Véhicule
           </Button>
-          <Button variant="default" onClick={() => setShowAddDeviceWithVehicleDialog(true)} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button variant="default" onClick={() => setShowAddDeviceWithVehicleDialog(true)}>
             <Car className="mr-2 h-4 w-4" />
             Créer Device + Véhicule
           </Button>
-          <Button variant="outline" onClick={() => setShowImportDevicesDialog(true)} className="border-gray-300 hover:bg-gray-50">
+          <Button variant="outline" onClick={() => setShowImportDevicesDialog(true)}>
             <Upload className="mr-2 h-4 w-4" />
             Importer Devices
           </Button>
