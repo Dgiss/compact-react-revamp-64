@@ -160,15 +160,27 @@ export function EnhancedDataTable({
   // Determine if the item is a device (for association button)
   const isDevice = (item: any) => item.type === 'device' || item.imei;
   
-  // Determine if the item can be associated (devices or vehicles without IMEI)
-  const canAssociate = (item: any) => isDevice(item) || (item.type === 'vehicle' && (!item.imei || item.imei === ''));
+  // Determine if the item can be associated (only unassociated items)
+  const canAssociate = (item: any) => {
+    if (item.type === 'vehicle') {
+      // Vehicle can be associated only if it has no IMEI/device
+      return !item.imei || item.imei === '';
+    }
+    if (item.type === 'device') {
+      // Device can be associated only if it has no vehicle
+      return !item.vehicleImmat || item.vehicleImmat === '';
+    }
+    return false;
+  };
 
-  // Determine if the item can be dissociated (associated items)
+  // Determine if the item can be dissociated (only associated items)
   const canDissociate = (item: any) => {
     if (item.type === 'vehicle') {
+      // Vehicle can be dissociated only if it has an IMEI/device
       return item.imei && item.imei !== '';
     }
     if (item.type === 'device') {
+      // Device can be dissociated only if it has a vehicle
       return item.vehicleImmat && item.vehicleImmat !== '';
     }
     return false;
