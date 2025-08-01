@@ -3,7 +3,7 @@ import React, { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Edit, Eye, EyeOff, Filter, Link, Search, Trash } from "lucide-react";
+import { Edit, Eye, EyeOff, Filter, Link, Search, Trash, Unlink } from "lucide-react";
 import { CopyableCell } from "./CopyableCell";
 import { 
   DropdownMenu, 
@@ -36,6 +36,7 @@ interface EnhancedDataTableProps {
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
   onAssociate?: (item: any) => void;
+  onDissociate?: (item: any) => void;
   renderActions?: (item: any) => React.ReactNode;
   loading?: boolean;
   enablePagination?: boolean;
@@ -52,6 +53,7 @@ export function EnhancedDataTable({
   onEdit, 
   onDelete, 
   onAssociate,
+  onDissociate,
   renderActions,
   loading = false,
   enablePagination = false,
@@ -160,6 +162,17 @@ export function EnhancedDataTable({
   
   // Determine if the item can be associated (devices or vehicles without IMEI)
   const canAssociate = (item: any) => isDevice(item) || (item.type === 'vehicle' && (!item.imei || item.imei === ''));
+
+  // Determine if the item can be dissociated (associated items)
+  const canDissociate = (item: any) => {
+    if (item.type === 'vehicle') {
+      return item.imei && item.imei !== '';
+    }
+    if (item.type === 'device') {
+      return item.vehicleImmat && item.vehicleImmat !== '';
+    }
+    return false;
+  };
 
   // Determine if a row is selected
   const isRowSelected = (row: any) => {
@@ -283,9 +296,9 @@ export function EnhancedDataTable({
               ) : (
                 <TableHead>Aucune colonne sélectionnée</TableHead>
               )}
-              {(renderActions || onEdit || onDelete || onAssociate) && hasVisibleColumns && 
+               {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && hasVisibleColumns && 
                 <TableHead className="w-24">Actions</TableHead>
-              }
+               }
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -308,31 +321,36 @@ export function EnhancedDataTable({
                       {renderCellContent(column, row)}
                     </TableCell>
                   ))}
-                  {(renderActions || onEdit || onDelete || onAssociate) && (
-                    <TableCell>
-                      {renderActions ? (
-                        renderActions(row)
-                      ) : (
-                        <div className="flex gap-1">
-                          {onEdit && (
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {onDelete && (
-                            <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {onAssociate && canAssociate(row) && (
-                            <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
-                              <Link className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                  )}
+                   {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && (
+                     <TableCell>
+                       {renderActions ? (
+                         renderActions(row)
+                       ) : (
+                         <div className="flex gap-1">
+                           {onEdit && (
+                             <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                               <Edit className="h-4 w-4" />
+                             </Button>
+                           )}
+                           {onDelete && (
+                             <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
+                               <Trash className="h-4 w-4" />
+                             </Button>
+                           )}
+                           {onAssociate && canAssociate(row) && (
+                             <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
+                               <Link className="h-4 w-4" />
+                             </Button>
+                           )}
+                           {onDissociate && canDissociate(row) && (
+                             <Button variant="ghost" size="icon" onClick={() => onDissociate(row)}>
+                               <Unlink className="h-4 w-4" />
+                             </Button>
+                           )}
+                         </div>
+                       )}
+                     </TableCell>
+                   )}
                 </TableRow>
                 );
               })

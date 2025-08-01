@@ -327,14 +327,23 @@ export default function VehiclesDevicesPage() {
   };
 
   // Dissociate device from vehicle
-  const dissociateDevice = async vehicleImmat => {
+  const dissociateDevice = async item => {
     console.log('=== STARTING DISSOCIATION ===');
-    console.log('Vehicle immat to dissociate:', vehicleImmat);
+    console.log('Item to dissociate:', item);
     try {
-      console.log('Calling dissociateVehicleFromDevice...');
-      const result = await dissociateVehicleFromDevice(vehicleImmat);
-      console.log('Dissociation result:', result);
-      await refreshAfterDissociation("Boîtier dissocié avec succès");
+      if (item.type === 'vehicle') {
+        console.log('Dissociating vehicle with immat:', item.immatriculation || item.immat);
+        const result = await dissociateVehicleFromDevice(item.immatriculation || item.immat);
+        console.log('Dissociation result:', result);
+        await refreshAfterDissociation("Boîtier dissocié du véhicule avec succès");
+      } else if (item.type === 'device') {
+        // Import device dissociation service if it exists
+        const { dissociateDeviceFromVehicle } = await import('../services/VehicleDissociationService.js');
+        console.log('Dissociating device with IMEI:', item.imei);
+        const result = await dissociateDeviceFromVehicle(item.vehicleImmat);
+        console.log('Dissociation result:', result);
+        await refreshAfterDissociation("Véhicule dissocié du boîtier avec succès");
+      }
       console.log('Dissociation completed successfully');
     } catch (err) {
       console.error('=== DISSOCIATION ERROR ===');
@@ -905,18 +914,19 @@ export default function VehiclesDevicesPage() {
         console.log('loading:', loading);
         console.log('Should show table:', dataToShow.length > 0);
         return dataToShow.length > 0 ? (
-          <EnhancedDataTable
-            columns={allColumns}
-            data={dataToShow}
-            onEdit={handleEdit}
-            onAssociate={handleAssociate}
-            loading={loading}
-            enablePagination={true}
-            selectedVehicles={selectedVehicles}
-            selectedDevices={selectedDevices}
-            isSelectMode={isSelectMode}
-            isDeviceSelectMode={isDeviceSelectMode}
-          />
+           <EnhancedDataTable
+             columns={allColumns}
+             data={dataToShow}
+             onEdit={handleEdit}
+             onAssociate={handleAssociate}
+             onDissociate={dissociateDevice}
+             loading={loading}
+             enablePagination={true}
+             selectedVehicles={selectedVehicles}
+             selectedDevices={selectedDevices}
+             isSelectMode={isSelectMode}
+             isDeviceSelectMode={isDeviceSelectMode}
+           />
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             Aucune donnée à afficher. Chargement en cours...
