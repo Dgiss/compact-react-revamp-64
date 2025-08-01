@@ -704,15 +704,6 @@ export default function VehiclesDevicesPage() {
     renderCell: (value, row) => <span className="text-blue-600 font-medium">
           {value || "Entreprise non définie"}
         </span>
-  }, {
-    id: "actions",
-    label: "Actions",
-    sortable: false,
-    visible: true,
-    renderCell: (value, row) => <div className="flex gap-2">
-          
-          
-        </div>
   }];
 
   // Function to determine which columns to use based on current view
