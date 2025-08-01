@@ -859,16 +859,40 @@ export default function VehiclesDevicesPage() {
             Retour
           </Button>
         </div>
-        <div className="flex flex-wrap gap-2 z-10 relative">
-          <Button onClick={() => setShowAddVehicleDialog(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <div className="flex flex-wrap gap-2 z-50 relative bg-red-500 p-4 border-4 border-yellow-400" style={{position: 'fixed', top: '20px', right: '20px', zIndex: 9999}}>
+          {(() => {console.log('=== RENDERING BUTTONS IN DOM ==='); return null;})()}
+          <Button 
+            onClick={() => {
+              console.log('ADD VEHICLE BUTTON CLICKED!');
+              setShowAddVehicleDialog(true);
+            }} 
+            className="bg-blue-600 hover:bg-blue-700 text-white border-2 border-white"
+            style={{backgroundColor: '#ff0000', color: 'white', padding: '10px', fontSize: '16px'}}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Ajouter Véhicule
           </Button>
-          <Button variant="default" onClick={() => setShowAddDeviceWithVehicleDialog(true)} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button 
+            variant="default" 
+            onClick={() => {
+              console.log('ADD DEVICE BUTTON CLICKED!');
+              setShowAddDeviceWithVehicleDialog(true);
+            }} 
+            className="bg-green-600 hover:bg-green-700 text-white border-2 border-white"
+            style={{backgroundColor: '#00ff00', color: 'black', padding: '10px', fontSize: '16px'}}
+          >
             <Car className="mr-2 h-4 w-4" />
             Créer Device + Véhicule
           </Button>
-          <Button variant="outline" onClick={() => setShowImportDevicesDialog(true)} className="border-gray-300 hover:bg-gray-50">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log('IMPORT BUTTON CLICKED!');
+              setShowImportDevicesDialog(true);
+            }} 
+            className="border-gray-300 hover:bg-gray-50 border-2 border-black bg-yellow-300"
+            style={{backgroundColor: '#ffff00', color: 'black', padding: '10px', fontSize: '16px'}}
+          >
             <Upload className="mr-2 h-4 w-4" />
             Importer Devices
           </Button>
