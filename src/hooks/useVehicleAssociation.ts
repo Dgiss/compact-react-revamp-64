@@ -7,10 +7,10 @@ import { toast } from '@/hooks/use-toast';
  * Provides consistent state management and error handling
  */
 export const useVehicleAssociation = () => {
-  const [isAssociating, setIsAssociating] = useState(false);
-  const [associationError, setAssociationError] = useState(null);
+  const [isAssociating, setIsAssociating] = useState<boolean>(false);
+  const [associationError, setAssociationError] = useState<string | null>(null);
 
-  const performAssociation = useCallback(async (deviceImei, vehicleImmat) => {
+  const performAssociation = useCallback(async (deviceImei: string, vehicleImmat: string) => {
     setIsAssociating(true);
     setAssociationError(null);
 

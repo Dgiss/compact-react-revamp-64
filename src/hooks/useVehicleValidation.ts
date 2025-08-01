@@ -10,15 +10,13 @@ const client = generateClient();
  * Custom hook for vehicle validation
  */
 export const useVehicleValidation = () => {
-  const [isValidating, setIsValidating] = useState(false);
-  const [validationError, setValidationError] = useState(null);
+  const [isValidating, setIsValidating] = useState<boolean>(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   /**
    * Check if a vehicle with the given immatriculation already exists
-   * @param {string} immat - Vehicle immatriculation to check
-   * @returns {Promise<{exists: boolean, vehicle?: Object}>}
    */
-  const checkImmatriculation = useCallback(async (immat) => {
+  const checkImmatriculation = useCallback(async (immat: string): Promise<{exists: boolean, vehicle?: any}> => {
     if (!immat || immat.trim() === '') {
       return { exists: false };
     }
@@ -58,10 +56,8 @@ export const useVehicleValidation = () => {
 
   /**
    * Validate and clean immatriculation format
-   * @param {string} immat - Raw immatriculation
-   * @returns {Object} Validation result
    */
-  const validateImmatFormat = useCallback((immat) => {
+  const validateImmatFormat = useCallback((immat: string): {isValid: boolean, error?: string, cleanImmat?: string} => {
     if (!immat || immat.trim() === '') {
       return { isValid: false, error: 'L\'immatriculation est obligatoire' };
     }
