@@ -33,7 +33,15 @@ export const useVehicleAssociation = () => {
         // Force a small delay to ensure backend consistency before refresh
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        return { success: true, data: result.vehicleUpdate, needsRefresh: true };
+        // Return simplified data to avoid serialization issues
+        const cleanData = {
+          immat: vehicleImmat,
+          vehicleDeviceImei: deviceImei,
+          isAssociated: true,
+          type: 'vehicle'
+        };
+        
+        return { success: true, data: cleanData, needsRefresh: true };
       } else {
         throw new Error('Association failed');
       }

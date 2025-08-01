@@ -93,9 +93,20 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
       }
     });
     
+    // Return only serializable data to avoid DataCloneError
+    const vehicleData = updateResult.data?.updateVehicle;
+    const cleanVehicleData = {
+      immat: vehicleData?.immat || vehicleImmat,
+      vehicleDeviceImei: vehicleData?.vehicleDeviceImei || deviceImei,
+      immatriculation: vehicleData?.immatriculation || vehicleImmat,
+      nomVehicule: vehicleData?.nomVehicule,
+      isAssociated: true,
+      type: 'vehicle'
+    };
+    
     return { 
       success: true, 
-      vehicleUpdate: updateResult.data?.updateVehicle,
+      vehicleUpdate: cleanVehicleData,
       message: `Boîtier ${deviceImei} associé avec succès au véhicule ${vehicleImmat}`
     };
     
