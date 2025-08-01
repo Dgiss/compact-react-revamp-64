@@ -156,7 +156,7 @@ export function EnhancedDataTable({
   const displayData = enablePagination ? paginatedData : sortedData;
 
   // Determine if the item is a device (for association button)
-  const isDevice = (item: any) => item.type === 'device' || item.imei;
+  const isDevice = (item: any) => item.type === 'device';
 
   // Determine if a row is selected
   const isRowSelected = (row: any) => {

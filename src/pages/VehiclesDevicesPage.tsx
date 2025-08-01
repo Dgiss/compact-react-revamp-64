@@ -895,34 +895,20 @@ export default function VehiclesDevicesPage() {
         </div>}
 
       {/* Table pour les vues spécialisées */}
-      {(() => {
-        const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
-        console.log('=== TABLE DISPLAY DEBUG ===');
-        console.log('filteredData.length:', filteredData.length);
-        console.log('combinedData.length:', combinedData.length);
-        console.log('dataToShow.length:', dataToShow.length);
-        console.log('loadingMode:', loadingMode);
-        console.log('loading:', loading);
-        console.log('Should show table:', dataToShow.length > 0);
-        return dataToShow.length > 0 ? (
-          <EnhancedDataTable
-            columns={allColumns}
-            data={dataToShow}
-            onEdit={handleEdit}
-            onAssociate={handleAssociate}
-            loading={loading}
-            enablePagination={true}
-            selectedVehicles={selectedVehicles}
-            selectedDevices={selectedDevices}
-            isSelectMode={isSelectMode}
-            isDeviceSelectMode={isDeviceSelectMode}
-          />
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucune donnée à afficher. Chargement en cours...
-          </div>
-        );
-      })()}
+      {filteredData.length > 0 && loadingMode === 'search' && (
+        <EnhancedDataTable
+          columns={allColumns}
+          data={filteredData}
+          onEdit={handleEdit}
+          onAssociate={handleAssociate}
+          loading={loading}
+          enablePagination={false}
+          selectedVehicles={selectedVehicles}
+          selectedDevices={selectedDevices}
+          isSelectMode={isSelectMode}
+          isDeviceSelectMode={isDeviceSelectMode}
+        />
+      )}
 
       {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
