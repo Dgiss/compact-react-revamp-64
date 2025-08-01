@@ -930,13 +930,13 @@ export default function VehiclesDevicesPage() {
           <SheetHeader className="mb-5">
             <SheetTitle>Associer un Véhicule</SheetTitle>
           </SheetHeader>
-          <AssociateVehicleForm device={selectedDevice} mode={associationMode} onClose={() => setShowAssociateSheet(false)} onSuccess={async () => {
+          <AssociateVehicleForm device={selectedDevice} mode={associationMode} onClose={() => setShowAssociateSheet(false)} onSuccess={async (updatedData) => {
           const successMessage = associationMode === 'company-device' ? "Le boîtier a été réservé pour l'entreprise avec succès" : "Le boîtier a été associé au véhicule avec succès";
           setShowAssociateSheet(false);
           setAssociationMode('vehicle-device');
 
-          // Use refresh hook to automatically update table
-          await refreshAfterAssociation(successMessage);
+          // Use refresh hook with updated data for proper table update
+          await refreshAfterAssociation(successMessage, updatedData);
         }} />
         </SheetContent>
       </Sheet>

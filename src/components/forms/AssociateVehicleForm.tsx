@@ -16,7 +16,7 @@ interface AssociateVehicleFormProps {
   device?: any; // Can be a device or a vehicle for bidirectional association
   mode?: 'vehicle-device' | 'company-device'; // New mode for company-device association
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (updatedData?: any) => void;
 }
 
 export default function AssociateVehicleForm({ device, mode = 'vehicle-device', onClose, onSuccess }: AssociateVehicleFormProps) {
@@ -248,7 +248,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
       try {
         const result = await performAssociation(device.imei, selectedVehicle);
         if (result.success) {
-          onSuccess();
+          // Pass the updated data to the parent for proper refresh
+          onSuccess(result.data);
           onClose();
         }
       } catch (error) {
@@ -279,7 +280,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         const vehicleImmat = device.vehicleImmat || device.immatriculation || device.immat;
         const result = await performAssociation(selectedDeviceImei, vehicleImmat);
         if (result.success) {
-          onSuccess();
+          // Pass the updated data to the parent for proper refresh
+          onSuccess(result.data);
           onClose();
         }
       } catch (error) {
