@@ -157,6 +157,9 @@ export function EnhancedDataTable({
 
   // Determine if the item is a device (for association button)
   const isDevice = (item: any) => item.type === 'device' || item.imei;
+  
+  // Determine if the item can be associated (devices or vehicles without IMEI)
+  const canAssociate = (item: any) => isDevice(item) || (item.type === 'vehicle' && (!item.imei || item.imei === ''));
 
   // Determine if a row is selected
   const isRowSelected = (row: any) => {
@@ -321,7 +324,7 @@ export function EnhancedDataTable({
                               <Trash className="h-4 w-4" />
                             </Button>
                           )}
-                          {onAssociate && isDevice(row) && (
+                          {onAssociate && canAssociate(row) && (
                             <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
                               <Link className="h-4 w-4" />
                             </Button>
