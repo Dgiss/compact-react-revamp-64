@@ -844,6 +844,61 @@ export default function VehiclesDevicesPage() {
   if (loadingMode === 'initial' || !loadingMode) {
     return <div className="space-y-6">
         <InitialView />
+        
+        {/* Modals must be available in all views */}
+        <Dialog open={showAddVehicleDialog} onOpenChange={setShowAddVehicleDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Ajouter un Véhicule</DialogTitle>
+              <DialogDescription>
+                Créez un nouveau véhicule sans boîtier associé.
+              </DialogDescription>
+            </DialogHeader>
+            <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} onSave={async data => {
+              await updateVehicleData(data);
+              setShowAddVehicleDialog(false);
+              loadQuickStats();
+            }} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Importer des Boîtiers</DialogTitle>
+              <DialogDescription>
+                Importez des boîtiers depuis un fichier Excel ou CSV.
+              </DialogDescription>
+            </DialogHeader>
+            <ImportDevicesForm onClose={() => {
+              setShowImportDevicesDialog(false);
+              loadQuickStats();
+            }} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={setShowAddDeviceWithVehicleDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Créer Device + Véhicule + Association</DialogTitle>
+              <DialogDescription>
+                Créez un nouveau boîtier et un véhicule, puis associez-les automatiquement.
+              </DialogDescription>
+            </DialogHeader>
+            <AddDeviceWithVehicleForm onClose={() => {
+              setShowAddDeviceWithVehicleDialog(false);
+              loadQuickStats();
+            }} onSuccess={devices => {
+              setShowAddDeviceWithVehicleDialog(false);
+              setFilteredData(devices);
+              setLoadingMode('search');
+              toast({
+                title: "Succès",
+                description: "Device et véhicule créés et associés avec succès"
+              });
+            }} />
+          </DialogContent>
+        </Dialog>
       </div>;
   }
   console.log('=== RENDERING TABLE VIEW ===');
@@ -926,22 +981,6 @@ export default function VehiclesDevicesPage() {
         </div>
         
         {/* Action buttons - Always visible and prominent */}
-        <div className="flex flex-wrap gap-2">
-          <Button variant="default" onClick={() => setShowAddVehicleDialog(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Ajouter Véhicule
-          </Button>
-          
-          <Button variant="default" onClick={() => setShowImportDevicesDialog(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Importer Boîtiers
-          </Button>
-          
-          <Button variant="default" onClick={() => setShowAddDeviceWithVehicleDialog(true)}>
-            <Link className="w-4 h-4 mr-2" />
-            Device + Véhicule
-          </Button>
-        </div>
       </div>
       
       {/* Interface d'association en masse pour boîtiers sélectionnés */}
