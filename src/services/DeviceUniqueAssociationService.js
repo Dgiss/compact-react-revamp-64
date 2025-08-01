@@ -2,6 +2,7 @@ import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
+import { toast } from '@/hooks/use-toast';
 
 const client = generateClient();
 
@@ -121,6 +122,12 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
     };
     
   } catch (error) {
+    console.error('Error associating device to vehicle:', error);
+    toast({
+      title: "Erreur",
+      description: error.message || "Erreur lors de l'association",
+      variant: "destructive",
+    });
     throw error;
   }
 };
