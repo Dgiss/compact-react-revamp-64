@@ -846,6 +846,10 @@ export default function VehiclesDevicesPage() {
         <InitialView />
       </div>;
   }
+  console.log('=== RENDERING TABLE VIEW ===');
+  console.log('loadingMode:', loadingMode);
+  console.log('Should render add buttons in table view');
+  
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
