@@ -206,8 +206,11 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     };
   });
 
-  // Generate device options (for vehicle to device association - using existing optimized data)
-  const deviceOptions = companyDevices.map(device => ({
+  // Generate device options (for vehicle to device association - filter out associated devices)
+  const deviceOptions = companyDevices.filter(device => {
+    // Only show devices that are not already associated to vehicles
+    return !device.isAssociated && !device.vehicleImmat;
+  }).map(device => ({
     value: device.imei,
     label: `${device.imei}${device.typeBoitier ? ` (Protocol: ${device.typeBoitier})` : ''} - ${device.entreprise || 'Libre'}`,
     disabled: false
