@@ -128,22 +128,40 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
   
   // Use the existing optimized function for loading devices without vehicles
   const loadDevicesWithoutVehicles = async () => {
-    console.log('Using existing getDevicesWithoutVehicles function...');
+    console.log('Loading only available devices (not associated or available in companydevice)...');
     setLoadingDevices(true);
     
     try {
-      // Use the existing optimized function from the hook
-      const devicesWithoutVehicles = await getDevicesWithoutVehicles();
-      console.log('Devices without vehicles loaded:', devicesWithoutVehicles.length);
-      console.log('Device details:', devicesWithoutVehicles.map(d => ({ 
+      // Get both devices without vehicles and company devices
+      const [devicesWithoutVehicles, companyDevices] = await Promise.all([
+        getDevicesWithoutVehicles(),
+        CompanyDeviceService.getUnassignedDevices()
+      ]);
+
+      // Filter to show only devices that are:
+      // 1. Not associated to any vehicle (from getDevicesWithoutVehicles)
+      // 2. OR available in companydevice (from getUnassignedDevices)
+      const availableDevices = [
+        ...devicesWithoutVehicles.filter(device => !device.isAssociated),
+        ...companyDevices.filter(device => !device.isAssociated)
+      ];
+
+      // Remove duplicates based on IMEI
+      const uniqueDevices = availableDevices.filter((device, index, self) => 
+        index === self.findIndex(d => d.imei === device.imei)
+      );
+
+      console.log('Available devices for association:', uniqueDevices.length);
+      console.log('Device details:', uniqueDevices.map(d => ({ 
         imei: d.imei, 
         type: d.typeBoitier,
-        entreprise: d.entreprise 
+        entreprise: d.entreprise,
+        isAssociated: d.isAssociated
       })));
-      setCompanyDevices(devicesWithoutVehicles);
+      setCompanyDevices(uniqueDevices);
       
     } catch (error) {
-      console.error('Error loading devices without vehicles:', error);
+      console.error('Error loading available devices:', error);
       setCompanyDevices([]);
       toast({
         title: "Erreur",
