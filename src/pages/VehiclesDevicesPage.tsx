@@ -895,20 +895,31 @@ export default function VehiclesDevicesPage() {
         </div>}
 
       {/* Table pour les vues spécialisées */}
-      {filteredData.length > 0 && (
-        <EnhancedDataTable
-          columns={allColumns}
-          data={filteredData}
-          onEdit={handleEdit}
-          onAssociate={handleAssociate}
-          loading={loading}
-          enablePagination={false}
-          selectedVehicles={selectedVehicles}
-          selectedDevices={selectedDevices}
-          isSelectMode={isSelectMode}
-          isDeviceSelectMode={isDeviceSelectMode}
-        />
-      )}
+      {(() => {
+        console.log('=== TABLE DISPLAY DEBUG ===');
+        console.log('filteredData.length:', filteredData.length);
+        console.log('loadingMode:', loadingMode);
+        console.log('loading:', loading);
+        console.log('Should show table:', filteredData.length > 0);
+        return filteredData.length > 0 ? (
+          <EnhancedDataTable
+            columns={allColumns}
+            data={filteredData}
+            onEdit={handleEdit}
+            onAssociate={handleAssociate}
+            loading={loading}
+            enablePagination={false}
+            selectedVehicles={selectedVehicles}
+            selectedDevices={selectedDevices}
+            isSelectMode={isSelectMode}
+            isDeviceSelectMode={isDeviceSelectMode}
+          />
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucune donnée à afficher. Utilisez les filtres pour charger des données.
+          </div>
+        );
+      })()}
 
       {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
