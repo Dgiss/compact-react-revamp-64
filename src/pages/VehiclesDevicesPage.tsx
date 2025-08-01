@@ -338,7 +338,9 @@ export default function VehiclesDevicesPage() {
         await refreshAfterDissociation("Boîtier dissocié du véhicule avec succès");
       } else if (item.type === 'device') {
         // Import device dissociation service if it exists
-        const { dissociateDeviceFromVehicle } = await import('../services/VehicleDissociationService.js');
+        const {
+          dissociateDeviceFromVehicle
+        } = await import('../services/VehicleDissociationService.js');
         console.log('Dissociating device with IMEI:', item.imei);
         const result = await dissociateDeviceFromVehicle(item.vehicleImmat);
         console.log('Dissociation result:', result);
@@ -717,13 +719,7 @@ export default function VehiclesDevicesPage() {
           </div>
         </Button>
 
-        <Button onClick={() => setLoadingMode('search')} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4">
-          <Search className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Rechercher</div>
-            <div className="text-sm text-muted-foreground">Recherche par critères</div>
-          </div>
-        </Button>
+        
 
         <Button onClick={() => loadAllData('optimized')} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Database className="h-6 w-6 mb-2" />
@@ -913,34 +909,18 @@ export default function VehiclesDevicesPage() {
 
       {/* Table pour les vues spécialisées */}
       {(() => {
-        const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
-        console.log('=== TABLE DISPLAY DEBUG ===');
-        console.log('filteredData.length:', filteredData.length);
-        console.log('combinedData.length:', combinedData.length);
-        console.log('dataToShow.length:', dataToShow.length);
-        console.log('loadingMode:', loadingMode);
-        console.log('loading:', loading);
-        console.log('Should show table:', dataToShow.length > 0);
-        return dataToShow.length > 0 ? (
-           <EnhancedDataTable
-             columns={allColumns}
-             data={dataToShow}
-             onEdit={handleEdit}
-             onAssociate={handleAssociate}
-             onDissociate={dissociateDevice}
-             loading={loading}
-             enablePagination={true}
-             selectedVehicles={selectedVehicles}
-             selectedDevices={selectedDevices}
-             isSelectMode={isSelectMode}
-             isDeviceSelectMode={isDeviceSelectMode}
-           />
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
+      const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
+      console.log('=== TABLE DISPLAY DEBUG ===');
+      console.log('filteredData.length:', filteredData.length);
+      console.log('combinedData.length:', combinedData.length);
+      console.log('dataToShow.length:', dataToShow.length);
+      console.log('loadingMode:', loadingMode);
+      console.log('loading:', loading);
+      console.log('Should show table:', dataToShow.length > 0);
+      return dataToShow.length > 0 ? <EnhancedDataTable columns={allColumns} data={dataToShow} onEdit={handleEdit} onAssociate={handleAssociate} onDissociate={dissociateDevice} loading={loading} enablePagination={true} selectedVehicles={selectedVehicles} selectedDevices={selectedDevices} isSelectMode={isSelectMode} isDeviceSelectMode={isDeviceSelectMode} /> : <div className="text-center py-8 text-muted-foreground">
             Aucune donnée à afficher. Chargement en cours...
-          </div>
-        );
-      })()}
+          </div>;
+    })()}
 
       {/* Keep existing dialogs and sheets */}
       <Sheet open={showAssociateSheet} onOpenChange={setShowAssociateSheet}>
@@ -948,7 +928,7 @@ export default function VehiclesDevicesPage() {
           <SheetHeader className="mb-5">
             <SheetTitle>Associer un Véhicule</SheetTitle>
           </SheetHeader>
-          <AssociateVehicleForm device={selectedDevice} mode={associationMode} onClose={() => setShowAssociateSheet(false)} onSuccess={async (updatedData) => {
+          <AssociateVehicleForm device={selectedDevice} mode={associationMode} onClose={() => setShowAssociateSheet(false)} onSuccess={async updatedData => {
           const successMessage = associationMode === 'company-device' ? "Le boîtier a été réservé pour l'entreprise avec succès" : "Le boîtier a été associé au véhicule avec succès";
           setShowAssociateSheet(false);
           setAssociationMode('vehicle-device');
