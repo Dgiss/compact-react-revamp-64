@@ -758,67 +758,6 @@ export default function VehiclesDevicesPage() {
   if (loadingMode === 'initial') {
     return <div className="space-y-6">
         <InitialView />
-        
-        {/* Dialogs for initial view */}
-        <Dialog open={showAddVehicleDialog} onOpenChange={(open) => {
-          console.log('Dialog state changing:', open);
-          setShowAddVehicleDialog(open);
-        }}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Ajouter un Véhicule</DialogTitle>
-              <DialogDescription>
-                Créez un nouveau véhicule sans boîtier associé.
-              </DialogDescription>
-            </DialogHeader>
-            <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} onSave={async data => {
-            await updateVehicleData(data);
-            setShowAddVehicleDialog(false);
-            loadQuickStats();
-          }} />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Importer des Boîtiers</DialogTitle>
-              <DialogDescription>
-                Importez des boîtiers depuis un fichier Excel ou CSV.
-              </DialogDescription>
-            </DialogHeader>
-            <ImportDevicesForm onClose={() => {
-            setShowImportDevicesDialog(false);
-            loadQuickStats();
-          }} />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={(open) => {
-          console.log('Device+Vehicle Dialog state changing:', open);
-          setShowAddDeviceWithVehicleDialog(open);
-        }}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Créer Device + Véhicule + Association</DialogTitle>
-              <DialogDescription>
-                Créez un nouveau boîtier et un véhicule, puis associez-les automatiquement.
-              </DialogDescription>
-            </DialogHeader>
-            <AddDeviceWithVehicleForm onClose={() => {
-              setShowAddDeviceWithVehicleDialog(false);
-              loadQuickStats();
-            }} onSuccess={devices => {
-              setShowAddDeviceWithVehicleDialog(false);
-              setFilteredData(devices);
-              setLoadingMode('search');
-              toast({
-                title: "Succès",
-                description: "Device et véhicule créés et associés avec succès"
-              });
-            }} />
-          </DialogContent>
-        </Dialog>
       </div>;
   }
   return <div className="space-y-6">
@@ -977,6 +916,67 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           {selectedItem && <AddVehicleForm initialData={selectedItem} onClose={() => setShowEditVehicleDialog(false)} onSave={handleSaveEdit} isEditing={true} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialogs - Available in all views */}
+      <Dialog open={showAddVehicleDialog} onOpenChange={(open) => {
+        console.log('Dialog state changing:', open);
+        setShowAddVehicleDialog(open);
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Ajouter un Véhicule</DialogTitle>
+            <DialogDescription>
+              Créez un nouveau véhicule sans boîtier associé.
+            </DialogDescription>
+          </DialogHeader>
+          <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} onSave={async data => {
+          await updateVehicleData(data);
+          setShowAddVehicleDialog(false);
+          loadQuickStats();
+        }} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showImportDevicesDialog} onOpenChange={setShowImportDevicesDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Importer des Boîtiers</DialogTitle>
+            <DialogDescription>
+              Importez des boîtiers depuis un fichier Excel ou CSV.
+            </DialogDescription>
+          </DialogHeader>
+          <ImportDevicesForm onClose={() => {
+          setShowImportDevicesDialog(false);
+          loadQuickStats();
+        }} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showAddDeviceWithVehicleDialog} onOpenChange={(open) => {
+        console.log('Device+Vehicle Dialog state changing:', open);
+        setShowAddDeviceWithVehicleDialog(open);
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Créer Device + Véhicule + Association</DialogTitle>
+            <DialogDescription>
+              Créez un nouveau boîtier et un véhicule, puis associez-les automatiquement.
+            </DialogDescription>
+          </DialogHeader>
+          <AddDeviceWithVehicleForm onClose={() => {
+            setShowAddDeviceWithVehicleDialog(false);
+            loadQuickStats();
+          }} onSuccess={devices => {
+            setShowAddDeviceWithVehicleDialog(false);
+            setFilteredData(devices);
+            setLoadingMode('search');
+            toast({
+              title: "Succès",
+              description: "Device et véhicule créés et associés avec succès"
+            });
+          }} />
         </DialogContent>
       </Dialog>
     </div>;
