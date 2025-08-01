@@ -1,7 +1,7 @@
 import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { withCredentialRetry } from '@/config/aws-config.js';
+import { withCredentialRetry, waitForAmplifyConfig, ensureCredentials } from '@/config/aws-config.js';
 
 const client = generateClient();
 
@@ -515,47 +515,66 @@ export const fetchVehiclesWithoutDevices = async () => {
  * OPTIMIZED: Get devices without vehicles - uses simplified GraphQL query
  */
 export const fetchDevicesWithoutVehicles = async () => {
-  return await withCredentialRetry(async () => {
-    console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
+  console.log('=== STARTING FETCH DEVICES WITHOUT VEHICLES ===');
+  
+  try {
+    // Ensure Amplify is configured and user is authenticated
+    await waitForAmplifyConfig();
+    console.log('Amplify config confirmed for devices fetch');
     
-    try {
-      // Get all devices and filter out those with vehicles on the client side
-      const response = await client.graphql({
-        query: queries.listDevices,
-        variables: {
-          limit: 1000
-        }
-      });
-      
-      const allDevices = response.data?.listDevices?.items || [];
-      
-      // Filter devices that don't have a vehicle association
-      const devicesWithoutVehicles = allDevices.filter(device => !device.vehicle);
-      
-      const devices = devicesWithoutVehicles.map(device => ({
-        id: device.imei,
-        entreprise: "Boîtier libre",
-        type: "device",
-        immatriculation: "",
-        nomVehicule: device.name || "",
-        imei: device.imei,
-        typeBoitier: device.protocolId?.toString() || "",
-        marque: "",
-        modele: "",
-        kilometrage: "",
-        telephone: device.sim || "",
-        emplacement: "",
-        deviceData: device,
-        isAssociated: false
-      }));
-      
-      console.log('Devices without vehicles found:', devices.length);
-      return devices;
-    } catch (error) {
-      console.error('Error fetching devices without vehicles:', error);
-      throw error;
+    // Check credentials before making the request
+    const hasCredentials = await ensureCredentials();
+    if (!hasCredentials) {
+      console.error('No valid credentials found for devices fetch');
+      throw new Error('Utilisateur non authentifié - veuillez vous reconnecter');
     }
-  });
+    console.log('Credentials confirmed for devices fetch');
+    
+    return await withCredentialRetry(async () => {
+      console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
+      
+      try {
+        // Get all devices and filter out those with vehicles on the client side
+        const response = await client.graphql({
+          query: queries.listDevices,
+          variables: {
+            limit: 1000
+          }
+        });
+        
+        const allDevices = response.data?.listDevices?.items || [];
+        
+        // Filter devices that don't have a vehicle association
+        const devicesWithoutVehicles = allDevices.filter(device => !device.vehicle);
+        
+        const devices = devicesWithoutVehicles.map(device => ({
+          id: device.imei,
+          entreprise: "Boîtier libre",
+          type: "device",
+          immatriculation: "",
+          nomVehicule: device.name || "",
+          imei: device.imei,
+          typeBoitier: device.protocolId?.toString() || "",
+          marque: "",
+          modele: "",
+          kilometrage: "",
+          telephone: device.sim || "",
+          emplacement: "",
+          deviceData: device,
+          isAssociated: false
+        }));
+        
+        console.log('Devices without vehicles found:', devices.length);
+        return devices;
+      } catch (error) {
+        console.error('Error in devices fetch GraphQL call:', error);
+        throw error;
+      }
+    }, 3); // Increase retry attempts to 3
+  } catch (error) {
+    console.error('Error in fetchDevicesWithoutVehicles outer catch:', error);
+    throw error;
+  }
 };
 
 /**
