@@ -104,17 +104,26 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
       }
     });
     
-    // Check for GraphQL errors
+    // Check for critical GraphQL errors (ignore nullable field errors)
     if (updateResult.errors && updateResult.errors.length > 0) {
-      console.error('GraphQL errors:', updateResult.errors);
-      const errorMessages = updateResult.errors.map(err => err.message).join(', ');
-      throw new Error(`Erreur GraphQL lors de l'association: ${errorMessages}`);
+      console.warn('GraphQL errors (may be nullable field errors):', updateResult.errors);
+      
+      // Check if these are only nullable field errors
+      const criticalErrors = updateResult.errors.filter(err => 
+        !err.message.includes('Cannot return null for non-nullable type') ||
+        err.path?.includes('immat') || err.path?.includes('vehicleDeviceImei')
+      );
+      
+      if (criticalErrors.length > 0) {
+        const errorMessages = criticalErrors.map(err => err.message).join(', ');
+        throw new Error(`Erreur GraphQL critique lors de l'association: ${errorMessages}`);
+      }
     }
     
     // Return only serializable data to avoid DataCloneError
     const vehicleData = updateResult.data?.updateVehicle;
-    if (!vehicleData) {
-      throw new Error('Aucune donnée retournée après la mise à jour du véhicule');
+    if (!vehicleData || !vehicleData.vehicleDeviceImei) {
+      throw new Error('Association échouée - véhicule non mis à jour');
     }
     
     const cleanVehicleData = {
