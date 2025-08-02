@@ -104,33 +104,22 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
       }
     });
     
-    // Check for critical GraphQL errors (ignore nullable field errors)
-    if (updateResult.errors && updateResult.errors.length > 0) {
-      console.warn('GraphQL errors (may be nullable field errors):', updateResult.errors);
-      
-      // Check if these are only nullable field errors
-      const criticalErrors = updateResult.errors.filter(err => 
-        !err.message.includes('Cannot return null for non-nullable type') ||
-        err.path?.includes('immat') || err.path?.includes('vehicleDeviceImei')
-      );
-      
-      if (criticalErrors.length > 0) {
-        const errorMessages = criticalErrors.map(err => err.message).join(', ');
-        throw new Error(`Erreur GraphQL critique lors de l'association: ${errorMessages}`);
-      }
-    }
-    
-    // Return only serializable data to avoid DataCloneError
+    // FIXED: Check for association success by verifying key fields
     const vehicleData = updateResult.data?.updateVehicle;
     if (!vehicleData || !vehicleData.vehicleDeviceImei) {
+      console.error('Association failed - no vehicleDeviceImei in response');
       throw new Error('Association échouée - véhicule non mis à jour');
     }
+
+    // Log success but ignore nullable field errors
+    if (updateResult.errors && updateResult.errors.length > 0) {
+      console.log('GraphQL nullable field errors (ignored):', updateResult.errors.map(e => e.message));
+    }
     
+    // Return only simple serializable data
     const cleanVehicleData = {
       immat: vehicleData.immat || vehicleImmat,
       vehicleDeviceImei: vehicleData.vehicleDeviceImei || deviceImei,
-      immatriculation: vehicleData.immatriculation || vehicleImmat,
-      nomVehicule: vehicleData.nomVehicule,
       isAssociated: true,
       type: 'vehicle'
     };
@@ -145,11 +134,7 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
     
   } catch (error) {
     console.error('Error associating device to vehicle:', error);
-    toast({
-      title: "Erreur",
-      description: error.message || "Erreur lors de l'association",
-      variant: "destructive",
-    });
+    // Don't show toast here - let the calling hook handle user feedback
     throw error;
   }
 };
