@@ -24,7 +24,9 @@ export const useVehicleAssociation = () => {
       // Perform association using the corrected service
       const result = await associateDeviceToVehicle(deviceImei, vehicleImmat);
 
-      if (result.success) {
+      // Check if association succeeded by verifying the result has the updated vehicle data
+      // Even if there are GraphQL errors on nullable fields, the association can still be successful
+      if (result.success || (result.data && result.data.updateVehicle && result.data.updateVehicle.vehicleDeviceImei === deviceImei)) {
         toast({
           title: "Association réussie",
           description: `Boîtier ${deviceImei} associé au véhicule ${vehicleImmat}`,
