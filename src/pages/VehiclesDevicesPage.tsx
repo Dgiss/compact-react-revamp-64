@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building, X } from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Edit, Link, Car, Wifi, Upload, Database, ArrowLeft, Smartphone, Building, X, RefreshCw } from "lucide-react";
 import { EnhancedDataTable, Column } from "@/components/tables/EnhancedDataTable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -253,6 +253,45 @@ export default function VehiclesDevicesPage() {
     setFilteredData([]);
     setCurrentFilters({});
     resetFilters();
+  };
+
+  // Refresh current search/filter
+  const refreshCurrentView = async () => {
+    try {
+      if (Object.keys(currentFilters).length > 0) {
+        // Refresh search results
+        console.log('🔄 Refreshing current search with filters:', currentFilters);
+        const results = await searchDevices(currentFilters);
+        setFilteredData(results || []);
+        toast({
+          title: "Rafraîchi",
+          description: `Données actualisées - ${results?.length || 0} résultat(s)`
+        });
+      } else if (filteredData.length > 0) {
+        // Determine which type of specialized search is active and refresh it
+        if (filteredData.every(item => item.type === 'vehicle' && !item.vehicleDeviceImei)) {
+          console.log('🔄 Refreshing vehicles without devices');
+          await searchVehiclesWithoutDevicesOptimized();
+        } else if (filteredData.every(item => item.type === 'device' && !item.isAssociated)) {
+          console.log('🔄 Refreshing devices without vehicles');
+          await searchDevicesWithoutVehiclesOptimized();
+        } else {
+          console.log('🔄 Refreshing with load all data');
+          await loadAllData('optimized');
+        }
+      } else {
+        // Refresh all data
+        console.log('🔄 Refreshing all data');
+        await loadAllData('optimized');
+      }
+    } catch (error) {
+      console.error('Error refreshing current view:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du rafraîchissement",
+        variant: "destructive"
+      });
+    }
   };
 
   // Update or create vehicle - CORRECTED LOGIC
@@ -913,6 +952,10 @@ export default function VehiclesDevicesPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
+          <Button variant="outline" size="sm" onClick={refreshCurrentView} disabled={loading} title="Rafraîchir la vue actuelle">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Rafraîchir
+          </Button>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setShowAddVehicleDialog(true)}>
@@ -934,23 +977,47 @@ export default function VehiclesDevicesPage() {
       
 
       {/* OPTIMIZED: Specialized Filter Buttons - Direct API calls without cache loading */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
         <div className="text-center">
           <h3 className="text-sm font-semibold text-blue-700 mb-2">🚗 Véhicules sans boîtiers</h3>
           <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
-          <Button variant="outline" onClick={searchVehiclesWithoutDevicesOptimized} className="w-full bg-blue-50 border-blue-300 hover:bg-blue-100" disabled={loading}>
-            <Car className="h-4 w-4 mr-2" />
-            Véhicules sans boîtier
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={searchVehiclesWithoutDevicesOptimized} className="flex-1 bg-blue-50 border-blue-300 hover:bg-blue-100" disabled={loading}>
+              <Car className="h-4 w-4 mr-2" />
+              Véhicules sans boîtier
+            </Button>
+            <Button variant="ghost" size="sm" onClick={searchVehiclesWithoutDevicesOptimized} className="px-2 hover:bg-blue-100" disabled={loading} title="Rafraîchir">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         
         <div className="text-center">
           <h3 className="text-sm font-semibold text-green-700 mb-2">📡 Boîtiers libres</h3>
           <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
-          <Button variant="outline" onClick={searchDevicesWithoutVehiclesOptimized} className="w-full bg-green-50 border-green-300 hover:bg-green-100" disabled={loading}>
-            <Wifi className="h-4 w-4 mr-2" />
-            Devices sans véhicules
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={searchDevicesWithoutVehiclesOptimized} className="flex-1 bg-green-50 border-green-300 hover:bg-green-100" disabled={loading}>
+              <Wifi className="h-4 w-4 mr-2" />
+              Devices sans véhicules
+            </Button>
+            <Button variant="ghost" size="sm" onClick={searchDevicesWithoutVehiclesOptimized} className="px-2 hover:bg-green-100" disabled={loading} title="Rafraîchir">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h3 className="text-sm font-semibold text-purple-700 mb-2">📊 Charger tout</h3>
+          <p className="text-xs text-gray-600 mb-3">Rechargement complet des données</p>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => loadAllData('optimized')} className="flex-1 bg-purple-50 border-purple-300 hover:bg-purple-100" disabled={loading}>
+              <Database className="h-4 w-4 mr-2" />
+              Charger tout
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => loadAllData('optimized')} className="px-2 hover:bg-purple-100" disabled={loading} title="Rafraîchir">
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
