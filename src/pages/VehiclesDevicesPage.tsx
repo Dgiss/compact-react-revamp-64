@@ -311,31 +311,53 @@ export default function VehiclesDevicesPage() {
         ...data
       };
       if (!mappedData.companyVehiclesId && data.entreprise) {
-        // Accept either an ID or a name and resolve to companyVehiclesId
-        const byId = companies.find(c => c.id === data.entreprise);
-        const byName = byId ? null : companies.find(c => c.name === data.entreprise);
+        const rawEntreprise = String(data.entreprise).trim();
+        const looksLikeId = /[a-zA-Z0-9-]{8,}/.test(rawEntreprise);
+        console.log('[VehiclesDevicesPage] Company resolution start:', { rawEntreprise, looksLikeId, companiesInCache: companies.length });
+
+        // Try cache by id or name
+        const byId = companies.find(c => c.id === rawEntreprise);
+        const byName = !byId ? companies.find(c => c.name === rawEntreprise) : null;
         const found = byId || byName;
         if (found) {
           mappedData.companyVehiclesId = found.id;
           mappedData.entreprise = found.name;
-          console.log('Mapped entreprise to companyVehiclesId (cache):', data.entreprise, '→', found.id);
+          console.log('[VehiclesDevicesPage] Company resolved from cache:', { input: rawEntreprise, id: found.id, name: found.name });
+        } else if (looksLikeId) {
+          // Accept direct ID to handle eventual consistency
+          mappedData.companyVehiclesId = rawEntreprise;
+          console.log('[VehiclesDevicesPage] Company accepted as direct ID (no cache match).');
+          // Optional non-blocking background lookup to resolve name
+          try {
+            const results = await searchCompaniesReal(rawEntreprise);
+            const exact = Array.isArray(results) ? results.find(c => c.id === rawEntreprise) : null;
+            if (exact?.name) mappedData.entreprise = exact.name;
+            console.log('[VehiclesDevicesPage] Background lookup result:', { found: !!exact });
+          } catch (e) {
+            // ignore and proceed
+          }
         } else {
           // Fallback to backend search (handles freshly created companies not yet in cache)
           try {
-            const results = await searchCompaniesReal(String(data.entreprise));
+            const results = await searchCompaniesReal(rawEntreprise);
             const exact = Array.isArray(results)
-              ? results.find(c => c.id === data.entreprise) ||
-                results.find(c => c.name?.toLowerCase() === String(data.entreprise).toLowerCase())
+              ? results.find(c => c.name?.toLowerCase() === rawEntreprise.toLowerCase())
               : null;
             if (exact) {
               mappedData.companyVehiclesId = exact.id;
               mappedData.entreprise = exact.name;
-              console.log('Mapped entreprise via backend search:', data.entreprise, '→', exact.id);
+              console.log('[VehiclesDevicesPage] Company resolved via backend search:', { input: rawEntreprise, id: exact.id, name: exact.name });
             } else {
-              throw new Error(`Entreprise "${data.entreprise}" non trouvée`);
+              throw new Error(`Entreprise "${rawEntreprise}" non trouvée`);
             }
           } catch {
-            throw new Error(`Entreprise "${data.entreprise}" non trouvée`);
+            // As last resort, accept ID-like input
+            if (looksLikeId) {
+              mappedData.companyVehiclesId = rawEntreprise;
+              console.warn('[VehiclesDevicesPage] Backend search failed, accepting ID-like value for companyVehiclesId.');
+            } else {
+              throw new Error(`Entreprise "${rawEntreprise}" non trouvée`);
+            }
           }
         }
       }

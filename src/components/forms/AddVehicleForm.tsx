@@ -89,10 +89,12 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     setIsCreatingDevice(true);
     
     try {
-      const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
-      const isIdLike = typeof entreprise === 'string' && /[a-zA-Z0-9-]{8,}/.test(entreprise);
-      const companyId = selectedCompany ? selectedCompany.id : (isIdLike ? entreprise : null);
-      const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
+      const entrepriseTrim = typeof entreprise === 'string' ? entreprise.trim() : entreprise;
+      const selectedCompany = entreprises.find(company => (company.id || company.name) === entrepriseTrim || company.name === entrepriseTrim);
+      const isIdLike = typeof entrepriseTrim === 'string' && /[a-zA-Z0-9-]{8,}/.test(entrepriseTrim);
+      const companyId = selectedCompany ? selectedCompany.id : (isIdLike ? entrepriseTrim : null);
+      const entrepriseName = selectedCompany ? selectedCompany.name : entrepriseTrim;
+      console.log('[AddVehicleForm] Company resolution', { input: entreprise, trimmed: entrepriseTrim, selectedCompany, companyId, entrepriseName, isIdLike });
       
       if (type === "vehicle" && !immatriculation) {
         toast({
