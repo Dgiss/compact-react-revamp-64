@@ -117,6 +117,7 @@ export const LoginForm: React.FC = () => {
               type="text"
               placeholder="Nom d'utilisateur"
               className="pl-10"
+              autoComplete="username"
               {...register('username', { 
                 required: "Nom d'utilisateur requis" 
               })}
@@ -136,6 +137,7 @@ export const LoginForm: React.FC = () => {
               type={showPassword ? 'text' : 'password'}
               placeholder="Mot de passe"
               className="pl-10 pr-10"
+              autoComplete="current-password"
               {...register('password', { 
                 required: 'Mot de passe requis' 
               })}

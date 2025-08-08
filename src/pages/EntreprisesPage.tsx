@@ -27,10 +27,13 @@ export default function EntreprisesPage() {
   // Fetch all companies with users
   const fetchCompanies = async () => {
     setLoading(true);
+    const markStart = 'fetch_companies_start';
+    const markEnd = 'fetch_companies_end';
+    performance.mark?.(markStart);
+    let count = 0;
     try {
-      console.log('Fetching companies with users...');
       const allItems = await CompanyService.fetchCompaniesWithUsers();
-      console.log('Companies fetched successfully:', allItems.length);
+      count = allItems.length || 0;
       setCompanies(allItems);
     } catch (err) {
       console.error('Error fetching companies:', err);
@@ -40,6 +43,18 @@ export default function EntreprisesPage() {
         variant: "destructive"
       });
     } finally {
+      performance.mark?.(markEnd);
+      try {
+        performance.measure?.('fetch_companies', markStart, markEnd);
+        const entries = performance.getEntriesByName('fetch_companies');
+        const last = entries[entries.length - 1];
+        if (last) {
+          console.info(`Entreprises: ${count} items chargés en ${Math.round(last.duration)}ms`);
+        }
+        performance.clearMeasures?.('fetch_companies');
+        performance.clearMarks?.(markStart);
+        performance.clearMarks?.(markEnd);
+      } catch {}
       setLoading(false);
     }
   };
@@ -47,13 +62,18 @@ export default function EntreprisesPage() {
   // Search companies with filters
   const fetchFilteredCompanies = async () => {
     setSearchLoading(true);
+    const markStart = 'fetch_filtered_companies_start';
+    const markEnd = 'fetch_filtered_companies_end';
+    performance.mark?.(markStart);
+    let count = 0;
     try {
       const allCompanies = await CompanyService.fetchFilteredCompanies(searchName, searchEmail, searchSiret);
+      count = allCompanies.length || 0;
       setCompanies(allCompanies);
       setIsFiltered(true);
       toast({
         title: "Recherche réussie",
-        description: `${allCompanies.length} entreprises trouvées`
+        description: `${count} entreprises trouvées`
       });
     } catch (error) {
       console.error("Error fetching companies:", error);
@@ -63,6 +83,18 @@ export default function EntreprisesPage() {
         variant: "destructive"
       });
     } finally {
+      performance.mark?.(markEnd);
+      try {
+        performance.measure?.('fetch_filtered_companies', markStart, markEnd);
+        const entries = performance.getEntriesByName('fetch_filtered_companies');
+        const last = entries[entries.length - 1];
+        if (last) {
+          console.info(`Recherche entreprises: ${count} items en ${Math.round(last.duration)}ms`);
+        }
+        performance.clearMeasures?.('fetch_filtered_companies');
+        performance.clearMarks?.(markStart);
+        performance.clearMarks?.(markEnd);
+      } catch {}
       setSearchLoading(false);
     }
   };

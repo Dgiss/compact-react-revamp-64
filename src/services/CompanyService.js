@@ -360,7 +360,7 @@ export const fetchCompaniesWithUsers = async () => {
             
           } while (userNextToken);
           
-          console.log(`Found ${companyUsers.length} users for company ${company.name}`);
+          // console.log silenced: users count per company
           
           // Clean and format user data with new fields
           const formattedUsers = companyUsers.map(user => ({
