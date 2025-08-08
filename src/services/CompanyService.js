@@ -83,6 +83,49 @@ export const fetchFilteredCompanies = async (searchName, searchEmail, searchSire
   return allCompanies;
 };
 
+// Lazy fetch users for a company (used by CompanyUsersList)
+export const getCompanyUsers = async (companyId) => {
+  await waitForAmplifyConfig();
+  if (!companyId) return [];
+  
+  let users = [];
+  let nextToken = null;
+  
+  try {
+    do {
+      const res = await client.graphql({
+        query: queries.usersByCompanyUsersId,
+        variables: {
+          companyUsersId: companyId,
+          limit: 1000,
+          nextToken
+        }
+      });
+      const data = res.data.usersByCompanyUsersId;
+      users = users.concat(data.items || []);
+      nextToken = data.nextToken;
+    } while (nextToken);
+  } catch (error) {
+    console.error('Error fetching company users:', error);
+    return [];
+  }
+  
+  // Normalize shape for UI
+  return users.map(user => ({
+    sub: user.sub,
+    id: user.sub,
+    username: user.username || '',
+    email: user.email || '',
+    password: user.password || '',
+    firstname: user.firstname || '',
+    lastname: user.lastname || '',
+    mobile: user.mobile || '',
+    role: user.role || 'ADMIN',
+    accessType: user.accessType || 'FULL_COMPANY',
+    nom: user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : (user.username || 'Utilisateur')
+  }));
+};
+
 export const createCompanyWithUser = async ({ companyData, userData }) => {
   await waitForAmplifyConfig();
   

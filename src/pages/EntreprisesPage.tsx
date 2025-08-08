@@ -32,7 +32,7 @@ export default function EntreprisesPage() {
     performance.mark?.(markStart);
     let count = 0;
     try {
-      const allItems = await CompanyService.fetchCompaniesWithUsers();
+      const allItems = await CompanyService.fetchCompanies();
       count = allItems.length || 0;
       setCompanies(allItems);
     } catch (err) {
@@ -158,7 +158,7 @@ export default function EntreprisesPage() {
     sortable: true,
     visible: true,
     renderCell: (value, row) => {
-      return <CompanyUsersList companyName={value} users={row.users?.items || []} />;
+      return <CompanyUsersList companyName={value} companyId={row.id} />;
     }
   }, {
     id: "contact",

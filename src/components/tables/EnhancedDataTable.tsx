@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EnhancedPagination } from "@/components/ui/enhanced-pagination";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export interface Column {
   id: string;
@@ -157,6 +158,16 @@ export function EnhancedDataTable({
   const hasVisibleColumns = visibleColumns.length > 0;
   const displayData = enablePagination ? paginatedData : sortedData;
 
+  // Virtualization setup (auto-enabled when not paginating and lots of rows)
+  const enableVirtual = !enablePagination && displayData.length > 200;
+  const parentRef = useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: displayData.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 48,
+    overscan: 8,
+  });
+
   // Determine if the item is a device (for association button)
   const isDevice = (item: any) => item.type === 'device' || item.imei;
   
@@ -284,91 +295,154 @@ export function EnhancedDataTable({
       </div>
 
       <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {hasVisibleColumns ? (
-                visibleColumns.map((column) => (
-                  <TableHead 
-                    key={column.id}
-                    className={column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''}
-                    onClick={() => column.sortable && requestSort(column.id)}
-                  >
-                    <div className="flex items-center whitespace-nowrap">
-                      {column.label}
-                      {column.sortable && (
-                        <span className="ml-1">
-                          {getSortDirection(column.id) === 'ascending' && '↑'}
-                          {getSortDirection(column.id) === 'descending' && '↓'}
-                        </span>
-                      )}
-                    </div>
-                  </TableHead>
-                ))
-              ) : (
-                <TableHead>Aucune colonne sélectionnée</TableHead>
-              )}
-               {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && hasVisibleColumns && 
-                <TableHead className="w-24">Actions</TableHead>
-               }
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayData.length === 0 ? (
+        <div ref={parentRef} className={enableVirtual ? "max-h-[70vh] overflow-auto" : ""}>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
-                  Aucune donnée disponible
-                </TableCell>
+                {hasVisibleColumns ? (
+                  visibleColumns.map((column) => (
+                    <TableHead 
+                      key={column.id}
+                      className={column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''}
+                      onClick={() => column.sortable && requestSort(column.id)}
+                    >
+                      <div className="flex items-center whitespace-nowrap">
+                        {column.label}
+                        {column.sortable && (
+                          <span className="ml-1">
+                            {getSortDirection(column.id) === 'ascending' && '↑'}
+                            {getSortDirection(column.id) === 'descending' && '↓'}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                  ))
+                ) : (
+                  <TableHead>Aucune colonne sélectionnée</TableHead>
+                )}
+                 {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && hasVisibleColumns && 
+                  <TableHead className="w-24">Actions</TableHead>
+                 }
               </TableRow>
-            ) : hasVisibleColumns ? (
-              displayData.map((row, index) => {
-                const selected = isRowSelected(row);
-                return (
-                <TableRow 
-                  key={index}
-                  className={selected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
-                >
-                  {visibleColumns.map((column) => (
-                    <TableCell key={column.id}>
-                      {renderCellContent(column, row)}
-                    </TableCell>
-                  ))}
-                   {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && (
-                     <TableCell>
-                       {renderActions ? (
-                         renderActions(row)
-                       ) : (
-                         <div className="flex gap-1">
-                           {onEdit && (
-                             <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
-                               <Edit className="h-4 w-4" />
-                             </Button>
-                           )}
-                           {onDelete && (
-                             <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
-                               <Trash className="h-4 w-4" />
-                             </Button>
-                           )}
-                           {onAssociate && canAssociate(row) && (
-                             <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
-                               <Link className="h-4 w-4" />
-                             </Button>
-                           )}
-                           {onDissociate && canDissociate(row) && (
-                             <Button variant="ghost" size="icon" onClick={() => onDissociate(row)}>
-                               <Unlink className="h-4 w-4" />
-                             </Button>
-                           )}
-                         </div>
-                       )}
-                     </TableCell>
-                   )}
+            </TableHeader>
+            <TableBody>
+              {displayData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={hasVisibleColumns ? visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate) ? 1 : 0) : 1} className="text-center py-4">
+                    Aucune donnée disponible
+                  </TableCell>
                 </TableRow>
-                );
-              })
-            ) : null}
-          </TableBody>
-        </Table>
+              ) : hasVisibleColumns ? (
+                enableVirtual ? (
+                  <>
+                    {/* Top spacer */}
+                    <TableRow>
+                      <TableCell colSpan={visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate || onDissociate) ? 1 : 0)} style={{ height: rowVirtualizer.getVirtualItems()[0]?.start ?? 0 }} />
+                    </TableRow>
+                    {rowVirtualizer.getVirtualItems().map(vi => {
+                      const row = displayData[vi.index];
+                      const selected = isRowSelected(row);
+                      return (
+                        <TableRow 
+                          key={vi.key}
+                          data-index={vi.index}
+                          className={selected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
+                          style={{ height: vi.size }}
+                        >
+                          {visibleColumns.map((column) => (
+                            <TableCell key={column.id}>
+                              {renderCellContent(column, row)}
+                            </TableCell>
+                          ))}
+                          {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && (
+                            <TableCell>
+                              {renderActions ? (
+                                renderActions(row)
+                              ) : (
+                                <div className="flex gap-1">
+                                  {onEdit && (
+                                    <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  {onDelete && (
+                                    <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  {onAssociate && canAssociate(row) && (
+                                    <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
+                                      <Link className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  {onDissociate && canDissociate(row) && (
+                                    <Button variant="ghost" size="icon" onClick={() => onDissociate(row)}>
+                                      <Unlink className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      );
+                    })}
+                    {/* Bottom spacer */}
+                    <TableRow>
+                      <TableCell colSpan={visibleColumns.length + ((renderActions || onEdit || onDelete || onAssociate || onDissociate) ? 1 : 0)} style={{ height: Math.max(0, rowVirtualizer.getTotalSize() - ((rowVirtualizer.getVirtualItems().at(-1)?.end) ?? 0)) }} />
+                    </TableRow>
+                  </>
+                ) : (
+                  displayData.map((row, index) => {
+                    const selected = isRowSelected(row);
+                    return (
+                    <TableRow 
+                      key={index}
+                      className={selected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
+                    >
+                      {visibleColumns.map((column) => (
+                        <TableCell key={column.id}>
+                          {renderCellContent(column, row)}
+                        </TableCell>
+                      ))}
+                       {(renderActions || onEdit || onDelete || onAssociate || onDissociate) && (
+                         <TableCell>
+                           {renderActions ? (
+                             renderActions(row)
+                           ) : (
+                             <div className="flex gap-1">
+                               {onEdit && (
+                                 <Button variant="ghost" size="icon" onClick={() => onEdit(row)}>
+                                   <Edit className="h-4 w-4" />
+                                 </Button>
+                               )}
+                               {onDelete && (
+                                 <Button variant="ghost" size="icon" onClick={() => onDelete(row)}>
+                                   <Trash className="h-4 w-4" />
+                                 </Button>
+                               )}
+                               {onAssociate && canAssociate(row) && (
+                                 <Button variant="ghost" size="icon" onClick={() => onAssociate(row)}>
+                                   <Link className="h-4 w-4" />
+                                 </Button>
+                               )}
+                               {onDissociate && canDissociate(row) && (
+                                 <Button variant="ghost" size="icon" onClick={() => onDissociate(row)}>
+                                   <Unlink className="h-4 w-4" />
+                                 </Button>
+                               )}
+                             </div>
+                           )}
+                         </TableCell>
+                       )}
+                    </TableRow>
+                    );
+                  })
+                )
+              ) : null}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {enablePagination && totalPages > 1 && (
