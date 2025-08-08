@@ -310,13 +310,33 @@ export default function VehiclesDevicesPage() {
       const mappedData = {
         ...data
       };
-      if (data.entreprise && !data.companyVehiclesId) {
-        const company = companies.find(c => c.name === data.entreprise);
-        if (company) {
-          mappedData.companyVehiclesId = company.id;
-          console.log('Mapped entreprise to companyVehiclesId:', data.entreprise, '→', company.id);
+      if (!mappedData.companyVehiclesId && data.entreprise) {
+        // Accept either an ID or a name and resolve to companyVehiclesId
+        const byId = companies.find(c => c.id === data.entreprise);
+        const byName = byId ? null : companies.find(c => c.name === data.entreprise);
+        const found = byId || byName;
+        if (found) {
+          mappedData.companyVehiclesId = found.id;
+          mappedData.entreprise = found.name;
+          console.log('Mapped entreprise to companyVehiclesId (cache):', data.entreprise, '→', found.id);
         } else {
-          throw new Error(`Entreprise "${data.entreprise}" non trouvée`);
+          // Fallback to backend search (handles freshly created companies not yet in cache)
+          try {
+            const results = await searchCompaniesReal(String(data.entreprise));
+            const exact = Array.isArray(results)
+              ? results.find(c => c.id === data.entreprise) ||
+                results.find(c => c.name?.toLowerCase() === String(data.entreprise).toLowerCase())
+              : null;
+            if (exact) {
+              mappedData.companyVehiclesId = exact.id;
+              mappedData.entreprise = exact.name;
+              console.log('Mapped entreprise via backend search:', data.entreprise, '→', exact.id);
+            } else {
+              throw new Error(`Entreprise "${data.entreprise}" non trouvée`);
+            }
+          } catch {
+            throw new Error(`Entreprise "${data.entreprise}" non trouvée`);
+          }
         }
       }
 
