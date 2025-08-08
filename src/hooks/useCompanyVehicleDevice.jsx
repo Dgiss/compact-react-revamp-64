@@ -154,7 +154,7 @@ export const useCompanyVehicleDevice = () => {
   const refreshDataInBackground = async () => {
     try {
       console.log('Refreshing data in background...');
-      const result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+      const result = await VehicleService.fetchCompaniesWithVehicles();
       
       // Update cache
       setAllDataCache(result);
@@ -182,14 +182,21 @@ export const useCompanyVehicleDevice = () => {
       const startTime = Date.now();
       let result;
       
-      if (mode === 'optimized' || mode === 'complete') {
-        // Always use the optimized single query for best performance
-        console.log('Using optimized single GraphQL query for maximum performance...');
-        result = await VehicleService.fetchAllVehiclesOptimized();
+      if (mode === 'complete') {
+        // Complete dataset including free devices
+        console.log('Using complete query including free devices...');
+        result = await VehicleService.fetchCompaniesWithVehicles();
       } else {
-        // Fallback to complex queries only if needed
-        console.log('Using fallback complex queries...');
-        result = await CompanyVehicleDeviceService.fetchCompaniesWithVehiclesAndDevices();
+        // Optimized: vehicles fast + free devices merged
+        console.log('Using optimized vehicles + free devices merge...');
+        const [base, free] = await Promise.all([
+          VehicleService.fetchAllVehiclesOptimized(),
+          CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
+        ]);
+        result = {
+          companies: base.companies || [],
+          vehicles: [...(base.vehicles || []), ...(free || [])]
+        };
       }
       
       const loadTime = Date.now() - startTime;
@@ -360,7 +367,7 @@ export const useCompanyVehicleDevice = () => {
     }
     
     try {
-      return CompanyVehicleDeviceService.getDeviceStatusLocal(allDataCache.devices, imei);
+      return CompanyVehicleDeviceService.getDeviceStatusLocal(allDataCache.vehicles, imei);
     } catch (err) {
       toast({
         title: "Erreur",
@@ -407,20 +414,54 @@ export const useCompanyVehicleDevice = () => {
     }
     
     try {
-      const results = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.devices, imei);
-      
-      toast({
-        title: "Recherche par IMEI",
-        description: `${results.length} résultat(s) trouvé(s)`,
+      // First, search locally in the unified cache
+      const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, imei);
+      if (localResults.length > 0) {
+        toast({
+          title: "Recherche par IMEI",
+          description: `${localResults.length} résultat(s) trouvé(s)`
+        });
+        return localResults;
+      }
+
+      // Fallback to backend exact lookup
+      const { generateClient } = await import('aws-amplify/api');
+      const { getDevice } = await import('../graphql/queries');
+      const client = generateClient();
+      const response = await client.graphql({
+        query: getDevice,
+        variables: { imei }
       });
-      
-      return results;
+      const device = response.data?.getDevice;
+      if (device) {
+        const mapped = {
+          id: device.imei,
+          entreprise: device.vehicle ? "Associé" : "Boîtier libre",
+          type: "device",
+          immatriculation: device.vehicle?.immat || "",
+          nomVehicule: device.vehicle?.nomVehicule || "",
+          imei: device.imei,
+          typeBoitier: device.protocolId?.toString() || "",
+          marque: "",
+          modele: "",
+          kilometrage: "",
+          telephone: device.sim || "",
+          emplacement: "",
+          deviceData: device,
+          isAssociated: !!device.vehicle?.immat
+        };
+        toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (backend)` });
+        return [mapped];
+      }
+
+      toast({ title: "Recherche par IMEI", description: `0 résultat` });
+      return [];
     } catch (err) {
       setError(err.message);
       toast({
         title: "Erreur",
         description: `Erreur lors de la recherche par IMEI: ${err.message}`,
-        variant: "destructive",
+        variant: "destructive"
       });
       return [];
     }
@@ -433,7 +474,7 @@ export const useCompanyVehicleDevice = () => {
     }
     
     try {
-      const results = CompanyVehicleDeviceService.filterBySimLocal(allDataCache.devices, sim);
+      const results = CompanyVehicleDeviceService.filterBySimLocal(allDataCache.vehicles, sim);
       
       toast({
         title: "Recherche par SIM",
@@ -487,7 +528,7 @@ export const useCompanyVehicleDevice = () => {
     
     try {
       const results = CompanyVehicleDeviceService.filterByCompanyLocal(
-        allDataCache.devices, 
+        allDataCache.vehicles, 
         company, 
         allDataCache.companies
       );

@@ -531,21 +531,26 @@ export const fetchDevicesWithoutVehicles = async () => {
     console.log('Credentials confirmed for devices fetch');
     
     return await withCredentialRetry(async () => {
-      console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES ===');
+      console.log('=== OPTIMIZED SEARCH: DEVICES WITHOUT VEHICLES (PAGINATED) ===');
       
       try {
-        // Get all devices and filter out those with vehicles on the client side
-        const response = await client.graphql({
-          query: queries.listDevices,
-          variables: {
-            limit: 1000
-          }
-        });
-        
-        const allDevices = response.data?.listDevices?.items || [];
+        let allDevices = [];
+        let nextToken = null;
+        let page = 0;
+        do {
+          page++;
+          const response = await client.graphql({
+            query: queries.listDevices,
+            variables: { limit: 1000, nextToken }
+          });
+          const items = response.data?.listDevices?.items || [];
+          allDevices = allDevices.concat(items);
+          nextToken = response.data?.listDevices?.nextToken || null;
+          console.log(`Devices page ${page}: +${items.length}, total=${allDevices.length}`);
+        } while (nextToken);
         
         // Filter devices that don't have a vehicle association
-        const devicesWithoutVehicles = allDevices.filter(device => !device.vehicle);
+        const devicesWithoutVehicles = allDevices.filter(device => !device?.vehicle);
         
         const devices = devicesWithoutVehicles.map(device => ({
           id: device.imei,
@@ -564,13 +569,13 @@ export const fetchDevicesWithoutVehicles = async () => {
           isAssociated: false
         }));
         
-        console.log('Devices without vehicles found:', devices.length);
+        console.log('Devices without vehicles found (merged):', devices.length);
         return devices;
       } catch (error) {
         console.error('Error in devices fetch GraphQL call:', error);
         throw error;
       }
-    }, 3); // Increase retry attempts to 3
+    }, 3);
   } catch (error) {
     console.error('Error in fetchDevicesWithoutVehicles outer catch:', error);
     throw error;
