@@ -975,14 +975,9 @@ export default function VehiclesDevicesPage() {
             <AddDeviceWithVehicleForm onClose={() => {
               setShowAddDeviceWithVehicleDialog(false);
               loadQuickStats();
-            }} onSuccess={devices => {
+            }} onSuccess={async () => {
               setShowAddDeviceWithVehicleDialog(false);
-              setFilteredData(devices);
-              setLoadingMode('search');
-              toast({
-                title: "Succès",
-                description: "Device et véhicule créés et associés avec succès"
-              });
+              await refreshAfterAssociation("Device et véhicule créés et associés");
             }} />
           </DialogContent>
         </Dialog>
@@ -1090,18 +1085,14 @@ export default function VehiclesDevicesPage() {
       
       {/* Interface d'association en masse pour boîtiers sélectionnés */}
       {showBulkAssociation && filteredData.length > 0 && <div className="mb-6">
-          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device")} onAssociationComplete={() => {
+          <DevicesBulkAssociation devices={filteredData.filter(device => device.type === "device")} onAssociationComplete={async () => {
         // Fermer l'interface d'association
         setShowBulkAssociation(false);
         // Réinitialiser les sélections
         setSelectedDevices([]);
         setIsDeviceSelectMode(false);
-        // Rafraîchir les données
-        loadAllData();
-        toast({
-          title: "Association réussie",
-          description: "Boîtiers associés avec succès"
-        });
+        // Rafraîchir les données de façon standardisée
+        await refreshAfterAssociation("Boîtiers associés avec succès");
       }} />
         </div>}
 
@@ -1137,21 +1128,12 @@ export default function VehiclesDevicesPage() {
         </SheetContent>
       </Sheet>
 
-      <MultipleImeiSearchDialog open={showMultipleImeiDialog} onOpenChange={setShowMultipleImeiDialog} data={combinedData} onUpdate={(devices, newCompany) => {
-      const updatedData = [...combinedData];
-      devices.forEach(selectedDevice => {
-        const index = updatedData.findIndex(item => item.imei === selectedDevice.imei);
-        if (index !== -1) {
-          updatedData[index] = {
-            ...updatedData[index],
-            entreprise: newCompany
-          };
-        }
-      });
+      <MultipleImeiSearchDialog open={showMultipleImeiDialog} onOpenChange={setShowMultipleImeiDialog} data={combinedData} onUpdate={async (devices, newCompany) => {
       toast({
         description: `${devices.length} boîtier(s) modifié(s) avec succès`
       });
       setShowMultipleImeiDialog(false);
+      await refreshAfterAssociation("Boîtiers mis à jour");
     }} />
 
       <Dialog open={showEditVehicleDialog} onOpenChange={setShowEditVehicleDialog}>
@@ -1217,14 +1199,9 @@ export default function VehiclesDevicesPage() {
           <AddDeviceWithVehicleForm onClose={() => {
           setShowAddDeviceWithVehicleDialog(false);
           loadQuickStats();
-        }} onSuccess={devices => {
+        }} onSuccess={async () => {
           setShowAddDeviceWithVehicleDialog(false);
-          setFilteredData(devices);
-          setLoadingMode('search');
-          toast({
-            title: "Succès",
-            description: "Device et véhicule créés et associés avec succès"
-          });
+          await refreshAfterAssociation("Device et véhicule créés et associés");
         }} />
         </DialogContent>
       </Dialog>
