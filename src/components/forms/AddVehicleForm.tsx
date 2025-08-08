@@ -90,8 +90,9 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     
     try {
       const selectedCompany = entreprises.find(company => (company.id || company.name) === entreprise);
+      const isIdLike = typeof entreprise === 'string' && /[a-zA-Z0-9-]{8,}/.test(entreprise);
+      const companyId = selectedCompany ? selectedCompany.id : (isIdLike ? entreprise : null);
       const entrepriseName = selectedCompany ? selectedCompany.name : entreprise;
-      const companyId = selectedCompany ? selectedCompany.id : null;
       
       if (type === "vehicle" && !immatriculation) {
         toast({

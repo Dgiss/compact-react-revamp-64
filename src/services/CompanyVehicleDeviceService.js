@@ -36,6 +36,25 @@ export const fetchCompaniesForSelect = async () => {
 export const searchCompaniesReal = async (searchTerm) => {
   return await withCredentialRetry(async () => {
     try {
+      // If the term looks like an ID, try direct lookup first
+      const looksLikeId = typeof searchTerm === 'string' && searchTerm.trim() !== '' && /[a-zA-Z0-9-]{8,}/.test(searchTerm);
+      if (looksLikeId) {
+        try {
+          const res = await client.graphql({
+            query: queries.getCompany,
+            variables: { id: searchTerm.trim() }
+          });
+          const company = res?.data?.getCompany;
+          if (company?.id) {
+            const found = [{ id: company.id, name: company.name, siret: company.siret }];
+            console.log(`Recherche par ID "${searchTerm}": 1 entreprise trouvée`);
+            return found;
+          }
+        } catch (e) {
+          // ignore and fall back to name search
+        }
+      }
+
       // Si pas de terme de recherche, retourner les premières entreprises
       if (!searchTerm || searchTerm.trim() === '') {
         const response = await client.graphql({
