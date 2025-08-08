@@ -313,8 +313,7 @@ export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
           // Fetch companies for mapping (simplified version for performance)
           try {
             const companiesResponse = await client.graphql({
-              query: queries.listCompanies,
-              variables: { limit: 1000 }
+              query: `query ListCompanyNames {\n                listCompanies(limit: 1000) {\n                  items { id name }\n                }\n              }`
             });
             const companies = companiesResponse.data.listCompanies.items;
             
@@ -352,9 +351,8 @@ export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
 
       // Fetch all companies to match with vehicles
       const companiesResponse = await client.graphql({
-        query: queries.listCompanies,
-        variables: { limit: 1000 }
-      });
+      query: `query ListCompanyNames {\n        listCompanies(limit: 1000) {\n          items { id name }\n        }\n      }`
+    });
       const companies = companiesResponse.data.listCompanies.items;
       
       const vehicles = allVehicles.map(vehicle => {
@@ -482,8 +480,7 @@ export const fetchVehiclesWithoutDevices = async () => {
       
       // Fetch all companies to match with vehicles
       const companiesResponse = await client.graphql({
-        query: queries.listCompanies,
-        variables: { limit: 1000 }
+        query: `query ListCompanyNames {\n          listCompanies(limit: 1000) {\n            items { id name }\n          }\n        }`
       });
       const companies = companiesResponse.data.listCompanies.items;
       
@@ -559,19 +556,34 @@ export const fetchDevicesWithoutVehicles = async () => {
         do {
           page++;
           const response = await client.graphql({
-            query: queries.listDevices,
-            variables: { limit: 1000, nextToken }
+            query: `query ListFreeDevices($nextToken: String) {
+              listDevices(
+                filter: { or: [
+                  { deviceVehicleImmat: { attributeExists: false } },
+                  { deviceVehicleImmat: { eq: null } },
+                  { deviceVehicleImmat: { eq: "" } }
+                ]},
+                limit: 1000,
+                nextToken: $nextToken
+              ) {
+                items {
+                  imei
+                  sim
+                  protocolId
+                  name
+                }
+                nextToken
+              }
+            }`,
+            variables: { nextToken }
           });
-          const items = response.data?.listDevices?.items || [];
-          allDevices = allDevices.concat(items);
+          const pageItems = response.data?.listDevices?.items || [];
+          allDevices = allDevices.concat(pageItems);
           nextToken = response.data?.listDevices?.nextToken || null;
-          console.log(`Devices page ${page}: +${items.length}, total=${allDevices.length}`);
+          console.log(`Devices page ${page}: +${pageItems.length}, total=${allDevices.length}`);
         } while (nextToken);
-        
-        // Filter devices that don't have a vehicle association
-        const devicesWithoutVehicles = allDevices.filter(device => !device?.vehicle);
-        
-        const devices = devicesWithoutVehicles.map(device => ({
+
+        const devices = allDevices.map(device => ({
           id: device.imei,
           entreprise: "Boîtier libre",
           type: "device",
@@ -587,7 +599,7 @@ export const fetchDevicesWithoutVehicles = async () => {
           deviceData: device,
           isAssociated: false
         }));
-        
+
         console.log('Devices without vehicles found (merged):', devices.length);
         return devices;
       } catch (error) {

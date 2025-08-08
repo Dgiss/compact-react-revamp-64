@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
 import * as VehicleService from '@/services/VehicleService.js';
 import { toast } from '@/hooks/use-toast';
@@ -24,6 +24,10 @@ export const useCompanyVehicleDevice = () => {
   // Loading mode states
   const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete', 'optimized'
   const [quickStats, setQuickStats] = useState(null);
+
+  // Performance guards
+  const loadingRef = useRef(false);
+  const lastLoadRef = useRef(0);
 
   // AUTO-LOAD companies on mount with debounce
   useEffect(() => {
