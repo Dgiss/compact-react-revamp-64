@@ -429,9 +429,9 @@ export const useCompanyVehicleDevice = () => {
       }
 
       // Fallback to backend exact lookup
-      const { generateClient } = await import('aws-amplify/api');
+      const { getGraphQLClient } = await import('@/config/aws-config.js');
       const { getDevice } = await import('../graphql/queries');
-      const client = generateClient();
+      const client = await getGraphQLClient();
       const response = await client.graphql({
         query: getDevice,
         variables: { imei }
@@ -682,9 +682,9 @@ export const useCompanyVehicleDevice = () => {
       
       // Fallback to simplified GraphQL queries with better error handling
       try {
-        const { generateClient } = await import('aws-amplify/api');
+        const { getGraphQLClient } = await import('@/config/aws-config.js');
         const { listCompanies } = await import('../graphql/queries');
-        const client = generateClient();
+        const client = await getGraphQLClient();
         
         // Simple count query that should work with the schema
         const companiesResult = await client.graphql({

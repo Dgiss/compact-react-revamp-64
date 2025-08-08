@@ -1,10 +1,9 @@
-import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
 import * as simpleMutations from '../graphql/mutations-simple';
-import { withCredentialRetry } from '@/config/aws-config.js';
+import { withCredentialRetry, getLazyClient } from '@/config/aws-config.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 /**
  * Check if vehicle exists by immatriculation

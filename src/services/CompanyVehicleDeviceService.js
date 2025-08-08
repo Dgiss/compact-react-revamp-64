@@ -1,9 +1,8 @@
-import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { withCredentialRetry, waitForAmplifyConfig, ensureCredentials } from '@/config/aws-config.js';
+import { withCredentialRetry, waitForAmplifyConfig, ensureCredentials, getLazyClient } from '@/config/aws-config.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 /**
  * Fetch companies for select components
@@ -11,8 +10,13 @@ const client = generateClient();
 export const fetchCompaniesForSelect = async () => {
   return await withCredentialRetry(async () => {
     try {
+      // In-memory cache (60s) to avoid repeated queries
+      if (fetchCompaniesForSelect._cache && Date.now() - fetchCompaniesForSelect._cache.ts < 60000) {
+        return fetchCompaniesForSelect._cache.data;
+      }
+
       const response = await client.graphql({
-        query: queries.listCompanies,
+        query: `query ListCompanyNames($limit: Int) {\n          listCompanies(limit: $limit) {\n            items { id name siret }\n            nextToken\n          }\n        }`,
         variables: { limit: 1000 }
       });
       
@@ -22,6 +26,8 @@ export const fetchCompaniesForSelect = async () => {
         siret: company.siret
       }));
       
+      // Save cache
+      fetchCompaniesForSelect._cache = { data: companies, ts: Date.now() };
       return companies;
     } catch (error) {
       console.error('Error fetching companies for select:', error);

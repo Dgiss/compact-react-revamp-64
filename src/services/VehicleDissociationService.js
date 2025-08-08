@@ -1,8 +1,6 @@
-import { generateClient } from 'aws-amplify/api';
-import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
 
-const client = generateClient();
+
 
 /**
  * Dissociate a device from a vehicle by setting vehicleDeviceImei to null

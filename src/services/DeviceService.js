@@ -1,12 +1,11 @@
-import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry, getLazyClient } from '@/config/aws-config.js';
 import { addDeviceToFlespi } from './FlespiService.js';
 import { hasFlespiApiKey } from './ApiConfigService';
 import { checkImeiAvailable, createDeviceSimple, associateDeviceToVehicleSimple } from './SimpleDeviceService.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 export const fetchAllDevices = async () => {
   return await withCredentialRetry(async () => {

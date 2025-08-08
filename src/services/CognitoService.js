@@ -1,9 +1,9 @@
 
 import { signUp, confirmSignUp, signIn, signOut, getCurrentUser } from 'aws-amplify/auth';
-import { generateClient } from 'aws-amplify/api';
+
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
 
-const client = generateClient();
+
 
 export const createUserInCognito = async ({ username, password, email, firstname, lastname }) => {
   await waitForAmplifyConfig();

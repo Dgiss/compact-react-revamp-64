@@ -1,12 +1,11 @@
 
-import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { withCredentialRetry } from '@/config/aws-config.js';
+import { withCredentialRetry, getLazyClient } from '@/config/aws-config.js';
 import { addDeviceToFlespi } from './FlespiService.js';
 import { hasFlespiApiKey } from './ApiConfigService';
 
-const client = generateClient();
+const client = getLazyClient();
 
 /**
  * Check if IMEI is available (doesn't exist in database)

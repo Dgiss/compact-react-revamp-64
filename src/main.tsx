@@ -8,13 +8,10 @@ import { configureAmplify } from './config/aws-config.js'
 const initializeApp = async () => {
   console.log('Initialisation de l\'application...');
   
-  const configSuccess = configureAmplify();
+  const configSuccess = await configureAmplify();
   if (!configSuccess) {
     console.error('Échec de la configuration Amplify');
   }
-  
-  // Attendre un petit délai pour s'assurer que la configuration est appliquée
-  await new Promise(resolve => setTimeout(resolve, 100));
   
   console.log('Application prête à démarrer');
   createRoot(document.getElementById("root")!).render(<App />);

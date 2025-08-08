@@ -1,9 +1,7 @@
-import { generateClient } from 'aws-amplify/api';
-import * as mutations from '../graphql/mutations';
 import { waitForAmplifyConfig } from '@/config/aws-config.js';
 import { associateDeviceToVehicleUnique } from './DeviceUniqueAssociationService.js';
 
-const client = generateClient();
+
 
 /**
  * Associate a device to a vehicle using CORRECT GraphQL relations

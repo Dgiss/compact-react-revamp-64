@@ -1,9 +1,9 @@
 
-import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
+import { getLazyClient } from '@/config/aws-config.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 export const fetchUsers = async () => {
   let allUsers = [];

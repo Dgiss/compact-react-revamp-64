@@ -1,10 +1,9 @@
-import { generateClient } from 'aws-amplify/api';
 import * as mutations from '../graphql/mutations';
 import * as queries from '../graphql/queries';
-import { waitForAmplifyConfig } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, getLazyClient } from '@/config/aws-config.js';
 import { createDevice } from './DeviceService.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 /**
  * Ensure device exists in the database, create if it doesn't

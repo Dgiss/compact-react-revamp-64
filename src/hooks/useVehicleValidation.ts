@@ -1,10 +1,10 @@
 
 import { useState, useCallback } from 'react';
-import { generateClient } from 'aws-amplify/api';
+import { getLazyClient } from '@/config/aws-config.js';
 import * as queries from '../graphql/queries';
 import { withCredentialRetry } from '@/config/aws-config.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 /**
  * Custom hook for vehicle validation

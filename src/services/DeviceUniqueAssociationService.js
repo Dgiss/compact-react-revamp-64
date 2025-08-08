@@ -1,10 +1,9 @@
-import { generateClient } from 'aws-amplify/api';
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry, getLazyClient } from '@/config/aws-config.js';
 import { toast } from '@/hooks/use-toast';
 
-const client = generateClient();
+const client = getLazyClient();
 
 /**
  * Check if a device is already associated with another vehicle

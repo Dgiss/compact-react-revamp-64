@@ -1,12 +1,12 @@
-import { generateClient } from 'aws-amplify/api';
+
 import * as queries from '../graphql/queries';
 import * as mutations from '../graphql/mutations';
-import { waitForAmplifyConfig, withCredentialRetry } from '@/config/aws-config.js';
+import { waitForAmplifyConfig, withCredentialRetry, getLazyClient } from '@/config/aws-config.js';
 import { fetchAllDevices } from './DeviceService.js';
 import { cleanDataForGraphQL } from '@/lib/utils';
 import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService.js';
 
-const client = generateClient();
+const client = getLazyClient();
 
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {

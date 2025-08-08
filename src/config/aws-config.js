@@ -1,6 +1,7 @@
 
 import { Amplify } from 'aws-amplify';
 import { getCurrentUser } from 'aws-amplify/auth';
+import { generateClient } from 'aws-amplify/api';
 
 const awsConfig = {
   aws_project_region: "eu-west-3",
@@ -146,5 +147,21 @@ export const withCredentialRetry = async (operation, maxRetries = 2) => {
     }
   }
 };
+
+// Helpers GraphQL - création paresseuse du client
+let graphQLClient = null;
+
+export const getGraphQLClient = async () => {
+  await waitForAmplifyConfig();
+  if (!graphQLClient) {
+    graphQLClient = generateClient({ authMode: 'userPool' });
+  }
+  return graphQLClient;
+};
+
+// Wrapper paresseux conservant l'API client.graphql existante
+export const getLazyClient = () => ({
+  graphql: (params) => getGraphQLClient().then(c => c.graphql(params))
+});
 
 export default awsConfig;
