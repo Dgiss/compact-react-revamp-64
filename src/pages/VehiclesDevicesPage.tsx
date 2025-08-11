@@ -887,7 +887,7 @@ export default function VehiclesDevicesPage() {
       }} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Smartphone className="h-6 w-6 mb-2" />
           <div>
-            <div className="font-medium">Dispositifs libres</div>
+            <div className="font-medium">Devices sans IMEI</div>
             <div className="text-sm text-muted-foreground">Voir et associer en masse</div>
           </div>
         </Button>
@@ -1033,7 +1033,7 @@ export default function VehiclesDevicesPage() {
         <div className="text-center">
           <h3 className="text-sm font-semibold text-green-700 mb-2">📡 Boîtiers libres</h3>
           <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
-          <Button variant="outline" onClick={searchDevicesWithoutVehiclesOptimized} className="w-full bg-green-50 border-green-300 hover:bg-green-100" disabled={loading}>
+          <Button variant="outline" onClick={() => { searchDevicesWithoutVehiclesOptimized(); setShowBulkAssociation(true); }} className="w-full bg-green-50 border-green-300 hover:bg-green-100" disabled={loading}>
             <Wifi className="h-4 w-4 mr-2" />
             Devices sans véhicules
           </Button>
@@ -1098,6 +1098,7 @@ export default function VehiclesDevicesPage() {
 
       {/* Table pour les vues spécialisées */}
       {(() => {
+      if (showBulkAssociation) return null;
       const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
       console.log('=== TABLE DISPLAY DEBUG ===');
       console.log('filteredData.length:', filteredData.length);
@@ -1106,9 +1107,25 @@ export default function VehiclesDevicesPage() {
       console.log('loadingMode:', loadingMode);
       console.log('loading:', loading);
       console.log('Should show table:', dataToShow.length > 0);
-      return dataToShow.length > 0 ? <EnhancedDataTable columns={getColumnsForCurrentView()} data={dataToShow} onEdit={handleEdit} onAssociate={handleAssociate} onDissociate={dissociateDevice} loading={loading} enablePagination={true} selectedVehicles={selectedVehicles} selectedDevices={selectedDevices} isSelectMode={isSelectMode} isDeviceSelectMode={isDeviceSelectMode} /> : <div className="text-center py-8 text-muted-foreground">
-            Aucune donnée à afficher. Chargement en cours...
-          </div>;
+      return dataToShow.length > 0 ? (
+        <EnhancedDataTable
+          columns={getColumnsForCurrentView()}
+          data={dataToShow}
+          onEdit={handleEdit}
+          onAssociate={handleAssociate}
+          onDissociate={dissociateDevice}
+          loading={loading}
+          enablePagination={true}
+          selectedVehicles={selectedVehicles}
+          selectedDevices={selectedDevices}
+          isSelectMode={isSelectMode}
+          isDeviceSelectMode={isDeviceSelectMode}
+        />
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          Aucune donnée à afficher. Chargement en cours...
+        </div>
+      );
     })()}
 
       {/* Keep existing dialogs and sheets */}
