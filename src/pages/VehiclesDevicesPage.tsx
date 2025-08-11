@@ -686,7 +686,7 @@ export default function VehiclesDevicesPage() {
     id: "modele",
     label: "Modèle",
     sortable: true,
-    visible: true
+    visible: false
   }, {
     id: "sim",
     label: "SIM",
