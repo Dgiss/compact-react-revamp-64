@@ -19,6 +19,7 @@ import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehic
 import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
+import { clearOldCaches } from "@/utils/cache-utils";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -654,7 +655,7 @@ export default function VehiclesDevicesPage() {
     id: "nomVehicule",
     label: "Nom Véhicule",
     sortable: true,
-    visible: true,
+    visible: false,
     renderCell: (value, row) => <span className={!value ? "text-gray-400 italic" : "text-gray-900"}>
         {value || "Nom non défini"}
       </span>
@@ -680,7 +681,7 @@ export default function VehiclesDevicesPage() {
     id: "marque",
     label: "Marque",
     sortable: true,
-    visible: true
+    visible: false
   }, {
     id: "modele",
     label: "Modèle",
@@ -741,7 +742,7 @@ export default function VehiclesDevicesPage() {
     id: "kilometrage",
     label: "Kilométrage",
     sortable: true,
-    visible: true
+    visible: false
   }];
 
   // Define columns specifically for vehicles without devices view
@@ -991,7 +992,7 @@ export default function VehiclesDevicesPage() {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">Véhicules & Dispositifs</h1>
-          <Button variant="ghost" size="sm" onClick={() => setLoadingMode('initial')}>
+          <Button variant="ghost" size="sm" onClick={() => { clearOldCaches(); setFilteredData([]); setCurrentFilters({}); setShowBulkAssociation(false); setLoadingMode('initial'); }}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
