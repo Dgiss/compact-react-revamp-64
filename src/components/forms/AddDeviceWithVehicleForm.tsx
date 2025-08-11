@@ -44,6 +44,7 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
   const [imei, setImei] = useState("");
   const [constructor, setConstructor] = useState("");
   const [sim, setSim] = useState("");
+  const [telephone, setTelephone] = useState("");
   const [typeBoitier, setTypeBoitier] = useState("");
   
   // State management
@@ -187,11 +188,12 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
         companyVehiclesId: companyId,
         company: selectedCompany,
         
-        // Device data
-        imei,
-        constructor: constructor || imei,
-        sim,
-        protocolId: protocolIdNumber
+      // Device data
+      imei,
+      constructor: constructor || imei,
+      sim: telephone || sim,
+      telephone,
+      protocolId: protocolIdNumber
       };
 
       console.log('Creating device with vehicle association:', creationData);
@@ -218,6 +220,7 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
         setImei("");
         setConstructor("");
         setSim("");
+        setTelephone("");
         setTypeBoitier("");
         setEntreprise("");
         
@@ -476,12 +479,19 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Input 
                 placeholder="SIM"
                 value={sim} 
                 onChange={(e) => setSim(e.target.value)}
+              />
+            </div>
+            <div>
+              <Input 
+                placeholder="Téléphone"
+                value={telephone} 
+                onChange={(e) => setTelephone(e.target.value)}
               />
             </div>
             <div>
