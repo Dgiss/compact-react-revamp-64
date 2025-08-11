@@ -56,7 +56,15 @@ export function AppSidebar() {
                   asChild 
                   isActive={location.pathname === item.path}
                 >
-                  <Link to={item.path}>
+                  <Link 
+                    to={item.path}
+                    onClick={(e) => {
+                      if (location.pathname === item.path) {
+                        e.preventDefault();
+                        window.location.reload();
+                      }
+                    }}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </Link>
