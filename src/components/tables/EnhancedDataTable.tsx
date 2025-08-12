@@ -101,14 +101,22 @@ export function EnhancedDataTable({
     return sortConfig.key === key ? sortConfig.direction : undefined;
   };
 
-  // Filter data globally
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
+    
+    // Support multi-token search (comma, space, newline, semicolon, pipe)
+    const tokens = searchTerm
+      .split(/[^0-9A-Za-zÀ-ÿ]+/)
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
     
     return data.filter(item => {
       const value = item[searchColumn];
       if (value === null || value === undefined) return false;
-      return String(value).toLowerCase().includes(searchTerm.toLowerCase());
+      const str = String(value).toLowerCase();
+      return tokens.length <= 1
+        ? str.includes(tokens[0])
+        : tokens.some(t => str.includes(t));
     });
   }, [data, searchTerm, searchColumn]);
 

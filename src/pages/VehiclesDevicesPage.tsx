@@ -424,6 +424,7 @@ export default function VehiclesDevicesPage() {
         const result = await dissociateVehicleFromDevice(item.immatriculation || item.immat);
         console.log('Dissociation result:', result);
         await refreshAfterDissociation("Boîtier dissocié du véhicule avec succès");
+        await refreshCurrentView();
       } else if (item.type === 'device') {
         // Import device dissociation service if it exists
         const {
@@ -433,6 +434,7 @@ export default function VehiclesDevicesPage() {
         const result = await dissociateDeviceFromVehicle(item.vehicleImmat);
         console.log('Dissociation result:', result);
         await refreshAfterDissociation("Véhicule dissocié du boîtier avec succès");
+        await refreshCurrentView();
       }
       console.log('Dissociation completed successfully');
     } catch (err) {

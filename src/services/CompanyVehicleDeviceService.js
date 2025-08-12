@@ -163,10 +163,23 @@ export const searchCompaniesReal = async (searchTerm) => {
 export const filterDevicesLocal = (devices, filters) => {
   const { imei, immatriculation, entreprise } = filters;
   
+  // Support multi-IMEI input (comma, space, newline, semicolon, pipe)
+  const imeiTokens = typeof imei === 'string'
+    ? imei.split(/[^0-9A-Za-z]+/).map(t => t.trim()).filter(Boolean)
+    : Array.isArray(imei) ? imei : [];
+  const hasMultiImei = imeiTokens.length > 1;
+  
   return devices.filter(device => {
-    const imeiMatch = !imei || (device.imei && device.imei.toLowerCase().includes(imei.toLowerCase()));
-    const immatriculationMatch = !immatriculation || (device.immatriculation && device.immatriculation.toLowerCase().includes(immatriculation.toLowerCase()));
-    const entrepriseMatch = !entreprise || (device.entreprise && device.entreprise.toLowerCase().includes(entreprise.toLowerCase()));
+    const dImei = (device.imei || '').toString();
+    const imeiMatch = !imei
+      ? true
+      : hasMultiImei
+        ? imeiTokens.some(token => dImei.toLowerCase().includes(token.toLowerCase()))
+        : (dImei && dImei.toLowerCase().includes(String(imei).toLowerCase()));
+    
+    const immatriculationValue = (device.immatriculation || device.immat || '').toString();
+    const immatriculationMatch = !immatriculation || immatriculationValue.toLowerCase().includes(immatriculation.toLowerCase());
+    const entrepriseMatch = !entreprise || ((device.entreprise || '').toLowerCase().includes(entreprise.toLowerCase()));
     
     return imeiMatch && immatriculationMatch && entrepriseMatch;
   });
@@ -202,7 +215,20 @@ export const getDeviceStatusLocal = (devices, imei) => {
  */
 export const filterByImeiLocal = (devices, imei) => {
   if (!imei) return devices;
-  return devices.filter(device => device.imei && device.imei.toLowerCase().includes(imei.toLowerCase()));
+  const tokens = (typeof imei === 'string' ? imei : String(imei))
+    .split(/[^0-9A-Za-z]+/)
+    .map(t => t.trim())
+    .filter(Boolean);
+  if (tokens.length <= 1) {
+    const term = (tokens[0] || String(imei)).toLowerCase();
+    return devices.filter(device => device.imei && device.imei.toLowerCase().includes(term));
+  }
+  const tokenSet = new Set(tokens.map(t => t.toLowerCase()));
+  return devices.filter(device => {
+    const d = device.imei?.toLowerCase();
+    if (!d) return false;
+    return tokenSet.has(d) || tokens.some(t => d.includes(t.toLowerCase()));
+  });
 };
 
 /**
