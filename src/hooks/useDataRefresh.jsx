@@ -83,8 +83,8 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
     }
   }, [loadAllData, setDevices, searchDevices, currentFilters]);
   
-  const refreshAfterDissociation = useCallback(async (message = "Dissociation réussie") => {
-    return refreshAfterAssociation(message);
+  const refreshAfterDissociation = useCallback(async (message = "Dissociation réussie", updatedItem = null) => {
+    return refreshAfterAssociation(message, updatedItem);
   }, [refreshAfterAssociation]);
   
   const refreshAfterDeletion = useCallback(async (message = "Suppression réussie") => {

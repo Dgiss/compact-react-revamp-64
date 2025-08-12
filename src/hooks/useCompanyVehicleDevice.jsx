@@ -418,8 +418,18 @@ export const useCompanyVehicleDevice = () => {
     }
     
     try {
+      // Normalize/sanitize IMEI input: accept separators and pick the first 15-digit token
+      const raw = typeof imei === 'string' ? imei : String(imei);
+      const tokens = raw
+        .split(/[^0-9A-Za-z]+/)
+        .map(t => t.trim())
+        .filter(Boolean);
+      // Prefer a 15-digit numeric token if present, else the first token
+      const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || raw.trim();
+      const sanitizedImei = preferred;
+
       // First, search locally in the unified cache
-      const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, imei);
+      const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
       if (localResults.length > 0) {
         toast({
           title: "Recherche par IMEI",
@@ -428,13 +438,13 @@ export const useCompanyVehicleDevice = () => {
         return localResults;
       }
 
-      // Fallback to backend exact lookup
+      // Fallback to backend exact lookup with sanitized IMEI
       const { getGraphQLClient } = await import('@/config/aws-config.js');
       const { getDevice } = await import('../graphql/queries');
       const client = await getGraphQLClient();
       const response = await client.graphql({
         query: getDevice,
-        variables: { imei }
+        variables: { imei: sanitizedImei }
       });
       const device = response.data?.getDevice;
       if (device) {

@@ -435,7 +435,14 @@ export default function VehiclesDevicesPage() {
         console.log('Dissociating vehicle with immat:', item.immatriculation || item.immat);
         const result = await dissociateVehicleFromDevice(item.immatriculation || item.immat);
         console.log('Dissociation result:', result);
-        await refreshAfterDissociation("Boîtier dissocié du véhicule avec succès");
+        await refreshAfterDissociation("Boîtier dissocié du véhicule avec succès", {
+          ...item,
+          imei: '',
+          vehicleDeviceImei: null,
+          device: null,
+          isAssociated: false,
+          type: 'vehicle'
+        });
         await refreshCurrentView();
       } else if (item.type === 'device') {
         // Import device dissociation service if it exists
@@ -445,7 +452,13 @@ export default function VehiclesDevicesPage() {
         console.log('Dissociating device with IMEI:', item.imei);
         const result = await dissociateDeviceFromVehicle(item.vehicleImmat);
         console.log('Dissociation result:', result);
-        await refreshAfterDissociation("Véhicule dissocié du boîtier avec succès");
+        await refreshAfterDissociation("Véhicule dissocié du boîtier avec succès", {
+          ...item,
+          vehicleImmat: null,
+          isAssociated: false,
+          entreprise: 'Boîtier libre',
+          type: 'device'
+        });
         await refreshCurrentView();
       }
       console.log('Dissociation completed successfully');
