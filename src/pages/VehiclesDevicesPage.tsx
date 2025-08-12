@@ -190,11 +190,23 @@ export default function VehiclesDevicesPage() {
       // Determine search type based on how many criteria are filled
       const filledCriteria = [searchImei, searchImmat, searchEntreprise].filter(Boolean);
       let results;
+      const isMultiImeiInput = (input: string) => {
+        if (!input) return false;
+        const parts = input.split(/[^0-9A-Za-z]+/).filter(Boolean);
+        if (parts.length > 1) return true;
+        const only = parts[0] || input;
+        return /^\d+$/.test(only) && only.length >= 30 && only.length % 15 === 0;
+      };
       if (filledCriteria.length === 1) {
         // Single criteria search - use specific functions with optimized caching
         if (searchImei) {
-          console.log('Single IMEI search for:', searchImei);
-          results = await searchByImei(searchImei);
+          if (isMultiImeiInput(searchImei)) {
+            console.log('Multi-IMEI search detected, using combined filter');
+            results = await searchDevices({ imei: searchImei });
+          } else {
+            console.log('Single IMEI search for:', searchImei);
+            results = await searchByImei(searchImei);
+          }
         } else if (searchImmat) {
           console.log('Single vehicle search for:', searchImmat);
           results = await searchByVehicle(searchImmat);

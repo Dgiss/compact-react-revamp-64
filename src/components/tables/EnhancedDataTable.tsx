@@ -104,11 +104,19 @@ export function EnhancedDataTable({
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
     
-    // Support multi-token search (comma, space, newline, semicolon, pipe)
-    const tokens = searchTerm
+    // Support multi-token search (comma, space, newline, semicolon, pipe, tab)
+    let tokens = searchTerm
       .split(/[^0-9A-Za-zÀ-ÿ]+/)
       .map(t => t.trim().toLowerCase())
       .filter(Boolean);
+    
+    // If a single numeric token looks like concatenated IMEIs (15n digits), chunk it
+    if (tokens.length === 1 && /^\d+$/.test(tokens[0]) && tokens[0].length >= 30 && tokens[0].length % 15 === 0) {
+      const t = tokens[0];
+      const chunks: string[] = [];
+      for (let i = 0; i < t.length; i += 15) chunks.push(t.slice(i, i + 15));
+      tokens = chunks;
+    }
     
     return data.filter(item => {
       const value = item[searchColumn];

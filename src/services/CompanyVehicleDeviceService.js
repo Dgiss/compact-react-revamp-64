@@ -163,19 +163,36 @@ export const searchCompaniesReal = async (searchTerm) => {
 export const filterDevicesLocal = (devices, filters) => {
   const { imei, immatriculation, entreprise } = filters;
   
-  // Support multi-IMEI input (comma, space, newline, semicolon, pipe)
-  const imeiTokens = typeof imei === 'string'
-    ? imei.split(/[^0-9A-Za-z]+/).map(t => t.trim()).filter(Boolean)
-    : Array.isArray(imei) ? imei : [];
+  // Parse IMEI inputs: support separators and concatenated 15-digit chunks
+  const parseImeis = (input) => {
+    if (!input) return [];
+    const rawTokens = (typeof input === 'string' ? input : String(input))
+      .split(/[^0-9A-Za-z]+/)
+      .map(t => t.trim())
+      .filter(Boolean);
+    let tokens = [...rawTokens];
+    // If a token is digits-only and length is a multiple of 15, split into 15-digit IMEIs
+    const expandToken = (t) => {
+      if (/^\d+$/.test(t) && t.length >= 30 && t.length % 15 === 0) {
+        const chunks = [];
+        for (let i = 0; i < t.length; i += 15) chunks.push(t.slice(i, i + 15));
+        return chunks;
+      }
+      return [t];
+    };
+    tokens = tokens.flatMap(expandToken);
+    return tokens.map(t => t.toLowerCase());
+  };
+  const imeiTokens = parseImeis(imei);
   const hasMultiImei = imeiTokens.length > 1;
   
   return devices.filter(device => {
-    const dImei = (device.imei || '').toString();
+    const dImei = (device.imei || '').toString().toLowerCase();
     const imeiMatch = !imei
       ? true
       : hasMultiImei
-        ? imeiTokens.some(token => dImei.toLowerCase().includes(token.toLowerCase()))
-        : (dImei && dImei.toLowerCase().includes(String(imei).toLowerCase()));
+        ? imeiTokens.some(token => dImei.includes(token))
+        : (dImei && dImei.includes(imeiTokens[0] || String(imei).toLowerCase()));
     
     const immatriculationValue = (device.immatriculation || device.immat || '').toString();
     const immatriculationMatch = !immatriculation || immatriculationValue.toLowerCase().includes(immatriculation.toLowerCase());
@@ -215,19 +232,29 @@ export const getDeviceStatusLocal = (devices, imei) => {
  */
 export const filterByImeiLocal = (devices, imei) => {
   if (!imei) return devices;
-  const tokens = (typeof imei === 'string' ? imei : String(imei))
+  const raw = (typeof imei === 'string' ? imei : String(imei));
+  let tokens = raw
     .split(/[^0-9A-Za-z]+/)
     .map(t => t.trim())
     .filter(Boolean);
+  // Expand concatenated numeric strings into 15-digit chunks
+  tokens = tokens.flatMap(t => {
+    if (/^\d+$/.test(t) && t.length >= 30 && t.length % 15 === 0) {
+      const chunks = [];
+      for (let i = 0; i < t.length; i += 15) chunks.push(t.slice(i, i + 15));
+      return chunks;
+    }
+    return [t];
+  });
   if (tokens.length <= 1) {
-    const term = (tokens[0] || String(imei)).toLowerCase();
+    const term = (tokens[0] || raw).toLowerCase();
     return devices.filter(device => device.imei && device.imei.toLowerCase().includes(term));
   }
-  const tokenSet = new Set(tokens.map(t => t.toLowerCase()));
+  const lowers = tokens.map(t => t.toLowerCase());
   return devices.filter(device => {
     const d = device.imei?.toLowerCase();
     if (!d) return false;
-    return tokenSet.has(d) || tokens.some(t => d.includes(t.toLowerCase()));
+    return lowers.includes(d) || lowers.some(t => d.includes(t));
   });
 };
 
