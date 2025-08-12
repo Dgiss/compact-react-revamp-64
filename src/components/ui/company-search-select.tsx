@@ -117,6 +117,28 @@ export function CompanySearchSelect({
     }
   }, [open, searchCompanies]);
 
+  // Ensure selected company label is available when value is prefilled
+  useEffect(() => {
+    if (!value) return;
+    const exists = companies.some(c => c.id === value || c.name === value);
+    if (exists) return;
+    (async () => {
+      try {
+        const results = await searchCompanies(String(value));
+        if (!Array.isArray(results) || results.length === 0) return;
+        setCompanies(prev => {
+          const merged = [...prev];
+          for (const r of results) {
+            if (!merged.some(c => c.id === r.id)) merged.push(r);
+          }
+          return merged;
+        });
+      } catch (e) {
+        console.error('Error preloading selected company:', e);
+      }
+    })();
+  }, [value, companies, searchCompanies]);
+
   const selectedCompany = useMemo(() => 
     companies.find(company => company.id === value || company.name === value),
     [companies, value]

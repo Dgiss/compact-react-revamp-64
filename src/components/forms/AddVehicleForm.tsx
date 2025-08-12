@@ -72,8 +72,17 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
       setMarque(initialData.marque || "");
       setModele(initialData.modele || "");
       
-      const foundCompany = entreprises.find(company => company.name === initialData.entreprise);
-      setEntreprise(foundCompany ? foundCompany.id || foundCompany.name : initialData.entreprise || "");
+      const inputName = initialData.entreprise || "";
+      const inputId = initialData.companyVehiclesId || initialData.companyId || "";
+      let foundCompany = null as any;
+      if (inputId) {
+        foundCompany = entreprises.find(company => company.id === inputId) || null;
+      }
+      if (!foundCompany && inputName) {
+        foundCompany = entreprises.find(company => company.name === inputName) || null;
+      }
+      const valueToSet = foundCompany ? (foundCompany.id || foundCompany.name) : (inputId || inputName || "");
+      setEntreprise(String(valueToSet));
       
       setEmplacement(initialData.emplacement || "");
       setImei(initialData.imei || "");
