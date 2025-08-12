@@ -17,6 +17,8 @@ import { DevicesBulkAssociation } from "@/components/tables/DevicesBulkAssociati
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { createVehicleSimple, updateVehicleSimple } from "@/services/SimpleVehicleService";
 import { dissociateVehicleFromDevice, deleteVehicleData } from "@/services/VehicleService";
+import { associateDeviceToVehicle } from "@/services/DeviceAssociationService.js";
+import { updateDeviceSimple } from "@/services/SimpleDeviceService.js";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { clearOldCaches } from "@/utils/cache-utils";
@@ -886,12 +888,49 @@ export default function VehiclesDevicesPage() {
     setAssociationMode('company-device');
     setShowAssociateSheet(true);
   };
-  const handleSaveEdit = updatedItem => {
-    updateVehicleData(updatedItem);
-    setShowEditVehicleDialog(false);
-    setSelectedItem(null);
-  };
+  const handleSaveEdit = async (updatedItem) => {
+    try {
+      const prevImei = selectedItem?.imei || selectedItem?.vehicleDeviceImei || '';
+      const immat = updatedItem.immatriculation || updatedItem.immat || selectedItem?.immatriculation || selectedItem?.immat;
+      const desiredImei = String(updatedItem.desiredVehicleDeviceImei || '').trim();
+      const associationChange = updatedItem.associationChange;
+      const deviceUpdates = updatedItem.deviceUpdates || {};
 
+      // 1) Orchestration association/dissociation
+      if ((associationChange === 'dissociate') || (!desiredImei && prevImei)) {
+        await dissociateVehicleFromDevice(immat);
+        toast({ title: 'Succès', description: 'Boîtier dissocié du véhicule avec succès' });
+        await refreshAfterDissociation('Boîtier dissocié du véhicule avec succès', {
+          ...selectedItem,
+          imei: '',
+          vehicleDeviceImei: null,
+          device: null,
+          isAssociated: false,
+          type: 'vehicle'
+        });
+      } else if (associationChange === 'associate' && desiredImei) {
+        await associateDeviceToVehicle(desiredImei, immat);
+        toast({ title: 'Succès', description: `Boîtier ${desiredImei} associé au véhicule ${immat}` });
+        if (deviceUpdates && (deviceUpdates.sim || deviceUpdates.protocolId !== undefined)) {
+          await updateDeviceSimple({ imei: desiredImei, ...deviceUpdates });
+          toast({ title: 'Boîtier mis à jour', description: 'Informations du boîtier mises à jour' });
+        }
+      } else if (associationChange === 'none' && prevImei && deviceUpdates && (deviceUpdates.sim || deviceUpdates.protocolId !== undefined)) {
+        await updateDeviceSimple({ imei: prevImei, ...deviceUpdates });
+        toast({ title: 'Boîtier mis à jour', description: 'Informations du boîtier mises à jour' });
+      }
+
+      // 2) Mise à jour des champs véhicule (sans les champs spéciaux)
+      const { desiredVehicleDeviceImei, associationChange: _ac, deviceUpdates: _du, ...vehicleFields } = updatedItem;
+      await updateVehicleData(vehicleFields);
+    } catch (error) {
+      console.error('Error saving vehicle edit:', error);
+      toast({ title: 'Erreur', description: error.message || 'Erreur lors de la mise à jour', variant: 'destructive' });
+    } finally {
+      setShowEditVehicleDialog(false);
+      setSelectedItem(null);
+    }
+  };
   // Initial view component
   const InitialView = () => <div className="space-y-8 p-8 text-center">
       <div className="space-y-4">

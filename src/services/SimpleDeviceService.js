@@ -164,6 +164,27 @@ export const createDeviceSimple = async (deviceData) => {
 };
 
 /**
+ * Update device fields (sim, protocolId) by IMEI
+ * @param {{ imei: string, sim?: string, protocolId?: number }} params
+ * @returns {Promise<Object>} Updated device
+ */
+export const updateDeviceSimple = async ({ imei, sim, protocolId }) => {
+  return await withCredentialRetry(async () => {
+    if (!imei) throw new Error('IMEI is required');
+
+    const input = { imei: String(imei) };
+    if (sim !== undefined && sim !== null && String(sim).trim() !== '') input.sim = String(sim);
+    if (protocolId !== undefined && protocolId !== null && String(protocolId).trim() !== '') input.protocolId = Number(protocolId);
+
+    const result = await client.graphql({
+      query: mutations.updateDevice,
+      variables: { input }
+    });
+    return result.data.updateDevice;
+  });
+};
+
+/**
  * Associate device to vehicle with complete bidirectional relationship
  * @param {string} vehicleImmat - Vehicle immatriculation
  * @param {string} deviceImei - Device IMEI

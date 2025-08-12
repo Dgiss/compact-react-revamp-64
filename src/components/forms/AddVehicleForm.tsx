@@ -47,6 +47,7 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
   const [entreprises, setEntreprises] = useState([]);
   const [isCreatingDevice, setIsCreatingDevice] = useState(false);
   const [shouldCreateDevice, setShouldCreateDevice] = useState(false);
+  const [dissociateRequested, setDissociateRequested] = useState(false);
   const { loadCompaniesForSelect } = useCompanyVehicleDevice();
 
   useEffect(() => {
@@ -84,6 +85,14 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
     }
   }, [initialData, entreprises]);
 
+  // Normalize/sanitize IMEI input: accept separators and pick the first 15-digit token
+  const normalizeImeiInput = (value: string) => {
+    const raw = typeof value === 'string' ? value : String(value || '');
+    const tokens = raw.split(/[^0-9A-Za-z]+/).map(t => t.trim()).filter(Boolean);
+    const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || '';
+    return preferred;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreatingDevice(true);
@@ -120,6 +129,50 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
           description: "Veuillez sélectionner une entreprise",
           variant: "destructive",
         });
+        return;
+      }
+      
+      // En mode édition de véhicule: on renvoie un payload enrichi et on ne crée pas de boîtier ici
+      if (isEditing && type === "vehicle") {
+        const prevImei = initialData?.imei || initialData?.vehicleDeviceImei || "";
+        const desired = normalizeImeiInput(imei);
+        if (desired && !/^\d{15}$/.test(desired)) {
+          toast({
+            title: "IMEI invalide",
+            description: "L'IMEI doit contenir 15 chiffres",
+            variant: "destructive",
+          });
+          setIsCreatingDevice(false);
+          return;
+        }
+        const protocolIdNumber = typeBoitier ? parseInt(typeBoitier.replace(/[^0-9]/g, '')) || undefined : undefined;
+        const deviceUpdates: any = {};
+        if (sim) deviceUpdates.sim = sim;
+        if (protocolIdNumber !== undefined) deviceUpdates.protocolId = protocolIdNumber;
+
+        let associationChange: 'none' | 'associate' | 'dissociate' = 'none';
+        if (dissociateRequested || (!desired && prevImei)) associationChange = 'dissociate';
+        else if (desired && desired !== prevImei) associationChange = 'associate';
+
+        const payload = {
+          immat: String(immatriculation || ""),
+          immatriculation: String(immatriculation || ""),
+          realImmat: String(immatriculation || ""),
+          nomVehicule: String(nomVehicule || ""),
+          categorie: String(categorie || ""),
+          marque: String(marque || ""),
+          modele: String(modele || ""),
+          entreprise: String(entrepriseName || ""),
+          companyVehiclesId: String(companyId || ""),
+          emplacement: String(emplacement || ""),
+          type: "vehicle",
+          desiredVehicleDeviceImei: String(desired || ""),
+          associationChange,
+          deviceUpdates: Object.keys(deviceUpdates).length ? deviceUpdates : undefined,
+        };
+        if (onSave) onSave(payload);
+        if (onClose) onClose();
+        setIsCreatingDevice(false);
         return;
       }
       
@@ -385,6 +438,28 @@ export default function AddVehicleForm({ onClose, onSave, initialData, isEditing
                 onChange={(e) => setKilometrage(e.target.value)}
               />
             </div>
+          </div>
+        )}
+        
+        {isEditing && isVehicle && (
+          <div className="space-y-3 border rounded-md p-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium">Gestion du boîtier</h3>
+              <Button type="button" variant="outline" onClick={() => { setImei(''); setDissociateRequested(true); }}>
+                Dissocier le boîtier
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                placeholder="IMEI (15 chiffres)"
+                value={imei}
+                onChange={(e) => { setImei(e.target.value); setDissociateRequested(false); }}
+                onBlur={(e) => setImei(normalizeImeiInput(e.target.value))}
+              />
+              <Input placeholder="SIM" value={sim} onChange={(e) => setSim(e.target.value)} />
+              <SearchableSelect options={boitierTypeOptions} value={typeBoitier} onValueChange={setTypeBoitier} placeholder="Type de boîtier" />
+            </div>
+            <p className="text-xs text-muted-foreground">Saisissez un nouvel IMEI pour ré-associer, ou videz pour dissocier.</p>
           </div>
         )}
         
