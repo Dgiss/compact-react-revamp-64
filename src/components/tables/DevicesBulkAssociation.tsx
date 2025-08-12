@@ -26,12 +26,37 @@ export const DevicesBulkAssociation = ({ devices, onAssociationComplete }: Devic
   // Filter devices based on search term
   const filteredDevices = useMemo(() => {
     if (!searchTerm) return devices;
-    
-    return devices.filter(device => 
-      device.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.typeBoitier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.telephone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.entreprise?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    // Multi-IMEI aware search: supports ; , | tab newline spaces and concatenated 15-digit blocks
+    let tokens = searchTerm
+      .split(/[^0-9A-Za-zÀ-ÿ]+/)
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+
+    // If single numeric token looks like concatenated IMEIs (15n digits), split into 15-digit chunks
+    const isConcat = tokens.length === 1 && /^\d+$/.test(tokens[0]) && tokens[0].length >= 30 && tokens[0].length % 15 === 0;
+    if (isConcat) {
+      const t = tokens[0];
+      const chunks: string[] = [];
+      for (let i = 0; i < t.length; i += 15) chunks.push(t.slice(i, i + 15));
+      tokens = chunks;
+    }
+
+    // If multiple tokens (likely multi-IMEI), match any token on IMEI only for precision
+    if (tokens.length > 1) {
+      return devices.filter(device => {
+        const imei = (device.imei || '').toLowerCase();
+        if (!imei) return false;
+        return tokens.some(tok => imei.includes(tok));
+      });
+    }
+
+    const term = tokens[0];
+    return devices.filter(device =>
+      (device.imei?.toLowerCase().includes(term)) ||
+      (device.typeBoitier?.toLowerCase().includes(term)) ||
+      (device.telephone?.toLowerCase().includes(term)) ||
+      (device.entreprise?.toLowerCase().includes(term))
     );
   }, [devices, searchTerm]);
 
