@@ -111,22 +111,28 @@ export function EnhancedDataTable({
       .filter(Boolean);
     
     // If a single numeric token looks like concatenated IMEIs (15n digits), chunk it
-    if (tokens.length === 1 && /^\d+$/.test(tokens[0]) && tokens[0].length >= 30 && tokens[0].length % 15 === 0) {
+    const isConcatNumeric = tokens.length === 1 && /^\d+$/.test(tokens[0]) && tokens[0].length >= 30 && tokens[0].length % 15 === 0;
+    if (isConcatNumeric) {
       const t = tokens[0];
       const chunks: string[] = [];
       for (let i = 0; i < t.length; i += 15) chunks.push(t.slice(i, i + 15));
       tokens = chunks;
     }
     
+    // Auto-target IMEI column when the query looks like IMEI(s)
+    const looksLikeImei = tokens.every(tok => /^\d{10,16}$/.test(tok));
+    const hasImeiColumn = columns.some(c => c.id === 'imei');
+    const effectiveColumn = looksLikeImei && hasImeiColumn ? 'imei' : searchColumn;
+    
     return data.filter(item => {
-      const value = item[searchColumn];
+      const value = item[effectiveColumn];
       if (value === null || value === undefined) return false;
       const str = String(value).toLowerCase();
       return tokens.length <= 1
         ? str.includes(tokens[0])
         : tokens.some(t => str.includes(t));
     });
-  }, [data, searchTerm, searchColumn]);
+  }, [data, searchTerm, searchColumn, columns]);
 
   // Sort data globally (before pagination)
   const sortedData = useMemo(() => {
