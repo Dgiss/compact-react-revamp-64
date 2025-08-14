@@ -121,9 +121,19 @@ export const useCompanyVehicleDevice = () => {
       
       if (sizeInMB > 4) { // Limit to 4MB
         console.warn('Cache data too large, using compact version');
+        // CRITICAL FIX: Don't arbitrarily limit data - use smarter compression
         const ultraCompactData = {
           companies: compactData.companies.slice(0, 50),
-          vehicles: compactData.vehicles.slice(0, 200),
+          // FIXED: Keep ALL vehicles but with minimal data for devices
+          vehicles: compactData.vehicles.map(v => ({
+            immat: v.immat,
+            type: v.type,
+            deviceImei: v.deviceImei,
+            // Keep only essential fields for search
+            id: v.id,
+            companyVehiclesId: v.companyVehiclesId,
+            isAssociated: v.isAssociated
+          })),
           timestamp: Date.now()
         };
         localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(ultraCompactData));
@@ -136,19 +146,22 @@ export const useCompanyVehicleDevice = () => {
       if (error.name === 'QuotaExceededError') {
         console.error('LocalStorage quota exceeded, clearing cache');
         localStorage.removeItem('fleetwatch_vehicle_cache');
-        // Try saving minimal data only
+        // Try saving minimal data only - but keep ALL IMEIs
         try {
           const minimalData = {
             companies: (data.companies || []).slice(0, 10).map(c => ({ id: c.id, name: c.name })),
-            vehicles: (data.vehicles || []).slice(0, 50).map(v => ({ 
+            // CRITICAL: Keep ALL devices but only essential search fields
+            vehicles: (data.vehicles || []).map(v => ({ 
               immat: v.immat || v.immatriculation, 
               type: v.type,
-              deviceImei: v.device?.imei || null
+              deviceImei: v.device?.imei || v.deviceImei,
+              id: v.id,
+              isAssociated: v.isAssociated
             })),
             timestamp: Date.now()
           };
           localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(minimalData));
-          console.log('Saved minimal cache after quota error');
+          console.log('Saved minimal cache after quota error - ALL vehicles preserved');
         } catch (fallbackError) {
           console.error('Failed to save even minimal cache:', fallbackError);
         }
