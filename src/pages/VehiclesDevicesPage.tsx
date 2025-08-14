@@ -47,18 +47,7 @@ export default function VehiclesDevicesPage() {
     getVehiclesWithoutDevices,
     getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
-    getUnassociatedItemsStats,
-    // RESTORED: Batch loading states and functions
-    isLoadingAll,
-    showProgressBar,
-    loadingProgress,
-    cancelSearch,
-    fetchAllVehicles,
-    fetchVehiclesWithoutImei,
-    fetchDevicesWithoutVehicles,
-    cancelOngoingSearch,
-    // Unified data for display
-    batchLoadedData
+    getUnassociatedItemsStats
   } = useCompanyVehicleDevice();
 
   // Local state for filtered data when using search
@@ -952,76 +941,36 @@ export default function VehiclesDevicesPage() {
       </div>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-        <Button onClick={fetchVehiclesWithoutImei} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading || isLoadingAll}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        <Button onClick={() => searchVehiclesWithEmptyImeiOptimized()} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
           <Car className="h-6 w-6 mb-2" />
           <div>
             <div className="font-medium">Véhicules sans IMEI</div>
-            <div className="text-sm text-muted-foreground">Chargement par lots rapide</div>
+            <div className="text-sm text-muted-foreground">Voir les véhicules avec IMEI vide</div>
           </div>
         </Button>
 
-        <Button onClick={fetchDevicesWithoutVehicles} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading || isLoadingAll}>
-          <Smartphone className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Boîtiers libres</div>
-            <div className="text-sm text-muted-foreground">Devices sans véhicules</div>
-          </div>
-        </Button>
-
-        <Button onClick={fetchAllVehicles} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading || isLoadingAll}>
-          <Database className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Charger TOUT</div>
-            <div className="text-sm text-muted-foreground">Tous véhicules (avec confirmation)</div>
-          </div>
-        </Button>
-
-        <Button onClick={() => loadAllData('optimized')} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading || isLoadingAll}>
-          <Wifi className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Charger (Cache)</div>
-            <div className="text-sm text-muted-foreground">Utilise le cache optimisé</div>
-          </div>
-        </Button>
-        
         <Button onClick={() => {
         searchDevicesWithoutVehiclesOptimized();
         setShowBulkAssociation(true);
-      }} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading || isLoadingAll}>
-          <Link className="h-6 w-6 mb-2" />
+      }} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
+          <Smartphone className="h-6 w-6 mb-2" />
           <div>
-            <div className="font-medium">Association en masse</div>
-            <div className="text-sm text-muted-foreground">Associer plusieurs devices</div>
+            <div className="font-medium">Devices sans IMEI</div>
+            <div className="text-sm text-muted-foreground">Voir et associer en masse</div>
           </div>
         </Button>
 
-        {isLoadingAll && (
-          <Button onClick={cancelOngoingSearch} variant="destructive" className="h-20 text-left flex flex-col items-start justify-center p-4">
-            <X className="h-6 w-6 mb-2" />
-            <div>
-              <div className="font-medium">Annuler</div>
-              <div className="text-sm text-muted-foreground">Arrêter le chargement</div>
-            </div>
-          </Button>
-        )}
-      </div>
+        
 
-      {/* Progress Bar for batch loading */}
-      {showProgressBar && (
-        <div className="max-w-2xl mx-auto p-4 border rounded-lg bg-card">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Chargement en cours...</span>
-            <span className="text-sm text-muted-foreground">{loadingProgress}%</span>
+        <Button onClick={() => loadAllData('optimized')} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
+          <Database className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Charger tout (Optimisé)</div>
+            <div className="text-sm text-muted-foreground">Nouvelle requête optimisée</div>
           </div>
-          <div className="w-full bg-secondary rounded-full h-2">
-            <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${loadingProgress}%` }}
-            />
-          </div>
-        </div>
-      )}
+        </Button>
+      </div>
 
       <div className="flex gap-2 justify-center">
         <Button onClick={() => setShowAddVehicleDialog(true)}>
@@ -1243,9 +1192,7 @@ export default function VehiclesDevicesPage() {
       {/* Table pour les vues spécialisées */}
       {(() => {
       if (showBulkAssociation) return null;
-      // Prioritize batch loaded data, then filtered data, then combined data
-      const dataToShow = batchLoadedData.length > 0 ? batchLoadedData : 
-                        filteredData.length > 0 ? filteredData : combinedData;
+      const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
       console.log('=== TABLE DISPLAY DEBUG ===');
       console.log('filteredData.length:', filteredData.length);
       console.log('combinedData.length:', combinedData.length);
