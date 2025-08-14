@@ -159,35 +159,32 @@ export const useCompanyVehicleDevice = () => {
     return null;
   }, [buildSearchIndexes]);
 
-  // Load all data - ULTRA-OPTIMIZED with enriched GraphQL query and parallel processing
+  // Load all data - ULTRA-FAST with massive parallel loading
   const loadAllData = useCallback(async (mode = 'optimized') => {
     setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`=== ULTRA-OPTIMIZED LOADING (${mode.toUpperCase()}) ===`);
+      console.log(`=== ⚡ ULTRA-FAST LOADING (${mode.toUpperCase()}) ===`);
       
       const startTime = Date.now();
       const timer = new PerformanceTimer();
       let result;
       
-      if (mode === 'complete') {
-        // Complete dataset using enriched GraphQL query
-        console.log('Using enriched complete query...');
-        result = await VehicleService.fetchCompaniesWithVehicles();
-      } else {
-        // Optimized: enriched vehicles query + free devices merged with parallel processing
-        console.log('Using ULTRA-optimized parallel query + free devices merge...');
-        const [base, free] = await Promise.all([
-          VehicleService.fetchAllVehiclesOptimized(),
-          CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
-        ]);
-        result = {
-          companies: base.companies || [],
-          vehicles: [...(base.vehicles || []), ...(free || [])]
-        };
-      }
+      // Always use the fastest optimized mode with massive parallel loading
+      console.log('🚀 Using ULTRA-FAST massive parallel loading...');
+      
+      // Launch both queries simultaneously for maximum speed
+      const [base, free] = await Promise.all([
+        VehicleService.fetchAllVehiclesOptimized(),
+        CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
+      ]);
+      
+      result = {
+        companies: base.companies || [],
+        vehicles: [...(base.vehicles || []), ...(free || [])]
+      };
       
       const loadTime = Date.now() - startTime;
       const metrics = timer.stop(result.vehicles?.length || 0);
@@ -542,19 +539,20 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [quickStats, isCacheReady, allDataCache]);
 
-  // Initialize hook with cached data
+  // Initialize hook with ULTRA-FAST cache + background refresh
   useEffect(() => {
     const initializeData = async () => {
       try {
-        // Load cached data first
+        // INSTANT: Load cached data first for immediate UI response
         const cached = loadFromLocalStorage();
-        if (cached) {
+        if (cached && cached.vehicles?.length > 0) {
+          console.log('⚡ INSTANT cache loading - UI ready immediately');
           setCompanies(cached.companies || []);
           setDevices(cached.vehicles || []);
           setAllDataCache(cached);
           setIsCacheReady(true);
           
-          // Calculate stats from cached data
+          // Calculate instant stats from cache
           const vehicles = cached.vehicles || [];
           const vehicleCount = vehicles.filter(item => item.type === "vehicle").length;
           const freeDevicesCount = vehicles.filter(item => item.type === "device" && !item.isAssociated).length;
@@ -563,17 +561,27 @@ export const useCompanyVehicleDevice = () => {
             vehicleCount,
             freeDeviceCount: freeDevicesCount
           });
+          
+          // BACKGROUND: Start ultra-fast refresh for data freshness
+          setTimeout(() => {
+            console.log('🔄 Starting background ultra-fast refresh...');
+            loadAllData('optimized').catch(console.warn);
+          }, 50); // Ultra-quick background refresh
+        } else {
+          // No cache, trigger ultra-fast loading immediately
+          console.log('🚀 No cache - starting immediate ultra-fast loading');
+          await loadAllData('optimized');
         }
-        
-        // Load quick stats
-        await loadQuickStats();
       } catch (error) {
-        console.warn('Error initializing cached data:', error);
+        console.warn('Error during ultra-fast initialization:', error);
+        // Fallback to ultra-fast loading
+        await loadAllData('optimized');
       }
     };
     
+    // Immediate initialization - no delay
     initializeData();
-  }, [loadFromLocalStorage, loadQuickStats]);
+  }, [loadFromLocalStorage, loadAllData]);
 
   // Reset filters by reloading all data
   const resetFilters = useCallback(async () => {

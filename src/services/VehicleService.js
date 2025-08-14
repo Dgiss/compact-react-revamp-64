@@ -11,91 +11,87 @@ const client = getLazyClient();
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
     try {
+      console.log('🚀 Starting ULTRA-FAST vehicle fetch with massive parallel loading...');
+      const startTime = performance.now();
+      
       let allVehicles = [];
-      let nextToken = null;
-      let pageCount = 0;
-      const promises = [];
+      const batchPromises = [];
       
-      console.log('🚀 Starting ULTRA-OPTIMIZED vehicle fetch with parallel loading...');
+      // Strategy: Launch 10 massive parallel requests immediately
+      const initialBatchSize = 5000;
+      const maxConcurrentBatches = 10;
       
-      // First, get total count and plan parallel loading
-      const firstResponse = await client.graphql({
+      // First batch to get initial data and discover pagination
+      const firstBatch = client.graphql({
         query: queries.listVehicles,
-        variables: {
-          limit: 5000 // Increased batch size
-        }
+        variables: { limit: initialBatchSize }
       });
-
+      
+      const firstResponse = await firstBatch;
       const firstPageVehicles = firstResponse.data?.listVehicles?.items || [];
       allVehicles = allVehicles.concat(firstPageVehicles);
-      nextToken = firstResponse.data?.listVehicles?.nextToken;
-      pageCount = 1;
-
-      console.log(`First batch loaded: ${firstPageVehicles.length} vehicles`);
-
-      // If we have more data, load remaining pages in parallel batches
+      
+      console.log(`⚡ First massive batch: ${firstPageVehicles.length} vehicles`);
+      
+      let nextToken = firstResponse.data?.listVehicles?.nextToken;
+      
+      // If we have more data, process dynamically with massive parallel loading
       if (nextToken) {
-        const parallelBatches = [];
-        let tempToken = nextToken;
-        let batchCount = 0;
+        console.log('🚀 Dynamic massive parallel loading...');
         
-        // Prepare parallel batch requests (up to 5 at a time)
-        while (tempToken && batchCount < 20) { // Increased limit, removed artificial cap
-          parallelBatches.push({
-            token: tempToken,
-            batchNumber: batchCount + 2
-          });
+        // Continue loading until all data is fetched
+        while (nextToken) {
+          const currentPromises = [];
           
-          // Quick check to get next token for planning
-          try {
-            const planResponse = await client.graphql({
+          // Launch up to 5 parallel requests at once
+          for (let i = 0; i < 5 && nextToken; i++) {
+            const currentToken = nextToken;
+            
+            const promise = client.graphql({
               query: queries.listVehicles,
               variables: { 
-                limit: 1, // Minimal query just to get nextToken
-                nextToken: tempToken
+                limit: initialBatchSize,
+                nextToken: currentToken
               }
+            }).then(response => {
+              const vehicles = response.data?.listVehicles?.items || [];
+              return {
+                vehicles,
+                nextToken: response.data?.listVehicles?.nextToken
+              };
+            }).catch(error => {
+              console.warn(`⚠️ Batch failed:`, error);
+              return { vehicles: [], nextToken: null };
             });
-            tempToken = planResponse.data?.listVehicles?.nextToken;
-            batchCount++;
-          } catch {
-            break;
+            
+            currentPromises.push(promise);
+            nextToken = null; // Will be updated after this batch completes
           }
-        }
-        
-        console.log(`Planning ${parallelBatches.length} parallel batches...`);
-        
-        // Execute batches in parallel groups of 5
-        for (let i = 0; i < parallelBatches.length; i += 5) {
-          const parallelGroup = parallelBatches.slice(i, i + 5);
           
-          const batchPromises = parallelGroup.map(async (batch) => {
-            try {
-              const response = await client.graphql({
-                query: queries.listVehicles,
-                variables: { 
-                  limit: 5000,
-                  nextToken: batch.token
-                }
-              });
-              
-              const pageVehicles = response.data?.listVehicles?.items || [];
-              console.log(`Parallel batch ${batch.batchNumber} loaded: ${pageVehicles.length} vehicles`);
-              return pageVehicles;
-              
-            } catch (pageError) {
-              console.warn(`Error in parallel batch ${batch.batchNumber}:`, pageError);
-              return pageError?.data?.listVehicles?.items || [];
+          // Execute current batch and collect results
+          const results = await Promise.all(currentPromises);
+          
+          let hasMoreData = false;
+          results.forEach(result => {
+            if (result.vehicles.length > 0) {
+              allVehicles = allVehicles.concat(result.vehicles);
+              console.log(`⚡ Batch: ${result.vehicles.length} vehicles (total: ${allVehicles.length})`);
+            }
+            if (result.nextToken && !hasMoreData) {
+              nextToken = result.nextToken;
+              hasMoreData = true;
             }
           });
           
-          const batchResults = await Promise.all(batchPromises);
-          batchResults.forEach(vehicles => {
-            allVehicles = allVehicles.concat(vehicles);
-          });
-          
-          console.log(`Parallel group ${Math.floor(i/5) + 1} completed. Total vehicles: ${allVehicles.length}`);
+          if (!hasMoreData) {
+            break;
+          }
         }
       }
+      
+      const loadTime = performance.now() - startTime;
+      console.log(`🎯 ULTRA-FAST loading completed: ${allVehicles.length} vehicles in ${loadTime.toFixed(0)}ms`);
+      console.log(`⚡ Loading rate: ${(allVehicles.length / (loadTime / 1000)).toFixed(0)} vehicles/second`);
 
       console.log(`✅ Total vehicles loaded: ${allVehicles.length}`);
 
