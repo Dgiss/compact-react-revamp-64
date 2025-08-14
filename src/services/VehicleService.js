@@ -24,6 +24,9 @@ export const fetchAllVehiclesOptimized = async () => {
               nomVehicule
               companyVehiclesId
               vehicleDeviceImei
+              marque
+              modele
+              kilometrage
               company {
                 name
               }
@@ -37,6 +40,13 @@ export const fetchAllVehiclesOptimized = async () => {
             nextToken
           }
         }`
+      });
+
+      console.log('First page vehicles response:', {
+        hasData: !!firstResponse.data,
+        hasVehicles: !!firstResponse.data?.listVehicles,
+        vehicleCount: firstResponse.data?.listVehicles?.items?.length || 0,
+        hasNextToken: !!firstResponse.data?.listVehicles?.nextToken
       });
 
       const firstPageVehicles = firstResponse.data?.listVehicles?.items || [];
@@ -140,11 +150,60 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.warn('VehicleService: Non-critical error during fetch, returning partial data:', error);
-      return {
-        companies: [],
-        vehicles: []
-      };
+      console.error('VehicleService.fetchAllVehiclesOptimized - DETAILED ERROR:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        errors: error.errors,
+        stack: error.stack,
+        fullError: error
+      });
+      
+      // Instead of returning empty data, let's try a fallback approach
+      console.warn('Attempting fallback: trying to fetch vehicles without company optimization...');
+      
+      try {
+        // Fallback: try basic vehicle fetch without company optimization
+        const fallbackResult = await withCredentialRetry(async () => {
+          const vehiclesResponse = await client.graphql({
+            query: queries.listVehicles,
+            variables: { limit: 1000 }
+          });
+          
+          const vehicles = vehiclesResponse.data?.listVehicles?.items || [];
+          console.log('Fallback vehicles loaded:', vehicles.length);
+          
+          return {
+            companies: [], // We'll load companies separately if needed
+            vehicles: vehicles.map(vehicle => ({
+              id: vehicle.immat,
+              entreprise: vehicle.companyVehiclesId || "Entreprise inconnue",
+              type: "vehicle",
+              immatriculation: vehicle.immat,
+              nomVehicule: vehicle.nomVehicule || "",
+              imei: vehicle.vehicleDeviceImei || "",
+              typeBoitier: "",
+              marque: vehicle.marque || "",
+              modele: vehicle.modele || "",
+              kilometrage: vehicle.kilometrage || "",
+              telephone: "",
+              emplacement: "",
+              vehicleData: vehicle,
+              isAssociated: !!vehicle.vehicleDeviceImei
+            }))
+          };
+        });
+        
+        console.log('Fallback successful, returning partial data');
+        return fallbackResult;
+        
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        return {
+          companies: [],
+          vehicles: []
+        };
+      }
     }
   });
 };
