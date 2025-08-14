@@ -136,10 +136,11 @@ export const fetchAllVehiclesOptimized = async () => {
       console.warn('Attempting fallback: trying to fetch vehicles without company optimization...');
       
       try {
-        // Fallback: try basic vehicle fetch without company/device relationships
-        const fallbackResult = await withCredentialRetry(async () => {
+        // Strategy 1: Ultra-minimal query with only essential fields
+        console.log('Fallback Strategy 1: Ultra-minimal vehicle query');
+        const minimalResult = await withCredentialRetry(async () => {
           const vehiclesResponse = await client.graphql({
-            query: `query FallbackVehicles {
+            query: `query MinimalVehicles {
               listVehicles(limit: 1000) {
                 items {
                   immat
@@ -147,9 +148,6 @@ export const fetchAllVehiclesOptimized = async () => {
                   nomVehicule
                   companyVehiclesId
                   vehicleDeviceImei
-                  marque
-                  modele
-                  kilometrage
                 }
                 nextToken
               }
@@ -157,38 +155,99 @@ export const fetchAllVehiclesOptimized = async () => {
           });
           
           const vehicles = vehiclesResponse.data?.listVehicles?.items || [];
-          console.log('Fallback vehicles loaded:', vehicles.length);
+          console.log('Minimal fallback vehicles loaded:', vehicles.length);
           
           return {
-            companies: [], // We'll load companies separately if needed
-            vehicles: vehicles.map(vehicle => ({
-              id: vehicle.immat,
-              entreprise: vehicle.companyVehiclesId || "Entreprise inconnue",
-              type: "vehicle",
-              immatriculation: vehicle.immat,
-              nomVehicule: vehicle.nomVehicule || "",
-              imei: vehicle.vehicleDeviceImei || "",
-              typeBoitier: "",
-              marque: vehicle.marque || "",
-              modele: vehicle.modele || "",
-              kilometrage: vehicle.kilometrage || "",
-              telephone: "",
-              emplacement: "",
-              vehicleData: vehicle,
-              isAssociated: !!vehicle.vehicleDeviceImei
-            }))
+            companies: [],
+            vehicles: vehicles.map((vehicle, index) => {
+              try {
+                return {
+                  id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
+                  type: "vehicle",
+                  immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
+                  entreprise: vehicle?.companyVehiclesId || "Non définie",
+                  nomVehicule: vehicle?.nomVehicule || "",
+                  imei: vehicle?.vehicleDeviceImei || "",
+                  telephone: "",
+                  typeBoitier: "",
+                  marque: "",
+                  modele: "",
+                  kilometrage: "",
+                  emplacement: "",
+                  isAssociated: !!vehicle?.vehicleDeviceImei,
+                  companyVehiclesId: vehicle?.companyVehiclesId,
+                  vehicleDeviceImei: vehicle?.vehicleDeviceImei,
+                  deviceData: null,
+                  vehicleData: vehicle
+                };
+              } catch (mappingError) {
+                console.warn('Error mapping vehicle:', mappingError);
+                return null;
+              }
+            }).filter(Boolean)
           };
         });
         
-        console.log('Fallback successful, returning partial data');
-        return fallbackResult;
+        console.log('Strategy 1 successful, returning:', minimalResult.vehicles.length, 'vehicles');
+        return minimalResult;
         
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
-        return {
-          companies: [],
-          vehicles: []
-        };
+      } catch (strategy1Error) {
+        console.warn('Strategy 1 failed:', strategy1Error);
+        
+        // Strategy 2: Even more minimal - just essential vehicle identification
+        try {
+          console.log('Fallback Strategy 2: Essential fields only');
+          const essentialResult = await withCredentialRetry(async () => {
+            const vehiclesResponse = await client.graphql({
+              query: `query EssentialVehicles {
+                listVehicles(limit: 1000) {
+                  items {
+                    immat
+                    immatriculation
+                  }
+                  nextToken
+                }
+              }`
+            });
+            
+            const vehicles = vehiclesResponse.data?.listVehicles?.items || [];
+            console.log('Essential fallback vehicles loaded:', vehicles.length);
+            
+            return {
+              companies: [],
+              vehicles: vehicles.map((vehicle, index) => ({
+                id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
+                type: "vehicle",
+                immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
+                entreprise: "Non définie",
+                nomVehicule: "",
+                imei: "",
+                telephone: "",
+                typeBoitier: "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                emplacement: "",
+                isAssociated: false,
+                companyVehiclesId: null,
+                vehicleDeviceImei: null,
+                deviceData: null,
+                vehicleData: vehicle
+              })).filter(v => v.immatriculation)
+            };
+          });
+          
+          console.log('Strategy 2 successful, returning:', essentialResult.vehicles.length, 'vehicles');
+          return essentialResult;
+          
+        } catch (strategy2Error) {
+          console.error('All fallback strategies failed:', strategy2Error);
+          // Return empty data but continue with devices
+          return {
+            companies: [],
+            vehicles: []
+          };
+        }
       }
     }
   });
