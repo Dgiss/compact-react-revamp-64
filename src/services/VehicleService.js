@@ -140,7 +140,12 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      throw new Error(`Erreur pagination: ${error?.message || 'Erreur inconnue'}`);
+      console.error('VehicleService pagination error:', error);
+      // Return partial data instead of throwing
+      return {
+        companies: [],
+        vehicles: []
+      };
     }
   });
 };

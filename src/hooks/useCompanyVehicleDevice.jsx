@@ -30,6 +30,9 @@ export const useCompanyVehicleDevice = () => {
   const [showProgressBar, setShowProgressBar] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [cancelSearch, setCancelSearch] = useState(false);
+  
+  // State unification for table display
+  const [batchLoadedData, setBatchLoadedData] = useState([]);
 
   // Performance guards
   const loadingRef = useRef(false);
@@ -966,6 +969,8 @@ export const useCompanyVehicleDevice = () => {
 
   // Reset to show all data
   const resetFilters = useCallback(() => {
+    // Clear batch loaded data when resetting
+    setBatchLoadedData([]);
     loadAllData();
   }, [loadAllData]);
 
@@ -1039,26 +1044,34 @@ export const useCompanyVehicleDevice = () => {
         }
       } while (nextToken);
       
+      // Update both states for proper table display
       setDevices([...allVehicles]);
+      setBatchLoadedData([...allVehicles]);
       
       if (!cancelSearch) {
         toast({
           title: "Chargement terminé",
-          description: `${allVehicles.length} véhicules récupérés au total`,
+          description: `${allVehicles.length} véhicules chargés avec succès`,
         });
       }
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      console.error('Erreur lors de la récupération de tous les véhicules:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
+      console.error('Error loading vehicles:', error);
+      setError(error.message);
+      
+      // Don't show error toast if operation was cancelled
+      if (!cancelSearch) {
+        toast({
+          title: "Erreur",
+          description: `Erreur lors du chargement: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoadingAll(false);
       setShowProgressBar(false);
+      setLoadingProgress(0);
       setCancelSearch(false);
     }
   }, []);
@@ -1130,26 +1143,33 @@ export const useCompanyVehicleDevice = () => {
         }
       } while (nextToken);
       
+      // Update both states for proper table display
       setDevices([...allVehicles]);
+      setBatchLoadedData([...allVehicles]);
       
       if (!cancelSearch) {
         toast({
-          title: "Recherche terminée",
-          description: `${allVehicles.length} véhicules sans IMEI trouvés`,
+          title: "Véhicules sans boîtiers",
+          description: `${allVehicles.length} véhicules sans boîtiers trouvés`,
         });
       }
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      console.error('Erreur lors de la récupération des véhicules sans IMEI:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
+      console.error('Error loading vehicles without devices:', error);
+      setError(error.message);
+      
+      if (!cancelSearch) {
+        toast({
+          title: "Erreur",
+          description: `Erreur lors du chargement: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoadingAll(false);
       setShowProgressBar(false);
+      setLoadingProgress(0);
       setCancelSearch(false);
     }
   }, []);
@@ -1246,26 +1266,33 @@ export const useCompanyVehicleDevice = () => {
         protocolId: device.protocolId,
         type: 'device'
       }));
+      // Update both states for proper table display
       setDevices(adaptedDevices);
+      setBatchLoadedData(adaptedDevices);
       
       if (!cancelSearch) {
         toast({
-          title: "Recherche terminée",
-          description: `${allDevices.length} devices sans véhicules trouvés`,
+          title: "Boîtiers sans véhicules",
+          description: `${allDevices.length} boîtiers sans véhicules trouvés`,
         });
       }
       
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      console.error('Erreur lors de la récupération des devices sans véhicules:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
+      console.error('Error loading devices without vehicles:', error);
+      setError(error.message);
+      
+      if (!cancelSearch) {
+        toast({
+          title: "Erreur",
+          description: `Erreur lors du chargement: ${error.message}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoadingAll(false);
       setShowProgressBar(false);
+      setLoadingProgress(0);
       setCancelSearch(false);
     }
   }, []);
@@ -1339,7 +1366,10 @@ export const useCompanyVehicleDevice = () => {
     fetchAllVehicles,
     fetchVehiclesWithoutImei,
     fetchDevicesWithoutVehicles,
-    cancelOngoingSearch
+    cancelOngoingSearch,
+    
+    // Unified data state for table display
+    batchLoadedData
   };
 };
 

@@ -56,7 +56,9 @@ export default function VehiclesDevicesPage() {
     fetchAllVehicles,
     fetchVehiclesWithoutImei,
     fetchDevicesWithoutVehicles,
-    cancelOngoingSearch
+    cancelOngoingSearch,
+    // Unified data for display
+    batchLoadedData
   } = useCompanyVehicleDevice();
 
   // Local state for filtered data when using search
@@ -1241,7 +1243,9 @@ export default function VehiclesDevicesPage() {
       {/* Table pour les vues spécialisées */}
       {(() => {
       if (showBulkAssociation) return null;
-      const dataToShow = filteredData.length > 0 ? filteredData : combinedData;
+      // Prioritize batch loaded data, then filtered data, then combined data
+      const dataToShow = batchLoadedData.length > 0 ? batchLoadedData : 
+                        filteredData.length > 0 ? filteredData : combinedData;
       console.log('=== TABLE DISPLAY DEBUG ===');
       console.log('filteredData.length:', filteredData.length);
       console.log('combinedData.length:', combinedData.length);
