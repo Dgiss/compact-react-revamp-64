@@ -5001,6 +5001,23 @@ export const listDevices = /* GraphQL */ `
             updatedAt
             __typename
           }
+          device {
+            imei
+            protocolId
+            sim
+            createdAt
+            updatedAt
+            deviceVehicleImmat
+            __typename
+          }
+          alerts {
+            nextToken
+            __typename
+          }
+          tags {
+            nextToken
+            __typename
+          }
           createdAt
           updatedAt
           vehicleVehicleCategoryId
@@ -5009,8 +5026,7 @@ export const listDevices = /* GraphQL */ `
           vehicleDeviceImei
           __typename
         }
-        createdAt
-        updatedAt
+        deviceVehicleImmat
         __typename
       }
       nextToken
