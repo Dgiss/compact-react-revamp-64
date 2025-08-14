@@ -190,8 +190,8 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
             console.log('🔄 Cache updated after dissociation with fresh timestamp');
             
             // Update the allDataCache reference if it exists
-            if ((window as any).allDataCache) {
-              (window as any).allDataCache = cachedData;
+            if (window.allDataCache) {
+              window.allDataCache = cachedData;
               console.log('🔄 Updated global allDataCache reference');
             }
           }
