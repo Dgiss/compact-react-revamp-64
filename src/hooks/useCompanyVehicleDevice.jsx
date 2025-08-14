@@ -22,8 +22,9 @@ export const useCompanyVehicleDevice = () => {
   const [companiesReady, setCompaniesReady] = useState(false);
   
   // Loading mode states
-  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete', 'optimized'
+  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete', 'optimized', 'scan'
   const [quickStats, setQuickStats] = useState(null);
+  const [scanMetrics, setScanMetrics] = useState(null);
 
   // Performance guards
   const loadingRef = useRef(false);
@@ -173,6 +174,131 @@ export const useCompanyVehicleDevice = () => {
       console.error('Background refresh failed:', error);
     }
   };
+
+  /**
+   * COMPLETE SCAN of Vehicle table - exhaustive loading without limits
+   * For debugging and ensuring all vehicles are displayed
+   */
+  const loadCompleteVehicleScan = useCallback(async () => {
+    // Prevent concurrent loading
+    if (loadingRef.current) {
+      console.log('⏹️ Scan already in progress, skipping...');
+      return;
+    }
+    
+    loadingRef.current = true;
+    setLoadingMode('scan');
+    setLoading(true);
+    setError(null);
+    setScanMetrics(null);
+    
+    try {
+      console.log('🔍 === COMPLETE VEHICLE SCAN STARTED ===');
+      
+      const startTime = Date.now();
+      
+      // Use the new complete scan service method
+      console.log('🔍 Using exhaustive scan with unlimited pagination...');
+      const result = await VehicleService.scanCompaniesWithVehicles();
+      
+      const loadTime = result.loadTime || (Date.now() - startTime);
+      console.log(`🎯 === COMPLETE SCAN COMPLETED IN ${loadTime}ms ===`);
+      console.log('📊 Scan Results:', {
+        companies: result.companies?.length || 0,
+        totalItems: result.vehicles?.length || 0,
+        vehicleCount: result.stats?.vehicleCount || 0,
+        freeDeviceCount: result.stats?.freeDeviceCount || 0,
+        scanMetrics: result.scanMetrics
+      });
+      
+      // Store scan metrics for debugging
+      setScanMetrics(result.scanMetrics);
+      
+      // Update state with complete data
+      setCompanies(result.companies || []);
+      setDevices(result.vehicles || []);
+      
+      // Cache complete scan results
+      setAllDataCache(result);
+      setIsCacheReady(true);
+      
+      // Save complete scan to localStorage in background
+      setTimeout(() => {
+        try {
+          saveToLocalStorage(result);
+        } catch (cacheError) {
+          console.warn('Complete scan cache save failed:', cacheError);
+        }
+      }, 0);
+      
+      // Calculate comprehensive stats
+      const vehicles = result.vehicles || [];
+      const vehicleCount = result.stats?.vehicleCount || vehicles.filter(item => item.type === "vehicle").length;
+      const freeDevicesCount = result.stats?.freeDeviceCount || vehicles.filter(item => 
+        item.type === "device" && !item.isAssociated
+      ).length;
+      const associatedDeviceCount = vehicles.filter(item => 
+        item.type === "device" && item.isAssociated
+      ).length;
+      
+      setFreeDevices(freeDevicesCount);
+      setStats({
+        vehicleCount,
+        associatedDeviceCount,
+        freeDeviceCount: freeDevicesCount,
+        totalItems: vehicles.length,
+        loadTime,
+        isCompleteScan: true,
+        scanMetrics: result.scanMetrics
+      });
+      
+      // Success notification with scan details
+      const loadTimeSeconds = (loadTime / 1000).toFixed(1);
+      const batchCount = result.scanMetrics?.batchCount || 0;
+      toast({
+        title: "🔍 Scan complet terminé",
+        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${batchCount} batches, ${loadTimeSeconds}s)`,
+      });
+      
+    } catch (err) {
+      console.error('❌ Complete vehicle scan error:', err);
+      setError(err.message || 'Erreur lors du scan complet');
+      setScanMetrics(null);
+      
+      // Try to recover with cached data
+      const cachedData = loadFromLocalStorage();
+      if (cachedData) {
+        console.log('🔄 Recovering with cached data after scan failure...');
+        setCompanies(cachedData.companies || []);
+        setDevices(cachedData.vehicles || []);
+        setAllDataCache(cachedData);
+        setIsCacheReady(true);
+        
+        toast({
+          title: "⚠️ Scan échoué - Cache utilisé",
+          description: "Utilisation des données en cache après échec du scan",
+          variant: "destructive"
+        });
+      } else {
+        // Complete failure - reset states
+        setCompanies([]);
+        setDevices([]);
+        setAllDataCache(null);
+        setIsCacheReady(false);
+        setFreeDevices(0);
+        setStats({});
+        
+        toast({
+          title: "❌ Échec du scan complet",
+          description: `Erreur: ${err.message}`,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setLoading(false);
+      loadingRef.current = false;
+    }
+  }, []);
 
   /**
    * ULTRA-FAST DATA LOADING (<20s) with enriched ListVehicles
@@ -901,6 +1027,7 @@ export const useCompanyVehicleDevice = () => {
     isCacheReady,
     loadingMode,
     quickStats,
+    scanMetrics,
     
     // Cache status
     allDataCache,
@@ -908,6 +1035,7 @@ export const useCompanyVehicleDevice = () => {
     // Actions
     loadAllData,
     loadAllDataUltraFast, // NEW: Ultra-fast loading function
+    loadCompleteVehicleScan, // NEW: Complete exhaustive scan function
     loadQuickStats,
     setLoadingMode,
     searchDevices,

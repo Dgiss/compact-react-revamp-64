@@ -22,6 +22,7 @@ import { updateDeviceSimple } from "@/services/SimpleDeviceService.js";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { clearOldCaches } from "@/utils/cache-utils";
+import { ScanMetricsPanel } from "@/components/debug/ScanMetricsPanel";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -30,7 +31,9 @@ export default function VehiclesDevicesPage() {
     isCacheReady,
     loadingMode,
     quickStats,
+    scanMetrics,
     loadAllData,
+    loadCompleteVehicleScan,
     loadQuickStats,
     setLoadingMode,
     searchDevices,
@@ -78,6 +81,9 @@ export default function VehiclesDevicesPage() {
 
   // Bulk association state
   const [showBulkAssociation, setShowBulkAssociation] = useState(false);
+  
+  // Debug panel state
+  const [showScanMetrics, setShowScanMetrics] = useState(false);
 
   // Track current filters for refresh after association
   const [currentFilters, setCurrentFilters] = useState({});
@@ -968,6 +974,14 @@ export default function VehiclesDevicesPage() {
             <div className="text-sm text-muted-foreground">Nouvelle requête optimisée</div>
           </div>
         </Button>
+
+        <Button onClick={() => loadCompleteVehicleScan()} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
+          <Search className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Scan complet</div>
+            <div className="text-sm text-muted-foreground">Scan exhaustif de la table Vehicle</div>
+          </div>
+        </Button>
       </div>
 
       <div className="flex gap-2 justify-center">
@@ -1118,8 +1132,29 @@ export default function VehiclesDevicesPage() {
             <Database className="h-4 w-4 mr-2" />
             Charger tout
           </Button>
+          
+          <Button variant="outline" onClick={() => {
+            // Clear current filters and run complete scan
+            setFilteredData([]);
+            setCurrentFilters({});
+            loadCompleteVehicleScan();
+          }} className="w-full bg-blue-50 border-blue-300 hover:bg-blue-100 mt-2" disabled={loading}>
+            <Search className="h-4 w-4 mr-2" />
+            Scan complet
+          </Button>
         </div>
       </div>
+
+      {/* Scan Metrics Panel */}
+      {scanMetrics && (
+        <div className="mb-4">
+          <ScanMetricsPanel 
+            scanMetrics={scanMetrics}
+            isVisible={showScanMetrics}
+            onToggle={() => setShowScanMetrics(!showScanMetrics)}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
         <div className="flex-1">
