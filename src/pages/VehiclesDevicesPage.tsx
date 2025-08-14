@@ -41,6 +41,16 @@ export default function VehiclesDevicesPage() {
     resetFilters,
     isFiltered,
     totalResults,
+    // RESTORED: Batch loading states and functions
+    isLoadingAll,
+    showProgressBar,
+    loadingProgress,
+    cancelSearch,
+    fetchAllVehicles,
+    fetchVehiclesWithoutImei,
+    fetchDevicesWithoutVehicles,
+    searchMartiguesCompany,
+    cancelOngoingSearch,
     // OPTIMIZED: New specialized functions
     getVehiclesWithoutDevices,
     getVehiclesWithEmptyImei,
@@ -966,6 +976,39 @@ export default function VehiclesDevicesPage() {
           <div>
             <div className="font-medium">Charger tout (Optimisé)</div>
             <div className="text-sm text-muted-foreground">Nouvelle requête optimisée</div>
+          </div>
+        </Button>
+
+        {/* RESTORED: Batch loading buttons */}
+        <Button onClick={fetchAllVehicles} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
+          <Database className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Tout charger (Batch)</div>
+            <div className="text-sm text-muted-foreground">Chargement progressif avec annulation</div>
+          </div>
+        </Button>
+
+        <Button onClick={fetchVehiclesWithoutImei} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
+          <Car className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Véhicules sans IMEI (Batch)</div>
+            <div className="text-sm text-muted-foreground">Chargement rapide par lots</div>
+          </div>
+        </Button>
+
+        <Button onClick={fetchDevicesWithoutVehicles} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
+          <Smartphone className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Boîtiers libres (Batch)</div>
+            <div className="text-sm text-muted-foreground">Chargement rapide par lots</div>
+          </div>
+        </Button>
+
+        <Button onClick={searchMartiguesCompany} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
+          <Building className="h-6 w-6 mb-2" />
+          <div>
+            <div className="font-medium">Test Martigues (2003)</div>
+            <div className="text-sm text-muted-foreground">Chargement par entreprise</div>
           </div>
         </Button>
       </div>
