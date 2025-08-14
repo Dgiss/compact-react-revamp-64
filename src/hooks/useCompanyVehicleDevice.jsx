@@ -29,7 +29,7 @@ export const useCompanyVehicleDevice = () => {
   const loadingRef = useRef(false);
   const lastLoadRef = useRef(0);
 
-  // AUTO-LOAD companies on mount with debounce
+  // AUTO-LOAD companies on mount with debounce + clear cache for fresh data
   useEffect(() => {
     let isMounted = true;
     
@@ -38,6 +38,11 @@ export const useCompanyVehicleDevice = () => {
       
       try {
         console.log('useCompanyVehicleDevice: Auto-loading companies...');
+        
+        // Clear old cache to force fresh data loading
+        localStorage.removeItem('fleetwatch_vehicle_cache');
+        console.log('Cleared vehicle cache for fresh data');
+        
         const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
         
         if (isMounted) {

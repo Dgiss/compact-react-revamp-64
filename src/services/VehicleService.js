@@ -88,6 +88,14 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       }).filter(Boolean);
 
+      console.log('Mapped vehicles count:', mappedVehicles.length);
+      console.log('Sample vehicle data:', mappedVehicles.slice(0, 3).map(v => ({
+        immatriculation: v.immatriculation,
+        entreprise: v.entreprise,
+        vehicleDeviceImei: v.vehicleDeviceImei,
+        companyVehiclesId: v.companyVehiclesId
+      })));
+
       console.log('Véhicules chargés avec succès:', mappedVehicles.length);
 
       return {
