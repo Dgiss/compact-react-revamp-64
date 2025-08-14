@@ -13,79 +13,33 @@ export const fetchAllVehiclesOptimized = async () => {
     try {
       let allVehicles = [];
       let nextToken = null;
-      let pageCount = 0;
+      let batchCount = 0;
       
-      const firstResponse = await client.graphql({
-        query: `query FirstPage {
-          listVehicles(limit: 1000) {
-            items {
-              immat
-              immatriculation
-              nomVehicule
-              companyVehiclesId
-              vehicleDeviceImei
-              marque
-              modele
-              kilometrage
-            }
-            nextToken
-          }
-        }`
-      });
-
-      console.log('First page vehicles response:', {
-        hasData: !!firstResponse.data,
-        hasVehicles: !!firstResponse.data?.listVehicles,
-        vehicleCount: firstResponse.data?.listVehicles?.items?.length || 0,
-        hasNextToken: !!firstResponse.data?.listVehicles?.nextToken
-      });
-
-      const firstPageVehicles = firstResponse.data?.listVehicles?.items || [];
-      allVehicles = allVehicles.concat(firstPageVehicles);
-      nextToken = firstResponse.data?.listVehicles?.nextToken;
-      pageCount = 1;
-
-      while (nextToken && pageCount < 100) {
-        pageCount++;
+      console.log('Récupération de tous les véhicules avec données complètes...');
+      
+      do {
+        batchCount++;
         
-        try {
-          const response = await client.graphql({
-            query: `query NextPage($nextToken: String!) {
-              listVehicles(limit: 1000, nextToken: $nextToken) {
-                items {
-                  immat
-                  immatriculation
-                  nomVehicule
-                  companyVehiclesId
-                  vehicleDeviceImei
-                  marque
-                  modele
-                  kilometrage
-                }
-                nextToken
-              }
-            }`,
-            variables: { nextToken }
-          });
-
-          if (response.errors && !response.data?.listVehicles?.items) {
-            break;
-          }
-
-          const pageVehicles = response.data?.listVehicles?.items || [];
-          allVehicles = allVehicles.concat(pageVehicles);
-          nextToken = response.data?.listVehicles?.nextToken;
-          
-        } catch (pageError) {
-          if (pageError?.data?.listVehicles?.items) {
-            const partialVehicles = pageError.data.listVehicles.items || [];
-            allVehicles = allVehicles.concat(partialVehicles);
-            nextToken = pageError.data.listVehicles.nextToken;
-          } else {
-            break;
-          }
-        }
-      }
+        const variables = {
+          limit: 1000,
+          nextToken: nextToken
+        };
+        
+        console.log(`Récupération du lot ${batchCount} de véhicules`);
+        
+        const response = await client.graphql({
+          query: queries.listVehicles,
+          variables: variables
+        });
+        
+        const results = response.data.listVehicles.items;
+        nextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`Lot ${batchCount}: ${results.length} véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
+        
+        allVehicles = [...allVehicles, ...results];
+        
+      } while (nextToken && batchCount < 100);
 
       // Load companies for name resolution
       let companiesMap = {};
@@ -96,12 +50,15 @@ export const fetchAllVehiclesOptimized = async () => {
           map[company.id] = company;
           return map;
         }, {});
-        console.log(`Loaded ${companies.length} companies for name resolution`);
+        console.log(`Chargé ${companies.length} entreprises pour résolution des noms`);
       } catch (companyError) {
-        console.warn('Could not load companies for name resolution:', companyError);
+        console.warn('Impossible de charger les entreprises pour résolution des noms:', companyError);
       }
 
-      const mappedVehicles = allVehicles.map((vehicle, index) => {
+      // Enrich devices with SIM data
+      const enrichedVehicles = await enrichDevicesWithSimData(allVehicles);
+
+      const mappedVehicles = enrichedVehicles.map((vehicle, index) => {
         try {
           const companyName = companiesMap[vehicle?.companyVehiclesId]?.name || "Non définie";
           
@@ -112,25 +69,26 @@ export const fetchAllVehiclesOptimized = async () => {
             entreprise: companyName,
             imei: vehicle?.vehicleDeviceImei || "",
             nomVehicule: vehicle?.nomVehicule || "",
-            telephone: "",
-            typeBoitier: "",
+            telephone: vehicle?.sim || "",
+            typeBoitier: vehicle?.protocolId?.toString() || "",
             isAssociated: !!vehicle?.vehicleDeviceImei,
             companyVehiclesId: vehicle?.companyVehiclesId,
             vehicleDeviceImei: vehicle?.vehicleDeviceImei,
             deviceData: null,
             marque: vehicle?.marque || "",
             modele: vehicle?.modele || "",
-            kilometrage: vehicle?.kilometrage || "",
+            kilometrage: vehicle?.kilometrage?.toString() || "",
             emplacement: vehicle?.emplacement || "",
-            iccid: "", // Will be populated if device is associated
-            sim: ""
+            iccid: vehicle?.iccid || "",
+            sim: vehicle?.sim || ""
           };
-        } catch {
+        } catch (error) {
+          console.warn('Erreur mapping véhicule:', error);
           return null;
         }
       }).filter(Boolean);
 
-      console.log('Vehicles loaded successfully:', mappedVehicles.length);
+      console.log('Véhicules chargés avec succès:', mappedVehicles.length);
 
       return {
         companies: Object.values(companiesMap),
@@ -138,131 +96,91 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      console.error('VehicleService.fetchAllVehiclesOptimized - DETAILED ERROR:', {
-        message: error.message,
-        code: error.code,
-        name: error.name,
-        errors: error.errors,
-        stack: error.stack,
-        fullError: error
-      });
+      console.error('Erreur principale lors de la récupération des véhicules:', error);
       
-      // Instead of returning empty data, let's try a fallback approach
-      console.warn('Attempting fallback: trying to fetch vehicles without company optimization...');
+      // Fallback avec strategy simplifiée
+      console.log('Tentative de récupération avec fallback...');
       
       try {
-        // Strategy 1: Ultra-minimal query with only essential fields
-        console.log('Fallback Strategy 1: Ultra-minimal vehicle query');
-        const minimalResult = await withCredentialRetry(async () => {
-          const vehiclesResponse = await client.graphql({
-            query: `query MinimalVehicles {
-              listVehicles(limit: 1000) {
-                items {
-                  immat
-                  immatriculation
-                  nomVehicule
-                  companyVehiclesId
-                  vehicleDeviceImei
-                }
-                nextToken
-              }
-            }`
+        let allVehicles = [];
+        let nextToken = null;
+        let batchCount = 0;
+        
+        do {
+          batchCount++;
+          
+          const variables = {
+            limit: 1000,
+            nextToken: nextToken
+          };
+          
+          const response = await client.graphql({
+            query: queries.listVehicles,
+            variables: variables
           });
           
-          const vehicles = vehiclesResponse.data?.listVehicles?.items || [];
-          console.log('Minimal fallback vehicles loaded:', vehicles.length);
+          const results = response.data.listVehicles.items;
+          nextToken = response.data.listVehicles.nextToken;
           
-          return {
-            companies: [],
-            vehicles: vehicles.map((vehicle, index) => {
-              try {
-                return {
-                  id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
-                  type: "vehicle",
-                  immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
-                  entreprise: vehicle?.companyVehiclesId || "Non définie",
-                  nomVehicule: vehicle?.nomVehicule || "",
-                  imei: vehicle?.vehicleDeviceImei || "",
-                  telephone: "",
-                  typeBoitier: "",
-                  marque: "",
-                  modele: "",
-                  kilometrage: "",
-                  emplacement: "",
-                  isAssociated: !!vehicle?.vehicleDeviceImei,
-                  companyVehiclesId: vehicle?.companyVehiclesId,
-                  vehicleDeviceImei: vehicle?.vehicleDeviceImei,
-                  deviceData: null,
-                  vehicleData: vehicle
-                };
-              } catch (mappingError) {
-                console.warn('Error mapping vehicle:', mappingError);
-                return null;
-              }
-            }).filter(Boolean)
-          };
-        });
+          allVehicles = [...allVehicles, ...results];
+          
+        } while (nextToken && batchCount < 50);
         
-        console.log('Strategy 1 successful, returning:', minimalResult.vehicles.length, 'vehicles');
-        return minimalResult;
-        
-      } catch (strategy1Error) {
-        console.warn('Strategy 1 failed:', strategy1Error);
-        
-        // Strategy 2: Even more minimal - just essential vehicle identification
+        // Load companies for name resolution in fallback
+        let companiesMap = {};
         try {
-          console.log('Fallback Strategy 2: Essential fields only');
-          const essentialResult = await withCredentialRetry(async () => {
-            const vehiclesResponse = await client.graphql({
-              query: `query EssentialVehicles {
-                listVehicles(limit: 1000) {
-                  items {
-                    immat
-                    immatriculation
-                  }
-                  nextToken
-                }
-              }`
-            });
-            
-            const vehicles = vehiclesResponse.data?.listVehicles?.items || [];
-            console.log('Essential fallback vehicles loaded:', vehicles.length);
+          const { fetchCompaniesForSelect } = await import('./CompanyVehicleDeviceService');
+          const companies = await fetchCompaniesForSelect();
+          companiesMap = companies.reduce((map, company) => {
+            map[company.id] = company;
+            return map;
+          }, {});
+        } catch (companyError) {
+          console.warn('Fallback: Impossible de charger les entreprises:', companyError);
+        }
+        
+        const mappedVehicles = allVehicles.map((vehicle, index) => {
+          try {
+            const companyName = companiesMap[vehicle?.companyVehiclesId]?.name || "Non définie";
             
             return {
-              companies: [],
-              vehicles: vehicles.map((vehicle, index) => ({
-                id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
-                type: "vehicle",
-                immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
-                entreprise: "Non définie",
-                nomVehicule: "",
-                imei: "",
-                telephone: "",
-                typeBoitier: "",
-                marque: "",
-                modele: "",
-                kilometrage: "",
-                emplacement: "",
-                isAssociated: false,
-                companyVehiclesId: null,
-                vehicleDeviceImei: null,
-                deviceData: null,
-                vehicleData: vehicle
-              })).filter(v => v.immatriculation)
+              id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
+              type: "vehicle",
+              immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
+              entreprise: companyName,
+              imei: vehicle?.vehicleDeviceImei || "",
+              nomVehicule: vehicle?.nomVehicule || "",
+              telephone: "",
+              typeBoitier: "",
+              isAssociated: !!vehicle?.vehicleDeviceImei,
+              companyVehiclesId: vehicle?.companyVehiclesId,
+              vehicleDeviceImei: vehicle?.vehicleDeviceImei,
+              deviceData: null,
+              marque: vehicle?.marque || "",
+              modele: vehicle?.modele || "",
+              kilometrage: vehicle?.kilometrage?.toString() || "",
+              emplacement: vehicle?.emplacement || "",
+              iccid: "",
+              sim: ""
             };
-          });
-          
-          console.log('Strategy 2 successful, returning:', essentialResult.vehicles.length, 'vehicles');
-          return essentialResult;
-          
-        } catch (strategy2Error) {
-          console.error('All fallback strategies failed:', strategy2Error);
-          // Return empty data but continue with devices
-          return {
-            companies: [],
-            vehicles: []
-          };
-        }
+          } catch (mappingError) {
+            console.warn('Erreur mapping véhicule fallback:', mappingError);
+            return null;
+          }
+        }).filter(Boolean);
+        
+        console.log('Fallback réussi:', mappedVehicles.length, 'véhicules');
+        return {
+          companies: Object.values(companiesMap),
+          vehicles: mappedVehicles
+        };
+        
+      } catch (fallbackError) {
+        console.error('Tous les fallbacks ont échoué:', fallbackError);
+        return {
+          companies: [],
+          vehicles: []
+        };
       }
     }
   });
@@ -383,6 +301,36 @@ export const fetchCompaniesWithVehicles = async () => {
     
     return { companies: allCompanies, vehicles: allDevices };
   });
+};
+
+/**
+ * Enrichir les devices avec les données SIM/ICCID
+ */
+const enrichDevicesWithSimData = async (vehicles) => {
+  try {
+    // Récupérer les devices pour enrichir avec SIM/ICCID
+    const devices = await fetchAllDevices();
+    const deviceMap = devices.reduce((map, device) => {
+      map[device.imei] = device;
+      return map;
+    }, {});
+    
+    return vehicles.map(vehicle => {
+      const device = deviceMap[vehicle?.vehicleDeviceImei];
+      if (device) {
+        return {
+          ...vehicle,
+          sim: device.sim || "",
+          iccid: generateMockIccid(device.sim || device.imei),
+          protocolId: device.protocolId
+        };
+      }
+      return vehicle;
+    });
+  } catch (error) {
+    console.warn('Erreur enrichissement données SIM:', error);
+    return vehicles;
+  }
 };
 
 export const updateVehicleData = async (data) => {
