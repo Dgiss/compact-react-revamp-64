@@ -11,120 +11,108 @@ const client = getLazyClient();
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
     try {
-      console.log('🚀 Starting ULTRA-FAST vehicle fetch with massive parallel loading...');
-      const startTime = performance.now();
-      
       let allVehicles = [];
-      const batchPromises = [];
+      let nextToken = null;
+      let pageCount = 0;
       
-      // Strategy: Launch 10 massive parallel requests immediately
-      const initialBatchSize = 5000;
-      const maxConcurrentBatches = 10;
-      
-      // First batch to get initial data and discover pagination
-      const firstBatch = client.graphql({
-        query: queries.listVehicles,
-        variables: { limit: initialBatchSize }
+      const firstResponse = await client.graphql({
+        query: `query FirstPage {
+          listVehicles(limit: 1000) {
+            items {
+              immat
+              immatriculation
+              nomVehicule
+              companyVehiclesId
+              vehicleDeviceImei
+              company {
+                name
+              }
+              device {
+                name
+                imei
+                sim
+                device_type_id
+              }
+            }
+            nextToken
+          }
+        }`
       });
-      
-      const firstResponse = await firstBatch;
+
       const firstPageVehicles = firstResponse.data?.listVehicles?.items || [];
       allVehicles = allVehicles.concat(firstPageVehicles);
-      
-      console.log(`⚡ First massive batch: ${firstPageVehicles.length} vehicles`);
-      
-      let nextToken = firstResponse.data?.listVehicles?.nextToken;
-      
-      // If we have more data, process dynamically with massive parallel loading
-      if (nextToken) {
-        console.log('🚀 Dynamic massive parallel loading...');
+      nextToken = firstResponse.data?.listVehicles?.nextToken;
+      pageCount = 1;
+
+      while (nextToken && pageCount < 100) {
+        pageCount++;
         
-        // Continue loading until all data is fetched
-        while (nextToken) {
-          const currentPromises = [];
-          
-          // Launch up to 5 parallel requests at once
-          for (let i = 0; i < 5 && nextToken; i++) {
-            const currentToken = nextToken;
-            
-            const promise = client.graphql({
-              query: queries.listVehicles,
-              variables: { 
-                limit: initialBatchSize,
-                nextToken: currentToken
+        try {
+          const response = await client.graphql({
+            query: `query NextPage($nextToken: String!) {
+              listVehicles(limit: 1000, nextToken: $nextToken) {
+                items {
+                  immat
+                  immatriculation
+                  nomVehicule
+                  companyVehiclesId
+                  vehicleDeviceImei
+                  company {
+                    name
+                  }
+                  device {
+                    name
+                    imei
+                    sim
+                    device_type_id
+                  }
+                }
+                nextToken
               }
-            }).then(response => {
-              const vehicles = response.data?.listVehicles?.items || [];
-              return {
-                vehicles,
-                nextToken: response.data?.listVehicles?.nextToken
-              };
-            }).catch(error => {
-              console.warn(`⚠️ Batch failed:`, error);
-              return { vehicles: [], nextToken: null };
-            });
-            
-            currentPromises.push(promise);
-            nextToken = null; // Will be updated after this batch completes
-          }
-          
-          // Execute current batch and collect results
-          const results = await Promise.all(currentPromises);
-          
-          let hasMoreData = false;
-          results.forEach(result => {
-            if (result.vehicles.length > 0) {
-              allVehicles = allVehicles.concat(result.vehicles);
-              console.log(`⚡ Batch: ${result.vehicles.length} vehicles (total: ${allVehicles.length})`);
-            }
-            if (result.nextToken && !hasMoreData) {
-              nextToken = result.nextToken;
-              hasMoreData = true;
-            }
+            }`,
+            variables: { nextToken }
           });
+
+          if (response.errors && !response.data?.listVehicles?.items) {
+            break;
+          }
+
+          const pageVehicles = response.data?.listVehicles?.items || [];
+          allVehicles = allVehicles.concat(pageVehicles);
+          nextToken = response.data?.listVehicles?.nextToken;
           
-          if (!hasMoreData) {
+        } catch (pageError) {
+          if (pageError?.data?.listVehicles?.items) {
+            const partialVehicles = pageError.data.listVehicles.items || [];
+            allVehicles = allVehicles.concat(partialVehicles);
+            nextToken = pageError.data.listVehicles.nextToken;
+          } else {
             break;
           }
         }
       }
-      
-      const loadTime = performance.now() - startTime;
-      console.log(`🎯 ULTRA-FAST loading completed: ${allVehicles.length} vehicles in ${loadTime.toFixed(0)}ms`);
-      console.log(`⚡ Loading rate: ${(allVehicles.length / (loadTime / 1000)).toFixed(0)} vehicles/second`);
-
-      console.log(`✅ Total vehicles loaded: ${allVehicles.length}`);
 
       const mappedVehicles = allVehicles.map((vehicle, index) => {
         try {
           return {
-            id: vehicle?.immat || `vehicle-${index}`,
+            id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
             type: "vehicle",
-            immatriculation: vehicle?.immat || "",
-            entreprise: vehicle?.company?.name || "Non définie", 
-            imei: vehicle?.device?.imei || "",
-            nomVehicule: vehicle?.code || "",
+            immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
+            entreprise: vehicle?.company?.name || "Non définie",
+            imei: vehicle?.device?.imei || vehicle?.vehicleDeviceImei || "",
+            nomVehicule: vehicle?.nomVehicule || "",
             telephone: vehicle?.device?.sim || "",
-            typeBoitier: vehicle?.device?.protocolId?.toString() || "",
-            isAssociated: !!(vehicle?.device?.imei),
+            typeBoitier: vehicle?.device?.device_type_id?.toString() || "",
+            isAssociated: !!(vehicle?.device?.imei || vehicle?.vehicleDeviceImei),
             companyVehiclesId: vehicle?.companyVehiclesId,
             vehicleDeviceImei: vehicle?.vehicleDeviceImei,
             deviceData: vehicle?.device || null,
-            marque: vehicle?.brand?.brandName || "",
-            modele: vehicle?.modele?.modele || "",
-            kilometrage: vehicle?.kilometerage?.toString() || "",
-            emplacement: vehicle?.locations || "",
-            // Enhanced data from the enriched query
-            year: vehicle?.year,
-            fuelType: vehicle?.fuelType,
-            consumption: vehicle?.consumption,
-            maxSpeed: vehicle?.maxSpeed,
-            seatCount: vehicle?.seatCount,
-            tankCapacity: vehicle?.tankCapacity,
-            co2: vehicle?.co2
+            marque: "",
+            modele: "",
+            kilometrage: "",
+            emplacement: ""
           };
-        } catch (error) {
-          console.warn(`Error mapping vehicle ${index}:`, error);
+        } catch {
           return null;
         }
       }).filter(Boolean);
@@ -137,10 +125,7 @@ export const fetchAllVehiclesOptimized = async () => {
           if (vehicle?.company?.name && vehicle?.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
             companies.push({
               id: vehicle.companyVehiclesId,
-              name: vehicle.company.name,
-              siret: vehicle.company.siret,
-              address: vehicle.company.address,
-              city: vehicle.company.city
+              name: vehicle.company.name
             });
             seenCompanies.add(vehicle.companyVehiclesId);
           }
@@ -149,15 +134,12 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       });
 
-      console.log(`✅ Extracted ${companies.length} unique companies`);
-
       return {
         companies,
         vehicles: mappedVehicles
       };
 
     } catch (error) {
-      console.error('Error in fetchAllVehiclesOptimized:', error);
       throw new Error(`Erreur pagination: ${error?.message || 'Erreur inconnue'}`);
     }
   });

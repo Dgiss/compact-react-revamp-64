@@ -1802,7 +1802,13 @@ export const getVehicle = /* GraphQL */ `
   }
 `;
 export const listVehicles = /* GraphQL */ `
-  query ListVehicles($immat: String, $filter: ModelVehicleFilterInput, $limit: Int, $nextToken: String, $sortDirection: ModelSortDirection) {
+  query ListVehicles(
+    $immat: String
+    $filter: ModelVehicleFilterInput
+    $limit: Int
+    $nextToken: String
+    $sortDirection: ModelSortDirection
+  ) {
     listVehicles(
       immat: $immat
       filter: $filter
@@ -1838,6 +1844,14 @@ export const listVehicles = /* GraphQL */ `
         locations
         installationPrecautions
         code
+        # vehicleCategory {
+        #   id
+        #   category
+        #   description
+        #   # createdAt
+        #   # updatedAt
+        #   __typename
+        # }
         brand {
           brandName
           logo {
@@ -1976,6 +1990,8 @@ export const listVehicles = /* GraphQL */ `
           nextToken
           __typename
         }
+        # createdAt
+        # updatedAt
         vehicleVehicleCategoryId
         vehicleBrandBrandName
         vehicleModeleId
@@ -4985,23 +5001,6 @@ export const listDevices = /* GraphQL */ `
             updatedAt
             __typename
           }
-          device {
-            imei
-            protocolId
-            sim
-            createdAt
-            updatedAt
-            deviceVehicleImmat
-            __typename
-          }
-          alerts {
-            nextToken
-            __typename
-          }
-          tags {
-            nextToken
-            __typename
-          }
           createdAt
           updatedAt
           vehicleVehicleCategoryId
@@ -5010,7 +5009,8 @@ export const listDevices = /* GraphQL */ `
           vehicleDeviceImei
           __typename
         }
-        deviceVehicleImmat
+        createdAt
+        updatedAt
         __typename
       }
       nextToken
