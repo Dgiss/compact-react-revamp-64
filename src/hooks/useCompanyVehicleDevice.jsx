@@ -193,14 +193,39 @@ export const useCompanyVehicleDevice = () => {
       } else {
         // Optimized: vehicles fast + free devices merged
         console.log('Using optimized vehicles + free devices merge...');
-        const [base, free] = await Promise.all([
+        
+        // Use Promise.allSettled to prevent total failure if one part fails
+        const results = await Promise.allSettled([
           VehicleService.fetchAllVehiclesOptimized(),
           CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
         ]);
+        
+        // Extract successful results and handle failures gracefully
+        const baseResult = results[0].status === 'fulfilled' 
+          ? results[0].value 
+          : { companies: [], vehicles: [] };
+          
+        const freeDevicesResult = results[1].status === 'fulfilled' 
+          ? results[1].value 
+          : [];
+        
+        // Log any failures for debugging
+        if (results[0].status === 'rejected') {
+          console.error('Failed to load vehicles:', results[0].reason);
+        }
+        if (results[1].status === 'rejected') {
+          console.warn('Failed to load free devices (partial data mode):', results[1].reason);
+        }
+        
         result = {
-          companies: base.companies || [],
-          vehicles: [...(base.vehicles || []), ...(free || [])]
+          companies: baseResult.companies || [],
+          vehicles: [...(baseResult.vehicles || []), ...(freeDevicesResult || [])]
         };
+        
+        // Show warning if devices failed to load
+        if (results[1].status === 'rejected') {
+          console.warn('Note: Free devices could not be loaded, showing vehicles only');
+        }
       }
       
       const loadTime = Date.now() - startTime;

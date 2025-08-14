@@ -612,34 +612,63 @@ export const fetchDevicesWithoutVehicles = async () => {
         let allDevices = [];
         let nextToken = null;
         let page = 0;
+        const pageSize = 500; // Reduced from 1000 for better stability
+        
         do {
           page++;
-          const response = await client.graphql({
-            query: `query ListFreeDevices($nextToken: String) {
-              listDevices(
-                filter: { or: [
-                  { deviceVehicleImmat: { attributeExists: false } },
-                  { deviceVehicleImmat: { eq: null } },
-                  { deviceVehicleImmat: { eq: "" } }
-                ]},
-                limit: 1000,
-                nextToken: $nextToken
-              ) {
-                items {
-                  imei
-                  sim
-                  protocolId
-                  name
-                }
-                nextToken
-              }
-            }`,
-            variables: { nextToken }
-          });
-          const pageItems = response.data?.listDevices?.items || [];
-          allDevices = allDevices.concat(pageItems);
-          nextToken = response.data?.listDevices?.nextToken || null;
-          console.log(`Devices page ${page}: +${pageItems.length}, total=${allDevices.length}`);
+          
+          try {
+            // Add timeout and retry for individual GraphQL calls
+            const response = await Promise.race([
+              client.graphql({
+                query: `query ListFreeDevices($nextToken: String, $limit: Int) {
+                  listDevices(
+                    filter: { or: [
+                      { deviceVehicleImmat: { attributeExists: false } },
+                      { deviceVehicleImmat: { eq: null } },
+                      { deviceVehicleImmat: { eq: "" } }
+                    ]},
+                    limit: $limit,
+                    nextToken: $nextToken
+                  ) {
+                    items {
+                      imei
+                      sim
+                      protocolId
+                      name
+                    }
+                    nextToken
+                  }
+                }`,
+                variables: { nextToken, limit: pageSize }
+              }),
+              // 30 second timeout per page
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('GraphQL timeout')), 30000)
+              )
+            ]);
+            
+            const pageItems = response.data?.listDevices?.items || [];
+            allDevices = allDevices.concat(pageItems);
+            nextToken = response.data?.listDevices?.nextToken || null;
+            console.log(`Devices page ${page}: +${pageItems.length}, total=${allDevices.length}`);
+            
+          } catch (pageError) {
+            console.warn(`Error on page ${page}, continuing with partial data:`, pageError);
+            // Log the actual GraphQL error details
+            if (pageError.errors) {
+              console.error('GraphQL errors:', pageError.errors);
+            }
+            // Stop pagination on error but return what we have
+            break;
+          }
+          
+          // Safety limit to prevent infinite loops
+          if (page >= 50) {
+            console.warn('Reached maximum page limit (50), stopping pagination');
+            break;
+          }
+          
         } while (nextToken);
 
         const devices = allDevices.map(device => ({
@@ -661,9 +690,18 @@ export const fetchDevicesWithoutVehicles = async () => {
 
         console.log('Devices without vehicles found (merged):', devices.length);
         return devices;
+        
       } catch (error) {
         console.error('Error in devices fetch GraphQL call:', error);
-        throw error;
+        // Log the full error for debugging
+        if (error.errors) {
+          console.error('Detailed GraphQL errors:', error.errors);
+        }
+        console.error('Error stack:', error.stack);
+        
+        // Return empty array instead of throwing to allow partial data loading
+        console.warn('Returning empty device list due to error, allowing vehicles to load');
+        return [];
       }
     }, 3);
   } catch (error) {

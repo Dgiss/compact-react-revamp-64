@@ -131,6 +131,15 @@ export const withCredentialRetry = async (operation, maxRetries = 2) => {
       
       return await operation();
     } catch (error) {
+      // Log the original error for debugging before transforming it
+      console.error(`Tentative ${attempt}/${maxRetries} - Erreur originale:`, {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        errors: error.errors,
+        stack: error.stack
+      });
+      
       console.warn(`Tentative ${attempt}/${maxRetries} échouée:`, error.message);
       
       if (error.message?.includes('NoCredentials') || error.message?.includes('No credentials')) {
@@ -142,7 +151,15 @@ export const withCredentialRetry = async (operation, maxRetries = 2) => {
         throw new Error('Erreur d\'authentification - veuillez vous reconnecter');
       }
       
-      // Pour les autres erreurs, ne pas retry
+      // For GraphQL errors, preserve more detail
+      if (error.errors && Array.isArray(error.errors)) {
+        const graphqlError = new Error(`GraphQL Error: ${error.errors.map(e => e.message).join(', ')}`);
+        graphqlError.originalError = error;
+        graphqlError.errors = error.errors;
+        throw graphqlError;
+      }
+      
+      // Pour les autres erreurs, ne pas retry mais préserver l'erreur originale
       throw error;
     }
   }
