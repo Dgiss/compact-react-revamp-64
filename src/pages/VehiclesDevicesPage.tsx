@@ -22,6 +22,8 @@ import { updateDeviceSimple } from "@/services/SimpleDeviceService.js";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { clearOldCaches } from "@/utils/cache-utils";
+import { CacheDebugPanel } from "@/components/debug/CacheDebugPanel";
+import { ImeiDiagnosticPanel } from "@/components/debug/ImeiDiagnosticPanel";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -41,16 +43,6 @@ export default function VehiclesDevicesPage() {
     resetFilters,
     isFiltered,
     totalResults,
-    // RESTORED: Batch loading states and functions
-    isLoadingAll,
-    showProgressBar,
-    loadingProgress,
-    cancelSearch,
-    fetchAllVehicles,
-    fetchVehiclesWithoutImei,
-    fetchDevicesWithoutVehicles,
-    searchMartiguesCompany,
-    cancelOngoingSearch,
     // OPTIMIZED: New specialized functions
     getVehiclesWithoutDevices,
     getVehiclesWithEmptyImei,
@@ -978,39 +970,6 @@ export default function VehiclesDevicesPage() {
             <div className="text-sm text-muted-foreground">Nouvelle requête optimisée</div>
           </div>
         </Button>
-
-        {/* RESTORED: Batch loading buttons */}
-        <Button onClick={fetchAllVehicles} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
-          <Database className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Tout charger (Batch)</div>
-            <div className="text-sm text-muted-foreground">Chargement progressif avec annulation</div>
-          </div>
-        </Button>
-
-        <Button onClick={fetchVehiclesWithoutImei} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
-          <Car className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Véhicules sans IMEI (Batch)</div>
-            <div className="text-sm text-muted-foreground">Chargement rapide par lots</div>
-          </div>
-        </Button>
-
-        <Button onClick={fetchDevicesWithoutVehicles} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
-          <Smartphone className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Boîtiers libres (Batch)</div>
-            <div className="text-sm text-muted-foreground">Chargement rapide par lots</div>
-          </div>
-        </Button>
-
-        <Button onClick={searchMartiguesCompany} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={isLoadingAll}>
-          <Building className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Test Martigues (2003)</div>
-            <div className="text-sm text-muted-foreground">Chargement par entreprise</div>
-          </div>
-        </Button>
       </div>
 
       <div className="flex gap-2 justify-center">
@@ -1105,6 +1064,30 @@ export default function VehiclesDevicesPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
+          <Button variant="outline" size="sm" onClick={refreshCurrentView} disabled={loading} title="Rafraîchir la vue actuelle">
+            <RefreshCw className="mr-2 h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Debug Panels - Temporary for IMEI search issues */}
+        <div className="hidden lg:block space-y-4">
+          <CacheDebugPanel
+            onClearCache={() => {
+              clearOldCaches();
+              setFilteredData([]);
+              setCurrentFilters({});
+            }}
+            onForceRefresh={() => {
+              loadAllData();
+            }}
+          />
+          
+          <ImeiDiagnosticPanel />
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={refreshCurrentView} disabled={loading} title="Rafraîchir la vue actuelle">
             <RefreshCw className="mr-2 h-4 w-4" />
             Rafraîchir
@@ -1217,35 +1200,6 @@ export default function VehiclesDevicesPage() {
       console.log('loadingMode:', loadingMode);
       console.log('loading:', loading);
       console.log('Should show table:', dataToShow.length > 0);
-
-      {/* RESTORED: Progress bar for batch loading */}
-      {showProgressBar && (
-        <div className="mb-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Chargement en cours...</span>
-            <span className="text-sm text-muted-foreground">{loadingProgress}%</span>
-          </div>
-          <div className="w-full bg-secondary rounded-full h-2">
-            <div 
-              className="bg-primary h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${loadingProgress}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Données trouvées: {dataToShow.length}</span>
-            <span>Statut: {isLoadingAll ? 'Chargement...' : 'Terminé'}</span>
-          </div>
-          {isLoadingAll && (
-            <div className="flex justify-center">
-              <Button variant="destructive" size="sm" onClick={cancelOngoingSearch}>
-                <X className="h-4 w-4 mr-2" />
-                Annuler le chargement
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-
       return dataToShow.length > 0 ? (
         <EnhancedDataTable
           columns={getColumnsForCurrentView()}

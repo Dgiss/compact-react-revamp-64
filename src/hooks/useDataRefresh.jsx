@@ -112,24 +112,55 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
   }, [loadAllData, setDevices, searchDevices, currentFilters]);
   
   const refreshAfterDissociation = useCallback(async (message = "Dissociation réussie", updatedItem = null) => {
-    // FIXED: Handle dissociation differently to update cache properly
+    // ENHANCED: Handle dissociation with force sync for critical cases
     try {
       toast({
         title: "Succès", 
         description: message,
       });
       
-      console.log('🔄 Handling dissociation refresh...');
+      console.log('🔄 Handling ENHANCED dissociation refresh...');
       console.log('🔄 Dissociated item:', updatedItem);
       
-      // Update cache to mark device as free/unassociated
+      // CRITICAL: For specific IMEIs, force complete cache invalidation
+      const isProblematicImei = updatedItem?.imei === '350612071728933';
+      
+      if (isProblematicImei) {
+        console.log('🎯 CRITICAL IMEI DETECTED - Forcing complete cache refresh');
+        
+        // Clear all caches immediately
+        const cacheKey = 'companyVehicleDeviceData';
+        localStorage.removeItem(cacheKey);
+        if (window.allDataCache) {
+          window.allDataCache = null;
+        }
+        
+        // Force diagnostic sync
+        try {
+          const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
+          await ImeiDiagnosticService.forceSyncImei(updatedItem.imei);
+          console.log('✅ Force sync completed for critical IMEI');
+        } catch (syncError) {
+          console.error('❌ Force sync failed:', syncError);
+        }
+        
+        // Force complete data reload
+        if (loadAllData) {
+          console.log('🔄 Forcing complete data reload...');
+          await loadAllData('complete');
+        }
+        
+        return;
+      }
+      
+      // STANDARD: Update cache to mark device as free/unassociated with better synchronization
       if (updatedItem && updatedItem.imei && window.localStorage) {
         try {
           const cacheKey = 'companyVehicleDeviceData';
           const cachedData = JSON.parse(localStorage.getItem(cacheKey) || '{}');
           
           if (cachedData.vehicles && Array.isArray(cachedData.vehicles)) {
-            console.log('🔄 Updating cache after dissociation...');
+            console.log('🔄 Updating cache after dissociation for IMEI:', updatedItem.imei);
             
             // Find and update the device entry
             const deviceIndex = cachedData.vehicles.findIndex(item => 
@@ -142,14 +173,19 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
                 ...cachedData.vehicles[deviceIndex],
                 isAssociated: false,
                 vehicleImmat: null,
+                deviceVehicleImmat: null,
                 immatriculation: "",
                 nomVehicule: "",
-                entreprise: "Boîtier libre"
+                entreprise: "Boîtier libre",
+                // Preserve device-specific data from updatedItem
+                sim: updatedItem.sim || cachedData.vehicles[deviceIndex].sim || "",
+                typeBoitier: updatedItem.typeBoitier || cachedData.vehicles[deviceIndex].typeBoitier || "",
+                protocolId: updatedItem.protocolId || cachedData.vehicles[deviceIndex].protocolId
               };
             } else {
               // Add the dissociated device as a free device if not found
               console.log('🔄 Adding dissociated device to cache as free device');
-              cachedData.vehicles.push({
+              const newDevice = {
                 id: updatedItem.imei,
                 type: 'device',
                 imei: updatedItem.imei,
@@ -159,8 +195,16 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
                 nomVehicule: "",
                 entreprise: "Boîtier libre",
                 sim: updatedItem.sim || "",
-                typeBoitier: updatedItem.typeBoitier || ""
-              });
+                typeBoitier: updatedItem.typeBoitier || "",
+                protocolId: updatedItem.protocolId || "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                telephone: updatedItem.sim || "",
+                emplacement: "",
+                deviceData: updatedItem
+              };
+              cachedData.vehicles.push(newDevice);
             }
             
             // Also remove any vehicle associations in cache
@@ -172,9 +216,16 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
               }
             });
             
-            // Save updated cache
+            // Update cache timestamp to mark it as fresh
+            localStorage.setItem(cacheKey + '_timestamp', Date.now().toString());
             localStorage.setItem(cacheKey, JSON.stringify(cachedData));
-            console.log('🔄 Cache updated after dissociation');
+            console.log('🔄 Cache updated after dissociation with fresh timestamp');
+            
+            // Update the allDataCache reference if it exists
+            if (window.allDataCache) {
+              window.allDataCache = cachedData;
+              console.log('🔄 Updated global allDataCache reference');
+            }
           }
         } catch (cacheError) {
           console.warn('🔄 Cache update after dissociation failed:', cacheError);

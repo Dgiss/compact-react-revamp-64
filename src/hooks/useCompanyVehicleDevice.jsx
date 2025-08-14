@@ -29,12 +29,6 @@ export const useCompanyVehicleDevice = () => {
   const loadingRef = useRef(false);
   const lastLoadRef = useRef(0);
 
-  // RESTORED: Batch loading states for progressive loading
-  const [isLoadingAll, setIsLoadingAll] = useState(false);
-  const [showProgressBar, setShowProgressBar] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [cancelSearch, setCancelSearch] = useState(false);
-
   // AUTO-LOAD companies on mount with debounce
   useEffect(() => {
     let isMounted = true;
@@ -179,481 +173,6 @@ export const useCompanyVehicleDevice = () => {
       console.error('Background refresh failed:', error);
     }
   };
-
-  // Load companies for select components - ALWAYS load companies
-  const loadCompaniesForSelect = useCallback(async () => {
-    try {
-      // Try cached companies first
-      if (allDataCache && allDataCache.companies && allDataCache.companies.length > 0) {
-        console.log('Using cached companies:', allDataCache.companies.length);
-        setCompanies(allDataCache.companies);
-        return allDataCache.companies;
-      }
-      
-      // If no cache, load directly from API
-      console.log('No cached companies, fetching from API');
-      const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
-      console.log('Companies loaded:', loadedCompanies.length);
-      setCompanies(loadedCompanies);
-      return loadedCompanies;
-    } catch (err) {
-      console.error('Error in loadCompaniesForSelect:', err);
-      setCompanies([]);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors du chargement des entreprises: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, [allDataCache]);
-
-  // RESTORED: Fetch vehicles without IMEI with batch loading
-  const fetchVehiclesWithoutImei = useCallback(async () => {
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Recherche en cours",
-        description: "Récupération des véhicules sans IMEI, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Recherche annulée",
-            description: `${allVehicles.length} résultats récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          filter: {
-            vehicleDeviceImei: {
-              attributeExists: false
-            }
-          },
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de véhicules sans IMEI`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules sans IMEI récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(batchCount * 10);
-        
-        if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 5 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allVehicles.length} véhicules sans IMEI récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Recherche terminée",
-          description: `${allVehicles.length} véhicules sans IMEI trouvés`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la récupération des véhicules sans IMEI:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Fetch devices without vehicles with batch loading
-  const fetchDevicesWithoutVehicles = useCallback(async () => {
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listDevices } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allDevices = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Recherche en cours",
-        description: "Récupération des devices sans véhicules, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Recherche annulée",
-            description: `${allDevices.length} résultats récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          filter: {
-            deviceVehicleImmat: {
-              attributeExists: false
-            }
-          },
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de devices sans véhicules`);
-        
-        const response = await client.graphql({
-          query: listDevices,
-          variables: variables
-        });
-        
-        const results = response.data.listDevices.items;
-        nextToken = response.data.listDevices.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} devices sans véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allDevices = [...allDevices, ...results];
-        
-        setLoadingProgress(batchCount * 10);
-        
-        // Adapter les données pour l'affichage
-        const adaptedDevices = allDevices.map(device => ({
-          immat: device.imei,
-          vehicleDeviceImei: device.imei,
-          code: `Device ${device.imei}`,
-          company: { name: 'N/A' },
-          vehicleVehicleCategoryId: 'Device',
-          vehicleBrandBrandName: 'N/A',
-          vehicleModeleId: 'N/A',
-          kilometerage: 'N/A',
-          kilometerageStart: 'N/A',
-          sim: device.sim,
-          protocolId: device.protocolId,
-          type: 'device'
-        }));
-        
-        if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(adaptedDevices);
-          
-          if (allDevices.length > 0 && batchCount % 5 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allDevices.length} devices sans véhicules récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      // Adaptation finale des données
-      const adaptedDevices = allDevices.map(device => ({
-        immat: device.imei,
-        vehicleDeviceImei: device.imei,
-        code: `Device ${device.imei}`,
-        company: { name: 'N/A' },
-        vehicleVehicleCategoryId: 'Device',
-        vehicleBrandBrandName: 'N/A',
-        vehicleModeleId: 'N/A',
-        kilometerage: 'N/A',
-        kilometerageStart: 'N/A',
-        sim: device.sim,
-        protocolId: device.protocolId,
-        type: 'device'
-      }));
-      
-      setDevices(adaptedDevices);
-      setAllDataCache({ companies, vehicles: adaptedDevices });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Recherche terminée",
-          description: `${allDevices.length} devices sans véhicules trouvés`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la récupération des devices sans véhicules:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Search for Martigues company specifically
-  const searchMartiguesCompany = useCallback(async () => {
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      // Find Martigues company ID first
-      const martiguesCompany = companies.find(c => c.name && c.name.toLowerCase().includes('martigues'));
-      if (!martiguesCompany) {
-        toast({
-          title: "Erreur",
-          description: "Entreprise Martigues non trouvée",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Recherche Martigues",
-        description: "Récupération de tous les véhicules Martigues...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Recherche annulée",
-            description: `${allVehicles.length} véhicules Martigues récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          filter: {
-            companyVehiclesId: {
-              eq: martiguesCompany.id
-            }
-          },
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} pour Martigues`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules Martigues récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(batchCount * 10);
-        
-        if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 5 === 0) {
-            toast({
-              title: "Progression Martigues",
-              description: `${allVehicles.length} véhicules Martigues récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Recherche Martigues terminée",
-          description: `${allVehicles.length} véhicules Martigues trouvés (attendu: 2003)`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la recherche Martigues:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche Martigues: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Cancel search function
-  const cancelOngoingSearch = useCallback(() => {
-    if (isLoadingAll) {
-      setCancelSearch(true);
-      toast({
-        title: "Annulation",
-        description: "Annulation de la recherche en cours...",
-      });
-    }
-  }, [isLoadingAll]);
-
-  // RESTORED: Fetch all vehicles with batch loading
-  const fetchAllVehicles = useCallback(async () => {
-    const confirmResult = window.confirm(
-      "Attention: Cette opération va récupérer tous les véhicules de la base de données, ce qui peut prendre beaucoup de temps et de ressources. Êtes-vous sûr de vouloir continuer?"
-    );
-    
-    if (!confirmResult) return;
-    
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Chargement",
-        description: "Récupération de tous les véhicules, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Chargement annulé",
-            description: `${allVehicles.length} véhicules récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de tous les véhicules`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(Math.min(95, batchCount * 5));
-        
-        if (batchCount % 5 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 10 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allVehicles.length} véhicules récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Chargement terminé",
-          description: `${allVehicles.length} véhicules récupérés au total`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la récupération de tous les véhicules:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
 
   // Load all data - OPTIMIZED for performance
   const loadAllData = useCallback(async (mode = 'optimized') => {
@@ -863,6 +382,34 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache, loadAllData]);
 
+  // Load companies for select components - ALWAYS load companies
+  const loadCompaniesForSelect = useCallback(async () => {
+    try {
+      // Try cached companies first
+      if (allDataCache && allDataCache.companies && allDataCache.companies.length > 0) {
+        console.log('Using cached companies:', allDataCache.companies.length);
+        setCompanies(allDataCache.companies);
+        return allDataCache.companies;
+      }
+      
+      // If no cache, load directly from API
+      console.log('No cached companies, fetching from API');
+      const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+      console.log('Companies loaded:', loadedCompanies.length);
+      setCompanies(loadedCompanies);
+      return loadedCompanies;
+    } catch (err) {
+      console.error('Error in loadCompaniesForSelect:', err);
+      setCompanies([]);
+      toast({
+        title: "Erreur",
+        description: `Erreur lors du chargement des entreprises: ${err.message}`,
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, [allDataCache]);
+
   // Specific search functions for single criteria - CLIENT-SIDE using cached data
   const searchByImei = useCallback(async (imei) => {
     if (!allDataCache) {
@@ -881,11 +428,69 @@ export const useCompanyVehicleDevice = () => {
       const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || raw.trim();
       const sanitizedImei = preferred;
 
-      console.log(`🔍 Searching for IMEI: ${sanitizedImei} in cache with ${allDataCache.vehicles?.length || 0} items`);
+      console.log(`🔍 ENHANCED IMEI SEARCH - Input: "${imei}" -> Sanitized: "${sanitizedImei}"`);
+      console.log(`🔍 Cache state - Total items: ${allDataCache.vehicles?.length || 0}`);
+      
+      // DIAGNOSTIC: Special handling for problematic IMEI
+      if (sanitizedImei === '350612071728933') {
+        console.log('🎯 PROBLEMATIC IMEI DETECTED - Running enhanced diagnostic');
+        try {
+          const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
+          const diagnosticResults = await ImeiDiagnosticService.runFullDiagnostic(sanitizedImei);
+          
+          // If found in diagnostic, use that data
+          const successfulTest = diagnosticResults.tests.find(test => test.success && test.data);
+          if (successfulTest) {
+            console.log('✅ DIAGNOSTIC SUCCESS - Found via:', successfulTest.name);
+            const device = successfulTest.data;
+            const mapped = {
+              id: device.imei,
+              entreprise: device.vehicle?.company?.name || (device.isAssociated ? "Associé" : "Boîtier libre"),
+              type: "device",
+              immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+              nomVehicule: device.vehicle?.nomVehicule || "",
+              imei: device.imei,
+              typeBoitier: device.protocolId?.toString() || "",
+              marque: "",
+              modele: "",
+              kilometrage: "",
+              telephone: device.sim || "",
+              emplacement: "",
+              deviceData: device,
+              isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+            };
+            
+            toast({
+              title: "Recherche par IMEI (Diagnostic)",
+              description: `IMEI trouvé via diagnostic: ${successfulTest.name}`,
+            });
+            return [mapped];
+          }
+        } catch (diagnosticError) {
+          console.error('❌ Diagnostic failed:', diagnosticError);
+        }
+      }
+      
+      // Debug: Check cache timestamp and age
+      const now = Date.now();
+      const lastCacheUpdate = localStorage.getItem('companyVehicleDeviceData_timestamp');
+      const cacheAge = lastCacheUpdate ? now - parseInt(lastCacheUpdate) : Infinity;
+      console.log(`🔍 Cache age: ${Math.round(cacheAge / 1000)}s (${Math.round(cacheAge / 60000)}min)`);
+
+      // Debug: Show some cache content
+      if (allDataCache.vehicles) {
+        const deviceCount = allDataCache.vehicles.filter(v => v.type === 'device').length;
+        const vehicleCount = allDataCache.vehicles.filter(v => v.type === 'vehicle').length;
+        console.log(`🔍 Cache breakdown - Devices: ${deviceCount}, Vehicles: ${vehicleCount}`);
+        
+        // Show first few devices for debugging
+        const devices = allDataCache.vehicles.filter(v => v.type === 'device').slice(0, 3);
+        console.log(`🔍 Sample devices in cache:`, devices.map(d => ({ imei: d.imei, associated: d.isAssociated })));
+      }
 
       // First, search locally in the unified cache
       const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
-      console.log(`🔍 Local search results:`, localResults);
+      console.log(`🔍 Local search results:`, localResults.length > 0 ? localResults : 'NONE FOUND');
       
       if (localResults.length > 0) {
         toast({
@@ -895,18 +500,20 @@ export const useCompanyVehicleDevice = () => {
         return localResults;
       }
 
-      // FIXED: If no local results and cache might be stale, try refreshing cache first
-      console.log('🔍 No local results, checking if cache needs refresh...');
-      const now = Date.now();
-      const lastCacheUpdate = localStorage.getItem('companyVehicleDeviceData_timestamp');
-      const cacheAge = lastCacheUpdate ? now - parseInt(lastCacheUpdate) : Infinity;
+      // ENHANCED: Force cache refresh if no results and cache is stale OR if specifically requested
+      console.log('🔍 No local results found');
       
-      // If cache is older than 5 minutes and no results, force refresh
-      if (cacheAge > 300000) { // 5 minutes
-        console.log('🔍 Cache is stale, forcing refresh before backend search...');
+      // Always try refresh if cache is older than 2 minutes OR if no results found
+      const shouldRefresh = cacheAge > 120000 || localResults.length === 0;
+      
+      if (shouldRefresh) {
+        console.log('🔍 Forcing cache refresh - cache age or no results...');
         await loadAllData();
+        
         // Retry local search after refresh
         const refreshedResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
+        console.log(`🔍 Post-refresh local search results:`, refreshedResults.length > 0 ? refreshedResults : 'STILL NONE');
+        
         if (refreshedResults.length > 0) {
           toast({
             title: "Recherche par IMEI",
@@ -916,39 +523,166 @@ export const useCompanyVehicleDevice = () => {
         }
       }
 
-      // Fallback to backend exact lookup with sanitized IMEI
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { getDevice } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      const response = await client.graphql({
-        query: getDevice,
-        variables: { imei: sanitizedImei }
-      });
-      const device = response.data?.getDevice;
-      if (device) {
-        const mapped = {
-          id: device.imei,
-          entreprise: device.vehicle ? "Associé" : "Boîtier libre",
-          type: "device",
-          immatriculation: device.vehicle?.immat || "",
-          nomVehicule: device.vehicle?.nomVehicule || "",
-          imei: device.imei,
-          typeBoitier: device.protocolId?.toString() || "",
-          marque: "",
-          modele: "",
-          kilometrage: "",
-          telephone: device.sim || "",
-          emplacement: "",
-          deviceData: device,
-          isAssociated: !!device.vehicle?.immat
-        };
-        toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (backend)` });
-        return [mapped];
+      // ENHANCED: Use the new diagnostic service for backend fallback
+      console.log('🔍 Trying enhanced backend search...');
+      
+      try {
+        const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
+        const foundDevice = await ImeiDiagnosticService.enhancedImeiSearch(sanitizedImei);
+        
+        if (foundDevice) {
+          console.log('✅ Found via enhanced search:', foundDevice);
+          const mapped = {
+            id: foundDevice.imei,
+            entreprise: foundDevice.vehicle?.company?.name || (foundDevice.isAssociated ? "Associé" : "Boîtier libre"),
+            type: "device",
+            immatriculation: foundDevice.vehicle?.immat || foundDevice.deviceVehicleImmat || "",
+            nomVehicule: foundDevice.vehicle?.nomVehicule || "",
+            imei: foundDevice.imei,
+            typeBoitier: foundDevice.protocolId?.toString() || "",
+            marque: "",
+            modele: "",
+            kilometrage: "",
+            telephone: foundDevice.sim || "",
+            emplacement: "",
+            deviceData: foundDevice,
+            isAssociated: !!foundDevice.vehicle?.immat || !!foundDevice.deviceVehicleImmat
+          };
+          
+          toast({
+            title: "Recherche par IMEI",
+            description: `1 résultat trouvé via recherche améliorée`,
+          });
+          return [mapped];
+        }
+        
+      } catch (enhancedError) {
+        console.error('🔍 Enhanced search failed:', enhancedError);
+        
+        // FALLBACK: Try original backend strategies
+        console.log('🔍 Falling back to original backend strategies...');
+        
+        try {
+          const { getGraphQLClient } = await import('@/config/aws-config.js');
+          const { getDevice, listDevices } = await import('../graphql/queries');
+          const client = await getGraphQLClient();
+          
+          // Strategy 1: Direct getDevice lookup
+          console.log('🔍 Fallback Strategy 1: Direct getDevice lookup');
+          const response = await client.graphql({
+            query: getDevice,
+            variables: { imei: sanitizedImei }
+          });
+          const device = response.data?.getDevice;
+          
+          if (device) {
+            console.log('🔍 Device found via getDevice fallback:', device);
+            const mapped = {
+              id: device.imei,
+              entreprise: device.vehicle?.company?.name || (device.vehicle ? "Associé" : "Boîtier libre"),
+              type: "device",
+              immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+              nomVehicule: device.vehicle?.nomVehicule || "",
+              imei: device.imei,
+              typeBoitier: device.protocolId?.toString() || "",
+              marque: "",
+              modele: "",
+              kilometrage: "",
+              telephone: device.sim || "",
+              emplacement: "",
+              deviceData: device,
+              isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+            };
+            toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (fallback direct)` });
+            return [mapped];
+          }
+
+          // Strategy 2: List devices with enhanced filter using new GraphQL structure
+          console.log('🔍 Fallback Strategy 2: Enhanced ListDevices');
+          
+          // Try with imei parameter first (new structure)
+          try {
+            const listResponse = await client.graphql({
+              query: listDevices,
+              variables: { 
+                imei: sanitizedImei,
+                limit: 20 
+              }
+            });
+            const devices = listResponse.data?.listDevices?.items || [];
+            
+            if (devices.length > 0) {
+              console.log('🔍 Devices found via listDevices (imei param):', devices);
+              const mappedDevices = devices.map(device => ({
+                id: device.imei,
+                entreprise: device.vehicle?.company?.name || (device.vehicle ? "Associé" : "Boîtier libre"),
+                type: "device",
+                immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+                nomVehicule: device.vehicle?.nomVehicule || "",
+                imei: device.imei,
+                typeBoitier: device.protocolId?.toString() || "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                telephone: device.sim || "",
+                emplacement: "",
+                deviceData: device,
+                isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+              }));
+              toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (fallback param)` });
+              return mappedDevices;
+            }
+          } catch (paramError) {
+            console.warn('🔍 IMEI parameter failed, trying filter:', paramError);
+          }
+          
+          // Try with filter as fallback
+          try {
+            const listResponse = await client.graphql({
+              query: listDevices,
+              variables: { 
+                filter: { imei: { eq: sanitizedImei } },
+                limit: 20 
+              }
+            });
+            const devices = listResponse.data?.listDevices?.items || [];
+            
+            if (devices.length > 0) {
+              console.log('🔍 Devices found via listDevices (filter):', devices);
+              const mappedDevices = devices.map(device => ({
+                id: device.imei,
+                entreprise: device.vehicle?.company?.name || (device.vehicle ? "Associé" : "Boîtier libre"),
+                type: "device",
+                immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+                nomVehicule: device.vehicle?.nomVehicule || "",
+                imei: device.imei,
+                typeBoitier: device.protocolId?.toString() || "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                telephone: device.sim || "",
+                emplacement: "",
+                deviceData: device,
+                isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+              }));
+              toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (fallback filter)` });
+              return mappedDevices;
+            }
+          } catch (filterError) {
+            console.warn('🔍 Filter also failed:', filterError);
+          }
+          
+        } catch (fallbackError) {
+          console.error('🔍 All fallback strategies failed:', fallbackError);
+        }
       }
 
-      toast({ title: "Recherche par IMEI", description: `0 résultat` });
+      console.log('🔍 IMEI not found in any strategy');
+      toast({ title: "Recherche par IMEI", description: `IMEI ${sanitizedImei} introuvable` });
       return [];
+      
     } catch (err) {
+      console.error('🔍 IMEI search error:', err);
       setError(err.message);
       toast({
         title: "Erreur",
@@ -1230,30 +964,24 @@ export const useCompanyVehicleDevice = () => {
   }, [loadAllData]);
 
   return {
-    // Data states
+    // Data
     companies,
     vehicles,
     devices,
     freeDevices,
     stats,
+    
+    // State
     loading,
     error,
     isCacheReady,
     loadingMode,
     quickStats,
-    companiesReady,
     
-    // RESTORED: Batch loading states
-    isLoadingAll,
-    showProgressBar,
-    loadingProgress,
-    cancelSearch,
+    // Cache status
+    allDataCache,
     
-    // Filter states
-    isFiltered: devices.length !== stats.totalDevices,
-    totalResults: devices.length,
-    
-    // Action functions
+    // Actions
     loadAllData,
     loadQuickStats,
     setLoadingMode,
@@ -1262,24 +990,21 @@ export const useCompanyVehicleDevice = () => {
     searchBySim,
     searchByVehicle,
     searchByCompany,
-    resetFilters,
     getVehiclesByCompany,
     getAllVehiclesByCompany,
     getDeviceStatus,
     loadCompaniesForSelect,
+    resetFilters,
     
-    // RESTORED: Batch loading functions
-    fetchAllVehicles,
-    fetchVehiclesWithoutImei,
-    fetchDevicesWithoutVehicles,
-    searchMartiguesCompany,
-    cancelOngoingSearch,
-    
-    // Optimized functions for unassociated items
+    // OPTIMIZED: New specialized functions for unassociated items
     getVehiclesWithoutDevices,
     getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
-    getUnassociatedItemsStats
+    getUnassociatedItemsStats,
+    
+    // Utilities
+    isFiltered: devices.length !== stats.totalDevices,
+    totalResults: devices.length
   };
 };
 
