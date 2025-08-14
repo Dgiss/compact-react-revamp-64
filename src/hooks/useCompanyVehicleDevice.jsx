@@ -174,25 +174,151 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - OPTIMIZED for performance
-  const loadAllData = useCallback(async (mode = 'optimized') => {
+  /**
+   * ULTRA-FAST DATA LOADING (<20s) with enriched ListVehicles
+   * Uses massive parallel pagination and intelligent caching
+   */
+  const loadAllDataUltraFast = useCallback(async (mode = 'ultra-fast') => {
+    // Prevent concurrent loading
+    if (loadingRef.current) {
+      console.log('⏹️ Loading already in progress, skipping...');
+      return;
+    }
+    
+    loadingRef.current = true;
     setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - OPTIMIZED ===`);
+      console.log(`🚀 === ULTRA-FAST LOADING STARTED (${mode.toUpperCase()}) ===`);
+      
+      const startTime = Date.now();
+      let result;
+      
+      // Use the new ultra-fast service method
+      console.log('🔥 Using ultra-fast enriched loading with massive parallel pagination...');
+      result = await VehicleService.fetchCompaniesWithVehiclesUltraFast();
+      
+      const loadTime = result.loadTime || (Date.now() - startTime);
+      console.log(`🎯 === ULTRA-FAST LOADING COMPLETED IN ${loadTime}ms ===`);
+      console.log('📊 Results:', {
+        companies: result.companies?.length || 0,
+        totalItems: result.vehicles?.length || 0,
+        vehicleCount: result.stats?.vehicleCount || 0,
+        freeDeviceCount: result.stats?.freeDeviceCount || 0
+      });
+      
+      // Validate we got data under 20 seconds
+      if (loadTime > 20000) {
+        console.warn(`⚠️ Loading exceeded 20s limit: ${loadTime}ms`);
+      }
+      
+      // Update state efficiently
+      setCompanies(result.companies || []);
+      setDevices(result.vehicles || []);
+      
+      // Cache for client-side filtering
+      setAllDataCache(result);
+      setIsCacheReady(true);
+      
+      // Save to localStorage in background (non-blocking)
+      setTimeout(() => {
+        try {
+          saveToLocalStorage(result);
+        } catch (cacheError) {
+          console.warn('Cache save failed:', cacheError);
+        }
+      }, 0);
+      
+      // Calculate stats from result or compute them
+      const vehicles = result.vehicles || [];
+      const vehicleCount = result.stats?.vehicleCount || vehicles.filter(item => item.type === "vehicle").length;
+      const freeDevicesCount = result.stats?.freeDeviceCount || vehicles.filter(item => 
+        item.type === "device" && !item.isAssociated
+      ).length;
+      const associatedDeviceCount = vehicles.filter(item => 
+        item.type === "device" && item.isAssociated
+      ).length;
+      
+      setFreeDevices(freeDevicesCount);
+      setStats({
+        vehicleCount,
+        associatedDeviceCount,
+        freeDeviceCount: freeDevicesCount,
+        totalItems: vehicles.length,
+        loadTime
+      });
+      
+      // Success notification
+      const loadTimeSeconds = (loadTime / 1000).toFixed(1);
+      toast({
+        title: "✅ Chargement ultra-rapide terminé",
+        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres en ${loadTimeSeconds}s`,
+      });
+      
+    } catch (err) {
+      console.error('❌ Ultra-fast loading error:', err);
+      setError(err.message || 'Une erreur est survenue');
+      
+      // Try to recover with cached data
+      const cachedData = loadFromLocalStorage();
+      if (cachedData) {
+        console.log('🔄 Recovering with cached data...');
+        setCompanies(cachedData.companies || []);
+        setDevices(cachedData.vehicles || []);
+        setAllDataCache(cachedData);
+        setIsCacheReady(true);
+        
+        toast({
+          title: "⚠️ Utilisation du cache",
+          description: "Données récupérées du cache en cas d'erreur",
+          variant: "destructive"
+        });
+      } else {
+        // Complete failure - reset states
+        setCompanies([]);
+        setDevices([]);
+        setAllDataCache(null);
+        setIsCacheReady(false);
+        setFreeDevices(0);
+        setStats({});
+        
+        toast({
+          title: "❌ Erreur de chargement",
+          description: `Échec du chargement: ${err.message}`,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setLoading(false);
+      loadingRef.current = false;
+    }
+  }, []);
+
+  // Keep original function as fallback
+  const loadAllData = useCallback(async (mode = 'optimized') => {
+    console.log('⚠️ Using fallback loadAllData, consider using loadAllDataUltraFast');
+    
+    // Route to ultra-fast by default
+    if (mode === 'optimized' || mode === 'complete') {
+      return await loadAllDataUltraFast('ultra-fast');
+    }
+    
+    // Legacy implementation for specific cases
+    setLoadingMode(mode);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - LEGACY ===`);
       
       const startTime = Date.now();
       let result;
       
       if (mode === 'complete') {
-        // Complete dataset including free devices
-        console.log('Using complete query including free devices...');
         result = await VehicleService.fetchCompaniesWithVehicles();
       } else {
-        // Optimized: vehicles fast + free devices merged
-        console.log('Using optimized vehicles + free devices merge...');
         const [base, free] = await Promise.all([
           VehicleService.fetchAllVehiclesOptimized(),
           CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
@@ -204,47 +330,32 @@ export const useCompanyVehicleDevice = () => {
       }
       
       const loadTime = Date.now() - startTime;
-      console.log(`=== DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
-      console.log('Companies count:', result.companies?.length || 0);
-      console.log('Combined data count:', result.vehicles?.length || 0);
+      console.log(`=== LEGACY DATA LOADED IN ${loadTime}ms ===`);
       
-      // Update state efficiently
       setCompanies(result.companies || []);
       setDevices(result.vehicles || []);
-      
-      // Cache for client-side filtering
       setAllDataCache(result);
       setIsCacheReady(true);
       
-      // Save to localStorage in background
       setTimeout(() => saveToLocalStorage(result), 0);
       
-      // Calculate stats efficiently
       const vehicles = result.vehicles || [];
       const vehicleCount = vehicles.filter(item => item.type === "vehicle").length;
-      const associatedDeviceCount = vehicles.filter(item => 
-        item.type === "device" && item.isAssociated
-      ).length;
       const freeDevicesCount = vehicles.filter(item => 
         item.type === "device" && !item.isAssociated
       ).length;
       
       setFreeDevices(freeDevicesCount);
-      setStats({
-        vehicleCount,
-        associatedDeviceCount,
-        freeDeviceCount: freeDevicesCount
-      });
+      setStats({ vehicleCount, freeDeviceCount: freeDevicesCount });
       
       toast({
-        title: "Données chargées",
+        title: "Données chargées (legacy)",
         description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
       });
       
     } catch (err) {
-      console.error('Error loading data:', err);
+      console.error('Legacy loading error:', err);
       setError(err.message || 'An error occurred');
-      // Reset states on error
       setCompanies([]);
       setDevices([]);
       setAllDataCache(null);
@@ -796,6 +907,7 @@ export const useCompanyVehicleDevice = () => {
     
     // Actions
     loadAllData,
+    loadAllDataUltraFast, // NEW: Ultra-fast loading function
     loadQuickStats,
     setLoadingMode,
     searchDevices,
