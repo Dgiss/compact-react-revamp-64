@@ -428,11 +428,29 @@ export const useCompanyVehicleDevice = () => {
       const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || raw.trim();
       const sanitizedImei = preferred;
 
-      console.log(`🔍 Searching for IMEI: ${sanitizedImei} in cache with ${allDataCache.vehicles?.length || 0} items`);
+      console.log(`🔍 IMEI SEARCH DEBUG - Input: "${imei}" -> Sanitized: "${sanitizedImei}"`);
+      console.log(`🔍 Cache state - Total items: ${allDataCache.vehicles?.length || 0}`);
+      
+      // Debug: Check cache timestamp and age
+      const now = Date.now();
+      const lastCacheUpdate = localStorage.getItem('companyVehicleDeviceData_timestamp');
+      const cacheAge = lastCacheUpdate ? now - parseInt(lastCacheUpdate) : Infinity;
+      console.log(`🔍 Cache age: ${Math.round(cacheAge / 1000)}s (${Math.round(cacheAge / 60000)}min)`);
+
+      // Debug: Show some cache content
+      if (allDataCache.vehicles) {
+        const deviceCount = allDataCache.vehicles.filter(v => v.type === 'device').length;
+        const vehicleCount = allDataCache.vehicles.filter(v => v.type === 'vehicle').length;
+        console.log(`🔍 Cache breakdown - Devices: ${deviceCount}, Vehicles: ${vehicleCount}`);
+        
+        // Show first few devices for debugging
+        const devices = allDataCache.vehicles.filter(v => v.type === 'device').slice(0, 3);
+        console.log(`🔍 Sample devices in cache:`, devices.map(d => ({ imei: d.imei, associated: d.isAssociated })));
+      }
 
       // First, search locally in the unified cache
       const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
-      console.log(`🔍 Local search results:`, localResults);
+      console.log(`🔍 Local search results:`, localResults.length > 0 ? localResults : 'NONE FOUND');
       
       if (localResults.length > 0) {
         toast({
@@ -442,18 +460,20 @@ export const useCompanyVehicleDevice = () => {
         return localResults;
       }
 
-      // FIXED: If no local results and cache might be stale, try refreshing cache first
-      console.log('🔍 No local results, checking if cache needs refresh...');
-      const now = Date.now();
-      const lastCacheUpdate = localStorage.getItem('companyVehicleDeviceData_timestamp');
-      const cacheAge = lastCacheUpdate ? now - parseInt(lastCacheUpdate) : Infinity;
+      // ENHANCED: Force cache refresh if no results and cache is stale OR if specifically requested
+      console.log('🔍 No local results found');
       
-      // If cache is older than 5 minutes and no results, force refresh
-      if (cacheAge > 300000) { // 5 minutes
-        console.log('🔍 Cache is stale, forcing refresh before backend search...');
+      // Always try refresh if cache is older than 2 minutes OR if no results found
+      const shouldRefresh = cacheAge > 120000 || localResults.length === 0;
+      
+      if (shouldRefresh) {
+        console.log('🔍 Forcing cache refresh - cache age or no results...');
         await loadAllData();
+        
         // Retry local search after refresh
         const refreshedResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
+        console.log(`🔍 Post-refresh local search results:`, refreshedResults.length > 0 ? refreshedResults : 'STILL NONE');
+        
         if (refreshedResults.length > 0) {
           toast({
             title: "Recherche par IMEI",
@@ -463,39 +483,108 @@ export const useCompanyVehicleDevice = () => {
         }
       }
 
-      // Fallback to backend exact lookup with sanitized IMEI
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { getDevice } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      const response = await client.graphql({
-        query: getDevice,
-        variables: { imei: sanitizedImei }
-      });
-      const device = response.data?.getDevice;
-      if (device) {
-        const mapped = {
-          id: device.imei,
-          entreprise: device.vehicle ? "Associé" : "Boîtier libre",
-          type: "device",
-          immatriculation: device.vehicle?.immat || "",
-          nomVehicule: device.vehicle?.nomVehicule || "",
-          imei: device.imei,
-          typeBoitier: device.protocolId?.toString() || "",
-          marque: "",
-          modele: "",
-          kilometrage: "",
-          telephone: device.sim || "",
-          emplacement: "",
-          deviceData: device,
-          isAssociated: !!device.vehicle?.immat
-        };
-        toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (backend)` });
-        return [mapped];
+      // Enhanced backend fallback with multiple strategies
+      console.log('🔍 Trying backend fallback strategies...');
+      
+      try {
+        // Strategy 1: Direct getDevice lookup
+        const { getGraphQLClient } = await import('@/config/aws-config.js');
+        const { getDevice, listDevices } = await import('../graphql/queries');
+        const client = await getGraphQLClient();
+        
+        console.log('🔍 Strategy 1: Direct getDevice lookup');
+        const response = await client.graphql({
+          query: getDevice,
+          variables: { imei: sanitizedImei }
+        });
+        const device = response.data?.getDevice;
+        
+        if (device) {
+          console.log('🔍 Device found via getDevice:', device);
+          const mapped = {
+            id: device.imei,
+            entreprise: device.vehicle ? "Associé" : "Boîtier libre",
+            type: "device",
+            immatriculation: device.vehicle?.immat || "",
+            nomVehicule: device.vehicle?.nomVehicule || "",
+            imei: device.imei,
+            typeBoitier: device.protocolId?.toString() || "",
+            marque: "",
+            modele: "",
+            kilometrage: "",
+            telephone: device.sim || "",
+            emplacement: "",
+            deviceData: device,
+            isAssociated: !!device.vehicle?.immat
+          };
+          toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (backend direct)` });
+          return [mapped];
+        }
+
+        // Strategy 2: List devices with filter (try exact match and partial match)
+        console.log('🔍 Strategy 2: ListDevices with filter');
+        let devices = [];
+        
+        // Try exact match first
+        try {
+          const listResponse = await client.graphql({
+            query: listDevices,
+            variables: { 
+              filter: { imei: { eq: sanitizedImei } },
+              limit: 5 
+            }
+          });
+          devices = listResponse.data?.listDevices?.items || [];
+        } catch (listError) {
+          console.warn('🔍 Exact filter failed, trying contains:', listError);
+          
+          // Fallback to contains filter
+          try {
+            const listResponse = await client.graphql({
+              query: listDevices,
+              variables: { 
+                filter: { imei: { contains: sanitizedImei } },
+                limit: 10 
+              }
+            });
+            devices = listResponse.data?.listDevices?.items || [];
+          } catch (containsError) {
+            console.warn('🔍 Contains filter also failed:', containsError);
+          }
+        }
+        
+        if (devices.length > 0) {
+          console.log('🔍 Devices found via listDevices:', devices);
+          const mappedDevices = devices.map(device => ({
+            id: device.imei,
+            entreprise: device.vehicle ? "Associé" : "Boîtier libre",
+            type: "device",
+            immatriculation: device.vehicle?.immat || "",
+            nomVehicule: device.vehicle?.nomVehicule || "",
+            imei: device.imei,
+            typeBoitier: device.protocolId?.toString() || "",
+            marque: "",
+            modele: "",
+            kilometrage: "",
+            telephone: device.sim || "",
+            emplacement: "",
+            deviceData: device,
+            isAssociated: !!device.vehicle?.immat
+          }));
+          toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (backend list)` });
+          return mappedDevices;
+        }
+        
+      } catch (backendError) {
+        console.error('🔍 Backend search failed:', backendError);
       }
 
-      toast({ title: "Recherche par IMEI", description: `0 résultat` });
+      console.log('🔍 IMEI not found in any strategy');
+      toast({ title: "Recherche par IMEI", description: `IMEI ${sanitizedImei} introuvable` });
       return [];
+      
     } catch (err) {
+      console.error('🔍 IMEI search error:', err);
       setError(err.message);
       toast({
         title: "Erreur",

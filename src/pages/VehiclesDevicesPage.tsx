@@ -22,6 +22,7 @@ import { updateDeviceSimple } from "@/services/SimpleDeviceService.js";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { clearOldCaches } from "@/utils/cache-utils";
+import { CacheDebugPanel } from "@/components/debug/CacheDebugPanel";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -1062,6 +1063,28 @@ export default function VehiclesDevicesPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
+          <Button variant="outline" size="sm" onClick={refreshCurrentView} disabled={loading} title="Rafraîchir la vue actuelle">
+            <RefreshCw className="mr-2 h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Debug Panel - Temporary for IMEI search issues */}
+        <div className="hidden lg:block">
+          <CacheDebugPanel
+            onClearCache={() => {
+              clearOldCaches();
+              setFilteredData([]);
+              setCurrentFilters({});
+            }}
+            onForceRefresh={() => {
+              loadAllData();
+            }}
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={refreshCurrentView} disabled={loading} title="Rafraîchir la vue actuelle">
             <RefreshCw className="mr-2 h-4 w-4" />
             Rafraîchir
