@@ -23,7 +23,6 @@ import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { clearOldCaches } from "@/utils/cache-utils";
 import { CacheDebugPanel } from "@/components/debug/CacheDebugPanel";
-import { ImeiDiagnosticPanel } from "@/components/debug/ImeiDiagnosticPanel";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -1069,8 +1068,8 @@ export default function VehiclesDevicesPage() {
           </Button>
         </div>
         
-        {/* Debug Panels - Temporary for IMEI search issues */}
-        <div className="hidden lg:block space-y-4">
+        {/* Debug Panel - Temporary for IMEI search issues */}
+        <div className="hidden lg:block">
           <CacheDebugPanel
             onClearCache={() => {
               clearOldCaches();
@@ -1081,8 +1080,6 @@ export default function VehiclesDevicesPage() {
               loadAllData();
             }}
           />
-          
-          <ImeiDiagnosticPanel />
         </div>
       </div>
       

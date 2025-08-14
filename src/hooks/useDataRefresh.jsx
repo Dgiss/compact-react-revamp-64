@@ -112,48 +112,17 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
   }, [loadAllData, setDevices, searchDevices, currentFilters]);
   
   const refreshAfterDissociation = useCallback(async (message = "Dissociation réussie", updatedItem = null) => {
-    // ENHANCED: Handle dissociation with force sync for critical cases
+    // FIXED: Handle dissociation differently to update cache properly
     try {
       toast({
         title: "Succès", 
         description: message,
       });
       
-      console.log('🔄 Handling ENHANCED dissociation refresh...');
+      console.log('🔄 Handling dissociation refresh...');
       console.log('🔄 Dissociated item:', updatedItem);
       
-      // CRITICAL: For specific IMEIs, force complete cache invalidation
-      const isProblematicImei = updatedItem?.imei === '350612071728933';
-      
-      if (isProblematicImei) {
-        console.log('🎯 CRITICAL IMEI DETECTED - Forcing complete cache refresh');
-        
-        // Clear all caches immediately
-        const cacheKey = 'companyVehicleDeviceData';
-        localStorage.removeItem(cacheKey);
-        if (window.allDataCache) {
-          window.allDataCache = null;
-        }
-        
-        // Force diagnostic sync
-        try {
-          const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
-          await ImeiDiagnosticService.forceSyncImei(updatedItem.imei);
-          console.log('✅ Force sync completed for critical IMEI');
-        } catch (syncError) {
-          console.error('❌ Force sync failed:', syncError);
-        }
-        
-        // Force complete data reload
-        if (loadAllData) {
-          console.log('🔄 Forcing complete data reload...');
-          await loadAllData('complete');
-        }
-        
-        return;
-      }
-      
-      // STANDARD: Update cache to mark device as free/unassociated with better synchronization
+      // ENHANCED: Update cache to mark device as free/unassociated with better synchronization
       if (updatedItem && updatedItem.imei && window.localStorage) {
         try {
           const cacheKey = 'companyVehicleDeviceData';
@@ -173,7 +142,6 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
                 ...cachedData.vehicles[deviceIndex],
                 isAssociated: false,
                 vehicleImmat: null,
-                deviceVehicleImmat: null,
                 immatriculation: "",
                 nomVehicule: "",
                 entreprise: "Boîtier libre",
