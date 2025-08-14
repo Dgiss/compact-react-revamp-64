@@ -422,13 +422,13 @@ export const useCompanyVehicleDevice = () => {
     }
   }, []);
 
-  // Keep original function as fallback
-  const loadAllData = useCallback(async (mode = 'optimized') => {
-    console.log('⚠️ Using fallback loadAllData, consider using loadAllDataUltraFast');
+  // Force complete scan by default for all data loading
+  const loadAllData = useCallback(async (mode = 'complete-scan') => {
+    console.log('🔍 Using complete scan by default to ensure all data is loaded');
     
-    // Route to ultra-fast by default
-    if (mode === 'optimized' || mode === 'complete') {
-      return await loadAllDataUltraFast('ultra-fast');
+    // Force complete scan for all modes to guarantee full data retrieval
+    if (mode === 'optimized' || mode === 'complete' || mode === 'complete-scan') {
+      return await loadCompleteVehicleScan();
     }
     
     // Legacy implementation for specific cases
@@ -1054,6 +1054,32 @@ export const useCompanyVehicleDevice = () => {
     getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
     getUnassociatedItemsStats,
+    
+    // Company-specific search
+    searchByCompanyName: useCallback(async (companyName) => {
+      console.log(`🔍 === SEARCHING COMPANY: ${companyName} ===`);
+      
+      try {
+        // Ensure we have complete data loaded
+        if (!isCacheReady || !allDataCache) {
+          console.log('🔄 Loading complete data for company search...');
+          await loadCompleteVehicleScan();
+        }
+        
+        // Filter vehicles for the specific company
+        const companyVehicles = (allDataCache?.vehicles || devices).filter(item => {
+          if (!item.entreprise) return false;
+          return item.entreprise.toLowerCase().includes(companyName.toLowerCase());
+        });
+        
+        console.log(`🎯 Found ${companyVehicles.length} vehicles for company "${companyName}"`);
+        
+        return companyVehicles;
+      } catch (error) {
+        console.error('Error searching by company name:', error);
+        return [];
+      }
+    }, [isCacheReady, allDataCache, devices, loadCompleteVehicleScan]),
     
     // Utilities
     isFiltered: devices.length !== stats.totalDevices,
