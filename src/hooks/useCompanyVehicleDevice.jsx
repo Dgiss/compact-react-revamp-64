@@ -428,8 +428,48 @@ export const useCompanyVehicleDevice = () => {
       const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || raw.trim();
       const sanitizedImei = preferred;
 
-      console.log(`🔍 IMEI SEARCH DEBUG - Input: "${imei}" -> Sanitized: "${sanitizedImei}"`);
+      console.log(`🔍 ENHANCED IMEI SEARCH - Input: "${imei}" -> Sanitized: "${sanitizedImei}"`);
       console.log(`🔍 Cache state - Total items: ${allDataCache.vehicles?.length || 0}`);
+      
+      // DIAGNOSTIC: Special handling for problematic IMEI
+      if (sanitizedImei === '350612071728933') {
+        console.log('🎯 PROBLEMATIC IMEI DETECTED - Running enhanced diagnostic');
+        try {
+          const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
+          const diagnosticResults = await ImeiDiagnosticService.runFullDiagnostic(sanitizedImei);
+          
+          // If found in diagnostic, use that data
+          const successfulTest = diagnosticResults.tests.find(test => test.success && test.data);
+          if (successfulTest) {
+            console.log('✅ DIAGNOSTIC SUCCESS - Found via:', successfulTest.name);
+            const device = successfulTest.data;
+            const mapped = {
+              id: device.imei,
+              entreprise: device.vehicle?.company?.name || (device.isAssociated ? "Associé" : "Boîtier libre"),
+              type: "device",
+              immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+              nomVehicule: device.vehicle?.nomVehicule || "",
+              imei: device.imei,
+              typeBoitier: device.protocolId?.toString() || "",
+              marque: "",
+              modele: "",
+              kilometrage: "",
+              telephone: device.sim || "",
+              emplacement: "",
+              deviceData: device,
+              isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+            };
+            
+            toast({
+              title: "Recherche par IMEI (Diagnostic)",
+              description: `IMEI trouvé via diagnostic: ${successfulTest.name}`,
+            });
+            return [mapped];
+          }
+        } catch (diagnosticError) {
+          console.error('❌ Diagnostic failed:', diagnosticError);
+        }
+      }
       
       // Debug: Check cache timestamp and age
       const now = Date.now();
@@ -483,100 +523,158 @@ export const useCompanyVehicleDevice = () => {
         }
       }
 
-      // Enhanced backend fallback with multiple strategies
-      console.log('🔍 Trying backend fallback strategies...');
+      // ENHANCED: Use the new diagnostic service for backend fallback
+      console.log('🔍 Trying enhanced backend search...');
       
       try {
-        // Strategy 1: Direct getDevice lookup
-        const { getGraphQLClient } = await import('@/config/aws-config.js');
-        const { getDevice, listDevices } = await import('../graphql/queries');
-        const client = await getGraphQLClient();
+        const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
+        const foundDevice = await ImeiDiagnosticService.enhancedImeiSearch(sanitizedImei);
         
-        console.log('🔍 Strategy 1: Direct getDevice lookup');
-        const response = await client.graphql({
-          query: getDevice,
-          variables: { imei: sanitizedImei }
-        });
-        const device = response.data?.getDevice;
-        
-        if (device) {
-          console.log('🔍 Device found via getDevice:', device);
+        if (foundDevice) {
+          console.log('✅ Found via enhanced search:', foundDevice);
           const mapped = {
-            id: device.imei,
-            entreprise: device.vehicle ? "Associé" : "Boîtier libre",
+            id: foundDevice.imei,
+            entreprise: foundDevice.vehicle?.company?.name || (foundDevice.isAssociated ? "Associé" : "Boîtier libre"),
             type: "device",
-            immatriculation: device.vehicle?.immat || "",
-            nomVehicule: device.vehicle?.nomVehicule || "",
-            imei: device.imei,
-            typeBoitier: device.protocolId?.toString() || "",
+            immatriculation: foundDevice.vehicle?.immat || foundDevice.deviceVehicleImmat || "",
+            nomVehicule: foundDevice.vehicle?.nomVehicule || "",
+            imei: foundDevice.imei,
+            typeBoitier: foundDevice.protocolId?.toString() || "",
             marque: "",
             modele: "",
             kilometrage: "",
-            telephone: device.sim || "",
+            telephone: foundDevice.sim || "",
             emplacement: "",
-            deviceData: device,
-            isAssociated: !!device.vehicle?.immat
+            deviceData: foundDevice,
+            isAssociated: !!foundDevice.vehicle?.immat || !!foundDevice.deviceVehicleImmat
           };
-          toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (backend direct)` });
+          
+          toast({
+            title: "Recherche par IMEI",
+            description: `1 résultat trouvé via recherche améliorée`,
+          });
           return [mapped];
         }
-
-        // Strategy 2: List devices with filter (try exact match and partial match)
-        console.log('🔍 Strategy 2: ListDevices with filter');
-        let devices = [];
         
-        // Try exact match first
+      } catch (enhancedError) {
+        console.error('🔍 Enhanced search failed:', enhancedError);
+        
+        // FALLBACK: Try original backend strategies
+        console.log('🔍 Falling back to original backend strategies...');
+        
         try {
-          const listResponse = await client.graphql({
-            query: listDevices,
-            variables: { 
-              filter: { imei: { eq: sanitizedImei } },
-              limit: 5 
-            }
-          });
-          devices = listResponse.data?.listDevices?.items || [];
-        } catch (listError) {
-          console.warn('🔍 Exact filter failed, trying contains:', listError);
+          const { getGraphQLClient } = await import('@/config/aws-config.js');
+          const { getDevice, listDevices } = await import('../graphql/queries');
+          const client = await getGraphQLClient();
           
-          // Fallback to contains filter
+          // Strategy 1: Direct getDevice lookup
+          console.log('🔍 Fallback Strategy 1: Direct getDevice lookup');
+          const response = await client.graphql({
+            query: getDevice,
+            variables: { imei: sanitizedImei }
+          });
+          const device = response.data?.getDevice;
+          
+          if (device) {
+            console.log('🔍 Device found via getDevice fallback:', device);
+            const mapped = {
+              id: device.imei,
+              entreprise: device.vehicle?.company?.name || (device.vehicle ? "Associé" : "Boîtier libre"),
+              type: "device",
+              immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+              nomVehicule: device.vehicle?.nomVehicule || "",
+              imei: device.imei,
+              typeBoitier: device.protocolId?.toString() || "",
+              marque: "",
+              modele: "",
+              kilometrage: "",
+              telephone: device.sim || "",
+              emplacement: "",
+              deviceData: device,
+              isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+            };
+            toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (fallback direct)` });
+            return [mapped];
+          }
+
+          // Strategy 2: List devices with enhanced filter using new GraphQL structure
+          console.log('🔍 Fallback Strategy 2: Enhanced ListDevices');
+          
+          // Try with imei parameter first (new structure)
           try {
             const listResponse = await client.graphql({
               query: listDevices,
               variables: { 
-                filter: { imei: { contains: sanitizedImei } },
-                limit: 10 
+                imei: sanitizedImei,
+                limit: 20 
               }
             });
-            devices = listResponse.data?.listDevices?.items || [];
-          } catch (containsError) {
-            console.warn('🔍 Contains filter also failed:', containsError);
+            const devices = listResponse.data?.listDevices?.items || [];
+            
+            if (devices.length > 0) {
+              console.log('🔍 Devices found via listDevices (imei param):', devices);
+              const mappedDevices = devices.map(device => ({
+                id: device.imei,
+                entreprise: device.vehicle?.company?.name || (device.vehicle ? "Associé" : "Boîtier libre"),
+                type: "device",
+                immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+                nomVehicule: device.vehicle?.nomVehicule || "",
+                imei: device.imei,
+                typeBoitier: device.protocolId?.toString() || "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                telephone: device.sim || "",
+                emplacement: "",
+                deviceData: device,
+                isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+              }));
+              toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (fallback param)` });
+              return mappedDevices;
+            }
+          } catch (paramError) {
+            console.warn('🔍 IMEI parameter failed, trying filter:', paramError);
           }
+          
+          // Try with filter as fallback
+          try {
+            const listResponse = await client.graphql({
+              query: listDevices,
+              variables: { 
+                filter: { imei: { eq: sanitizedImei } },
+                limit: 20 
+              }
+            });
+            const devices = listResponse.data?.listDevices?.items || [];
+            
+            if (devices.length > 0) {
+              console.log('🔍 Devices found via listDevices (filter):', devices);
+              const mappedDevices = devices.map(device => ({
+                id: device.imei,
+                entreprise: device.vehicle?.company?.name || (device.vehicle ? "Associé" : "Boîtier libre"),
+                type: "device",
+                immatriculation: device.vehicle?.immat || device.deviceVehicleImmat || "",
+                nomVehicule: device.vehicle?.nomVehicule || "",
+                imei: device.imei,
+                typeBoitier: device.protocolId?.toString() || "",
+                marque: "",
+                modele: "",
+                kilometrage: "",
+                telephone: device.sim || "",
+                emplacement: "",
+                deviceData: device,
+                isAssociated: !!device.vehicle?.immat || !!device.deviceVehicleImmat
+              }));
+              toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (fallback filter)` });
+              return mappedDevices;
+            }
+          } catch (filterError) {
+            console.warn('🔍 Filter also failed:', filterError);
+          }
+          
+        } catch (fallbackError) {
+          console.error('🔍 All fallback strategies failed:', fallbackError);
         }
-        
-        if (devices.length > 0) {
-          console.log('🔍 Devices found via listDevices:', devices);
-          const mappedDevices = devices.map(device => ({
-            id: device.imei,
-            entreprise: device.vehicle ? "Associé" : "Boîtier libre",
-            type: "device",
-            immatriculation: device.vehicle?.immat || "",
-            nomVehicule: device.vehicle?.nomVehicule || "",
-            imei: device.imei,
-            typeBoitier: device.protocolId?.toString() || "",
-            marque: "",
-            modele: "",
-            kilometrage: "",
-            telephone: device.sim || "",
-            emplacement: "",
-            deviceData: device,
-            isAssociated: !!device.vehicle?.immat
-          }));
-          toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (backend list)` });
-          return mappedDevices;
-        }
-        
-      } catch (backendError) {
-        console.error('🔍 Backend search failed:', backendError);
       }
 
       console.log('🔍 IMEI not found in any strategy');
