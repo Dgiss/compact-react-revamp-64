@@ -22,9 +22,8 @@ export const useCompanyVehicleDevice = () => {
   const [companiesReady, setCompaniesReady] = useState(false);
   
   // Loading mode states
-  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete', 'optimized', 'scan'
+  const [loadingMode, setLoadingMode] = useState('initial'); // 'initial', 'search', 'complete', 'optimized'
   const [quickStats, setQuickStats] = useState(null);
-  const [scanMetrics, setScanMetrics] = useState(null);
 
   // Performance guards
   const loadingRef = useRef(false);
@@ -175,276 +174,25 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  /**
-   * COMPLETE SCAN of Vehicle table - exhaustive loading without limits
-   * For debugging and ensuring all vehicles are displayed
-   */
-  const loadCompleteVehicleScan = useCallback(async () => {
-    // Prevent concurrent loading
-    if (loadingRef.current) {
-      console.log('⏹️ Scan already in progress, skipping...');
-      return;
-    }
-    
-    loadingRef.current = true;
-    setLoadingMode('scan');
-    setLoading(true);
-    setError(null);
-    setScanMetrics(null);
-    
-    try {
-      console.log('🔍 === COMPLETE VEHICLE SCAN STARTED ===');
-      
-      const startTime = Date.now();
-      
-      // Use the new complete scan service method
-      console.log('🔍 Using exhaustive scan with unlimited pagination...');
-      const result = await VehicleService.scanCompaniesWithVehicles();
-      
-      const loadTime = result.loadTime || (Date.now() - startTime);
-      console.log(`🎯 === COMPLETE SCAN COMPLETED IN ${loadTime}ms ===`);
-      console.log('📊 Scan Results:', {
-        companies: result.companies?.length || 0,
-        totalItems: result.vehicles?.length || 0,
-        vehicleCount: result.stats?.vehicleCount || 0,
-        freeDeviceCount: result.stats?.freeDeviceCount || 0,
-        scanMetrics: result.scanMetrics
-      });
-      
-      // Store scan metrics for debugging
-      setScanMetrics(result.scanMetrics);
-      
-      // Update state with complete data
-      setCompanies(result.companies || []);
-      setDevices(result.vehicles || []);
-      
-      // Cache complete scan results
-      setAllDataCache(result);
-      setIsCacheReady(true);
-      
-      // Save complete scan to localStorage in background
-      setTimeout(() => {
-        try {
-          saveToLocalStorage(result);
-        } catch (cacheError) {
-          console.warn('Complete scan cache save failed:', cacheError);
-        }
-      }, 0);
-      
-      // Calculate comprehensive stats
-      const vehicles = result.vehicles || [];
-      const vehicleCount = result.stats?.vehicleCount || vehicles.filter(item => item.type === "vehicle").length;
-      const freeDevicesCount = result.stats?.freeDeviceCount || vehicles.filter(item => 
-        item.type === "device" && !item.isAssociated
-      ).length;
-      const associatedDeviceCount = vehicles.filter(item => 
-        item.type === "device" && item.isAssociated
-      ).length;
-      
-      setFreeDevices(freeDevicesCount);
-      setStats({
-        vehicleCount,
-        associatedDeviceCount,
-        freeDeviceCount: freeDevicesCount,
-        totalItems: vehicles.length,
-        loadTime,
-        isCompleteScan: true,
-        scanMetrics: result.scanMetrics
-      });
-      
-      // Success notification with scan details
-      const loadTimeSeconds = (loadTime / 1000).toFixed(1);
-      const batchCount = result.scanMetrics?.batchCount || 0;
-      toast({
-        title: "🔍 Scan complet terminé",
-        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${batchCount} batches, ${loadTimeSeconds}s)`,
-      });
-      
-    } catch (err) {
-      console.error('❌ Complete vehicle scan error:', err);
-      setError(err.message || 'Erreur lors du scan complet');
-      setScanMetrics(null);
-      
-      // Try to recover with cached data
-      const cachedData = loadFromLocalStorage();
-      if (cachedData) {
-        console.log('🔄 Recovering with cached data after scan failure...');
-        setCompanies(cachedData.companies || []);
-        setDevices(cachedData.vehicles || []);
-        setAllDataCache(cachedData);
-        setIsCacheReady(true);
-        
-        toast({
-          title: "⚠️ Scan échoué - Cache utilisé",
-          description: "Utilisation des données en cache après échec du scan",
-          variant: "destructive"
-        });
-      } else {
-        // Complete failure - reset states
-        setCompanies([]);
-        setDevices([]);
-        setAllDataCache(null);
-        setIsCacheReady(false);
-        setFreeDevices(0);
-        setStats({});
-        
-        toast({
-          title: "❌ Échec du scan complet",
-          description: `Erreur: ${err.message}`,
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-    }
-  }, []);
-
-  /**
-   * ULTRA-FAST DATA LOADING (<20s) with enriched ListVehicles
-   * Uses massive parallel pagination and intelligent caching
-   */
-  const loadAllDataUltraFast = useCallback(async (mode = 'ultra-fast') => {
-    // Prevent concurrent loading
-    if (loadingRef.current) {
-      console.log('⏹️ Loading already in progress, skipping...');
-      return;
-    }
-    
-    loadingRef.current = true;
+  // Load all data - OPTIMIZED for performance
+  const loadAllData = useCallback(async (mode = 'optimized') => {
     setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`🚀 === ULTRA-FAST LOADING STARTED (${mode.toUpperCase()}) ===`);
-      
-      const startTime = Date.now();
-      let result;
-      
-      // Use the new ultra-fast service method
-      console.log('🔥 Using ultra-fast enriched loading with massive parallel pagination...');
-      result = await VehicleService.fetchCompaniesWithVehiclesUltraFast();
-      
-      const loadTime = result.loadTime || (Date.now() - startTime);
-      console.log(`🎯 === ULTRA-FAST LOADING COMPLETED IN ${loadTime}ms ===`);
-      console.log('📊 Results:', {
-        companies: result.companies?.length || 0,
-        totalItems: result.vehicles?.length || 0,
-        vehicleCount: result.stats?.vehicleCount || 0,
-        freeDeviceCount: result.stats?.freeDeviceCount || 0
-      });
-      
-      // Validate we got data under 20 seconds
-      if (loadTime > 20000) {
-        console.warn(`⚠️ Loading exceeded 20s limit: ${loadTime}ms`);
-      }
-      
-      // Update state efficiently
-      setCompanies(result.companies || []);
-      setDevices(result.vehicles || []);
-      
-      // Cache for client-side filtering
-      setAllDataCache(result);
-      setIsCacheReady(true);
-      
-      // Save to localStorage in background (non-blocking)
-      setTimeout(() => {
-        try {
-          saveToLocalStorage(result);
-        } catch (cacheError) {
-          console.warn('Cache save failed:', cacheError);
-        }
-      }, 0);
-      
-      // Calculate stats from result or compute them
-      const vehicles = result.vehicles || [];
-      const vehicleCount = result.stats?.vehicleCount || vehicles.filter(item => item.type === "vehicle").length;
-      const freeDevicesCount = result.stats?.freeDeviceCount || vehicles.filter(item => 
-        item.type === "device" && !item.isAssociated
-      ).length;
-      const associatedDeviceCount = vehicles.filter(item => 
-        item.type === "device" && item.isAssociated
-      ).length;
-      
-      setFreeDevices(freeDevicesCount);
-      setStats({
-        vehicleCount,
-        associatedDeviceCount,
-        freeDeviceCount: freeDevicesCount,
-        totalItems: vehicles.length,
-        loadTime
-      });
-      
-      // Success notification
-      const loadTimeSeconds = (loadTime / 1000).toFixed(1);
-      toast({
-        title: "✅ Chargement ultra-rapide terminé",
-        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres en ${loadTimeSeconds}s`,
-      });
-      
-    } catch (err) {
-      console.error('❌ Ultra-fast loading error:', err);
-      setError(err.message || 'Une erreur est survenue');
-      
-      // Try to recover with cached data
-      const cachedData = loadFromLocalStorage();
-      if (cachedData) {
-        console.log('🔄 Recovering with cached data...');
-        setCompanies(cachedData.companies || []);
-        setDevices(cachedData.vehicles || []);
-        setAllDataCache(cachedData);
-        setIsCacheReady(true);
-        
-        toast({
-          title: "⚠️ Utilisation du cache",
-          description: "Données récupérées du cache en cas d'erreur",
-          variant: "destructive"
-        });
-      } else {
-        // Complete failure - reset states
-        setCompanies([]);
-        setDevices([]);
-        setAllDataCache(null);
-        setIsCacheReady(false);
-        setFreeDevices(0);
-        setStats({});
-        
-        toast({
-          title: "❌ Erreur de chargement",
-          description: `Échec du chargement: ${err.message}`,
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-    }
-  }, []);
-
-  // Force complete scan by default for all data loading
-  const loadAllData = useCallback(async (mode = 'complete-scan') => {
-    console.log('🔍 Using complete scan by default to ensure all data is loaded');
-    
-    // Force complete scan for all modes to guarantee full data retrieval
-    if (mode === 'optimized' || mode === 'complete' || mode === 'complete-scan') {
-      return await loadCompleteVehicleScan();
-    }
-    
-    // Legacy implementation for specific cases
-    setLoadingMode(mode);
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - LEGACY ===`);
+      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - OPTIMIZED ===`);
       
       const startTime = Date.now();
       let result;
       
       if (mode === 'complete') {
+        // Complete dataset including free devices
+        console.log('Using complete query including free devices...');
         result = await VehicleService.fetchCompaniesWithVehicles();
       } else {
+        // Optimized: vehicles fast + free devices merged
+        console.log('Using optimized vehicles + free devices merge...');
         const [base, free] = await Promise.all([
           VehicleService.fetchAllVehiclesOptimized(),
           CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
@@ -456,32 +204,47 @@ export const useCompanyVehicleDevice = () => {
       }
       
       const loadTime = Date.now() - startTime;
-      console.log(`=== LEGACY DATA LOADED IN ${loadTime}ms ===`);
+      console.log(`=== DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
+      console.log('Companies count:', result.companies?.length || 0);
+      console.log('Combined data count:', result.vehicles?.length || 0);
       
+      // Update state efficiently
       setCompanies(result.companies || []);
       setDevices(result.vehicles || []);
+      
+      // Cache for client-side filtering
       setAllDataCache(result);
       setIsCacheReady(true);
       
+      // Save to localStorage in background
       setTimeout(() => saveToLocalStorage(result), 0);
       
+      // Calculate stats efficiently
       const vehicles = result.vehicles || [];
       const vehicleCount = vehicles.filter(item => item.type === "vehicle").length;
+      const associatedDeviceCount = vehicles.filter(item => 
+        item.type === "device" && item.isAssociated
+      ).length;
       const freeDevicesCount = vehicles.filter(item => 
         item.type === "device" && !item.isAssociated
       ).length;
       
       setFreeDevices(freeDevicesCount);
-      setStats({ vehicleCount, freeDeviceCount: freeDevicesCount });
+      setStats({
+        vehicleCount,
+        associatedDeviceCount,
+        freeDeviceCount: freeDevicesCount
+      });
       
       toast({
-        title: "Données chargées (legacy)",
+        title: "Données chargées",
         description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
       });
       
     } catch (err) {
-      console.error('Legacy loading error:', err);
+      console.error('Error loading data:', err);
       setError(err.message || 'An error occurred');
+      // Reset states on error
       setCompanies([]);
       setDevices([]);
       setAllDataCache(null);
@@ -1027,15 +790,12 @@ export const useCompanyVehicleDevice = () => {
     isCacheReady,
     loadingMode,
     quickStats,
-    scanMetrics,
     
     // Cache status
     allDataCache,
     
     // Actions
     loadAllData,
-    loadAllDataUltraFast, // NEW: Ultra-fast loading function
-    loadCompleteVehicleScan, // NEW: Complete exhaustive scan function
     loadQuickStats,
     setLoadingMode,
     searchDevices,
@@ -1054,32 +814,6 @@ export const useCompanyVehicleDevice = () => {
     getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
     getUnassociatedItemsStats,
-    
-    // Company-specific search
-    searchByCompanyName: useCallback(async (companyName) => {
-      console.log(`🔍 === SEARCHING COMPANY: ${companyName} ===`);
-      
-      try {
-        // Ensure we have complete data loaded
-        if (!isCacheReady || !allDataCache) {
-          console.log('🔄 Loading complete data for company search...');
-          await loadCompleteVehicleScan();
-        }
-        
-        // Filter vehicles for the specific company
-        const companyVehicles = (allDataCache?.vehicles || devices).filter(item => {
-          if (!item.entreprise) return false;
-          return item.entreprise.toLowerCase().includes(companyName.toLowerCase());
-        });
-        
-        console.log(`🎯 Found ${companyVehicles.length} vehicles for company "${companyName}"`);
-        
-        return companyVehicles;
-      } catch (error) {
-        console.error('Error searching by company name:', error);
-        return [];
-      }
-    }, [isCacheReady, allDataCache, devices, loadCompleteVehicleScan]),
     
     // Utilities
     isFiltered: devices.length !== stats.totalDevices,

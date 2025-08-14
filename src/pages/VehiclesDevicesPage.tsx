@@ -22,7 +22,6 @@ import { updateDeviceSimple } from "@/services/SimpleDeviceService.js";
 import * as CompanyDeviceService from "@/services/CompanyDeviceService";
 import { useDataRefresh } from "@/hooks/useDataRefresh";
 import { clearOldCaches } from "@/utils/cache-utils";
-import { ScanMetricsPanel } from "@/components/debug/ScanMetricsPanel";
 export default function VehiclesDevicesPage() {
   const {
     companies,
@@ -31,9 +30,7 @@ export default function VehiclesDevicesPage() {
     isCacheReady,
     loadingMode,
     quickStats,
-    scanMetrics,
     loadAllData,
-    loadCompleteVehicleScan,
     loadQuickStats,
     setLoadingMode,
     searchDevices,
@@ -41,7 +38,6 @@ export default function VehiclesDevicesPage() {
     searchBySim,
     searchByVehicle,
     searchByCompany,
-    searchByCompanyName,
     resetFilters,
     isFiltered,
     totalResults,
@@ -71,10 +67,6 @@ export default function VehiclesDevicesPage() {
   const [searchImmat, setSearchImmat] = useState('');
   const [searchEntreprise, setSearchEntreprise] = useState('');
   const [searchVehiclesWithoutImei, setSearchVehiclesWithoutImei] = useState(false);
-  
-  // Company-specific search states
-  const [showMartiguesResults, setShowMartiguesResults] = useState(false);
-  const [martiguesData, setMartiguesData] = useState([]);
 
   // Multi-selection for dissociation
   const [selectedVehicles, setSelectedVehicles] = useState([]);
@@ -86,9 +78,6 @@ export default function VehiclesDevicesPage() {
 
   // Bulk association state
   const [showBulkAssociation, setShowBulkAssociation] = useState(false);
-  
-  // Debug panel state
-  const [showScanMetrics, setShowScanMetrics] = useState(false);
 
   // Track current filters for refresh after association
   const [currentFilters, setCurrentFilters] = useState({});
@@ -160,33 +149,6 @@ export default function VehiclesDevicesPage() {
       setLoadingMode('search');
     } catch (error) {
       console.error('Error searching company reserved devices:', error);
-    }
-  };
-
-  // MARTIGUES SPECIFIC SEARCH - Dedicated function for testing complete data retrieval
-  const searchMartiguesCompany = async () => {
-    try {
-      console.log('🔍 === MARTIGUES COMPANY SEARCH (COMPLETE SCAN) ===');
-      setLoadingMode('search');
-      setShowMartiguesResults(true);
-      
-      const martiguesVehicles = await searchByCompanyName('martigues');
-      setMartiguesData(martiguesVehicles);
-      setFilteredData(martiguesVehicles);
-      
-      toast({
-        title: "Recherche Martigues",
-        description: `${martiguesVehicles.length} véhicules trouvés pour Martigues (BD attendue: 2003)`,
-        duration: 5000
-      });
-      
-    } catch (error) {
-      console.error('Error searching Martigues company:', error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la recherche Martigues",
-        variant: "destructive"
-      });
     }
   };
 
@@ -309,8 +271,6 @@ export default function VehiclesDevicesPage() {
     setSearchImmat('');
     setSearchEntreprise('');
     setSearchVehiclesWithoutImei(false);
-    setShowMartiguesResults(false);
-    setMartiguesData([]);
     setFilteredData([]);
     setCurrentFilters({});
     resetFilters();
@@ -340,11 +300,11 @@ export default function VehiclesDevicesPage() {
           console.log('🔄 Refreshing with load all data');
           await loadAllData('optimized');
         }
-        } else {
-          // Refresh all data with complete scan
-          console.log('🔄 Refreshing all data with complete scan');
-          await loadCompleteVehicleScan();
-        }
+      } else {
+        // Refresh all data
+        console.log('🔄 Refreshing all data');
+        await loadAllData('optimized');
+      }
     } catch (error) {
       console.error('Error refreshing current view:', error);
       toast({
@@ -1008,22 +968,6 @@ export default function VehiclesDevicesPage() {
             <div className="text-sm text-muted-foreground">Nouvelle requête optimisée</div>
           </div>
         </Button>
-
-        <Button onClick={() => loadCompleteVehicleScan()} variant="outline" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
-          <Search className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Scan complet</div>
-            <div className="text-sm text-muted-foreground">Scan exhaustif de la table Vehicle</div>
-          </div>
-        </Button>
-
-        <Button onClick={() => searchMartiguesCompany()} variant="secondary" className="h-20 text-left flex flex-col items-start justify-center p-4" disabled={loading}>
-          <Building className="h-6 w-6 mb-2" />
-          <div>
-            <div className="font-medium">Test Martigues</div>
-            <div className="text-sm text-muted-foreground">2003 véhicules attendus</div>
-          </div>
-        </Button>
       </div>
 
       <div className="flex gap-2 justify-center">
@@ -1143,7 +1087,7 @@ export default function VehiclesDevicesPage() {
       
 
       {/* OPTIMIZED: Specialized Filter Buttons - Direct API calls without cache loading */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
         <div className="text-center">
           <h3 className="text-sm font-semibold text-blue-700 mb-2">🚗 Véhicules sans boîtiers</h3>
           <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
@@ -1174,48 +1118,8 @@ export default function VehiclesDevicesPage() {
             <Database className="h-4 w-4 mr-2" />
             Charger tout
           </Button>
-          
-          <Button variant="outline" onClick={() => {
-            // Clear current filters and run complete scan
-            setFilteredData([]);
-            setCurrentFilters({});
-            loadCompleteVehicleScan();
-          }} className="w-full bg-blue-50 border-blue-300 hover:bg-blue-100 mt-2" disabled={loading}>
-            <Search className="h-4 w-4 mr-2" />
-            Scan complet
-          </Button>
-        </div>
-
-        <div className="text-center">
-          <h3 className="text-sm font-semibold text-orange-700 mb-2">🏢 Test Martigues</h3>
-          <p className="text-xs text-gray-600 mb-3">Vérification des 2003 véhicules attendus</p>
-          <Button variant="outline" onClick={searchMartiguesCompany} className="w-full bg-orange-50 border-orange-300 hover:bg-orange-100" disabled={loading}>
-            <Building className="h-4 w-4 mr-2" />
-            Rechercher Martigues
-          </Button>
-          {showMartiguesResults && (
-            <div className="mt-2 p-2 bg-white rounded border">
-              <p className="text-xs">
-                <span className="font-medium text-orange-700">Trouvés:</span> {martiguesData.length} / 2003
-              </p>
-              <p className="text-xs text-gray-500">
-                {martiguesData.length === 2003 ? '✅ Complet' : '⚠️ Incomplet'}
-              </p>
-            </div>
-          )}
         </div>
       </div>
-
-      {/* Scan Metrics Panel */}
-      {scanMetrics && (
-        <div className="mb-4">
-          <ScanMetricsPanel 
-            scanMetrics={scanMetrics}
-            isVisible={showScanMetrics}
-            onToggle={() => setShowScanMetrics(!showScanMetrics)}
-          />
-        </div>
-      )}
 
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-4">
         <div className="flex-1">
