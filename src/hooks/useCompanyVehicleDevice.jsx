@@ -1017,14 +1017,18 @@ export const useCompanyVehicleDevice = () => {
           variables
         });
         
-        const results = response.data.listVehicles.items;
+        // Extract only the data, not the full response to avoid URL clone errors
+        const results = response.data.listVehicles.items.map(item => ({
+          ...item,
+          type: 'vehicle'
+        }));
         nextToken = response.data.listVehicles.nextToken;
         allVehicles = [...allVehicles, ...results];
         
         setLoadingProgress(Math.min(95, batchCount * 5));
         
         if (batchCount % 5 === 0 || !nextToken) {
-          setDevices(allVehicles.map(v => ({...v, type: 'vehicle'})));
+          setDevices([...allVehicles]);
           
           if (allVehicles.length > 0 && batchCount % 10 === 0) {
             toast({
@@ -1035,7 +1039,7 @@ export const useCompanyVehicleDevice = () => {
         }
       } while (nextToken);
       
-      setDevices(allVehicles.map(v => ({...v, type: 'vehicle'})));
+      setDevices([...allVehicles]);
       
       if (!cancelSearch) {
         toast({
@@ -1104,14 +1108,18 @@ export const useCompanyVehicleDevice = () => {
           variables
         });
         
-        const results = response.data.listVehicles.items;
+        // Extract only the data, not the full response to avoid URL clone errors
+        const results = response.data.listVehicles.items.map(item => ({
+          ...item,
+          type: 'vehicle'
+        }));
         nextToken = response.data.listVehicles.nextToken;
         allVehicles = [...allVehicles, ...results];
         
         setLoadingProgress(batchCount * 10);
         
         if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(allVehicles.map(v => ({...v, type: 'vehicle'})));
+          setDevices([...allVehicles]);
           
           if (allVehicles.length > 0 && batchCount % 5 === 0) {
             toast({
@@ -1122,7 +1130,7 @@ export const useCompanyVehicleDevice = () => {
         }
       } while (nextToken);
       
-      setDevices(allVehicles.map(v => ({...v, type: 'vehicle'})));
+      setDevices([...allVehicles]);
       
       if (!cancelSearch) {
         toast({
@@ -1191,6 +1199,7 @@ export const useCompanyVehicleDevice = () => {
           variables
         });
         
+        // Extract only the data, not the full response to avoid URL clone errors
         const results = response.data.listDevices.items;
         nextToken = response.data.listDevices.nextToken;
         allDevices = [...allDevices, ...results];
