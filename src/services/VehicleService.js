@@ -15,28 +15,13 @@ export const fetchAllVehiclesOptimized = async () => {
       let nextToken = null;
       let pageCount = 0;
       
+      console.log('🚀 Starting optimized vehicle fetch with enriched GraphQL query...');
+      
       const firstResponse = await client.graphql({
-        query: `query FirstPage {
-          listVehicles(limit: 1000) {
-            items {
-              immat
-              immatriculation
-              nomVehicule
-              companyVehiclesId
-              vehicleDeviceImei
-              company {
-                name
-              }
-              device {
-                name
-                imei
-                sim
-                device_type_id
-              }
-            }
-            nextToken
-          }
-        }`
+        query: queries.listVehicles,
+        variables: {
+          limit: 1000
+        }
       });
 
       const firstPageVehicles = firstResponse.data?.listVehicles?.items || [];
@@ -44,33 +29,18 @@ export const fetchAllVehiclesOptimized = async () => {
       nextToken = firstResponse.data?.listVehicles?.nextToken;
       pageCount = 1;
 
+      console.log(`First page loaded: ${firstPageVehicles.length} vehicles`);
+
       while (nextToken && pageCount < 100) {
         pageCount++;
         
         try {
           const response = await client.graphql({
-            query: `query NextPage($nextToken: String!) {
-              listVehicles(limit: 1000, nextToken: $nextToken) {
-                items {
-                  immat
-                  immatriculation
-                  nomVehicule
-                  companyVehiclesId
-                  vehicleDeviceImei
-                  company {
-                    name
-                  }
-                  device {
-                    name
-                    imei
-                    sim
-                    device_type_id
-                  }
-                }
-                nextToken
-              }
-            }`,
-            variables: { nextToken }
+            query: queries.listVehicles,
+            variables: { 
+              limit: 1000,
+              nextToken: nextToken
+            }
           });
 
           if (response.errors && !response.data?.listVehicles?.items) {
@@ -81,38 +51,52 @@ export const fetchAllVehiclesOptimized = async () => {
           allVehicles = allVehicles.concat(pageVehicles);
           nextToken = response.data?.listVehicles?.nextToken;
           
+          console.log(`Page ${pageCount} loaded: ${pageVehicles.length} vehicles (Total: ${allVehicles.length})`);
+          
         } catch (pageError) {
           if (pageError?.data?.listVehicles?.items) {
             const partialVehicles = pageError.data.listVehicles.items || [];
             allVehicles = allVehicles.concat(partialVehicles);
             nextToken = pageError.data.listVehicles.nextToken;
           } else {
+            console.warn(`Error on page ${pageCount}, stopping pagination`);
             break;
           }
         }
       }
 
+      console.log(`✅ Total vehicles loaded: ${allVehicles.length}`);
+
       const mappedVehicles = allVehicles.map((vehicle, index) => {
         try {
           return {
-            id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
+            id: vehicle?.immat || `vehicle-${index}`,
             type: "vehicle",
-            immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
-            entreprise: vehicle?.company?.name || "Non définie",
-            imei: vehicle?.device?.imei || vehicle?.vehicleDeviceImei || "",
-            nomVehicule: vehicle?.nomVehicule || "",
+            immatriculation: vehicle?.immat || "",
+            entreprise: vehicle?.company?.name || "Non définie", 
+            imei: vehicle?.device?.imei || "",
+            nomVehicule: vehicle?.code || "",
             telephone: vehicle?.device?.sim || "",
-            typeBoitier: vehicle?.device?.device_type_id?.toString() || "",
-            isAssociated: !!(vehicle?.device?.imei || vehicle?.vehicleDeviceImei),
+            typeBoitier: vehicle?.device?.protocolId?.toString() || "",
+            isAssociated: !!(vehicle?.device?.imei),
             companyVehiclesId: vehicle?.companyVehiclesId,
             vehicleDeviceImei: vehicle?.vehicleDeviceImei,
             deviceData: vehicle?.device || null,
-            marque: "",
-            modele: "",
-            kilometrage: "",
-            emplacement: ""
+            marque: vehicle?.brand?.brandName || "",
+            modele: vehicle?.modele?.modele || "",
+            kilometrage: vehicle?.kilometerage?.toString() || "",
+            emplacement: vehicle?.locations || "",
+            // Enhanced data from the enriched query
+            year: vehicle?.year,
+            fuelType: vehicle?.fuelType,
+            consumption: vehicle?.consumption,
+            maxSpeed: vehicle?.maxSpeed,
+            seatCount: vehicle?.seatCount,
+            tankCapacity: vehicle?.tankCapacity,
+            co2: vehicle?.co2
           };
-        } catch {
+        } catch (error) {
+          console.warn(`Error mapping vehicle ${index}:`, error);
           return null;
         }
       }).filter(Boolean);
@@ -125,7 +109,10 @@ export const fetchAllVehiclesOptimized = async () => {
           if (vehicle?.company?.name && vehicle?.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
             companies.push({
               id: vehicle.companyVehiclesId,
-              name: vehicle.company.name
+              name: vehicle.company.name,
+              siret: vehicle.company.siret,
+              address: vehicle.company.address,
+              city: vehicle.company.city
             });
             seenCompanies.add(vehicle.companyVehiclesId);
           }
@@ -134,12 +121,15 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       });
 
+      console.log(`✅ Extracted ${companies.length} unique companies`);
+
       return {
         companies,
         vehicles: mappedVehicles
       };
 
     } catch (error) {
+      console.error('Error in fetchAllVehiclesOptimized:', error);
       throw new Error(`Erreur pagination: ${error?.message || 'Erreur inconnue'}`);
     }
   });

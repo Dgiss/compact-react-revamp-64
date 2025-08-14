@@ -174,25 +174,25 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - OPTIMIZED for performance
+  // Load all data - OPTIMIZED with enriched GraphQL query
   const loadAllData = useCallback(async (mode = 'optimized') => {
     setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - OPTIMIZED ===`);
+      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - ENRICHED QUERY ===`);
       
       const startTime = Date.now();
       let result;
       
       if (mode === 'complete') {
-        // Complete dataset including free devices
-        console.log('Using complete query including free devices...');
+        // Complete dataset using enriched GraphQL query
+        console.log('Using enriched complete query...');
         result = await VehicleService.fetchCompaniesWithVehicles();
       } else {
-        // Optimized: vehicles fast + free devices merged
-        console.log('Using optimized vehicles + free devices merge...');
+        // Optimized: enriched vehicles query + free devices merged
+        console.log('Using enriched optimized query + free devices merge...');
         const [base, free] = await Promise.all([
           VehicleService.fetchAllVehiclesOptimized(),
           CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
@@ -204,22 +204,34 @@ export const useCompanyVehicleDevice = () => {
       }
       
       const loadTime = Date.now() - startTime;
-      console.log(`=== DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
+      console.log(`=== ENRICHED DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
       console.log('Companies count:', result.companies?.length || 0);
-      console.log('Combined data count:', result.vehicles?.length || 0);
+      console.log('Vehicles with enriched data count:', result.vehicles?.length || 0);
       
-      // Update state efficiently
+      // Log some sample enriched data for verification
+      const sampleVehicle = result.vehicles?.find(v => v.type === 'vehicle');
+      if (sampleVehicle) {
+        console.log('Sample enriched vehicle data:', {
+          immat: sampleVehicle.immatriculation,
+          brand: sampleVehicle.marque,
+          model: sampleVehicle.modele,
+          year: sampleVehicle.year,
+          hasDevice: !!sampleVehicle.deviceData
+        });
+      }
+      
+      // Update state efficiently with enriched data
       setCompanies(result.companies || []);
       setDevices(result.vehicles || []);
       
-      // Cache for client-side filtering
+      // Cache enriched data for client-side filtering
       setAllDataCache(result);
       setIsCacheReady(true);
       
-      // Save to localStorage in background
+      // Save enriched data to localStorage in background
       setTimeout(() => saveToLocalStorage(result), 0);
       
-      // Calculate stats efficiently
+      // Calculate stats efficiently with enriched data
       const vehicles = result.vehicles || [];
       const vehicleCount = vehicles.filter(item => item.type === "vehicle").length;
       const associatedDeviceCount = vehicles.filter(item => 
@@ -237,12 +249,12 @@ export const useCompanyVehicleDevice = () => {
       });
       
       toast({
-        title: "Données chargées",
-        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
+        title: "Données enrichies chargées",
+        description: `${vehicleCount} véhicules complets, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
       });
       
     } catch (err) {
-      console.error('Error loading data:', err);
+      console.error('Error loading enriched data:', err);
       setError(err.message || 'An error occurred');
       // Reset states on error
       setCompanies([]);
@@ -254,7 +266,7 @@ export const useCompanyVehicleDevice = () => {
       
       toast({
         title: "Erreur",
-        description: `Erreur lors du chargement: ${err.message}`,
+        description: `Erreur lors du chargement enrichi: ${err.message}`,
         variant: "destructive"
       });
     } finally {
