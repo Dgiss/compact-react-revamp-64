@@ -29,33 +29,60 @@ export const useCompanyVehicleDevice = () => {
   const loadingRef = useRef(false);
   const lastLoadRef = useRef(0);
 
-  // AUTO-LOAD companies on mount with debounce
+  // AUTO-LOAD companies AND cache on mount with debounce
   useEffect(() => {
     let isMounted = true;
     
-    const loadInitialCompanies = async () => {
+    const loadInitialData = async () => {
       if (!isMounted) return;
       
       try {
-        console.log('useCompanyVehicleDevice: Auto-loading companies...');
+        console.log('useCompanyVehicleDevice: Auto-loading initial data...');
+        
+        // First try to load from localStorage
+        const cachedData = loadFromLocalStorage();
+        if (cachedData && isMounted) {
+          console.log('✅ Loading from cache:', { 
+            companies: cachedData.companies?.length || 0, 
+            vehicles: cachedData.vehicles?.length || 0 
+          });
+          setAllDataCache(cachedData);
+          setIsCacheReady(true);
+          setCompanies(cachedData.companies || []);
+          setDevices(cachedData.vehicles || []);
+          setCompaniesReady(true);
+          
+          // Background refresh to ensure fresh data
+          setTimeout(() => refreshDataInBackground(), 1000);
+          return;
+        }
+        
+        // If no cache, load companies first for immediate UI
+        console.log('No cache found, loading companies...');
         const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
         
         if (isMounted) {
           console.log('Initial companies loaded:', loadedCompanies.length);
           setCompanies(loadedCompanies);
           setCompaniesReady(true);
+          
+          // Then load full data to populate cache
+          console.log('Loading full data to populate cache...');
+          await loadAllData('optimized');
         }
       } catch (error) {
         if (isMounted) {
-          console.error('Error auto-loading companies:', error);
+          console.error('Error auto-loading initial data:', error);
           setCompanies([]);
           setCompaniesReady(false);
+          setAllDataCache(null);
+          setIsCacheReady(false);
         }
       }
     };
     
     // Debounce to prevent multiple simultaneous calls
-    const timeoutId = setTimeout(loadInitialCompanies, 100);
+    const timeoutId = setTimeout(loadInitialData, 100);
     
     return () => {
       isMounted = false;
@@ -174,7 +201,7 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // Load all data - OPTIMIZED for performance
+  // Load all data - OPTIMIZED for performance with enhanced error handling
   const loadAllData = useCallback(async (mode = 'optimized') => {
     setLoadingMode(mode);
     setLoading(true);
@@ -193,10 +220,17 @@ export const useCompanyVehicleDevice = () => {
       } else {
         // Optimized: vehicles fast + free devices merged
         console.log('Using optimized vehicles + free devices merge...');
+        console.log('Calling VehicleService.fetchAllVehiclesOptimized...');
         const [base, free] = await Promise.all([
           VehicleService.fetchAllVehiclesOptimized(),
           CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
         ]);
+        console.log('Base result:', { 
+          companies: base?.companies?.length || 0, 
+          vehicles: base?.vehicles?.length || 0 
+        });
+        console.log('Free devices result:', free?.length || 0);
+        
         result = {
           companies: base.companies || [],
           vehicles: [...(base.vehicles || []), ...(free || [])]
@@ -207,6 +241,12 @@ export const useCompanyVehicleDevice = () => {
       console.log(`=== DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
       console.log('Companies count:', result.companies?.length || 0);
       console.log('Combined data count:', result.vehicles?.length || 0);
+      
+      // CRITICAL: Verify we have actual data
+      if (!result.vehicles || result.vehicles.length === 0) {
+        console.warn('⚠️ No vehicles/devices loaded! This will cause empty cache issues.');
+        throw new Error('Aucune donnée chargée - vérifiez la connexion à la base de données');
+      }
       
       // Update state efficiently
       setCompanies(result.companies || []);
@@ -236,13 +276,20 @@ export const useCompanyVehicleDevice = () => {
         freeDeviceCount: freeDevicesCount
       });
       
+      console.log('✅ Cache populated successfully:', {
+        vehicleCount,
+        associatedDeviceCount,
+        freeDevicesCount,
+        cacheReady: true
+      });
+      
       toast({
         title: "Données chargées",
         description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
       });
       
     } catch (err) {
-      console.error('Error loading data:', err);
+      console.error('❌ Error loading data:', err);
       setError(err.message || 'An error occurred');
       // Reset states on error
       setCompanies([]);
@@ -410,11 +457,33 @@ export const useCompanyVehicleDevice = () => {
     }
   }, [allDataCache]);
 
-  // Specific search functions for single criteria - CLIENT-SIDE using cached data
+  // Specific search functions for single criteria - CLIENT-SIDE using cached data with GraphQL fallback
   const searchByImei = useCallback(async (imei) => {
-    if (!allDataCache) {
+    if (!allDataCache || !isCacheReady) {
+      console.log('⚠️ Cache not ready for searchByImei, loading data...');
       await loadAllData();
-      return [];
+      if (!allDataCache) {
+        console.log('🔍 Cache still empty after loadAllData, using direct GraphQL fallback');
+        // Direct GraphQL fallback if cache fails
+        try {
+          const { ImeiDiagnosticService } = await import('../services/ImeiDiagnosticService.js');
+          const diagnosticResults = await ImeiDiagnosticService.enhancedImeiSearch(imei);
+          if (diagnosticResults) {
+            const mapped = {
+              id: diagnosticResults.imei,
+              entreprise: diagnosticResults.vehicle?.company?.name || "Boîtier libre",
+              type: "device",
+              immatriculation: diagnosticResults.vehicle?.immat || "",
+              imei: diagnosticResults.imei,
+              isAssociated: !!diagnosticResults.vehicle?.immat
+            };
+            return [mapped];
+          }
+        } catch (fallbackError) {
+          console.error('❌ GraphQL fallback failed:', fallbackError);
+        }
+        return [];
+      }
     }
     
     try {
