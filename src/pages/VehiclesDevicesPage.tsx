@@ -206,7 +206,9 @@ export default function VehiclesDevicesPage() {
         if (searchImei) {
           if (isMultiImeiInput(searchImei)) {
             console.log('Multi-IMEI search detected, using combined filter');
-            results = await searchDevices({ imei: searchImei });
+            results = await searchDevices({
+              imei: searchImei
+            });
           } else {
             console.log('Single IMEI search for:', searchImei);
             results = await searchByImei(searchImei);
@@ -330,7 +332,11 @@ export default function VehiclesDevicesPage() {
       if (!mappedData.companyVehiclesId && data.entreprise) {
         const rawEntreprise = String(data.entreprise).trim();
         const looksLikeId = /[a-zA-Z0-9-]{8,}/.test(rawEntreprise);
-        console.log('[VehiclesDevicesPage] Company resolution start:', { rawEntreprise, looksLikeId, companiesInCache: companies.length });
+        console.log('[VehiclesDevicesPage] Company resolution start:', {
+          rawEntreprise,
+          looksLikeId,
+          companiesInCache: companies.length
+        });
 
         // Try cache by id or name
         const byId = companies.find(c => c.id === rawEntreprise);
@@ -339,7 +345,11 @@ export default function VehiclesDevicesPage() {
         if (found) {
           mappedData.companyVehiclesId = found.id;
           mappedData.entreprise = found.name;
-          console.log('[VehiclesDevicesPage] Company resolved from cache:', { input: rawEntreprise, id: found.id, name: found.name });
+          console.log('[VehiclesDevicesPage] Company resolved from cache:', {
+            input: rawEntreprise,
+            id: found.id,
+            name: found.name
+          });
         } else if (looksLikeId) {
           // Accept direct ID to handle eventual consistency
           mappedData.companyVehiclesId = rawEntreprise;
@@ -349,7 +359,9 @@ export default function VehiclesDevicesPage() {
             const results = await searchCompaniesReal(rawEntreprise);
             const exact = Array.isArray(results) ? results.find(c => c.id === rawEntreprise) : null;
             if (exact?.name) mappedData.entreprise = exact.name;
-            console.log('[VehiclesDevicesPage] Background lookup result:', { found: !!exact });
+            console.log('[VehiclesDevicesPage] Background lookup result:', {
+              found: !!exact
+            });
           } catch (e) {
             // ignore and proceed
           }
@@ -357,13 +369,15 @@ export default function VehiclesDevicesPage() {
           // Fallback to backend search (handles freshly created companies not yet in cache)
           try {
             const results = await searchCompaniesReal(rawEntreprise);
-            const exact = Array.isArray(results)
-              ? results.find(c => c.name?.toLowerCase() === rawEntreprise.toLowerCase())
-              : null;
+            const exact = Array.isArray(results) ? results.find(c => c.name?.toLowerCase() === rawEntreprise.toLowerCase()) : null;
             if (exact) {
               mappedData.companyVehiclesId = exact.id;
               mappedData.entreprise = exact.name;
-              console.log('[VehiclesDevicesPage] Company resolved via backend search:', { input: rawEntreprise, id: exact.id, name: exact.name });
+              console.log('[VehiclesDevicesPage] Company resolved via backend search:', {
+                input: rawEntreprise,
+                id: exact.id,
+                name: exact.name
+              });
             } else {
               throw new Error(`Entreprise "${rawEntreprise}" non trouvée`);
             }
@@ -890,7 +904,7 @@ export default function VehiclesDevicesPage() {
     setAssociationMode('company-device');
     setShowAssociateSheet(true);
   };
-  const handleSaveEdit = async (updatedItem) => {
+  const handleSaveEdit = async updatedItem => {
     try {
       const prevImei = selectedItem?.imei || selectedItem?.vehicleDeviceImei || '';
       const immat = updatedItem.immatriculation || updatedItem.immat || selectedItem?.immatriculation || selectedItem?.immat;
@@ -899,9 +913,12 @@ export default function VehiclesDevicesPage() {
       const deviceUpdates = updatedItem.deviceUpdates || {};
 
       // 1) Orchestration association/dissociation
-      if ((associationChange === 'dissociate') || (!desiredImei && prevImei)) {
+      if (associationChange === 'dissociate' || !desiredImei && prevImei) {
         await dissociateVehicleFromDevice(immat);
-        toast({ title: 'Succès', description: 'Boîtier dissocié du véhicule avec succès' });
+        toast({
+          title: 'Succès',
+          description: 'Boîtier dissocié du véhicule avec succès'
+        });
         await refreshAfterDissociation('Boîtier dissocié du véhicule avec succès', {
           ...selectedItem,
           imei: '',
@@ -912,22 +929,46 @@ export default function VehiclesDevicesPage() {
         });
       } else if (associationChange === 'associate' && desiredImei) {
         await associateDeviceToVehicle(desiredImei, immat);
-        toast({ title: 'Succès', description: `Boîtier ${desiredImei} associé au véhicule ${immat}` });
+        toast({
+          title: 'Succès',
+          description: `Boîtier ${desiredImei} associé au véhicule ${immat}`
+        });
         if (deviceUpdates && (deviceUpdates.sim || deviceUpdates.protocolId !== undefined)) {
-          await updateDeviceSimple({ imei: desiredImei, ...deviceUpdates });
-          toast({ title: 'Boîtier mis à jour', description: 'Informations du boîtier mises à jour' });
+          await updateDeviceSimple({
+            imei: desiredImei,
+            ...deviceUpdates
+          });
+          toast({
+            title: 'Boîtier mis à jour',
+            description: 'Informations du boîtier mises à jour'
+          });
         }
       } else if (associationChange === 'none' && prevImei && deviceUpdates && (deviceUpdates.sim || deviceUpdates.protocolId !== undefined)) {
-        await updateDeviceSimple({ imei: prevImei, ...deviceUpdates });
-        toast({ title: 'Boîtier mis à jour', description: 'Informations du boîtier mises à jour' });
+        await updateDeviceSimple({
+          imei: prevImei,
+          ...deviceUpdates
+        });
+        toast({
+          title: 'Boîtier mis à jour',
+          description: 'Informations du boîtier mises à jour'
+        });
       }
 
       // 2) Mise à jour des champs véhicule (sans les champs spéciaux)
-      const { desiredVehicleDeviceImei, associationChange: _ac, deviceUpdates: _du, ...vehicleFields } = updatedItem;
+      const {
+        desiredVehicleDeviceImei,
+        associationChange: _ac,
+        deviceUpdates: _du,
+        ...vehicleFields
+      } = updatedItem;
       await updateVehicleData(vehicleFields);
     } catch (error) {
       console.error('Error saving vehicle edit:', error);
-      toast({ title: 'Erreur', description: error.message || 'Erreur lors de la mise à jour', variant: 'destructive' });
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Erreur lors de la mise à jour',
+        variant: 'destructive'
+      });
     } finally {
       setShowEditVehicleDialog(false);
       setSelectedItem(null);
@@ -1011,10 +1052,10 @@ export default function VehiclesDevicesPage() {
               </DialogDescription>
             </DialogHeader>
             <AddVehicleForm onClose={() => setShowAddVehicleDialog(false)} onSave={async data => {
-              await updateVehicleData(data);
-              setShowAddVehicleDialog(false);
-              loadQuickStats();
-            }} />
+            await updateVehicleData(data);
+            setShowAddVehicleDialog(false);
+            loadQuickStats();
+          }} />
           </DialogContent>
         </Dialog>
 
@@ -1027,9 +1068,9 @@ export default function VehiclesDevicesPage() {
               </DialogDescription>
             </DialogHeader>
             <ImportDevicesForm onClose={() => {
-              setShowImportDevicesDialog(false);
-              loadQuickStats();
-            }} />
+            setShowImportDevicesDialog(false);
+            loadQuickStats();
+          }} />
           </DialogContent>
         </Dialog>
 
@@ -1042,12 +1083,12 @@ export default function VehiclesDevicesPage() {
               </DialogDescription>
             </DialogHeader>
             <AddDeviceWithVehicleForm onClose={() => {
-              setShowAddDeviceWithVehicleDialog(false);
-              loadQuickStats();
-            }} onSuccess={async () => {
-              setShowAddDeviceWithVehicleDialog(false);
-              await refreshAfterAssociation("Device et véhicule créés et associés");
-            }} />
+            setShowAddDeviceWithVehicleDialog(false);
+            loadQuickStats();
+          }} onSuccess={async () => {
+            setShowAddDeviceWithVehicleDialog(false);
+            await refreshAfterAssociation("Device et véhicule créés et associés");
+          }} />
           </DialogContent>
         </Dialog>
       </div>;
@@ -1055,12 +1096,17 @@ export default function VehiclesDevicesPage() {
   console.log('=== RENDERING TABLE VIEW ===');
   console.log('loadingMode:', loadingMode);
   console.log('Should render add buttons in table view');
-  
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">Véhicules & Dispositifs</h1>
-          <Button variant="ghost" size="sm" onClick={() => { clearOldCaches(); setFilteredData([]); setCurrentFilters({}); setShowBulkAssociation(false); setLoadingMode('initial'); }}>
+          <Button variant="ghost" size="sm" onClick={() => {
+          clearOldCaches();
+          setFilteredData([]);
+          setCurrentFilters({});
+          setShowBulkAssociation(false);
+          setLoadingMode('initial');
+        }}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour
           </Button>
@@ -1070,20 +1116,7 @@ export default function VehiclesDevicesPage() {
         </div>
         
         {/* Debug Panels - Temporary for IMEI search issues */}
-        <div className="hidden lg:block space-y-4">
-          <CacheDebugPanel
-            onClearCache={() => {
-              clearOldCaches();
-              setFilteredData([]);
-              setCurrentFilters({});
-            }}
-            onForceRefresh={() => {
-              loadAllData();
-            }}
-          />
-          
-          <ImeiDiagnosticPanel />
-        </div>
+        
       </div>
       
       <div className="flex justify-between items-center">
@@ -1126,7 +1159,10 @@ export default function VehiclesDevicesPage() {
         <div className="text-center">
           <h3 className="text-sm font-semibold text-green-700 mb-2">📡 Boîtiers libres</h3>
           <p className="text-xs text-gray-600 mb-3">Recherche optimisée - Chargement direct sans cache</p>
-          <Button variant="outline" onClick={() => { searchDevicesWithoutVehiclesOptimized(); setShowBulkAssociation(true); }} className="w-full bg-green-50 border-green-300 hover:bg-green-100" disabled={loading}>
+          <Button variant="outline" onClick={() => {
+          searchDevicesWithoutVehiclesOptimized();
+          setShowBulkAssociation(true);
+        }} className="w-full bg-green-50 border-green-300 hover:bg-green-100" disabled={loading}>
             <Wifi className="h-4 w-4 mr-2" />
             Devices sans véhicules
           </Button>
@@ -1136,11 +1172,11 @@ export default function VehiclesDevicesPage() {
           <h3 className="text-sm font-semibold text-purple-700 mb-2">📊 Charger tout</h3>
           <p className="text-xs text-gray-600 mb-3">Rechargement complet des données</p>
           <Button variant="outline" onClick={() => {
-            // Clear current filters and load all data
-            setFilteredData([]);
-            setCurrentFilters({});
-            loadAllData('optimized');
-          }} className="w-full bg-purple-50 border-purple-300 hover:bg-purple-100" disabled={loading}>
+          // Clear current filters and load all data
+          setFilteredData([]);
+          setCurrentFilters({});
+          loadAllData('optimized');
+        }} className="w-full bg-purple-50 border-purple-300 hover:bg-purple-100" disabled={loading}>
             <Database className="h-4 w-4 mr-2" />
             Charger tout
           </Button>
@@ -1200,25 +1236,9 @@ export default function VehiclesDevicesPage() {
       console.log('loadingMode:', loadingMode);
       console.log('loading:', loading);
       console.log('Should show table:', dataToShow.length > 0);
-      return dataToShow.length > 0 ? (
-        <EnhancedDataTable
-          columns={getColumnsForCurrentView()}
-          data={dataToShow}
-          onEdit={handleEdit}
-          onAssociate={handleAssociate}
-          onDissociate={dissociateDevice}
-          loading={loading}
-          enablePagination={true}
-          selectedVehicles={selectedVehicles}
-          selectedDevices={selectedDevices}
-          isSelectMode={isSelectMode}
-          isDeviceSelectMode={isDeviceSelectMode}
-        />
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
+      return dataToShow.length > 0 ? <EnhancedDataTable columns={getColumnsForCurrentView()} data={dataToShow} onEdit={handleEdit} onAssociate={handleAssociate} onDissociate={dissociateDevice} loading={loading} enablePagination={true} selectedVehicles={selectedVehicles} selectedDevices={selectedDevices} isSelectMode={isSelectMode} isDeviceSelectMode={isDeviceSelectMode} /> : <div className="text-center py-8 text-muted-foreground">
           Aucune donnée à afficher. Chargement en cours...
-        </div>
-      );
+        </div>;
     })()}
 
       {/* Keep existing dialogs and sheets */}
