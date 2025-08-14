@@ -700,7 +700,7 @@ export default function VehiclesDevicesPage() {
     id: "nomVehicule",
     label: "Nom Véhicule",
     sortable: true,
-    visible: false,
+    visible: true,
     renderCell: (value, row) => <span className={!value ? "text-gray-400 italic" : "text-gray-900"}>
         {value || "Nom non défini"}
       </span>
@@ -721,30 +721,55 @@ export default function VehiclesDevicesPage() {
     id: "emplacement",
     label: "Emplacement",
     sortable: true,
-    visible: true
+    visible: true,
+    renderCell: (value, row) => <span className={value ? "text-gray-900" : "text-gray-400"}>
+          {value || "Non défini"}
+        </span>
   }, {
     id: "marque",
     label: "Marque",
     sortable: true,
-    visible: false
+    visible: true,
+    renderCell: (value, row) => <span className={value ? "text-gray-900" : "text-gray-400"}>
+          {value || "Non définie"}
+        </span>
   }, {
     id: "modele",
     label: "Modèle",
     sortable: true,
-    visible: false
+    visible: true,
+    renderCell: (value, row) => <span className={value ? "text-gray-900" : "text-gray-400"}>
+          {value || "Non défini"}
+        </span>
+  }, {
+    id: "kilometrage",
+    label: "Kilométrage",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className={value ? "text-gray-900" : "text-gray-400"}>
+          {value ? `${value} km` : "Non défini"}
+        </span>
   }, {
     id: "sim",
     label: "SIM",
     sortable: true,
     visible: true,
-    renderCell: (value, row) => <span className={row.telephone ? "text-gray-900" : "text-gray-400"}>
-          {row.telephone || "Pas de SIM"}
+    renderCell: (value, row) => <span className={row.sim || row.telephone ? "text-gray-900" : "text-gray-400"}>
+          {row.sim || row.telephone || "Pas de SIM"}
+        </span>
+  }, {
+    id: "iccid",
+    label: "ICCID",
+    sortable: true,
+    visible: true,
+    renderCell: (value, row) => <span className={value ? "text-gray-900 font-mono text-sm" : "text-gray-400"}>
+          {value || "Pas d'ICCID"}
         </span>
   }, {
     id: "telephone",
     label: "Téléphone",
     sortable: true,
-    visible: true,
+    visible: false,
     renderCell: value => <span className={value ? "text-gray-900" : "text-gray-400"}>
           {value || "Pas de téléphone"}
         </span>
@@ -783,11 +808,6 @@ export default function VehiclesDevicesPage() {
             {status}
           </span>;
     }
-  }, {
-    id: "kilometrage",
-    label: "Kilométrage",
-    sortable: true,
-    visible: false
   }];
 
   // Define columns specifically for vehicles without devices view

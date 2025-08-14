@@ -87,13 +87,29 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       }
 
+      // Load companies for name resolution
+      let companiesMap = {};
+      try {
+        const { fetchCompaniesForSelect } = await import('./CompanyVehicleDeviceService');
+        const companies = await fetchCompaniesForSelect();
+        companiesMap = companies.reduce((map, company) => {
+          map[company.id] = company;
+          return map;
+        }, {});
+        console.log(`Loaded ${companies.length} companies for name resolution`);
+      } catch (companyError) {
+        console.warn('Could not load companies for name resolution:', companyError);
+      }
+
       const mappedVehicles = allVehicles.map((vehicle, index) => {
         try {
+          const companyName = companiesMap[vehicle?.companyVehiclesId]?.name || "Non définie";
+          
           return {
             id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
             type: "vehicle",
             immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
-            entreprise: vehicle?.companyVehiclesId || "Non définie",
+            entreprise: companyName,
             imei: vehicle?.vehicleDeviceImei || "",
             nomVehicule: vehicle?.nomVehicule || "",
             telephone: "",
@@ -105,20 +121,19 @@ export const fetchAllVehiclesOptimized = async () => {
             marque: vehicle?.marque || "",
             modele: vehicle?.modele || "",
             kilometrage: vehicle?.kilometrage || "",
-            emplacement: ""
+            emplacement: vehicle?.emplacement || "",
+            iccid: "", // Will be populated if device is associated
+            sim: ""
           };
         } catch {
           return null;
         }
       }).filter(Boolean);
 
-      // We'll handle company loading separately since we removed relationships
-      const companies = [];
-      
       console.log('Vehicles loaded successfully:', mappedVehicles.length);
 
       return {
-        companies,
+        companies: Object.values(companiesMap),
         vehicles: mappedVehicles
       };
 
@@ -359,7 +374,9 @@ export const fetchCompaniesWithVehicles = async () => {
         telephone: device.sim || "",
         emplacement: "",
         deviceData: device,
-        isAssociated: false
+        isAssociated: false,
+        iccid: generateMockIccid(device.sim || device.imei),
+        sim: device.sim || ""
       }));
     
     const allDevices = [...allVehicles, ...unassociatedDevices];
@@ -510,4 +527,14 @@ export const dissociateVehicleFromDevice = async (vehicleImmat) => {
 
 export const associateDeviceToVehicle = async (deviceImei, vehicleImmat) => {
   return await associateVehicleToDevice(vehicleImmat, deviceImei);
+};
+
+// Helper function to generate mock ICCID based on SIM/IMEI for demonstration
+const generateMockIccid = (simOrImei) => {
+  if (!simOrImei) return "";
+  
+  // Generate a realistic ICCID format: 19-20 digits
+  const base = simOrImei.slice(-10);
+  const prefix = "8933101234567890";
+  return prefix + base.slice(0, 4);
 };
