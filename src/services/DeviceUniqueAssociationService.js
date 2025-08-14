@@ -179,9 +179,38 @@ export const dissociateDeviceFromVehicle = async (deviceImei) => {
     
     await Promise.all(updatePromises);
     
+    // FIXED: Get device details to return complete dissociation info
+    let deviceData = null;
+    try {
+      const deviceResponse = await client.graphql({
+        query: queries.getDevice,
+        variables: { imei: deviceImei }
+      });
+      deviceData = deviceResponse.data?.getDevice;
+    } catch (deviceError) {
+      console.warn('Could not fetch device details after dissociation:', deviceError);
+    }
+    
+    // Return dissociated device information for cache update
+    const dissociatedDevice = {
+      imei: deviceImei,
+      isAssociated: false,
+      vehicleImmat: null,
+      type: 'device',
+      // Include any other device fields available
+      ...(deviceData && {
+        sim: deviceData.sim,
+        protocolId: deviceData.protocolId,
+        typeBoitier: deviceData.protocolId?.toString() || ""
+      })
+    };
+    
+    console.log('🔄 Dissociation completed, returning device info:', dissociatedDevice);
+    
     return { 
       success: true, 
-      message: `Boîtier ${deviceImei} dissocié avec succès`
+      message: `Boîtier ${deviceImei} dissocié avec succès`,
+      dissociatedDevice: dissociatedDevice
     };
     
   } catch (error) {

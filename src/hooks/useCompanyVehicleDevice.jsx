@@ -428,14 +428,39 @@ export const useCompanyVehicleDevice = () => {
       const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || raw.trim();
       const sanitizedImei = preferred;
 
+      console.log(`🔍 Searching for IMEI: ${sanitizedImei} in cache with ${allDataCache.vehicles?.length || 0} items`);
+
       // First, search locally in the unified cache
       const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
+      console.log(`🔍 Local search results:`, localResults);
+      
       if (localResults.length > 0) {
         toast({
           title: "Recherche par IMEI",
-          description: `${localResults.length} résultat(s) trouvé(s)`
+          description: `${localResults.length} résultat(s) trouvé(s) (cache)`
         });
         return localResults;
+      }
+
+      // FIXED: If no local results and cache might be stale, try refreshing cache first
+      console.log('🔍 No local results, checking if cache needs refresh...');
+      const now = Date.now();
+      const lastCacheUpdate = localStorage.getItem('companyVehicleDeviceData_timestamp');
+      const cacheAge = lastCacheUpdate ? now - parseInt(lastCacheUpdate) : Infinity;
+      
+      // If cache is older than 5 minutes and no results, force refresh
+      if (cacheAge > 300000) { // 5 minutes
+        console.log('🔍 Cache is stale, forcing refresh before backend search...');
+        await loadAllData();
+        // Retry local search after refresh
+        const refreshedResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
+        if (refreshedResults.length > 0) {
+          toast({
+            title: "Recherche par IMEI",
+            description: `${refreshedResults.length} résultat(s) trouvé(s) (cache rafraîchi)`
+          });
+          return refreshedResults;
+        }
       }
 
       // Fallback to backend exact lookup with sanitized IMEI

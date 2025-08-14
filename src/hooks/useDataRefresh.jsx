@@ -19,6 +19,34 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
       console.log('🔄 Updated item received:', updatedItem);
       console.log('🔄 Current filters:', currentFilters);
       
+      // FIXED: Update allDataCache as well to sync search functionality
+      if (updatedItem && window.localStorage) {
+        try {
+          const cacheKey = 'companyVehicleDeviceData';
+          const cachedData = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+          
+          if (cachedData.vehicles && Array.isArray(cachedData.vehicles)) {
+            const vehicleIndex = cachedData.vehicles.findIndex(item => 
+              (item.imei && item.imei === updatedItem.imei) || 
+              (item.immat && item.immat === updatedItem.immat) ||
+              (item.immatriculation && item.immatriculation === updatedItem.immat)
+            );
+            
+            if (vehicleIndex !== -1) {
+              console.log('🔄 Updating cache entry for item:', updatedItem);
+              // Update the cached item
+              cachedData.vehicles[vehicleIndex] = { ...cachedData.vehicles[vehicleIndex], ...updatedItem };
+              
+              // Save back to localStorage
+              localStorage.setItem(cacheKey, JSON.stringify(cachedData));
+              console.log('🔄 Cache updated successfully');
+            }
+          }
+        } catch (cacheError) {
+          console.warn('🔄 Cache update failed:', cacheError);
+        }
+      }
+      
       if (updatedItem) {
         // Update only the specific item in local state
         console.log('🔄 Updating specific item in local state:', updatedItem);
@@ -84,8 +112,110 @@ export const useDataRefresh = (loadAllData, setDevices, searchDevices, currentFi
   }, [loadAllData, setDevices, searchDevices, currentFilters]);
   
   const refreshAfterDissociation = useCallback(async (message = "Dissociation réussie", updatedItem = null) => {
-    return refreshAfterAssociation(message, updatedItem);
-  }, [refreshAfterAssociation]);
+    // FIXED: Handle dissociation differently to update cache properly
+    try {
+      toast({
+        title: "Succès", 
+        description: message,
+      });
+      
+      console.log('🔄 Handling dissociation refresh...');
+      console.log('🔄 Dissociated item:', updatedItem);
+      
+      // Update cache to mark device as free/unassociated
+      if (updatedItem && updatedItem.imei && window.localStorage) {
+        try {
+          const cacheKey = 'companyVehicleDeviceData';
+          const cachedData = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+          
+          if (cachedData.vehicles && Array.isArray(cachedData.vehicles)) {
+            console.log('🔄 Updating cache after dissociation...');
+            
+            // Find and update the device entry
+            const deviceIndex = cachedData.vehicles.findIndex(item => 
+              item.imei === updatedItem.imei && item.type === 'device'
+            );
+            
+            if (deviceIndex !== -1) {
+              console.log('🔄 Found device in cache, marking as free');
+              cachedData.vehicles[deviceIndex] = {
+                ...cachedData.vehicles[deviceIndex],
+                isAssociated: false,
+                vehicleImmat: null,
+                immatriculation: "",
+                nomVehicule: "",
+                entreprise: "Boîtier libre"
+              };
+            } else {
+              // Add the dissociated device as a free device if not found
+              console.log('🔄 Adding dissociated device to cache as free device');
+              cachedData.vehicles.push({
+                id: updatedItem.imei,
+                type: 'device',
+                imei: updatedItem.imei,
+                isAssociated: false,
+                vehicleImmat: null,
+                immatriculation: "",
+                nomVehicule: "",
+                entreprise: "Boîtier libre",
+                sim: updatedItem.sim || "",
+                typeBoitier: updatedItem.typeBoitier || ""
+              });
+            }
+            
+            // Also remove any vehicle associations in cache
+            cachedData.vehicles.forEach(item => {
+              if (item.type === 'vehicle' && item.vehicleDeviceImei === updatedItem.imei) {
+                console.log('🔄 Removing device association from vehicle in cache');
+                item.vehicleDeviceImei = null;
+                item.imei = "";
+              }
+            });
+            
+            // Save updated cache
+            localStorage.setItem(cacheKey, JSON.stringify(cachedData));
+            console.log('🔄 Cache updated after dissociation');
+          }
+        } catch (cacheError) {
+          console.warn('🔄 Cache update after dissociation failed:', cacheError);
+        }
+      }
+      
+      // Update local state
+      if (updatedItem) {
+        setDevices(prevDevices => {
+          const updatedDevices = [...prevDevices];
+          
+          // Remove the device from "vehicles without IMEI" if it was there
+          const vehicleIndex = updatedDevices.findIndex(item => 
+            item.type === 'vehicle' && item.vehicleDeviceImei === updatedItem.imei
+          );
+          
+          if (vehicleIndex !== -1) {
+            console.log('🔄 Removing device from associated vehicle');
+            updatedDevices[vehicleIndex] = {
+              ...updatedDevices[vehicleIndex],
+              vehicleDeviceImei: null,
+              imei: ""
+            };
+          }
+          
+          return updatedDevices;
+        });
+      } else {
+        // Fallback refresh
+        return refreshAfterAssociation(message, updatedItem);
+      }
+      
+    } catch (error) {
+      console.error('🔄 Error in dissociation refresh:', error);
+      toast({
+        title: "Attention",
+        description: "Dissociation réussie, mais la liste pourrait ne pas être à jour. Veuillez actualiser manuellement.",
+        variant: "destructive"
+      });
+    }
+  }, [refreshAfterAssociation, setDevices]);
   
   const refreshAfterDeletion = useCallback(async (message = "Suppression réussie") => {
     return refreshAfterAssociation(message);
