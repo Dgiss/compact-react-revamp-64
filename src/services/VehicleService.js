@@ -8,6 +8,35 @@ import { createVehicleSimple, updateVehicleSimple } from './SimpleVehicleService
 
 const client = getLazyClient();
 
+// Simplified GraphQL query to avoid complex nested relations
+const SIMPLE_LIST_VEHICLES = `
+  query ListVehiclesSimplified(
+    $limit: Int
+    $nextToken: String
+  ) {
+    listVehicles(
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        immat
+        companyVehiclesId
+        vehicleDeviceImei
+        locations
+        kilometerage
+        code
+        brand {
+          brandName
+        }
+        modele {
+          modele
+        }
+      }
+      nextToken
+    }
+  }
+`;
+
 export const fetchAllVehiclesOptimized = async () => {
   return await withCredentialRetry(async () => {
     try {
@@ -28,7 +57,7 @@ export const fetchAllVehiclesOptimized = async () => {
         console.log(`Récupération du lot ${batchCount} de véhicules`);
         
         const response = await client.graphql({
-          query: queries.listVehicles,
+          query: SIMPLE_LIST_VEHICLES,
           variables: variables
         });
         
@@ -63,9 +92,9 @@ export const fetchAllVehiclesOptimized = async () => {
           const companyName = companiesMap[vehicle?.companyVehiclesId]?.name || "Non définie";
           
           return {
-            id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
+            id: vehicle?.immat || `vehicle-${index}`,
             type: "vehicle",
-            immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
+            immatriculation: vehicle?.immat || "",
             entreprise: companyName,
             imei: vehicle?.vehicleDeviceImei || "",
             nomVehicule: vehicle?.nomVehicule || "",
@@ -75,10 +104,10 @@ export const fetchAllVehiclesOptimized = async () => {
             companyVehiclesId: vehicle?.companyVehiclesId,
             vehicleDeviceImei: vehicle?.vehicleDeviceImei,
             deviceData: null,
-            marque: vehicle?.marque || "",
-            modele: vehicle?.modele || "",
-            kilometrage: vehicle?.kilometrage?.toString() || "",
-            emplacement: vehicle?.emplacement || "",
+            marque: vehicle?.brand?.brandName || "",
+            modele: vehicle?.modele?.modele || "",
+            kilometrage: vehicle?.kilometerage?.toString() || "",
+            emplacement: vehicle?.locations || "",
             iccid: vehicle?.iccid || "",
             sim: vehicle?.sim || ""
           };
@@ -106,8 +135,27 @@ export const fetchAllVehiclesOptimized = async () => {
     } catch (error) {
       console.error('Erreur principale lors de la récupération des véhicules:', error);
       
-      // Fallback avec strategy simplifiée
+      // Fallback avec requête encore plus simple
       console.log('Tentative de récupération avec fallback...');
+      
+      const MINIMAL_LIST_VEHICLES = `
+        query ListVehiclesMinimal(
+          $limit: Int
+          $nextToken: String
+        ) {
+          listVehicles(
+            limit: $limit
+            nextToken: $nextToken
+          ) {
+            items {
+              immat
+              companyVehiclesId
+              vehicleDeviceImei
+            }
+            nextToken
+          }
+        }
+      `;
       
       try {
         let allVehicles = [];
@@ -123,7 +171,7 @@ export const fetchAllVehiclesOptimized = async () => {
           };
           
           const response = await client.graphql({
-            query: queries.listVehicles,
+            query: MINIMAL_LIST_VEHICLES,
             variables: variables
           });
           
