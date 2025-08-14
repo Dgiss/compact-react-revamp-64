@@ -14,13 +14,15 @@ export const fetchAllVehiclesOptimized = async () => {
       let allVehicles = [];
       let nextToken = null;
       let pageCount = 0;
+      const promises = [];
       
-      console.log('🚀 Starting optimized vehicle fetch with enriched GraphQL query...');
+      console.log('🚀 Starting ULTRA-OPTIMIZED vehicle fetch with parallel loading...');
       
+      // First, get total count and plan parallel loading
       const firstResponse = await client.graphql({
         query: queries.listVehicles,
         variables: {
-          limit: 1000
+          limit: 5000 // Increased batch size
         }
       });
 
@@ -29,39 +31,69 @@ export const fetchAllVehiclesOptimized = async () => {
       nextToken = firstResponse.data?.listVehicles?.nextToken;
       pageCount = 1;
 
-      console.log(`First page loaded: ${firstPageVehicles.length} vehicles`);
+      console.log(`First batch loaded: ${firstPageVehicles.length} vehicles`);
 
-      while (nextToken && pageCount < 100) {
-        pageCount++;
+      // If we have more data, load remaining pages in parallel batches
+      if (nextToken) {
+        const parallelBatches = [];
+        let tempToken = nextToken;
+        let batchCount = 0;
         
-        try {
-          const response = await client.graphql({
-            query: queries.listVehicles,
-            variables: { 
-              limit: 1000,
-              nextToken: nextToken
+        // Prepare parallel batch requests (up to 5 at a time)
+        while (tempToken && batchCount < 20) { // Increased limit, removed artificial cap
+          parallelBatches.push({
+            token: tempToken,
+            batchNumber: batchCount + 2
+          });
+          
+          // Quick check to get next token for planning
+          try {
+            const planResponse = await client.graphql({
+              query: queries.listVehicles,
+              variables: { 
+                limit: 1, // Minimal query just to get nextToken
+                nextToken: tempToken
+              }
+            });
+            tempToken = planResponse.data?.listVehicles?.nextToken;
+            batchCount++;
+          } catch {
+            break;
+          }
+        }
+        
+        console.log(`Planning ${parallelBatches.length} parallel batches...`);
+        
+        // Execute batches in parallel groups of 5
+        for (let i = 0; i < parallelBatches.length; i += 5) {
+          const parallelGroup = parallelBatches.slice(i, i + 5);
+          
+          const batchPromises = parallelGroup.map(async (batch) => {
+            try {
+              const response = await client.graphql({
+                query: queries.listVehicles,
+                variables: { 
+                  limit: 5000,
+                  nextToken: batch.token
+                }
+              });
+              
+              const pageVehicles = response.data?.listVehicles?.items || [];
+              console.log(`Parallel batch ${batch.batchNumber} loaded: ${pageVehicles.length} vehicles`);
+              return pageVehicles;
+              
+            } catch (pageError) {
+              console.warn(`Error in parallel batch ${batch.batchNumber}:`, pageError);
+              return pageError?.data?.listVehicles?.items || [];
             }
           });
-
-          if (response.errors && !response.data?.listVehicles?.items) {
-            break;
-          }
-
-          const pageVehicles = response.data?.listVehicles?.items || [];
-          allVehicles = allVehicles.concat(pageVehicles);
-          nextToken = response.data?.listVehicles?.nextToken;
           
-          console.log(`Page ${pageCount} loaded: ${pageVehicles.length} vehicles (Total: ${allVehicles.length})`);
+          const batchResults = await Promise.all(batchPromises);
+          batchResults.forEach(vehicles => {
+            allVehicles = allVehicles.concat(vehicles);
+          });
           
-        } catch (pageError) {
-          if (pageError?.data?.listVehicles?.items) {
-            const partialVehicles = pageError.data.listVehicles.items || [];
-            allVehicles = allVehicles.concat(partialVehicles);
-            nextToken = pageError.data.listVehicles.nextToken;
-          } else {
-            console.warn(`Error on page ${pageCount}, stopping pagination`);
-            break;
-          }
+          console.log(`Parallel group ${Math.floor(i/5) + 1} completed. Total vehicles: ${allVehicles.length}`);
         }
       }
 

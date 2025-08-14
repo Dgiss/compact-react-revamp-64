@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import * as CompanyVehicleDeviceService from '@/services/CompanyVehicleDeviceService';
 import * as VehicleService from '@/services/VehicleService.js';
 import { toast } from '@/hooks/use-toast';
+import { setOptimizedCache, getOptimizedCache, getCacheStats } from '@/utils/optimized-cache-utils';
+import { PerformanceTimer, createSearchIndex, processBatch } from '@/utils/performance-utils';
 
 /**
  * Custom hook for managing company-vehicle-device data
@@ -28,162 +30,146 @@ export const useCompanyVehicleDevice = () => {
   // Performance guards
   const loadingRef = useRef(false);
   const lastLoadRef = useRef(0);
+  
+  // Search indexes for ultra-fast lookups
+  const searchIndexesRef = useRef({
+    imei: new Map(),
+    immat: new Map(),
+    company: new Map(),
+    sim: new Map()
+  });
 
-  // AUTO-LOAD companies on mount with debounce
-  useEffect(() => {
-    let isMounted = true;
+  // Build search indexes for ultra-fast searching
+  const buildSearchIndexes = useCallback((vehicles) => {
+    const timer = new PerformanceTimer();
     
-    const loadInitialCompanies = async () => {
-      if (!isMounted) return;
+    searchIndexesRef.current = {
+      imei: createSearchIndex(vehicles, (item) => [
+        item.imei || '',
+        item.vehicleDeviceImei || ''
+      ].filter(Boolean)),
       
-      try {
-        console.log('useCompanyVehicleDevice: Auto-loading companies...');
-        const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
-        
-        if (isMounted) {
-          console.log('Initial companies loaded:', loadedCompanies.length);
-          setCompanies(loadedCompanies);
-          setCompaniesReady(true);
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Error auto-loading companies:', error);
-          setCompanies([]);
-          setCompaniesReady(false);
-        }
-      }
+      immat: createSearchIndex(vehicles, (item) => [
+        item.immatriculation || ''
+      ].filter(Boolean)),
+      
+      company: createSearchIndex(vehicles, (item) => [
+        item.entreprise || ''
+      ].filter(Boolean)),
+      
+      sim: createSearchIndex(vehicles, (item) => [
+        item.telephone || ''
+      ].filter(Boolean))
     };
     
-    // Debounce to prevent multiple simultaneous calls
-    const timeoutId = setTimeout(loadInitialCompanies, 100);
-    
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
+    const metrics = timer.stop(vehicles.length);
+    console.log(`🔍 Search indexes built in ${metrics.duration.toFixed(2)}ms for ${vehicles.length} items`);
   }, []);
 
-  // localStorage utilities with better error handling
-  const saveToLocalStorage = (data) => {
+  // Auto-load initial companies with debouncing
+  useEffect(() => {
+    let timeoutId;
+    
+    if (!companiesReady && !loading && !loadingRef.current) {
+      timeoutId = setTimeout(async () => {
+        try {
+          setLoading(true);
+          loadingRef.current = true;
+          
+          const companiesData = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+          setCompanies(companiesData || []);
+          setCompaniesReady(true);
+          
+          console.log(`✅ Initial companies loaded: ${companiesData?.length || 0}`);
+        } catch (error) {
+          console.error('Error loading initial companies:', error);
+          setError(error.message);
+        } finally {
+          setLoading(false);
+          loadingRef.current = false;
+        }
+      }, 100);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [companiesReady, loading]);
+
+  // Save to localStorage with optimized compression
+  const saveToLocalStorage = useCallback((data) => {
     try {
-      // CRITICAL FIX: Reduce cache size to prevent QuotaExceededError
+      const timer = new PerformanceTimer();
+      
+      // Compact data before saving - remove unnecessary fields
       const compactData = {
-        companies: (data.companies || []).map(c => ({
-          id: c.id,
-          name: c.name,
-          siret: c.siret
-        })),
-        vehicles: (data.vehicles || []).map(v => ({
-          id: v.id,
-          immat: v.immat || v.immatriculation,
-          type: v.type,
-          marque: v.marque,
-          modele: v.modele,
-          companyVehiclesId: v.companyVehiclesId,
-          entreprise: v.entreprise,
-          // FIXED: Use actual GraphQL relation - device.imei instead of vehicleDeviceImei
-          deviceImei: v.device?.imei || null,
-          isAssociated: !!v.device?.imei
-        })),
-        timestamp: Date.now()
+        companies: data.companies || [],
+        vehicles: (data.vehicles || []).map(item => ({
+          id: item.id,
+          type: item.type,
+          immatriculation: item.immatriculation,
+          entreprise: item.entreprise,
+          imei: item.imei,
+          nomVehicule: item.nomVehicule,
+          telephone: item.telephone,
+          typeBoitier: item.typeBoitier,
+          isAssociated: item.isAssociated,
+          companyVehiclesId: item.companyVehiclesId,
+          vehicleDeviceImei: item.vehicleDeviceImei,
+          marque: item.marque,
+          modele: item.modele,
+          year: item.year,
+          kilometrage: item.kilometrage,
+          emplacement: item.emplacement,
+          // Enhanced data
+          fuelType: item.fuelType,
+          consumption: item.consumption,
+          maxSpeed: item.maxSpeed,
+          seatCount: item.seatCount,
+          tankCapacity: item.tankCapacity,
+          co2: item.co2
+        }))
       };
       
-      // Check size before saving
-      const dataStr = JSON.stringify(compactData);
-      const sizeInMB = (dataStr.length * 2) / (1024 * 1024); // Rough estimate
+      const success = setOptimizedCache('companyVehicleDeviceData', compactData, 1800000);
+      const metrics = timer.stop(compactData.vehicles.length);
       
-      if (sizeInMB > 4) { // Limit to 4MB
-        console.warn('Cache data too large, using compact version');
-        const ultraCompactData = {
-          companies: compactData.companies.slice(0, 50),
-          vehicles: compactData.vehicles.slice(0, 200),
-          timestamp: Date.now()
-        };
-        localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(ultraCompactData));
-      } else {
-        localStorage.setItem('fleetwatch_vehicle_cache', dataStr);
+      if (success) {
+        const stats = getCacheStats();
+        console.log(`💾 Data cached in ${metrics.duration.toFixed(2)}ms. Cache stats: ${stats.totalSize.toFixed(2)}MB, ${stats.entryCount} entries, ${stats.compressedCount} compressed`);
       }
-      
-      console.log('Data saved to localStorage (size:', sizeInMB.toFixed(2), 'MB)');
     } catch (error) {
-      if (error.name === 'QuotaExceededError') {
-        console.error('LocalStorage quota exceeded, clearing cache');
-        localStorage.removeItem('fleetwatch_vehicle_cache');
-        // Try saving minimal data only
-        try {
-          const minimalData = {
-            companies: (data.companies || []).slice(0, 10).map(c => ({ id: c.id, name: c.name })),
-            vehicles: (data.vehicles || []).slice(0, 50).map(v => ({ 
-              immat: v.immat || v.immatriculation, 
-              type: v.type,
-              deviceImei: v.device?.imei || null
-            })),
-            timestamp: Date.now()
-          };
-          localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(minimalData));
-          console.log('Saved minimal cache after quota error');
-        } catch (fallbackError) {
-          console.error('Failed to save even minimal cache:', fallbackError);
-        }
-      } else {
-        console.error('Error saving to localStorage:', error);
-      }
+      console.warn('Error saving to localStorage:', error);
     }
-  };
-  
-  const loadFromLocalStorage = () => {
-    try {
-      const cached = localStorage.getItem('fleetwatch_vehicle_cache');
-      if (!cached) return null;
-      
-      const data = JSON.parse(cached);
-      const now = Date.now();
-      const thirtyMinutes = 30 * 60 * 1000;
-      
-      if (now - data.timestamp > thirtyMinutes) {
-        console.log('Cache expired, removing from localStorage');
-        localStorage.removeItem('fleetwatch_vehicle_cache');
-        return null;
-      }
-      
-      console.log('Valid cache found in localStorage');
-      return data;
-    } catch (error) {
-      console.error('Error loading from localStorage:', error);
-      localStorage.removeItem('fleetwatch_vehicle_cache');
-      return null;
-    }
-  };
-  
-  const refreshDataInBackground = async () => {
-    try {
-      console.log('Refreshing data in background...');
-      const result = await VehicleService.fetchCompaniesWithVehicles();
-      
-      // Update cache
-      setAllDataCache(result);
-      saveToLocalStorage(result);
-      
-      // Update state silently
-      setCompanies(result.companies || []);
-      setDevices(result.vehicles || []);
-      
-      console.log('Background refresh completed');
-    } catch (error) {
-      console.error('Background refresh failed:', error);
-    }
-  };
+  }, []);
 
-  // Load all data - OPTIMIZED with enriched GraphQL query
+  // Load from localStorage with optimized cache
+  const loadFromLocalStorage = useCallback(() => {
+    try {
+      const cached = getOptimizedCache('companyVehicleDeviceData', 1800000); // 30 minutes
+      if (cached) {
+        console.log('📦 Using optimized cached company-vehicle-device data');
+        // Rebuild search indexes after loading from cache
+        buildSearchIndexes(cached.vehicles || []);
+        return cached;
+      }
+    } catch (error) {
+      console.warn('Error loading from localStorage:', error);
+    }
+    return null;
+  }, [buildSearchIndexes]);
+
+  // Load all data - ULTRA-OPTIMIZED with enriched GraphQL query and parallel processing
   const loadAllData = useCallback(async (mode = 'optimized') => {
     setLoadingMode(mode);
     setLoading(true);
     setError(null);
     
     try {
-      console.log(`=== LOADING ALL DATA (${mode.toUpperCase()}) - ENRICHED QUERY ===`);
+      console.log(`=== ULTRA-OPTIMIZED LOADING (${mode.toUpperCase()}) ===`);
       
       const startTime = Date.now();
+      const timer = new PerformanceTimer();
       let result;
       
       if (mode === 'complete') {
@@ -191,8 +177,8 @@ export const useCompanyVehicleDevice = () => {
         console.log('Using enriched complete query...');
         result = await VehicleService.fetchCompaniesWithVehicles();
       } else {
-        // Optimized: enriched vehicles query + free devices merged
-        console.log('Using enriched optimized query + free devices merge...');
+        // Optimized: enriched vehicles query + free devices merged with parallel processing
+        console.log('Using ULTRA-optimized parallel query + free devices merge...');
         const [base, free] = await Promise.all([
           VehicleService.fetchAllVehiclesOptimized(),
           CompanyVehicleDeviceService.fetchDevicesWithoutVehicles()
@@ -204,21 +190,13 @@ export const useCompanyVehicleDevice = () => {
       }
       
       const loadTime = Date.now() - startTime;
-      console.log(`=== ENRICHED DATA LOADED SUCCESSFULLY IN ${loadTime}ms ===`);
-      console.log('Companies count:', result.companies?.length || 0);
-      console.log('Vehicles with enriched data count:', result.vehicles?.length || 0);
+      const metrics = timer.stop(result.vehicles?.length || 0);
       
-      // Log some sample enriched data for verification
-      const sampleVehicle = result.vehicles?.find(v => v.type === 'vehicle');
-      if (sampleVehicle) {
-        console.log('Sample enriched vehicle data:', {
-          immat: sampleVehicle.immatriculation,
-          brand: sampleVehicle.marque,
-          model: sampleVehicle.modele,
-          year: sampleVehicle.year,
-          hasDevice: !!sampleVehicle.deviceData
-        });
-      }
+      console.log(`=== ULTRA-OPTIMIZED DATA LOADED SUCCESSFULLY ===`);
+      console.log(`⚡ Load time: ${loadTime}ms`);
+      console.log(`📊 Processing rate: ${metrics.itemsPerSecond.toFixed(0)} items/sec`);
+      console.log(`🏢 Companies: ${result.companies?.length || 0}`);
+      console.log(`🚗 Vehicles: ${result.vehicles?.length || 0}`);
       
       // Update state efficiently with enriched data
       setCompanies(result.companies || []);
@@ -227,6 +205,9 @@ export const useCompanyVehicleDevice = () => {
       // Cache enriched data for client-side filtering
       setAllDataCache(result);
       setIsCacheReady(true);
+      
+      // Build search indexes for ultra-fast searching
+      buildSearchIndexes(result.vehicles || []);
       
       // Save enriched data to localStorage in background
       setTimeout(() => saveToLocalStorage(result), 0);
@@ -249,12 +230,12 @@ export const useCompanyVehicleDevice = () => {
       });
       
       toast({
-        title: "Données enrichies chargées",
-        description: `${vehicleCount} véhicules complets, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
+        title: "🚀 Données ultra-optimisées chargées",
+        description: `${vehicleCount} véhicules, ${freeDevicesCount} boîtiers libres (${loadTime}ms)`,
       });
       
     } catch (err) {
-      console.error('Error loading enriched data:', err);
+      console.error('Error loading ultra-optimized data:', err);
       setError(err.message || 'An error occurred');
       // Reset states on error
       setCompanies([]);
@@ -266,660 +247,378 @@ export const useCompanyVehicleDevice = () => {
       
       toast({
         title: "Erreur",
-        description: `Erreur lors du chargement enrichi: ${err.message}`,
+        description: `Erreur lors du chargement ultra-optimisé: ${err.message}`,
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [buildSearchIndexes, saveToLocalStorage]);
 
-  // Search with filters - CLIENT-SIDE using cached data (OPTIMIZED)
+  
   const searchDevices = useCallback(async (filters) => {
-    if (!allDataCache || !isCacheReady) {
-      console.log('Cache not ready for search, loading data...');
-      await loadAllData();
-      if (!allDataCache) return [];
-    }
-    
-    try {
-      // FIXED: Use vehicles array instead of devices for client-side filtering
-      const results = CompanyVehicleDeviceService.filterDevicesLocal(allDataCache.vehicles, filters);
-      
-      console.log(`Search results for filters ${JSON.stringify(filters)}:`, results.length);
-      
-      return results;
-    } catch (err) {
-      setError(err.message);
-      console.error('Search error:', err);
+    if (!isCacheReady || !allDataCache?.vehicles) {
+      console.log('Cache not ready, loading data first...');
+      await loadAllData('optimized');
       return [];
     }
-  }, [allDataCache, isCacheReady, loadAllData]);
 
-  // Get vehicles for specific company - SIMPLIFIED logic
-  const getVehiclesByCompany = useCallback(async (companyId) => {
-    if (!isCacheReady || !allDataCache) {
-      console.log('Cache not ready for getVehiclesByCompany, cache ready:', isCacheReady);
-      return [];
-    }
-    
-    try {
-      // Client-side filtering using cached data
-      const companyVehicles = CompanyVehicleDeviceService.filterVehiclesByCompanyLocal(
-        allDataCache.vehicles, 
-        companyId, 
-        allDataCache.companies
+    const vehicles = allDataCache.vehicles;
+    let results = vehicles;
+
+    // Apply filters
+    if (filters.entreprise && filters.entreprise !== 'all') {
+      results = results.filter(item => 
+        item.companyVehiclesId === filters.entreprise ||
+        item.entreprise?.toLowerCase().includes(filters.entreprise.toLowerCase())
       );
-      
-      console.log('Raw company vehicles found:', companyVehicles.length);
-      
-      // FIXED: Filter for vehicles WITHOUT an associated device using GraphQL relations
-      const availableVehicles = companyVehicles.filter(vehicle => {
-        // Check device relation - use actual GraphQL schema
-        const hasDevice = vehicle.device?.imei || vehicle.deviceImei;
-        
-        console.log(`Vehicle ${vehicle.immat || vehicle.immatriculation}: hasDevice=${!!hasDevice}, available=${!hasDevice}`);
-        
-        return !hasDevice; // Available if no device associated
-      });
-      
-      console.log('Available vehicles for association:', availableVehicles.length);
-      
-      return availableVehicles;
-    } catch (err) {
-      console.error('Error getting vehicles by company:', err);
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la récupération des véhicules: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
     }
-  }, [allDataCache, isCacheReady]);
 
-  // Get ALL vehicles for specific company (including those with IMEI) - fallback function
-  const getAllVehiclesByCompany = useCallback(async (companyId) => {
-    if (!isCacheReady || !allDataCache) {
-      console.log('Cache not ready for getAllVehiclesByCompany, cache ready:', isCacheReady);
-      return [];
-    }
-    
-    try {
-      // Client-side filtering using cached data - returns ALL vehicles
-      const companyVehicles = CompanyVehicleDeviceService.filterVehiclesByCompanyLocal(
-        allDataCache.vehicles, 
-        companyId, 
-        allDataCache.companies
+    if (filters.imei) {
+      results = results.filter(item => 
+        item.imei && item.imei.toLowerCase().includes(filters.imei.toLowerCase())
       );
-      
-      console.log('ALL company vehicles (including those with IMEI):', companyVehicles);
-      
-      // FIXED: Add status indicator using actual GraphQL relations
-      const vehiclesWithStatus = companyVehicles.map(vehicle => {
-        const deviceImei = vehicle.device?.imei || vehicle.deviceImei;
-        const isAssociated = !!deviceImei;
-        
-        return {
-          ...vehicle,
-          isAssociated,
-          associatedDevice: deviceImei
-        };
-      });
-      
-      return vehiclesWithStatus;
-    } catch (err) {
-      console.error('Error getting all vehicles by company:', err);
-      setError(err.message);
-      return [];
     }
-  }, [allDataCache, isCacheReady]);
 
-  // Get device status - CLIENT-SIDE using cached data
-  const getDeviceStatus = useCallback(async (imei) => {
-    if (!allDataCache) {
-      await loadAllData();
-      return { found: false, message: 'No data available' };
+    if (filters.immatriculation) {
+      results = results.filter(item => 
+        item.immatriculation && item.immatriculation.toLowerCase().includes(filters.immatriculation.toLowerCase())
+      );
     }
+
+    if (filters.telephone) {
+      results = results.filter(item => 
+        item.telephone && item.telephone.toLowerCase().includes(filters.telephone.toLowerCase())
+      );
+    }
+
+    if (filters.nomVehicule) {
+      results = results.filter(item => 
+        item.nomVehicule && item.nomVehicule.toLowerCase().includes(filters.nomVehicule.toLowerCase())
+      );
+    }
+
+    console.log(`Filtered ${results.length} items from ${vehicles.length} total`);
+    return results;
+  }, [isCacheReady, allDataCache, loadAllData]);
+
+  // Get vehicles by company - optimized version
+  const getVehiclesByCompany = useCallback((companyId) => {
+    if (!allDataCache?.vehicles || !companyId) return [];
     
-    try {
-      return CompanyVehicleDeviceService.getDeviceStatusLocal(allDataCache.vehicles, imei);
-    } catch (err) {
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la vérification du device: ${err.message}`,
-        variant: "destructive",
-      });
-      return { found: false, message: err.message };
-    }
-  }, [allDataCache, loadAllData]);
-
-  // Load companies for select components - ALWAYS load companies
-  const loadCompaniesForSelect = useCallback(async () => {
-    try {
-      // Try cached companies first
-      if (allDataCache && allDataCache.companies && allDataCache.companies.length > 0) {
-        console.log('Using cached companies:', allDataCache.companies.length);
-        setCompanies(allDataCache.companies);
-        return allDataCache.companies;
-      }
-      
-      // If no cache, load directly from API
-      console.log('No cached companies, fetching from API');
-      const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
-      console.log('Companies loaded:', loadedCompanies.length);
-      setCompanies(loadedCompanies);
-      return loadedCompanies;
-    } catch (err) {
-      console.error('Error in loadCompaniesForSelect:', err);
-      setCompanies([]);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors du chargement des entreprises: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
+    return allDataCache.vehicles.filter(item => 
+      item.type === "vehicle" && 
+      item.companyVehiclesId === companyId &&
+      !item.imei // Vehicles without devices
+    );
   }, [allDataCache]);
 
-  // Specific search functions for single criteria - CLIENT-SIDE using cached data
+  // Get all vehicles by company - optimized version
+  const getAllVehiclesByCompany = useCallback((companyId) => {
+    if (!allDataCache?.vehicles || !companyId) return [];
+    
+    return allDataCache.vehicles.filter(item => 
+      item.type === "vehicle" && 
+      item.companyVehiclesId === companyId
+    );
+  }, [allDataCache]);
+
+  // Check device status by IMEI - optimized with cache
+  const getDeviceStatus = useCallback((imei) => {
+    if (!allDataCache?.vehicles || !imei) return { status: 'unknown' };
+    
+    const device = allDataCache.vehicles.find(item => 
+      (item.type === "device" || item.imei) && 
+      item.imei === imei
+    );
+    
+    if (!device) return { status: 'not_found' };
+    
+    return {
+      status: device.isAssociated ? 'associated' : 'free',
+      device: device
+    };
+  }, [allDataCache]);
+
+  // Ultra-fast search by IMEI using search indexes
   const searchByImei = useCallback(async (imei) => {
-    if (!allDataCache) {
-      await loadAllData();
-      return [];
-    }
+    if (!imei?.trim()) return [];
     
-    try {
-      // Normalize/sanitize IMEI input: accept separators and pick the first 15-digit token
-      const raw = typeof imei === 'string' ? imei : String(imei);
-      const tokens = raw
-        .split(/[^0-9A-Za-z]+/)
-        .map(t => t.trim())
-        .filter(Boolean);
-      // Prefer a 15-digit numeric token if present, else the first token
-      const preferred = tokens.find(t => /^\d{15}$/.test(t)) || tokens[0] || raw.trim();
-      const sanitizedImei = preferred;
-
-      console.log(`🔍 IMEI SEARCH DEBUG - Input: "${imei}" -> Sanitized: "${sanitizedImei}"`);
-      console.log(`🔍 Cache state - Total items: ${allDataCache.vehicles?.length || 0}`);
+    const cleanImei = imei.trim();
+    const timer = new PerformanceTimer();
+    
+    // ULTRA-FAST: Search using pre-built indexes
+    if (isCacheReady && searchIndexesRef.current.imei.size > 0) {
+      const exactMatches = searchIndexesRef.current.imei.get(cleanImei.toLowerCase()) || [];
       
-      // Debug: Check cache timestamp and age
-      const now = Date.now();
-      const lastCacheUpdate = localStorage.getItem('companyVehicleDeviceData_timestamp');
-      const cacheAge = lastCacheUpdate ? now - parseInt(lastCacheUpdate) : Infinity;
-      console.log(`🔍 Cache age: ${Math.round(cacheAge / 1000)}s (${Math.round(cacheAge / 60000)}min)`);
-
-      // Debug: Show some cache content
-      if (allDataCache.vehicles) {
-        const deviceCount = allDataCache.vehicles.filter(v => v.type === 'device').length;
-        const vehicleCount = allDataCache.vehicles.filter(v => v.type === 'vehicle').length;
-        console.log(`🔍 Cache breakdown - Devices: ${deviceCount}, Vehicles: ${vehicleCount}`);
-        
-        // Show first few devices for debugging
-        const devices = allDataCache.vehicles.filter(v => v.type === 'device').slice(0, 3);
-        console.log(`🔍 Sample devices in cache:`, devices.map(d => ({ imei: d.imei, associated: d.isAssociated })));
-      }
-
-      // First, search locally in the unified cache
-      const localResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
-      console.log(`🔍 Local search results:`, localResults.length > 0 ? localResults : 'NONE FOUND');
-      
-      if (localResults.length > 0) {
-        toast({
-          title: "Recherche par IMEI",
-          description: `${localResults.length} résultat(s) trouvé(s) (cache)`
-        });
-        return localResults;
-      }
-
-      // ENHANCED: Force cache refresh if no results and cache is stale OR if specifically requested
-      console.log('🔍 No local results found');
-      
-      // Always try refresh if cache is older than 2 minutes OR if no results found
-      const shouldRefresh = cacheAge > 120000 || localResults.length === 0;
-      
-      if (shouldRefresh) {
-        console.log('🔍 Forcing cache refresh - cache age or no results...');
-        await loadAllData();
-        
-        // Retry local search after refresh
-        const refreshedResults = CompanyVehicleDeviceService.filterByImeiLocal(allDataCache.vehicles, sanitizedImei);
-        console.log(`🔍 Post-refresh local search results:`, refreshedResults.length > 0 ? refreshedResults : 'STILL NONE');
-        
-        if (refreshedResults.length > 0) {
-          toast({
-            title: "Recherche par IMEI",
-            description: `${refreshedResults.length} résultat(s) trouvé(s) (cache rafraîchi)`
-          });
-          return refreshedResults;
-        }
-      }
-
-      // Enhanced backend fallback with multiple strategies
-      console.log('🔍 Trying backend fallback strategies...');
-      
-      try {
-        // Strategy 1: Direct getDevice lookup
-        const { getGraphQLClient } = await import('@/config/aws-config.js');
-        const { getDevice, listDevices } = await import('../graphql/queries');
-        const client = await getGraphQLClient();
-        
-        console.log('🔍 Strategy 1: Direct getDevice lookup');
-        const response = await client.graphql({
-          query: getDevice,
-          variables: { imei: sanitizedImei }
-        });
-        const device = response.data?.getDevice;
-        
-        if (device) {
-          console.log('🔍 Device found via getDevice:', device);
-          const mapped = {
-            id: device.imei,
-            entreprise: device.vehicle ? "Associé" : "Boîtier libre",
-            type: "device",
-            immatriculation: device.vehicle?.immat || "",
-            nomVehicule: device.vehicle?.nomVehicule || "",
-            imei: device.imei,
-            typeBoitier: device.protocolId?.toString() || "",
-            marque: "",
-            modele: "",
-            kilometrage: "",
-            telephone: device.sim || "",
-            emplacement: "",
-            deviceData: device,
-            isAssociated: !!device.vehicle?.immat
-          };
-          toast({ title: "Recherche par IMEI", description: `1 résultat trouvé (backend direct)` });
-          return [mapped];
-        }
-
-        // Strategy 2: List devices with filter (try exact match and partial match)
-        console.log('🔍 Strategy 2: ListDevices with filter');
-        let devices = [];
-        
-        // Try exact match first
-        try {
-          const listResponse = await client.graphql({
-            query: listDevices,
-            variables: { 
-              filter: { imei: { eq: sanitizedImei } },
-              limit: 5 
-            }
-          });
-          devices = listResponse.data?.listDevices?.items || [];
-        } catch (listError) {
-          console.warn('🔍 Exact filter failed, trying contains:', listError);
-          
-          // Fallback to contains filter
-          try {
-            const listResponse = await client.graphql({
-              query: listDevices,
-              variables: { 
-                filter: { imei: { contains: sanitizedImei } },
-                limit: 10 
-              }
-            });
-            devices = listResponse.data?.listDevices?.items || [];
-          } catch (containsError) {
-            console.warn('🔍 Contains filter also failed:', containsError);
+      if (exactMatches.length === 0) {
+        // Fuzzy search in index
+        const fuzzyMatches = [];
+        searchIndexesRef.current.imei.forEach((items, key) => {
+          if (key.includes(cleanImei.toLowerCase()) || cleanImei.toLowerCase().includes(key)) {
+            fuzzyMatches.push(...items);
           }
-        }
+        });
         
-        if (devices.length > 0) {
-          console.log('🔍 Devices found via listDevices:', devices);
-          const mappedDevices = devices.map(device => ({
-            id: device.imei,
-            entreprise: device.vehicle ? "Associé" : "Boîtier libre",
-            type: "device",
-            immatriculation: device.vehicle?.immat || "",
-            nomVehicule: device.vehicle?.nomVehicule || "",
-            imei: device.imei,
-            typeBoitier: device.protocolId?.toString() || "",
-            marque: "",
-            modele: "",
-            kilometrage: "",
-            telephone: device.sim || "",
-            emplacement: "",
-            deviceData: device,
-            isAssociated: !!device.vehicle?.immat
-          }));
-          toast({ title: "Recherche par IMEI", description: `${mappedDevices.length} résultat(s) trouvé(s) (backend list)` });
-          return mappedDevices;
+        if (fuzzyMatches.length > 0) {
+          const metrics = timer.stop(fuzzyMatches.length);
+          console.log(`🚀 Found ${fuzzyMatches.length} devices with fuzzy search in ${metrics.duration.toFixed(2)}ms`);
+          return fuzzyMatches;
         }
-        
-      } catch (backendError) {
-        console.error('🔍 Backend search failed:', backendError);
+      } else {
+        const metrics = timer.stop(exactMatches.length);
+        console.log(`🚀 Found ${exactMatches.length} devices with index search in ${metrics.duration.toFixed(2)}ms`);
+        return exactMatches;
       }
-
-      console.log('🔍 IMEI not found in any strategy');
-      toast({ title: "Recherche par IMEI", description: `IMEI ${sanitizedImei} introuvable` });
-      return [];
-      
-    } catch (err) {
-      console.error('🔍 IMEI search error:', err);
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche par IMEI: ${err.message}`,
-        variant: "destructive"
-      });
-      return [];
-    }
-  }, [allDataCache, loadAllData]);
-
-  const searchBySim = useCallback(async (sim) => {
-    if (!allDataCache) {
-      await loadAllData();
-      return [];
     }
     
-    try {
-      const results = CompanyVehicleDeviceService.filterBySimLocal(allDataCache.vehicles, sim);
-      
-      toast({
-        title: "Recherche par SIM",
-        description: `${results.length} résultat(s) trouvé(s)`,
-      });
-      
-      return results;
-    } catch (err) {
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche par SIM: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, [allDataCache, loadAllData]);
-
-  const searchByVehicle = useCallback(async (vehicle) => {
-    if (!allDataCache) {
-      await loadAllData();
-      return [];
-    }
-    
-    try {
-      // Use the existing filterByVehicleLocal function which already handles the unified format
-      const results = CompanyVehicleDeviceService.filterByVehicleLocal(allDataCache.vehicles, vehicle);
-      
-      toast({
-        title: "Recherche par véhicule",
-        description: `${results.length} résultat(s) trouvé(s)`,
-      });
-      
-      return results;
-    } catch (err) {
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche par véhicule: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, [allDataCache, loadAllData]);
-
-  const searchByCompany = useCallback(async (company) => {
-    if (!allDataCache) {
-      await loadAllData();
-      return [];
-    }
-    
-    try {
-      const results = CompanyVehicleDeviceService.filterByCompanyLocal(
-        allDataCache.vehicles, 
-        company, 
-        allDataCache.companies
+    // Fallback: try cache if indexes not ready
+    if (isCacheReady && allDataCache?.vehicles) {
+      const results = allDataCache.vehicles.filter(device => 
+        device.imei && device.imei.toLowerCase().includes(cleanImei.toLowerCase())
       );
       
-      if (results.length === 0) {
-        toast({
-          title: "Aucun résultat",
-          description: `Aucune entreprise trouvée pour "${company}". Vérifiez l'orthographe.`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Recherche par entreprise",
-          description: `${results.length} résultat(s) trouvé(s) pour "${company}"`,
-        });
+      if (results.length > 0) {
+        const metrics = timer.stop(results.length);
+        console.log(`Found ${results.length} devices in cache fallback in ${metrics.duration.toFixed(2)}ms`);
+        return results;
       }
-      
-      return results;
-    } catch (err) {
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche par entreprise: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
     }
-  }, [allDataCache, loadAllData]);
-
-  // OPTIMIZED: Get vehicles without devices (no cache needed)
-  const getVehiclesWithoutDevices = useCallback(async () => {
+    
+    console.log('Cache search failed, trying backend strategies...');
+    
+    // Strategy 1: Quick device lookup
     try {
-      const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithoutDevices();
-      
-      toast({
-        title: "Véhicules sans IMEI",
-        description: `${vehicles.length} véhicule(s) sans boîtier trouvé(s)`,
-      });
-      
-      return vehicles;
-    } catch (err) {
-      console.error('Error getting vehicles without devices:', err);
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la récupération des véhicules sans IMEI: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, []);
-
-  // OPTIMIZED: Get vehicles with empty IMEI with progressive loading
-  const getVehiclesWithEmptyImei = useCallback(async (onProgressUpdate = null) => {
-    try {
-      console.log('=== HOOK: GETTING VEHICLES WITH EMPTY IMEI ===');
-      const vehicles = await CompanyVehicleDeviceService.fetchVehiclesWithEmptyImei(onProgressUpdate);
-      
-      console.log('Hook: Vehicles with empty IMEI received:', vehicles.length);
-      
-      toast({
-        title: "Véhicules sans IMEI",
-        description: `${vehicles.length} véhicule(s) sans IMEI assigné trouvé(s)`,
-      });
-      
-      return vehicles;
-    } catch (err) {
-      console.error('=== HOOK ERROR: Getting vehicles with empty IMEI ===');
-      console.error('Hook error details:', err);
-      console.error('Hook error message:', err.message);
-      
-      // Provide more specific error handling
-      let errorMessage = 'Erreur lors de la récupération des véhicules sans IMEI';
-      if (err.message && err.message !== 'undefined') {
-        errorMessage += `: ${err.message}`;
-      } else {
-        errorMessage += ': Erreur inconnue, vérifiez la console pour plus de détails';
-      }
-      
-      setError(errorMessage);
-      toast({
-        title: "Erreur",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, []);
-
-  // OPTIMIZED: Get devices without vehicles (no cache needed)
-  const getDevicesWithoutVehicles = useCallback(async () => {
-    try {
-      const devices = await CompanyVehicleDeviceService.fetchDevicesWithoutVehicles();
-      
-      toast({
-        title: "Devices sans véhicules",
-        description: `${devices.length} boîtier(s) libre(s) trouvé(s)`,
-      });
-      
-      return devices;
-    } catch (err) {
-      console.error('Error getting devices without vehicles:', err);
-      setError(err.message);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la récupération des boîtiers libres: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, []);
-
-  // OPTIMIZED: Get stats for unassociated items
-  const getUnassociatedItemsStats = useCallback(async () => {
-    try {
-      return await CompanyVehicleDeviceService.fetchUnassociatedItemsStats();
-    } catch (err) {
-      console.error('Error getting unassociated items stats:', err);
-      setError(err.message);
-      return {
-        vehiclesWithoutDevicesCount: 0,
-        devicesWithoutVehiclesCount: 0,
-        totalVehicles: 0,
-        totalDevices: 0
-      };
-    }
-  }, []);
-
-  // FIXED: Load basic statistics with proper error handling and fallback
-  const loadQuickStats = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Use cached data as primary source for quick stats
-      const cachedData = loadFromLocalStorage();
-      if (cachedData && cachedData.companies && cachedData.vehicles) {
-        const vehicleCount = (cachedData.vehicles || []).filter(item => item.type === "vehicle").length;
-        const deviceCount = (cachedData.vehicles || []).filter(item => item.type === "device").length;
-        
-        setQuickStats({
-          totalVehicles: vehicleCount,
-          totalDevices: deviceCount
-        });
-        console.log('Quick stats loaded from cache:', { totalVehicles: vehicleCount, totalDevices: deviceCount });
-        return;
-      }
-      
-      // Fallback to simplified GraphQL queries with better error handling
-      try {
-        const { getGraphQLClient } = await import('@/config/aws-config.js');
-        const { listCompanies } = await import('../graphql/queries');
-        const client = await getGraphQLClient();
-        
-        // Simple count query that should work with the schema
-        const companiesResult = await client.graphql({
-          query: listCompanies,
-          variables: { limit: 1 }
-        });
-        
-        // Set basic stats
-        setQuickStats({
-          totalVehicles: 0, // Will be updated when data loads
-          totalDevices: 0,  // Will be updated when data loads
-          totalCompanies: companiesResult.data?.listCompanies?.items?.length || 0
-        });
-        
-        console.log('Basic quick stats loaded');
-      } catch (graphqlError) {
-        console.warn('GraphQL quick stats failed, using minimal fallback:', graphqlError);
-        // Use absolute minimal stats
-        setQuickStats({
-          totalVehicles: companies.length > 0 ? 0 : 0,
-          totalDevices: companies.length > 0 ? 0 : 0
-        });
+      const quickResults = await CompanyVehicleDeviceService.searchDeviceByImei(cleanImei);
+      if (quickResults && quickResults.length > 0) {
+        console.log(`Found ${quickResults.length} devices with quick search`);
+        return quickResults;
       }
     } catch (error) {
+      console.warn('Quick search failed:', error);
+    }
+    
+    // Strategy 2: Full vehicle search as fallback
+    try {
+      const fullResults = await CompanyVehicleDeviceService.searchVehiclesByFilters({ imei: cleanImei });
+      if (fullResults && fullResults.length > 0) {
+        console.log(`Found ${fullResults.length} vehicles with full search`);
+        return fullResults;
+      }
+    } catch (error) {
+      console.warn('Full search failed:', error);
+    }
+    
+    const metrics = timer.stop(0);
+    console.log(`No results found for IMEI: ${cleanImei} (total time: ${metrics.duration.toFixed(2)}ms)`);
+    return [];
+  }, [isCacheReady, allDataCache]);
+
+  
+  // Search by SIM using cached data
+  const searchBySim = useCallback((sim) => {
+    if (!sim?.trim() || !allDataCache?.vehicles) return [];
+    
+    const cleanSim = sim.trim();
+    return allDataCache.vehicles.filter(device => 
+      device.telephone && device.telephone.toLowerCase().includes(cleanSim.toLowerCase())
+    );
+  }, [allDataCache]);
+
+  // Search by vehicle using cached data
+  const searchByVehicle = useCallback((vehicle) => {
+    if (!vehicle?.trim() || !allDataCache?.vehicles) return [];
+    
+    const cleanVehicle = vehicle.trim().toLowerCase();
+    return allDataCache.vehicles.filter(item => 
+      item.type === "vehicle" && (
+        (item.immatriculation && item.immatriculation.toLowerCase().includes(cleanVehicle)) ||
+        (item.nomVehicule && item.nomVehicule.toLowerCase().includes(cleanVehicle))
+      )
+    );
+  }, [allDataCache]);
+
+  // Search by company using cached data
+  const searchByCompany = useCallback((company) => {
+    if (!company?.trim() || !allDataCache?.vehicles) return [];
+    
+    const cleanCompany = company.trim().toLowerCase();
+    return allDataCache.vehicles.filter(item => 
+      item.type === "vehicle" && 
+      item.entreprise && 
+      item.entreprise.toLowerCase().includes(cleanCompany)
+    );
+  }, [allDataCache]);
+
+  // Get vehicles without devices - optimized
+  const getVehiclesWithoutDevices = useCallback(async () => {
+    if (!isCacheReady || !allDataCache?.vehicles) {
+      console.log('Cache not ready, using backend service...');
+      return await CompanyVehicleDeviceService.fetchVehiclesWithoutDevices();
+    }
+    
+    return allDataCache.vehicles.filter(item => 
+      item.type === "vehicle" && !item.imei
+    );
+  }, [isCacheReady, allDataCache]);
+
+  // Get vehicles with empty IMEI - optimized with progress
+  const getVehiclesWithEmptyImei = useCallback(async (onProgressUpdate) => {
+    if (!isCacheReady || !allDataCache?.vehicles) {
+      console.log('Cache not ready, using backend service...');
+      return await CompanyVehicleDeviceService.fetchVehiclesWithEmptyImei(onProgressUpdate);
+    }
+    
+    const vehicles = allDataCache.vehicles.filter(item => 
+      item.type === "vehicle" && (!item.imei || item.imei.trim() === "")
+    );
+    
+    if (onProgressUpdate) {
+      onProgressUpdate(vehicles.length);
+    }
+    
+    return vehicles;
+  }, [isCacheReady, allDataCache]);
+
+  // Get devices without vehicles - optimized
+  const getDevicesWithoutVehicles = useCallback(async () => {
+    if (!isCacheReady || !allDataCache?.vehicles) {
+      console.log('Cache not ready, using backend service...');
+      return await CompanyVehicleDeviceService.fetchDevicesWithoutVehicles();
+    }
+    
+    return allDataCache.vehicles.filter(item => 
+      item.type === "device" && !item.isAssociated
+    );
+  }, [isCacheReady, allDataCache]);
+
+  // Get unassociated items stats - optimized
+  const getUnassociatedItemsStats = useCallback(async () => {
+    if (!isCacheReady || !allDataCache?.vehicles) {
+      console.log('Cache not ready, using backend service...');
+      return await CompanyVehicleDeviceService.fetchUnassociatedItemsStats();
+    }
+    
+    const vehicles = allDataCache.vehicles;
+    const vehiclesWithoutDevices = vehicles.filter(item => 
+      item.type === "vehicle" && !item.imei
+    ).length;
+    
+    const devicesWithoutVehicles = vehicles.filter(item => 
+      item.type === "device" && !item.isAssociated
+    ).length;
+    
+    return {
+      vehiclesWithoutDevices,
+      devicesWithoutVehicles
+    };
+  }, [isCacheReady, allDataCache]);
+
+  // Load quick stats with cache optimization
+  const loadQuickStats = useCallback(async () => {
+    if (quickStats) return quickStats;
+    
+    try {
+      // Try cache first
+      if (isCacheReady && allDataCache?.vehicles) {
+        const vehicles = allDataCache.vehicles;
+        const stats = {
+          vehicleCount: vehicles.filter(item => item.type === "vehicle").length,
+          deviceCount: vehicles.filter(item => item.type === "device").length,
+          associatedCount: vehicles.filter(item => item.type === "device" && item.isAssociated).length,
+          freeDeviceCount: vehicles.filter(item => item.type === "device" && !item.isAssociated).length
+        };
+        setQuickStats(stats);
+        return stats;
+      }
+      
+      // Fallback to backend
+      const stats = await CompanyVehicleDeviceService.fetchQuickStats();
+      setQuickStats(stats);
+      return stats;
+    } catch (error) {
       console.error('Error loading quick stats:', error);
-      // Always provide some stats, even if empty
-      setQuickStats({
-        totalVehicles: 0,
-        totalDevices: 0
-      });
-    } finally {
-      setLoading(false);
+      return {};
     }
-  }, [companies.length]);
+  }, [quickStats, isCacheReady, allDataCache]);
 
-  // MODIFIED: Initialize only cached data and quick stats on mount
+  // Initialize hook with cached data
   useEffect(() => {
-    console.log('=== INITIALIZING ON-DEMAND LOADING MODE ===');
-    const cachedData = loadFromLocalStorage();
+    const initializeData = async () => {
+      try {
+        // Load cached data first
+        const cached = loadFromLocalStorage();
+        if (cached) {
+          setCompanies(cached.companies || []);
+          setDevices(cached.vehicles || []);
+          setAllDataCache(cached);
+          setIsCacheReady(true);
+          
+          // Calculate stats from cached data
+          const vehicles = cached.vehicles || [];
+          const vehicleCount = vehicles.filter(item => item.type === "vehicle").length;
+          const freeDevicesCount = vehicles.filter(item => item.type === "device" && !item.isAssociated).length;
+          setFreeDevices(freeDevicesCount);
+          setStats({
+            vehicleCount,
+            freeDeviceCount: freeDevicesCount
+          });
+        }
+        
+        // Load quick stats
+        await loadQuickStats();
+      } catch (error) {
+        console.warn('Error initializing cached data:', error);
+      }
+    };
     
-    if (cachedData) {
-      console.log('Found cached data - setting as available but not loading to state');
-      setAllDataCache(cachedData);
-      setIsCacheReady(true);
-      // Don't load to state automatically anymore
-    }
-    
-    // Load quick stats for dashboard
-    loadQuickStats();
-  }, [loadQuickStats]); // Include loadQuickStats in dependencies
+    initializeData();
+  }, [loadFromLocalStorage, loadQuickStats]);
 
-  // Reset to show all data
-  const resetFilters = useCallback(() => {
-    loadAllData();
+  // Reset filters by reloading all data
+  const resetFilters = useCallback(async () => {
+    await loadAllData('optimized');
   }, [loadAllData]);
 
   return {
-    // Data
+    // Data states
     companies,
     vehicles,
     devices,
     freeDevices,
     stats,
-    
-    // State
-    loading,
-    error,
-    isCacheReady,
-    loadingMode,
     quickStats,
     
-    // Cache status
-    allDataCache,
+    // Loading states
+    loading,
+    error,
+    loadingMode,
+    isCacheReady,
+    companiesReady,
     
     // Actions
     loadAllData,
     loadQuickStats,
     setLoadingMode,
     searchDevices,
+    getVehiclesByCompany,
+    getAllVehiclesByCompany,
+    getDeviceStatus,
     searchByImei,
     searchBySim,
     searchByVehicle,
     searchByCompany,
-    getVehiclesByCompany,
-    getAllVehiclesByCompany,
-    getDeviceStatus,
-    loadCompaniesForSelect,
-    resetFilters,
-    
-    // OPTIMIZED: New specialized functions for unassociated items
     getVehiclesWithoutDevices,
     getVehiclesWithEmptyImei,
     getDevicesWithoutVehicles,
     getUnassociatedItemsStats,
+    resetFilters,
     
-    // Utilities
-    isFiltered: devices.length !== stats.totalDevices,
-    totalResults: devices.length
+    // Computed properties
+    isFiltered: loadingMode === 'search',
+    totalResults: devices?.length || 0,
+    
+    // Cache status
+    cacheReady: isCacheReady
   };
 };
-
-export default useCompanyVehicleDevice;
