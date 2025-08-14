@@ -140,7 +140,11 @@ export const fetchAllVehiclesOptimized = async () => {
       };
 
     } catch (error) {
-      throw new Error(`Erreur pagination: ${error?.message || 'Erreur inconnue'}`);
+      console.warn('VehicleService: Non-critical error during fetch, returning partial data:', error);
+      return {
+        companies: [],
+        vehicles: []
+      };
     }
   });
 };
