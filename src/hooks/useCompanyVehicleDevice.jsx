@@ -180,104 +180,33 @@ export const useCompanyVehicleDevice = () => {
     }
   };
 
-  // RESTORED: Batch loading with progressive pagination and cancellation
-  const fetchAllVehicles = useCallback(async () => {
-    const confirmResult = window.confirm(
-      "Attention: Cette opération va récupérer tous les véhicules de la base de données, ce qui peut prendre beaucoup de temps et de ressources. Êtes-vous sûr de vouloir continuer?"
-    );
-    
-    if (!confirmResult) return;
-    
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
+  // Load companies for select components - ALWAYS load companies
+  const loadCompaniesForSelect = useCallback(async () => {
     try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Chargement",
-        description: "Récupération de tous les véhicules, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Chargement annulé",
-            description: `${allVehicles.length} véhicules récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de tous les véhicules`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(Math.min(95, batchCount * 5));
-        
-        if (batchCount % 5 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 10 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allVehicles.length} véhicules récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Chargement terminé",
-          description: `${allVehicles.length} véhicules récupérés au total`,
-        });
+      // Try cached companies first
+      if (allDataCache && allDataCache.companies && allDataCache.companies.length > 0) {
+        console.log('Using cached companies:', allDataCache.companies.length);
+        setCompanies(allDataCache.companies);
+        return allDataCache.companies;
       }
       
-    } catch (error) {
-      console.error('Erreur lors de la récupération de tous les véhicules:', error);
+      // If no cache, load directly from API
+      console.log('No cached companies, fetching from API');
+      const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
+      console.log('Companies loaded:', loadedCompanies.length);
+      setCompanies(loadedCompanies);
+      return loadedCompanies;
+    } catch (err) {
+      console.error('Error in loadCompaniesForSelect:', err);
+      setCompanies([]);
       toast({
         title: "Erreur",
-        description: `Erreur: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
+        description: `Erreur lors du chargement des entreprises: ${err.message}`,
+        variant: "destructive",
       });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
+      return [];
     }
-  }, [companies]);
+  }, [allDataCache]);
 
   // RESTORED: Fetch vehicles without IMEI with batch loading
   const fetchVehiclesWithoutImei = useCallback(async () => {
@@ -626,6 +555,105 @@ export const useCompanyVehicleDevice = () => {
       });
     }
   }, [isLoadingAll]);
+
+  // RESTORED: Fetch all vehicles with batch loading
+  const fetchAllVehicles = useCallback(async () => {
+    const confirmResult = window.confirm(
+      "Attention: Cette opération va récupérer tous les véhicules de la base de données, ce qui peut prendre beaucoup de temps et de ressources. Êtes-vous sûr de vouloir continuer?"
+    );
+    
+    if (!confirmResult) return;
+    
+    setIsLoadingAll(true);
+    setShowProgressBar(true);
+    setLoadingProgress(0);
+    setCancelSearch(false);
+    setLoading(true);
+    
+    try {
+      const { getGraphQLClient } = await import('@/config/aws-config.js');
+      const { listVehicles } = await import('../graphql/queries');
+      const client = await getGraphQLClient();
+      
+      let allVehicles = [];
+      let nextToken = null;
+      let batchCount = 0;
+      
+      toast({
+        title: "Chargement",
+        description: "Récupération de tous les véhicules, veuillez patienter...",
+      });
+      
+      do {
+        if (cancelSearch) {
+          toast({
+            title: "Chargement annulé",
+            description: `${allVehicles.length} véhicules récupérés avant annulation`,
+          });
+          break;
+        }
+        
+        batchCount++;
+        
+        const variables = {
+          limit: 1000,
+          nextToken: nextToken
+        };
+        
+        console.log(`Récupération du lot ${batchCount} de tous les véhicules`);
+        
+        const response = await client.graphql({
+          query: listVehicles,
+          variables: variables
+        });
+        
+        const results = response.data.listVehicles.items;
+        nextToken = response.data.listVehicles.nextToken;
+        
+        console.log(`Lot ${batchCount}: ${results.length} véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
+        
+        allVehicles = [...allVehicles, ...results];
+        
+        setLoadingProgress(Math.min(95, batchCount * 5));
+        
+        if (batchCount % 5 === 0 || !nextToken) {
+          setDevices(allVehicles);
+          
+          if (allVehicles.length > 0 && batchCount % 10 === 0) {
+            toast({
+              title: "Progression",
+              description: `${allVehicles.length} véhicules récupérés jusqu'à présent`,
+            });
+          }
+        }
+        
+      } while (nextToken);
+      
+      setDevices(allVehicles);
+      setAllDataCache({ companies, vehicles: allVehicles });
+      setIsCacheReady(true);
+      
+      if (!cancelSearch) {
+        toast({
+          title: "Chargement terminé",
+          description: `${allVehicles.length} véhicules récupérés au total`,
+        });
+      }
+      
+    } catch (error) {
+      console.error('Erreur lors de la récupération de tous les véhicules:', error);
+      toast({
+        title: "Erreur",
+        description: `Erreur: ${error.message || 'Erreur inconnue'}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingAll(false);
+      setShowProgressBar(false);
+      setCancelSearch(false);
+      setLoading(false);
+    }
+  }, [companies]);
 
   // Load all data - OPTIMIZED for performance
   const loadAllData = useCallback(async (mode = 'optimized') => {
@@ -834,481 +862,6 @@ export const useCompanyVehicleDevice = () => {
       return { found: false, message: err.message };
     }
   }, [allDataCache, loadAllData]);
-
-  // RESTORED: Batch loading with progressive pagination and cancellation
-  const fetchAllVehicles = useCallback(async () => {
-    const confirmResult = window.confirm(
-      "Attention: Cette opération va récupérer tous les véhicules de la base de données, ce qui peut prendre beaucoup de temps et de ressources. Êtes-vous sûr de vouloir continuer?"
-    );
-    
-    if (!confirmResult) return;
-    
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Chargement",
-        description: "Récupération de tous les véhicules, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Chargement annulé",
-            description: `${allVehicles.length} véhicules récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de tous les véhicules`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(Math.min(95, batchCount * 5));
-        
-        if (batchCount % 5 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 10 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allVehicles.length} véhicules récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Chargement terminé",
-          description: `${allVehicles.length} véhicules récupérés au total`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la récupération de tous les véhicules:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Fetch vehicles without IMEI with batch loading
-  const fetchVehiclesWithoutImei = useCallback(async () => {
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Recherche en cours",
-        description: "Récupération des véhicules sans IMEI, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Recherche annulée",
-            description: `${allVehicles.length} résultats récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          filter: {
-            vehicleDeviceImei: {
-              attributeExists: false
-            }
-          },
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de véhicules sans IMEI`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules sans IMEI récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(batchCount * 10);
-        
-        if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 5 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allVehicles.length} véhicules sans IMEI récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Recherche terminée",
-          description: `${allVehicles.length} véhicules sans IMEI trouvés`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la récupération des véhicules sans IMEI:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Fetch devices without vehicles with batch loading
-  const fetchDevicesWithoutVehicles = useCallback(async () => {
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listDevices } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      let allDevices = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Recherche en cours",
-        description: "Récupération des devices sans véhicules, veuillez patienter...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Recherche annulée",
-            description: `${allDevices.length} résultats récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          filter: {
-            deviceVehicleImmat: {
-              attributeExists: false
-            }
-          },
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} de devices sans véhicules`);
-        
-        const response = await client.graphql({
-          query: listDevices,
-          variables: variables
-        });
-        
-        const results = response.data.listDevices.items;
-        nextToken = response.data.listDevices.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} devices sans véhicules récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allDevices = [...allDevices, ...results];
-        
-        setLoadingProgress(batchCount * 10);
-        
-        // Adapter les données pour l'affichage
-        const adaptedDevices = allDevices.map(device => ({
-          immat: device.imei,
-          vehicleDeviceImei: device.imei,
-          code: `Device ${device.imei}`,
-          company: { name: 'N/A' },
-          vehicleVehicleCategoryId: 'Device',
-          vehicleBrandBrandName: 'N/A',
-          vehicleModeleId: 'N/A',
-          kilometerage: 'N/A',
-          kilometerageStart: 'N/A',
-          sim: device.sim,
-          protocolId: device.protocolId,
-          type: 'device'
-        }));
-        
-        if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(adaptedDevices);
-          
-          if (allDevices.length > 0 && batchCount % 5 === 0) {
-            toast({
-              title: "Progression",
-              description: `${allDevices.length} devices sans véhicules récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      // Adaptation finale des données
-      const adaptedDevices = allDevices.map(device => ({
-        immat: device.imei,
-        vehicleDeviceImei: device.imei,
-        code: `Device ${device.imei}`,
-        company: { name: 'N/A' },
-        vehicleVehicleCategoryId: 'Device',
-        vehicleBrandBrandName: 'N/A',
-        vehicleModeleId: 'N/A',
-        kilometerage: 'N/A',
-        kilometerageStart: 'N/A',
-        sim: device.sim,
-        protocolId: device.protocolId,
-        type: 'device'
-      }));
-      
-      setDevices(adaptedDevices);
-      setAllDataCache({ companies, vehicles: adaptedDevices });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Recherche terminée",
-          description: `${allDevices.length} devices sans véhicules trouvés`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la récupération des devices sans véhicules:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Search for Martigues company specifically
-  const searchMartiguesCompany = useCallback(async () => {
-    setIsLoadingAll(true);
-    setShowProgressBar(true);
-    setLoadingProgress(0);
-    setCancelSearch(false);
-    setLoading(true);
-    
-    try {
-      const { getGraphQLClient } = await import('@/config/aws-config.js');
-      const { listVehicles } = await import('../graphql/queries');
-      const client = await getGraphQLClient();
-      
-      // Find Martigues company ID first
-      const martiguesCompany = companies.find(c => c.name && c.name.toLowerCase().includes('martigues'));
-      if (!martiguesCompany) {
-        toast({
-          title: "Erreur",
-          description: "Entreprise Martigues non trouvée",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      let allVehicles = [];
-      let nextToken = null;
-      let batchCount = 0;
-      
-      toast({
-        title: "Recherche Martigues",
-        description: "Récupération de tous les véhicules Martigues...",
-      });
-      
-      do {
-        if (cancelSearch) {
-          toast({
-            title: "Recherche annulée",
-            description: `${allVehicles.length} véhicules Martigues récupérés avant annulation`,
-          });
-          break;
-        }
-        
-        batchCount++;
-        
-        const variables = {
-          filter: {
-            companyVehiclesId: {
-              eq: martiguesCompany.id
-            }
-          },
-          limit: 1000,
-          nextToken: nextToken
-        };
-        
-        console.log(`Récupération du lot ${batchCount} pour Martigues`);
-        
-        const response = await client.graphql({
-          query: listVehicles,
-          variables: variables
-        });
-        
-        const results = response.data.listVehicles.items;
-        nextToken = response.data.listVehicles.nextToken;
-        
-        console.log(`Lot ${batchCount}: ${results.length} véhicules Martigues récupérés, nextToken: ${nextToken ? 'présent' : 'absent'}`);
-        
-        allVehicles = [...allVehicles, ...results];
-        
-        setLoadingProgress(batchCount * 10);
-        
-        if (batchCount % 2 === 0 || !nextToken) {
-          setDevices(allVehicles);
-          
-          if (allVehicles.length > 0 && batchCount % 5 === 0) {
-            toast({
-              title: "Progression Martigues",
-              description: `${allVehicles.length} véhicules Martigues récupérés jusqu'à présent`,
-            });
-          }
-        }
-        
-      } while (nextToken);
-      
-      setDevices(allVehicles);
-      setAllDataCache({ companies, vehicles: allVehicles });
-      setIsCacheReady(true);
-      
-      if (!cancelSearch) {
-        toast({
-          title: "Recherche Martigues terminée",
-          description: `${allVehicles.length} véhicules Martigues trouvés (attendu: 2003)`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Erreur lors de la recherche Martigues:', error);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors de la recherche Martigues: ${error.message || 'Erreur inconnue'}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingAll(false);
-      setShowProgressBar(false);
-      setCancelSearch(false);
-      setLoading(false);
-    }
-  }, [companies]);
-
-  // RESTORED: Cancel search function
-  const cancelOngoingSearch = useCallback(() => {
-    if (isLoadingAll) {
-      setCancelSearch(true);
-      toast({
-        title: "Annulation",
-        description: "Annulation de la recherche en cours...",
-      });
-    }
-  }, [isLoadingAll]);
-
-  // Load companies for select components - ALWAYS load companies
-  const loadCompaniesForSelect = useCallback(async () => {
-    try {
-      // Try cached companies first
-      if (allDataCache && allDataCache.companies && allDataCache.companies.length > 0) {
-        console.log('Using cached companies:', allDataCache.companies.length);
-        setCompanies(allDataCache.companies);
-        return allDataCache.companies;
-      }
-      
-      // If no cache, load directly from API
-      console.log('No cached companies, fetching from API');
-      const loadedCompanies = await CompanyVehicleDeviceService.fetchCompaniesForSelect();
-      console.log('Companies loaded:', loadedCompanies.length);
-      setCompanies(loadedCompanies);
-      return loadedCompanies;
-    } catch (err) {
-      console.error('Error in loadCompaniesForSelect:', err);
-      setCompanies([]);
-      toast({
-        title: "Erreur",
-        description: `Erreur lors du chargement des entreprises: ${err.message}`,
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, [allDataCache]);
 
   // Specific search functions for single criteria - CLIENT-SIDE using cached data
   const searchByImei = useCallback(async (imei) => {

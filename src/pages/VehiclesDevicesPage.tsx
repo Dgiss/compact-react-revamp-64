@@ -1217,6 +1217,35 @@ export default function VehiclesDevicesPage() {
       console.log('loadingMode:', loadingMode);
       console.log('loading:', loading);
       console.log('Should show table:', dataToShow.length > 0);
+
+      {/* RESTORED: Progress bar for batch loading */}
+      {showProgressBar && (
+        <div className="mb-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Chargement en cours...</span>
+            <span className="text-sm text-muted-foreground">{loadingProgress}%</span>
+          </div>
+          <div className="w-full bg-secondary rounded-full h-2">
+            <div 
+              className="bg-primary h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Données trouvées: {dataToShow.length}</span>
+            <span>Statut: {isLoadingAll ? 'Chargement...' : 'Terminé'}</span>
+          </div>
+          {isLoadingAll && (
+            <div className="flex justify-center">
+              <Button variant="destructive" size="sm" onClick={cancelOngoingSearch}>
+                <X className="h-4 w-4 mr-2" />
+                Annuler le chargement
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       return dataToShow.length > 0 ? (
         <EnhancedDataTable
           columns={getColumnsForCurrentView()}
