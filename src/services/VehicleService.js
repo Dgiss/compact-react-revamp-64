@@ -27,15 +27,6 @@ export const fetchAllVehiclesOptimized = async () => {
               marque
               modele
               kilometrage
-              company {
-                name
-              }
-              device {
-                name
-                imei
-                sim
-                device_type_id
-              }
             }
             nextToken
           }
@@ -67,15 +58,9 @@ export const fetchAllVehiclesOptimized = async () => {
                   nomVehicule
                   companyVehiclesId
                   vehicleDeviceImei
-                  company {
-                    name
-                  }
-                  device {
-                    name
-                    imei
-                    sim
-                    device_type_id
-                  }
+                  marque
+                  modele
+                  kilometrage
                 }
                 nextToken
               }
@@ -108,18 +93,18 @@ export const fetchAllVehiclesOptimized = async () => {
             id: vehicle?.immat || vehicle?.immatriculation || `vehicle-${index}`,
             type: "vehicle",
             immatriculation: vehicle?.immat || vehicle?.immatriculation || "",
-            entreprise: vehicle?.company?.name || "Non définie",
-            imei: vehicle?.device?.imei || vehicle?.vehicleDeviceImei || "",
+            entreprise: vehicle?.companyVehiclesId || "Non définie",
+            imei: vehicle?.vehicleDeviceImei || "",
             nomVehicule: vehicle?.nomVehicule || "",
-            telephone: vehicle?.device?.sim || "",
-            typeBoitier: vehicle?.device?.device_type_id?.toString() || "",
-            isAssociated: !!(vehicle?.device?.imei || vehicle?.vehicleDeviceImei),
+            telephone: "",
+            typeBoitier: "",
+            isAssociated: !!vehicle?.vehicleDeviceImei,
             companyVehiclesId: vehicle?.companyVehiclesId,
             vehicleDeviceImei: vehicle?.vehicleDeviceImei,
-            deviceData: vehicle?.device || null,
-            marque: "",
-            modele: "",
-            kilometrage: "",
+            deviceData: null,
+            marque: vehicle?.marque || "",
+            modele: vehicle?.modele || "",
+            kilometrage: vehicle?.kilometrage || "",
             emplacement: ""
           };
         } catch {
@@ -127,22 +112,10 @@ export const fetchAllVehiclesOptimized = async () => {
         }
       }).filter(Boolean);
 
+      // We'll handle company loading separately since we removed relationships
       const companies = [];
-      const seenCompanies = new Set();
       
-      allVehicles.forEach((vehicle) => {
-        try {
-          if (vehicle?.company?.name && vehicle?.companyVehiclesId && !seenCompanies.has(vehicle.companyVehiclesId)) {
-            companies.push({
-              id: vehicle.companyVehiclesId,
-              name: vehicle.company.name
-            });
-            seenCompanies.add(vehicle.companyVehiclesId);
-          }
-        } catch {
-          // Ignore errors
-        }
-      });
+      console.log('Vehicles loaded successfully:', mappedVehicles.length);
 
       return {
         companies,
@@ -163,11 +136,24 @@ export const fetchAllVehiclesOptimized = async () => {
       console.warn('Attempting fallback: trying to fetch vehicles without company optimization...');
       
       try {
-        // Fallback: try basic vehicle fetch without company optimization
+        // Fallback: try basic vehicle fetch without company/device relationships
         const fallbackResult = await withCredentialRetry(async () => {
           const vehiclesResponse = await client.graphql({
-            query: queries.listVehicles,
-            variables: { limit: 1000 }
+            query: `query FallbackVehicles {
+              listVehicles(limit: 1000) {
+                items {
+                  immat
+                  immatriculation
+                  nomVehicule
+                  companyVehiclesId
+                  vehicleDeviceImei
+                  marque
+                  modele
+                  kilometrage
+                }
+                nextToken
+              }
+            }`
           });
           
           const vehicles = vehiclesResponse.data?.listVehicles?.items || [];
