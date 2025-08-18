@@ -1318,11 +1318,11 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           <AddVehicleForm
-            onSuccess={(vehicle) => {
+            onSave={(vehicle) => {
               setShowAddVehicleDialog(false);
               updateVehicleData(vehicle);
             }}
-            onCancel={() => setShowAddVehicleDialog(false)}
+            onClose={() => setShowAddVehicleDialog(false)}
           />
         </DialogContent>
       </Dialog>
@@ -1339,12 +1339,13 @@ export default function VehiclesDevicesPage() {
           {selectedItem && (
             <AddVehicleForm
               initialData={selectedItem}
-              onSuccess={(vehicle) => {
+              isEditing={true}
+              onSave={(vehicle) => {
                 setShowEditVehicleDialog(false);
                 setSelectedItem(null);
                 updateVehicleData(vehicle);
               }}
-              onCancel={() => {
+              onClose={() => {
                 setShowEditVehicleDialog(false);
                 setSelectedItem(null);
               }}
@@ -1363,7 +1364,7 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           <ImportDevicesForm
-            onImportComplete={() => {
+            onClose={() => {
               setShowImportDevicesDialog(false);
               refreshCurrentView();
             }}
@@ -1385,7 +1386,7 @@ export default function VehiclesDevicesPage() {
               setShowAddDeviceWithVehicleDialog(false);
               refreshCurrentView();
             }}
-            onCancel={() => setShowAddDeviceWithVehicleDialog(false)}
+            onClose={() => setShowAddDeviceWithVehicleDialog(false)}
           />
         </DialogContent>
       </Dialog>
@@ -1398,15 +1399,14 @@ export default function VehiclesDevicesPage() {
           </SheetHeader>
           {selectedDevice && (
             <AssociateVehicleForm
-              selectedDevice={selectedDevice}
-              companies={companies}
+              device={selectedDevice}
               mode={associationMode}
               onSuccess={() => {
                 setShowAssociateSheet(false);
                 setSelectedDevice(null);
                 refreshCurrentView();
               }}
-              onCancel={() => {
+              onClose={() => {
                 setShowAssociateSheet(false);
                 setSelectedDevice(null);
               }}
@@ -1419,9 +1419,11 @@ export default function VehiclesDevicesPage() {
       <MultipleImeiSearchDialog
         open={showMultipleImeiDialog}
         onOpenChange={setShowMultipleImeiDialog}
-        onResultsFound={(results) => {
-          setFilteredData(results);
+        data={searchIndex.current.data || []}
+        onUpdate={(devices, newCompany) => {
+          console.log('Multiple IMEI update:', devices, newCompany);
           setShowMultipleImeiDialog(false);
+          refreshCurrentView();
         }}
       />
 
