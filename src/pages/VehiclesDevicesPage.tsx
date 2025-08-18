@@ -27,10 +27,34 @@ import { clearOldCaches } from "@/utils/cache-utils";
 import { CacheDebugPanel } from "@/components/debug/CacheDebugPanel";
 import { ImeiDiagnosticPanel } from "@/components/debug/ImeiDiagnosticPanel";
 
+// ============= TYPE DEFINITIONS =============
+
+interface SearchCriteria {
+  imei?: string;
+  immatriculation?: string;
+  entreprise?: string;
+  telephone?: string;
+  sim?: string;
+  fulltext?: string;
+}
+
+interface SearchIndexes {
+  imei: Map<string, number[]>;
+  immatriculation: Map<string, number[]>;
+  entreprise: Map<string, number[]>;
+  telephone: Map<string, number[]>;
+  sim: Map<string, number[]>;
+  fulltext: Map<string, number[]>;
+}
+
 // ============= OPTIMISATIONS RECHERCHE ULTRA-RAPIDE =============
 
 // Classe d'indexation optimisée pour recherche instantanée
 class SuperFastSearchIndex {
+  public indexes: SearchIndexes;
+  public data: any[];
+  public lastIndexTime: number;
+
   constructor() {
     this.indexes = {
       imei: new Map(),
@@ -44,7 +68,7 @@ class SuperFastSearchIndex {
     this.lastIndexTime = 0;
   }
 
-  normalizeText(text) {
+  normalizeText(text: string | null | undefined): string {
     if (!text) return "";
     return text.toString().toLowerCase()
       .normalize("NFD")
@@ -52,10 +76,10 @@ class SuperFastSearchIndex {
       .replace(/[^a-z0-9]/g, ""); // Keep only alphanumeric
   }
 
-  tokenize(text) {
+  tokenize(text: string | null | undefined): string[] {
     if (!text) return [];
     const normalized = this.normalizeText(text);
-    const tokens = new Set();
+    const tokens = new Set<string>();
     
     tokens.add(normalized);
     
@@ -69,7 +93,7 @@ class SuperFastSearchIndex {
     return Array.from(tokens);
   }
 
-  buildIndex(data) {
+  buildIndex(data: any[]): void {
     console.log(`🚀 Building super fast search index for ${data.length} items...`);
     const startTime = performance.now();
     
@@ -82,7 +106,7 @@ class SuperFastSearchIndex {
         const imeiTokens = this.tokenize(item.imei);
         imeiTokens.forEach(token => {
           if (!this.indexes.imei.has(token)) this.indexes.imei.set(token, []);
-          this.indexes.imei.get(token).push(idx);
+          this.indexes.imei.get(token)!.push(idx);
         });
       }
 
@@ -92,7 +116,7 @@ class SuperFastSearchIndex {
         const immatTokens = this.tokenize(immat);
         immatTokens.forEach(token => {
           if (!this.indexes.immatriculation.has(token)) this.indexes.immatriculation.set(token, []);
-          this.indexes.immatriculation.get(token).push(idx);
+          this.indexes.immatriculation.get(token)!.push(idx);
         });
       }
 
@@ -101,7 +125,7 @@ class SuperFastSearchIndex {
         const entrepriseTokens = this.tokenize(item.entreprise);
         entrepriseTokens.forEach(token => {
           if (!this.indexes.entreprise.has(token)) this.indexes.entreprise.set(token, []);
-          this.indexes.entreprise.get(token).push(idx);
+          this.indexes.entreprise.get(token)!.push(idx);
         });
       }
 
@@ -111,9 +135,9 @@ class SuperFastSearchIndex {
         const telTokens = this.tokenize(tel);
         telTokens.forEach(token => {
           if (!this.indexes.telephone.has(token)) this.indexes.telephone.set(token, []);
-          this.indexes.telephone.get(token).push(idx);
+          this.indexes.telephone.get(token)!.push(idx);
           if (!this.indexes.sim.has(token)) this.indexes.sim.set(token, []);
-          this.indexes.sim.get(token).push(idx);
+          this.indexes.sim.get(token)!.push(idx);
         });
       }
 
@@ -131,7 +155,7 @@ class SuperFastSearchIndex {
       const fullTextTokens = this.tokenize(fullText);
       fullTextTokens.forEach(token => {
         if (!this.indexes.fulltext.has(token)) this.indexes.fulltext.set(token, []);
-        this.indexes.fulltext.get(token).push(idx);
+        this.indexes.fulltext.get(token)!.push(idx);
       });
     });
 
@@ -139,11 +163,11 @@ class SuperFastSearchIndex {
     console.log(`✅ Super fast index built in ${(this.lastIndexTime - startTime).toFixed(2)}ms`);
   }
 
-  search(criteria) {
+  search(criteria: SearchCriteria): any[] {
     const startTime = performance.now();
-    const results = new Map(); // item index -> score
+    const results = new Map<number, number>(); // item index -> score
     
-    const addResults = (indexName, query, weight = 1) => {
+    const addResults = (indexName: keyof SearchIndexes, query: string | undefined, weight = 1) => {
       if (!query) return;
       
       const normalized = this.normalizeText(query);
@@ -151,7 +175,7 @@ class SuperFastSearchIndex {
       
       // Exact match gets highest score
       if (index.has(normalized)) {
-        index.get(normalized).forEach(idx => {
+        index.get(normalized)!.forEach(idx => {
           results.set(idx, (results.get(idx) || 0) + weight * 100);
         });
       }
@@ -191,19 +215,23 @@ class SuperFastSearchIndex {
     return sortedResults;
   }
 
-  suggest(field, query, limit = 8) {
+  suggest(field: keyof SearchIndexes, query: string, limit = 8): string[] {
     if (!query || query.length < 2) return [];
     
     const normalized = this.normalizeText(query);
     const index = this.indexes[field];
-    const suggestions = new Set();
+    const suggestions = new Set<string>();
     
     for (const [token, indices] of index.entries()) {
       if (token.startsWith(normalized) && suggestions.size < limit) {
         indices.slice(0, 3).forEach(idx => {
           const item = this.data[idx];
-          if (item[field]) suggestions.add(item[field]);
-          if (field === 'immatriculation' && item.immat) suggestions.add(item.immat);
+          if (field === 'immatriculation') {
+            if (item[field]) suggestions.add(item[field]);
+            if (item.immat) suggestions.add(item.immat);
+          } else if (item[field]) {
+            suggestions.add(item[field]);
+          }
         });
       }
     }
@@ -213,9 +241,9 @@ class SuperFastSearchIndex {
 }
 
 // Hook de debouncing optimisé
-function useDebounce(value, delay) {
+function useDebounce(value: string, delay: number): string {
   const [debouncedValue, setDebouncedValue] = useState(value);
-  const timeoutRef = useRef();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>();
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -264,18 +292,18 @@ export default function VehiclesDevicesPage() {
   const [searchStats, setSearchStats] = useState({ total: 0, time: 0 });
   
   // Local state for filtered data when using search
-  const [filteredData, setFilteredData] = useState([]);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
 
   // Dialog states
   const [showAssociateSheet, setShowAssociateSheet] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState(null);
-  const [associationMode, setAssociationMode] = useState('vehicle-device');
+  const [selectedDevice, setSelectedDevice] = useState<any>(null);
+  const [associationMode, setAssociationMode] = useState<"vehicle-device" | "company-device">("vehicle-device");
   const [showMultipleImeiDialog, setShowMultipleImeiDialog] = useState(false);
   const [showAddVehicleDialog, setShowAddVehicleDialog] = useState(false);
   const [showImportDevicesDialog, setShowImportDevicesDialog] = useState(false);
   const [showEditVehicleDialog, setShowEditVehicleDialog] = useState(false);
   const [showAddDeviceWithVehicleDialog, setShowAddDeviceWithVehicleDialog] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   // ============= OPTIMIZED SEARCH STATES =============
   const [searchImei, setSearchImei] = useState('');
@@ -290,26 +318,26 @@ export default function VehiclesDevicesPage() {
   
   // Suggestions
   const [suggestions, setSuggestions] = useState({
-    imei: [],
-    immatriculation: [],
-    entreprise: [],
-    telephone: []
+    imei: [] as string[],
+    immatriculation: [] as string[],
+    entreprise: [] as string[],
+    telephone: [] as string[]
   });
-  const [activeSuggestionField, setActiveSuggestionField] = useState(null);
+  const [activeSuggestionField, setActiveSuggestionField] = useState<string | null>(null);
 
   // Multi-selection for dissociation
-  const [selectedVehicles, setSelectedVehicles] = useState([]);
+  const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
 
   // Multi-selection for devices association
-  const [selectedDevices, setSelectedDevices] = useState([]);
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
   const [isDeviceSelectMode, setIsDeviceSelectMode] = useState(false);
 
   // Bulk association state
   const [showBulkAssociation, setShowBulkAssociation] = useState(false);
 
   // Track current filters for refresh after association
-  const [currentFilters, setCurrentFilters] = useState({});
+  const [currentFilters, setCurrentFilters] = useState<SearchCriteria>({});
 
   // Data refresh hook
   const {
@@ -336,7 +364,7 @@ export default function VehiclesDevicesPage() {
   }, [combinedData]);
 
   // Optimized search function
-  const performOptimizedSearch = useCallback((criteria) => {
+  const performOptimizedSearch = useCallback((criteria: SearchCriteria) => {
     if (!searchIndex.current.data.length) {
       console.warn('Search index not ready');
       return;
@@ -371,7 +399,7 @@ export default function VehiclesDevicesPage() {
 
   // Advanced search effect
   useEffect(() => {
-    const criteria = {};
+    const criteria: SearchCriteria = {};
     if (debouncedSearchImei) criteria.imei = debouncedSearchImei;
     if (debouncedSearchImmat) criteria.immatriculation = debouncedSearchImmat;
     if (debouncedSearchEntreprise) criteria.entreprise = debouncedSearchEntreprise;
@@ -391,7 +419,7 @@ export default function VehiclesDevicesPage() {
   }, []);
 
   // Handle suggestions
-  const handleSuggestionInput = useCallback((field, value) => {
+  const handleSuggestionInput = useCallback((field: keyof SearchIndexes, value: string) => {
     if (value.length >= 2) {
       const fieldSuggestions = searchIndex.current.suggest(field, value, 6);
       setSuggestions(prev => ({
@@ -405,7 +433,7 @@ export default function VehiclesDevicesPage() {
   }, []);
 
   // Apply suggestion
-  const applySuggestion = useCallback((field, value) => {
+  const applySuggestion = useCallback((field: string, value: string) => {
     if (field === 'imei') setSearchImei(value);
     else if (field === 'immatriculation') setSearchImmat(value);
     else if (field === 'entreprise') setSearchEntreprise(value);
@@ -422,7 +450,7 @@ export default function VehiclesDevicesPage() {
       setFilteredData([]);
       setLoadingMode('search');
 
-      const onProgressUpdate = progressResults => {
+      const onProgressUpdate = (progressResults: any[]) => {
         console.log(`Progress update: ${progressResults.length} vehicles so far`);
         setFilteredData([...progressResults]);
       };
@@ -487,7 +515,7 @@ export default function VehiclesDevicesPage() {
     }
 
     // Use optimized search
-    const criteria = {};
+    const criteria: SearchCriteria = {};
     if (searchImei) criteria.imei = searchImei;
     if (searchImmat) criteria.immatriculation = searchImmat;
     if (searchEntreprise) criteria.entreprise = searchEntreprise;
@@ -556,7 +584,7 @@ export default function VehiclesDevicesPage() {
   };
 
   // Update or create vehicle
-  const updateVehicleData = async data => {
+  const updateVehicleData = async (data: any) => {
     try {
       console.log('=== UPDATING/CREATING VEHICLE (CORRECTED) ===');
       console.log('Data received:', data);
@@ -566,8 +594,8 @@ export default function VehiclesDevicesPage() {
         const rawEntreprise = String(data.entreprise).trim();
         const looksLikeId = /[a-zA-Z0-9-]{8,}/.test(rawEntreprise);
         
-        const byId = companies.find(c => c.id === rawEntreprise);
-        const byName = !byId ? companies.find(c => c.name === rawEntreprise) : null;
+        const byId = companies.find((c: any) => c.id === rawEntreprise);
+        const byName = !byId ? companies.find((c: any) => c.name === rawEntreprise) : null;
         const found = byId || byName;
         
         if (found) {
@@ -577,7 +605,7 @@ export default function VehiclesDevicesPage() {
           mappedData.companyVehiclesId = rawEntreprise;
           try {
             const results = await searchCompaniesReal(rawEntreprise);
-            const exact = Array.isArray(results) ? results.find(c => c.id === rawEntreprise) : null;
+            const exact = Array.isArray(results) ? results.find((c: any) => c.id === rawEntreprise) : null;
             if (exact?.name) mappedData.entreprise = exact.name;
           } catch (e) {
             // ignore and proceed
@@ -585,7 +613,7 @@ export default function VehiclesDevicesPage() {
         } else {
           try {
             const results = await searchCompaniesReal(rawEntreprise);
-            const exact = Array.isArray(results) ? results.find(c => c.name?.toLowerCase() === rawEntreprise.toLowerCase()) : null;
+            const exact = Array.isArray(results) ? results.find((c: any) => c.name?.toLowerCase() === rawEntreprise.toLowerCase()) : null;
             if (exact) {
               mappedData.companyVehiclesId = exact.id;
               mappedData.entreprise = exact.name;
@@ -620,7 +648,7 @@ export default function VehiclesDevicesPage() {
         });
         await loadAllData();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating/creating vehicle:', err);
       toast({
         title: "Erreur",
@@ -631,11 +659,11 @@ export default function VehiclesDevicesPage() {
   };
 
   // Delete vehicle
-  const deleteVehicleDataLocal = async item => {
+  const deleteVehicleDataLocal = async (item: any) => {
     try {
       await deleteVehicleData(item);
       await refreshAfterDeletion("Véhicule supprimé avec succès");
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting vehicle:', err);
       toast({
         title: "Erreur",
@@ -646,7 +674,7 @@ export default function VehiclesDevicesPage() {
   };
 
   // Dissociate device from vehicle
-  const dissociateDevice = async item => {
+  const dissociateDevice = async (item: any) => {
     console.log('=== STARTING DISSOCIATION ===');
     console.log('Item to dissociate:', item);
     try {
@@ -678,7 +706,7 @@ export default function VehiclesDevicesPage() {
         await refreshCurrentView();
       }
       console.log('Dissociation completed successfully');
-    } catch (err) {
+    } catch (err: any) {
       console.error('=== DISSOCIATION ERROR ===');
       console.error('Error type:', err.constructor.name);
       console.error('Error message:', err.message);
@@ -717,7 +745,7 @@ export default function VehiclesDevicesPage() {
         try {
           await dissociateVehicleFromDevice(immat);
           results.push({ immat, success: true });
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error dissociating ${immat}:`, error);
           errors.push({ immat, error: error.message });
         }
@@ -739,7 +767,7 @@ export default function VehiclesDevicesPage() {
 
       setSelectedVehicles([]);
       setIsSelectMode(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Bulk dissociation error:', err);
       toast({
         title: "Erreur",
@@ -757,7 +785,7 @@ export default function VehiclesDevicesPage() {
       label: "Entreprise",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <div className="flex items-center gap-2">
           <Building className="h-4 w-4 text-blue-500" />
           <span className={value ? "text-blue-700 font-medium" : "text-gray-400"}>
@@ -771,7 +799,7 @@ export default function VehiclesDevicesPage() {
       label: "Type",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <div className="flex items-center gap-2">
           {value === "vehicle" ? (
             <Car className="h-4 w-4 text-green-500" />
@@ -791,7 +819,7 @@ export default function VehiclesDevicesPage() {
       label: "Immatriculation",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <div className="flex items-center gap-2">
           <Car className="h-4 w-4 text-blue-500" />
           <div className="flex flex-col">
@@ -808,7 +836,7 @@ export default function VehiclesDevicesPage() {
       label: "IMEI",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         value ? (
           <div className="flex items-center gap-2">
             <Smartphone className="h-4 w-4 text-gray-500" />
@@ -826,7 +854,7 @@ export default function VehiclesDevicesPage() {
       label: "Protocol",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className={value ? "text-gray-900" : "text-gray-400"}>
           {value || "Aucun protocole"}
         </span>
@@ -837,7 +865,7 @@ export default function VehiclesDevicesPage() {
       label: "Emplacement",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className={value ? "text-gray-900" : "text-gray-400"}>
           {value || "Non défini"}
         </span>
@@ -848,7 +876,7 @@ export default function VehiclesDevicesPage() {
       label: "Marque",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className={value ? "text-gray-900" : "text-gray-400"}>
           {value || "Non définie"}
         </span>
@@ -859,7 +887,7 @@ export default function VehiclesDevicesPage() {
       label: "Modèle",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className={value ? "text-gray-900" : "text-gray-400"}>
           {value || "Non défini"}
         </span>
@@ -870,7 +898,7 @@ export default function VehiclesDevicesPage() {
       label: "Kilométrage",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className={value ? "text-gray-900" : "text-gray-400"}>
           {value ? `${value} km` : "Non défini"}
         </span>
@@ -881,7 +909,7 @@ export default function VehiclesDevicesPage() {
       label: "SIM",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className={row.sim || row.telephone ? "text-gray-900" : "text-gray-400"}>
           {row.sim || row.telephone || "Pas de SIM"}
         </span>
@@ -892,7 +920,7 @@ export default function VehiclesDevicesPage() {
       label: "Statut",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => {
+      renderCell: (value: any, row: any) => {
         let status = "Inconnu";
         let badgeClass = "bg-gray-100 text-gray-800";
         
@@ -933,7 +961,7 @@ export default function VehiclesDevicesPage() {
       label: "Immatriculation",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <div className="flex items-center gap-2">
           <Car className="h-4 w-4 text-blue-500" />
           <div className="flex flex-col">
@@ -950,7 +978,7 @@ export default function VehiclesDevicesPage() {
       label: "IMEI",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className="text-gray-400 italic">
           Non assigné
         </span>
@@ -961,7 +989,7 @@ export default function VehiclesDevicesPage() {
       label: "Entreprise actuelle",
       sortable: true,
       visible: true,
-      renderCell: (value, row) => (
+      renderCell: (value: any, row: any) => (
         <span className="text-blue-600 font-medium">
           {value || "Entreprise non définie"}
         </span>
@@ -980,7 +1008,7 @@ export default function VehiclesDevicesPage() {
   };
 
   // Handle functions
-  const handleDelete = async item => {
+  const handleDelete = async (item: any) => {
     if (!window.confirm(`Êtes-vous sûr de vouloir supprimer le véhicule "${item.immatriculation || item.immat}" ?`)) {
       return;
     }
@@ -1005,12 +1033,12 @@ export default function VehiclesDevicesPage() {
     }
   };
 
-  const handleEdit = item => {
+  const handleEdit = (item: any) => {
     setSelectedItem(item);
     setShowEditVehicleDialog(true);
   };
 
-  const handleAssociate = item => {
+  const handleAssociate = (item: any) => {
     console.log('Association initiated for item:', item);
     setSelectedDevice(item);
     setShowAssociateSheet(true);
@@ -1139,14 +1167,14 @@ export default function VehiclesDevicesPage() {
                   value={value}
                   onChange={(e) => {
                     setter(e.target.value);
-                    handleSuggestionInput(key, e.target.value);
+                    handleSuggestionInput(key as keyof SearchIndexes, e.target.value);
                   }}
                 />
                 
                 {/* Suggestions dropdown */}
-                {activeSuggestionField === key && suggestions[key].length > 0 && (
+                {activeSuggestionField === key && suggestions[key as keyof typeof suggestions].length > 0 && (
                   <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-40 overflow-y-auto">
-                    {suggestions[key].map((suggestion, idx) => (
+                    {suggestions[key as keyof typeof suggestions].map((suggestion, idx) => (
                       <div
                         key={idx}
                         className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
@@ -1290,7 +1318,6 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           <AddVehicleForm
-            companies={companies}
             onSuccess={(vehicle) => {
               setShowAddVehicleDialog(false);
               updateVehicleData(vehicle);
@@ -1311,7 +1338,6 @@ export default function VehiclesDevicesPage() {
           </DialogHeader>
           {selectedItem && (
             <AddVehicleForm
-              companies={companies}
               initialData={selectedItem}
               onSuccess={(vehicle) => {
                 setShowEditVehicleDialog(false);
@@ -1337,11 +1363,10 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           <ImportDevicesForm
-            onSuccess={() => {
+            onImportComplete={() => {
               setShowImportDevicesDialog(false);
               refreshCurrentView();
             }}
-            onCancel={() => setShowImportDevicesDialog(false)}
           />
         </DialogContent>
       </Dialog>
@@ -1356,7 +1381,6 @@ export default function VehiclesDevicesPage() {
             </DialogDescription>
           </DialogHeader>
           <AddDeviceWithVehicleForm
-            companies={companies}
             onSuccess={() => {
               setShowAddDeviceWithVehicleDialog(false);
               refreshCurrentView();
@@ -1395,7 +1419,7 @@ export default function VehiclesDevicesPage() {
       <MultipleImeiSearchDialog
         open={showMultipleImeiDialog}
         onOpenChange={setShowMultipleImeiDialog}
-        onSearch={(results) => {
+        onResultsFound={(results) => {
           setFilteredData(results);
           setShowMultipleImeiDialog(false);
         }}
