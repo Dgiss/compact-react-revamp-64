@@ -67,54 +67,75 @@ export const useCompanyVehicleDevice = () => {
       clearTimeout(timeoutId);
     };
   }, []);
-// Remplacer la fonction saveToLocalStorage existante
-const saveToLocalStorage = (data) => {
-  try {
-    // Version compressée pour éviter quota exceeded
-    const minimalData = {
-      companies: data.companies || [],
-      vehicles: (data.vehicles || []).map(v => ({
-        id: v.id,
-        type: v.type,
-        imei: v.imei,
-        immatriculation: v.immatriculation,
-        entreprise: v.entreprise,
-        isAssociated: v.isAssociated,
-        // Garder seulement l'essentiel
-        telephone: v.telephone,
-        nomVehicule: v.nomVehicule
-      })),
-      timestamp: Date.now(),
-      version: '2.0'
-    };
-    
-    const serialized = JSON.stringify(minimalData);
-    
-    // Vérifier taille avant sauvegarde
-    if (serialized.length > 4 * 1024 * 1024) { // 4MB limite
-      console.warn('Cache trop volumineux, sauvegarde partielle');
-      // Sauver seulement les entreprises et statistiques
-      const ultraMinimal = {
-        companies: data.companies,
-        stats: { 
-          vehicleCount: data.vehicles?.filter(v => v.type === 'vehicle').length,
-          deviceCount: data.vehicles?.filter(v => v.type === 'device').length 
-        },
+
+  // localStorage utilities with better error handling
+  const saveToLocalStorage = (data) => {
+    try {
+      // CRITICAL FIX: Reduce cache size to prevent QuotaExceededError
+      const compactData = {
+        companies: (data.companies || []).map(c => ({
+          id: c.id,
+          name: c.name,
+          siret: c.siret
+        })),
+        vehicles: (data.vehicles || []).map(v => ({
+          id: v.id,
+          immat: v.immat || v.immatriculation,
+          type: v.type,
+          marque: v.marque,
+          modele: v.modele,
+          companyVehiclesId: v.companyVehiclesId,
+          entreprise: v.entreprise,
+          // FIXED: Use actual GraphQL relation - device.imei instead of vehicleDeviceImei
+          deviceImei: v.device?.imei || null,
+          isAssociated: !!v.device?.imei
+        })),
         timestamp: Date.now()
       };
-      localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(ultraMinimal));
-    } else {
-      localStorage.setItem('fleetwatch_vehicle_cache', serialized);
+      
+      // Check size before saving
+      const dataStr = JSON.stringify(compactData);
+      const sizeInMB = (dataStr.length * 2) / (1024 * 1024); // Rough estimate
+      
+      if (sizeInMB > 4) { // Limit to 4MB
+        console.warn('Cache data too large, using compact version');
+        const ultraCompactData = {
+          companies: compactData.companies.slice(0, 50),
+          vehicles: compactData.vehicles.slice(0, 200),
+          timestamp: Date.now()
+        };
+        localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(ultraCompactData));
+      } else {
+        localStorage.setItem('fleetwatch_vehicle_cache', dataStr);
+      }
+      
+      console.log('Data saved to localStorage (size:', sizeInMB.toFixed(2), 'MB)');
+    } catch (error) {
+      if (error.name === 'QuotaExceededError') {
+        console.error('LocalStorage quota exceeded, clearing cache');
+        localStorage.removeItem('fleetwatch_vehicle_cache');
+        // Try saving minimal data only
+        try {
+          const minimalData = {
+            companies: (data.companies || []).slice(0, 10).map(c => ({ id: c.id, name: c.name })),
+            vehicles: (data.vehicles || []).slice(0, 50).map(v => ({ 
+              immat: v.immat || v.immatriculation, 
+              type: v.type,
+              deviceImei: v.device?.imei || null
+            })),
+            timestamp: Date.now()
+          };
+          localStorage.setItem('fleetwatch_vehicle_cache', JSON.stringify(minimalData));
+          console.log('Saved minimal cache after quota error');
+        } catch (fallbackError) {
+          console.error('Failed to save even minimal cache:', fallbackError);
+        }
+      } else {
+        console.error('Error saving to localStorage:', error);
+      }
     }
-    
-    console.log(`💾 Cache optimisé sauvé: ${(serialized.length / 1024).toFixed(1)}KB`);
-    
-  } catch (error) {
-    console.error('Erreur cache:', error);
-    // Fallback: clear cache si problème
-    localStorage.removeItem('fleetwatch_vehicle_cache');
-  }
-};
+  };
+  
   const loadFromLocalStorage = () => {
     try {
       const cached = localStorage.getItem('fleetwatch_vehicle_cache');
