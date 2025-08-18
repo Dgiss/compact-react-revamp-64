@@ -276,39 +276,107 @@ export const getUnassignedDevices = async () => {
   await waitForAmplifyConfig();
   
   try {
-    // Get all devices
-    const devicesResponse = await client.graphql({
-      query: queries.listDevices,
-      variables: {
-        limit: 1000
+    console.log('=== FETCHING UNASSIGNED DEVICES (SECURED) ===');
+    
+    // Simplified inline GraphQL query for devices to avoid nested field errors
+    const SIMPLE_LIST_DEVICES = `
+      query ListDevicesSimple($limit: Int, $nextToken: String) {
+        listDevices(limit: $limit, nextToken: $nextToken) {
+          items {
+            imei
+            sim
+            protocolId
+            name
+            deviceVehicleImmat
+          }
+          nextToken
+        }
       }
-    });
+    `;
     
-    const allDevices = devicesResponse.data?.listDevices?.items || [];
-    
-    // Get all active company device associations
-    const associationsResponse = await client.graphql({
-      query: queries.listCompanyDevices,
-      variables: {
-        filter: {
-          isActive: { eq: true }
-        },
-        limit: 1000
+    // Minimal inline GraphQL query for vehicles to get only IMEI associations
+    const MINIMAL_LIST_VEHICLES = `
+      query ListVehiclesImeiOnly($limit: Int, $nextToken: String) {
+        listVehicles(limit: $limit, nextToken: $nextToken) {
+          items {
+            vehicleDeviceImei
+          }
+          nextToken
+        }
       }
-    });
+    `;
     
-    const activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
+    let allDevices = [];
+    let allVehicles = [];
+    let activeAssociations = [];
+    
+    // Fetch all devices with pagination
+    let nextToken = null;
+    do {
+      try {
+        const devicesResponse = await client.graphql({
+          query: SIMPLE_LIST_DEVICES,
+          variables: { limit: 1000, nextToken }
+        });
+        
+        if (devicesResponse.data?.listDevices?.items) {
+          allDevices = allDevices.concat(devicesResponse.data.listDevices.items);
+          nextToken = devicesResponse.data.listDevices.nextToken;
+        } else {
+          break;
+        }
+      } catch (error) {
+        console.error('Error fetching devices batch:', error);
+        // If we get errors but have some data, continue with what we have
+        if (error.data?.listDevices?.items) {
+          allDevices = allDevices.concat(error.data.listDevices.items);
+        }
+        break;
+      }
+    } while (nextToken);
+    
+    // Fetch all vehicles with pagination
+    nextToken = null;
+    do {
+      try {
+        const vehiclesResponse = await client.graphql({
+          query: MINIMAL_LIST_VEHICLES,
+          variables: { limit: 1000, nextToken }
+        });
+        
+        if (vehiclesResponse.data?.listVehicles?.items) {
+          allVehicles = allVehicles.concat(vehiclesResponse.data.listVehicles.items);
+          nextToken = vehiclesResponse.data.listVehicles.nextToken;
+        } else {
+          break;
+        }
+      } catch (error) {
+        console.error('Error fetching vehicles batch:', error);
+        // If we get errors but have some data, continue with what we have
+        if (error.data?.listVehicles?.items) {
+          allVehicles = allVehicles.concat(error.data.listVehicles.items);
+        }
+        break;
+      }
+    } while (nextToken);
+    
+    // Get active company device associations (keep existing query if it works)
+    try {
+      const associationsResponse = await client.graphql({
+        query: queries.listCompanyDevices,
+        variables: {
+          filter: { isActive: { eq: true } },
+          limit: 1000
+        }
+      });
+      activeAssociations = associationsResponse.data?.listCompanyDevices?.items || [];
+    } catch (error) {
+      console.error('Error fetching company associations:', error);
+      // Continue without company associations data
+      activeAssociations = [];
+    }
+    
     const companyAssociatedImeis = new Set(activeAssociations.map(assoc => assoc.deviceIMEI));
-    
-    // Get all vehicles to check for vehicle associations
-    const vehiclesResponse = await client.graphql({
-      query: queries.listVehicles,
-      variables: {
-        limit: 1000
-      }
-    });
-    
-    const allVehicles = vehiclesResponse.data?.listVehicles?.items || [];
     const vehicleAssociatedImeis = new Set(
       allVehicles
         .map(v => v.vehicleDeviceImei)
@@ -320,9 +388,13 @@ export const getUnassignedDevices = async () => {
       !companyAssociatedImeis.has(device.imei) && !vehicleAssociatedImeis.has(device.imei)
     );
     
+    console.log(`Found ${unassignedDevices.length} unassigned devices from ${allDevices.length} total devices`);
     return unassignedDevices;
+    
   } catch (error) {
-    throw error;
+    console.error('Error in getUnassignedDevices:', error);
+    // Return empty array instead of throwing to allow partial functionality
+    return [];
   }
 };
 

@@ -126,24 +126,56 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
     }
   };
   
-  // Use the existing optimized function for loading devices without vehicles
+  // Use the existing optimized function for loading devices without vehicles with resilient error handling
   const loadDevicesWithoutVehicles = async () => {
     console.log('Loading only available devices (not associated or available in companydevice)...');
     setLoadingDevices(true);
     
     try {
-      // Get both devices without vehicles and company devices
-      const [devicesWithoutVehicles, companyDevices] = await Promise.all([
+      // Use Promise.allSettled to handle partial failures gracefully
+      const results = await Promise.allSettled([
         getDevicesWithoutVehicles(),
         CompanyDeviceService.getUnassignedDevices()
       ]);
+
+      let devicesWithoutVehicles = [];
+      let companyDevices = [];
+
+      // Handle first source (getDevicesWithoutVehicles)
+      if (results[0].status === 'fulfilled') {
+        devicesWithoutVehicles = results[0].value || [];
+        console.log('✅ getDevicesWithoutVehicles succeeded:', devicesWithoutVehicles.length);
+      } else {
+        console.error('❌ getDevicesWithoutVehicles failed:', results[0].reason);
+        toast({
+          title: "Avertissement",
+          description: "Certains boîtiers pourraient ne pas être affichés",
+          variant: "default",
+        });
+      }
+
+      // Handle second source (getUnassignedDevices)
+      if (results[1].status === 'fulfilled') {
+        companyDevices = results[1].value || [];
+        console.log('✅ getUnassignedDevices succeeded:', companyDevices.length);
+      } else {
+        console.error('❌ getUnassignedDevices failed:', results[1].reason);
+        // Don't show another toast if first source succeeded
+        if (results[0].status === 'rejected') {
+          toast({
+            title: "Avertissement",
+            description: "Certains boîtiers pourraient ne pas être affichés",
+            variant: "default",
+          });
+        }
+      }
 
       // Filter to show only devices that are:
       // 1. Not associated to any vehicle (from getDevicesWithoutVehicles)
       // 2. OR available in companydevice (from getUnassignedDevices)
       const availableDevices = [
-        ...devicesWithoutVehicles.filter(device => !device.isAssociated),
-        ...companyDevices.filter(device => !device.isAssociated)
+        ...devicesWithoutVehicles.filter(device => !device.isAssociated && !device.vehicleImmat),
+        ...companyDevices.filter(device => !device.isAssociated && !device.vehicleImmat)
       ];
 
       // Remove duplicates based on IMEI
@@ -156,7 +188,8 @@ export default function AssociateVehicleForm({ device, mode = 'vehicle-device', 
         imei: d.imei, 
         type: d.typeBoitier,
         entreprise: d.entreprise,
-        isAssociated: d.isAssociated
+        isAssociated: d.isAssociated,
+        vehicleImmat: d.vehicleImmat
       })));
       setCompanyDevices(uniqueDevices);
       

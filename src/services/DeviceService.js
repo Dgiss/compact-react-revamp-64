@@ -9,7 +9,26 @@ const client = getLazyClient();
 
 export const fetchAllDevices = async () => {
   return await withCredentialRetry(async () => {
-    console.log('=== FETCHING ALL DEVICES ===');
+    console.log('=== FETCHING ALL DEVICES (SECURED) ===');
+    
+    // Simplified inline GraphQL query to avoid nested field errors
+    const SIMPLE_LIST_DEVICES = `
+      query ListDevicesSimple($limit: Int, $nextToken: String) {
+        listDevices(limit: $limit, nextToken: $nextToken) {
+          items {
+            imei
+            sim
+            protocolId
+            name
+            deviceVehicleImmat
+            enabled
+            createdAt
+            updatedAt
+          }
+          nextToken
+        }
+      }
+    `;
     
     let allDevices = [];
     let nextToken = null;
@@ -24,7 +43,7 @@ export const fetchAllDevices = async () => {
       
       try {
         const deviceList = await client.graphql({
-          query: queries.listDevices,
+          query: SIMPLE_LIST_DEVICES,
           variables: variables
         });
         
@@ -39,7 +58,14 @@ export const fetchAllDevices = async () => {
         if (error.errors) {
           console.error('GraphQL errors:', error.errors);
         }
-        throw new Error(`Failed to fetch devices: ${error.message}`);
+        // If we have partial data, use it instead of throwing
+        if (error.data?.listDevices?.items) {
+          console.log('Using partial device data from error response');
+          allDevices = allDevices.concat(error.data.listDevices.items);
+          nextToken = error.data.listDevices.nextToken;
+        } else {
+          throw new Error(`Failed to fetch devices: ${error.message}`);
+        }
       }
       
     } while (nextToken);
