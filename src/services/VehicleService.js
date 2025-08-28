@@ -57,12 +57,6 @@ const SIMPLE_LIST_VEHICLES = `
         locations
         kilometerage
         code
-        brand {
-          brandName
-        }
-        modele {
-          modele
-        }
       }
       nextToken
     }
