@@ -476,7 +476,17 @@ export const searchVehiclesByCompany = async (companyId) => {
       
       // Sinon, requête directe
       const response = await client.graphql({
-        query: queries.listVehicles,
+        query: `
+          query ListVehiclesMinimal($filter: ModelVehicleFilterInput, $limit: Int) {
+            listVehicles(filter: $filter, limit: $limit) {
+              items {
+                immat
+                companyVehiclesId
+                vehicleDeviceImei
+              }
+            }
+          }
+        `,
         variables: {
           filter: {
             companyVehiclesId: { eq: companyId }
@@ -514,7 +524,17 @@ export const searchVehiclesByImmat = async (immatPattern) => {
       
       // Sinon, requête directe
       const response = await client.graphql({
-        query: queries.listVehicles,
+        query: `
+          query ListVehiclesMinimal($filter: ModelVehicleFilterInput, $limit: Int) {
+            listVehicles(filter: $filter, limit: $limit) {
+              items {
+                immat
+                companyVehiclesId
+                vehicleDeviceImei
+              }
+            }
+          }
+        `,
         variables: {
           filter: {
             immat: { contains: immatPattern }

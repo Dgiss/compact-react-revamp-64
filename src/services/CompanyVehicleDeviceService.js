@@ -332,7 +332,18 @@ export const fetchVehiclesWithoutDevices = async (limit = 1000) => {
         
         try {
           const response = await client.graphql({
-            query: queries.listVehicles,
+            query: `
+              query ListVehiclesMinimal($limit: Int, $nextToken: String, $filter: ModelVehicleFilterInput) {
+                listVehicles(limit: $limit, nextToken: $nextToken, filter: $filter) {
+                  items {
+                    immat
+                    companyVehiclesId
+                    vehicleDeviceImei
+                  }
+                  nextToken
+                }
+              }
+            `,
             variables: variables
           });
           
@@ -638,7 +649,18 @@ export const fetchVehiclesWithEmptyImei = async (onProgressUpdate = null) => {
         
         try {
           const response = await client.graphql({
-            query: queries.listVehicles,
+            query: `
+              query ListVehiclesMinimal($limit: Int, $nextToken: String) {
+                listVehicles(limit: $limit, nextToken: $nextToken) {
+                  items {
+                    immat
+                    companyVehiclesId
+                    vehicleDeviceImei
+                  }
+                  nextToken
+                }
+              }
+            `,
             variables: {
               limit: 1000,
               nextToken: nextToken
