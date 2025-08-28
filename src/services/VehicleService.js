@@ -480,8 +480,19 @@ export const dissociateVehicleFromDevice = async (vehicleImmat) => {
     console.log('Vehicle immat:', vehicleImmat);
     
     try {
+      const minimalUpdateVehicle = /* GraphQL */ `
+        mutation UpdateVehicle($input: UpdateVehicleInput!) {
+          updateVehicle(input: $input) {
+            immat
+            vehicleDeviceImei
+            updatedAt
+            __typename
+          }
+        }
+      `;
+
       const vehicleUpdate = await client.graphql({
-        query: mutations.updateVehicle,
+        query: minimalUpdateVehicle,
         variables: {
           input: {
             immat: vehicleImmat,

@@ -93,8 +93,19 @@ export const associateDeviceToVehicleUnique = async (deviceImei, vehicleImmat, f
     }
     
     // Proceed with association by updating the vehicle's vehicleDeviceImei field
+    const minimalUpdateVehicle = /* GraphQL */ `
+      mutation UpdateVehicle($input: UpdateVehicleInput!) {
+        updateVehicle(input: $input) {
+          immat
+          vehicleDeviceImei
+          updatedAt
+          __typename
+        }
+      }
+    `;
+
     const updateResult = await client.graphql({
-      query: mutations.updateVehicle,
+      query: minimalUpdateVehicle,
       variables: {
         input: {
           immat: vehicleImmat,
@@ -153,21 +164,45 @@ export const dissociateDeviceFromVehicle = async (deviceImei) => {
     
     console.log(`🔄 Dissociating device ${deviceImei}`);
     // Find the vehicle associated with this device first
+    const minimalListVehicles = /* GraphQL */ `
+      query ListVehiclesByImei($filter: ModelVehicleFilterInput, $limit: Int) {
+        listVehicles(filter: $filter, limit: $limit) {
+          items {
+            immat
+            vehicleDeviceImei
+          }
+          nextToken
+        }
+      }
+    `;
+
     const vehiclesResponse = await client.graphql({
-      query: queries.listVehicles,
+      query: minimalListVehicles,
       variables: {
         filter: {
           vehicleDeviceImei: { eq: deviceImei }
-        }
+        },
+        limit: 1000
       }
     });
     
     const associatedVehicles = vehiclesResponse.data?.listVehicles?.items || [];
     
     // Dissociate from all vehicles (should be only one due to uniqueness)
+    const minimalUpdateVehicle = /* GraphQL */ `
+      mutation UpdateVehicle($input: UpdateVehicleInput!) {
+        updateVehicle(input: $input) {
+          immat
+          vehicleDeviceImei
+          updatedAt
+          __typename
+        }
+      }
+    `;
+
     const updatePromises = associatedVehicles.map(vehicle => 
       client.graphql({
-        query: mutations.updateVehicle,
+        query: minimalUpdateVehicle,
         variables: {
           input: {
             immat: vehicle.immat,
