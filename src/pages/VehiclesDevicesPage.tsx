@@ -463,12 +463,12 @@ export default function VehiclesDevicesPage() {
         });
         await refreshCurrentView();
       } else if (item.type === 'device') {
-        // Import device dissociation service if it exists
+        // Import device dissociation service from DeviceUniqueAssociationService
         const {
           dissociateDeviceFromVehicle
-        } = await import('../services/VehicleDissociationService.js');
+        } = await import('../services/DeviceUniqueAssociationService.js');
         console.log('Dissociating device with IMEI:', item.imei);
-        const result = await dissociateDeviceFromVehicle(item.vehicleImmat);
+        const result = await dissociateDeviceFromVehicle(item.imei);
         console.log('Dissociation result:', result);
         await refreshAfterDissociation("Véhicule dissocié du boîtier avec succès", {
           ...item,

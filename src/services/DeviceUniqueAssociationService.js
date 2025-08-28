@@ -20,24 +20,37 @@ export const checkDeviceVehicleUniqueness = async (deviceImei, excludeVehicleImm
     });
     
     console.log(`🔍 Checking uniqueness for device ${deviceImei} (exclude: ${excludeVehicleImmat})`);
-    // Get device and check its vehicle association
-    const deviceResponse = await client.graphql({
-      query: queries.getDevice,
-      variables: { imei: deviceImei }
+    
+    // Use minimal inline query to avoid nested field issues
+    const minimalListVehicles = /* GraphQL */ `
+      query ListVehiclesByImei($filter: ModelVehicleFilterInput, $limit: Int) {
+        listVehicles(filter: $filter, limit: $limit) {
+          items {
+            immat
+            vehicleDeviceImei
+          }
+          nextToken
+        }
+      }
+    `;
+    
+    const vehiclesResponse = await client.graphql({
+      query: minimalListVehicles,
+      variables: {
+        filter: {
+          vehicleDeviceImei: { eq: deviceImei }
+        },
+        limit: 1
+      }
     });
     
-    const device = deviceResponse.data?.getDevice;
-    if (!device) {
+    const associatedVehicles = vehiclesResponse.data?.listVehicles?.items || [];
+    
+    if (associatedVehicles.length === 0) {
       return { isAssociated: false };
     }
     
-    // Check if device has a vehicle association
-    const associatedVehicle = device.vehicle;
-    if (!associatedVehicle) {
-      return { isAssociated: false };
-    }
-    
-    const associatedVehicleImmat = associatedVehicle.immat;
+    const associatedVehicleImmat = associatedVehicles[0].immat;
     
     // If excluding a specific vehicle (for updates), check if it's different
     if (excludeVehicleImmat && associatedVehicleImmat === excludeVehicleImmat) {
@@ -214,11 +227,23 @@ export const dissociateDeviceFromVehicle = async (deviceImei) => {
     
     await Promise.all(updatePromises);
     
-    // FIXED: Get device details to return complete dissociation info
+    // FIXED: Get device details to return complete dissociation info with minimal query
     let deviceData = null;
     try {
+      const minimalGetDevice = /* GraphQL */ `
+        query GetDeviceSlim($imei: String!) {
+          getDevice(imei: $imei) {
+            imei
+            sim
+            protocolId
+            deviceVehicleImmat
+            __typename
+          }
+        }
+      `;
+      
       const deviceResponse = await client.graphql({
-        query: queries.getDevice,
+        query: minimalGetDevice,
         variables: { imei: deviceImei }
       });
       deviceData = deviceResponse.data?.getDevice;
