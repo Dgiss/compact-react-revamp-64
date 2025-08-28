@@ -102,18 +102,18 @@ export const dissociateDeviceFromCompany = async (deviceImei, companyId = null) 
         throw new Error('No active company association found for this device');
       }
     } else {
-      // Get association by device IMEI using listCompanyDevices
+      // Get association by company and device
       const associations = await client.graphql({
-        query: queries.listCompanyDevices,
+        query: queries.companyDevicesByDeviceIMEIAndAssociationDate,
         variables: {
+          deviceIMEI: deviceImei,
           filter: {
-            deviceIMEI: { eq: deviceImei },
             companyID: { eq: companyId },
             isActive: { eq: true }
           }
         }
       });
-      activeAssociation = associations.data?.listCompanyDevices?.items?.[0];
+      activeAssociation = associations.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items?.[0];
     }
     
     if (!activeAssociation) {
@@ -149,16 +149,16 @@ export const getActiveCompanyDeviceAssociation = async (deviceImei) => {
   
   try {
     const response = await client.graphql({
-      query: queries.listCompanyDevices,
+      query: queries.companyDevicesByDeviceIMEIAndAssociationDate,
       variables: {
+        deviceIMEI: deviceImei,
         filter: {
-          deviceIMEI: { eq: deviceImei },
           isActive: { eq: true }
         }
       }
     });
     
-    const associations = response.data?.listCompanyDevices?.items || [];
+    const associations = response.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
     return associations.length > 0 ? associations[0] : null;
   } catch (error) {
     throw error;
@@ -178,16 +178,14 @@ export const getDevicesByCompany = async (companyId, activeOnly = true) => {
     const filter = activeOnly ? { isActive: { eq: true } } : {};
     
     const response = await client.graphql({
-      query: queries.listCompanyDevices,
+      query: queries.companyDevicesByCompanyIDAndAssociationDate,
       variables: {
-        filter: {
-          companyID: { eq: companyId },
-          ...filter
-        }
+        companyID: companyId,
+        filter: filter
       }
     });
     
-    return response.data?.listCompanyDevices?.items || [];
+    return response.data?.companyDevicesByCompanyIDAndAssociationDate?.items || [];
   } catch (error) {
     throw error;
   }
@@ -203,15 +201,13 @@ export const getCompanyDeviceHistory = async (deviceImei) => {
   
   try {
     const response = await client.graphql({
-      query: queries.listCompanyDevices,
+      query: queries.companyDevicesByDeviceIMEIAndAssociationDate,
       variables: {
-        filter: {
-          deviceIMEI: { eq: deviceImei }
-        }
+        deviceIMEI: deviceImei
       }
     });
     
-    return response.data?.listCompanyDevices?.items || [];
+    return response.data?.companyDevicesByDeviceIMEIAndAssociationDate?.items || [];
   } catch (error) {
     throw error;
   }

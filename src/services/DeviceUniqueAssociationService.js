@@ -154,17 +154,7 @@ export const dissociateDeviceFromVehicle = async (deviceImei) => {
     console.log(`🔄 Dissociating device ${deviceImei}`);
     // Find the vehicle associated with this device first
     const vehiclesResponse = await client.graphql({
-      query: `
-        query ListVehiclesMinimal($filter: ModelVehicleFilterInput) {
-          listVehicles(filter: $filter) {
-            items {
-              immat
-              companyVehiclesId
-              vehicleDeviceImei
-            }
-          }
-        }
-      `,
+      query: queries.listVehicles,
       variables: {
         filter: {
           vehicleDeviceImei: { eq: deviceImei }

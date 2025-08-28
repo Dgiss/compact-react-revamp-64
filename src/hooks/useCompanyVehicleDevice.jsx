@@ -900,16 +900,7 @@ export const useCompanyVehicleDevice = () => {
   // OPTIMIZED: Get stats for unassociated items
   const getUnassociatedItemsStats = useCallback(async () => {
     try {
-      // Use existing functions to get stats
-      const vehiclesWithoutDevices = await CompanyVehicleDeviceService.fetchVehiclesWithoutDevices();
-      const devicesWithoutVehicles = await CompanyVehicleDeviceService.fetchDevicesWithoutVehicles();
-      
-      return {
-        vehiclesWithoutDevicesCount: vehiclesWithoutDevices.length,
-        devicesWithoutVehiclesCount: devicesWithoutVehicles.length,
-        totalVehicles: vehicles.length,
-        totalDevices: devices.length
-      };
+      return await CompanyVehicleDeviceService.fetchUnassociatedItemsStats();
     } catch (err) {
       console.error('Error getting unassociated items stats:', err);
       setError(err.message);
@@ -920,7 +911,7 @@ export const useCompanyVehicleDevice = () => {
         totalDevices: 0
       };
     }
-  }, [vehicles.length, devices.length]);
+  }, []);
 
   // FIXED: Load basic statistics with proper error handling and fallback
   const loadQuickStats = useCallback(async () => {

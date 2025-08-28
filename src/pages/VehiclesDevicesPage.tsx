@@ -11,7 +11,7 @@ import AddDeviceWithVehicleForm from "@/components/forms/AddDeviceWithVehicleFor
 import { toast } from "@/hooks/use-toast";
 import { MultipleImeiSearchDialog } from "@/components/dialogs/MultipleImeiSearchDialog";
 import { DeleteConfirmationDialog } from "@/components/dialogs/DeleteConfirmationDialog";
-import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
+import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice.jsx";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { DevicesBulkAssociation } from "@/components/tables/DevicesBulkAssociation";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";

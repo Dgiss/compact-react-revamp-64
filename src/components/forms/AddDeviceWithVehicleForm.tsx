@@ -7,7 +7,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { CompanySearchSelect } from "@/components/ui/company-search-select";
 import { useCompanyVehicleDevice } from "@/hooks/useCompanyVehicleDevice";
 import { useVehicleValidation } from "@/hooks/useVehicleValidation";
-import { createDevice } from "@/services/DeviceService";
+import { createDeviceWithVehicleAssociation } from "@/services/DeviceService";
 import { searchCompaniesReal } from "@/services/CompanyVehicleDeviceService";
 import { toast } from "@/components/ui/use-toast";
 
@@ -198,8 +198,8 @@ export default function AddDeviceWithVehicleForm({ onClose, onSuccess }: AddDevi
 
       console.log('Creating device with vehicle association:', creationData);
 
-  // Use createDevice from DeviceService instead of createDeviceWithVehicleAssociation
-  const result = await createDevice(creationData);
+      // Create device with vehicle association
+      const result = await createDeviceWithVehicleAssociation(creationData);
 
       // Handle results
       if (result.success) {
